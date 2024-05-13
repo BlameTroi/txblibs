@@ -1,0 +1,32 @@
+* txblibs -- Troy's header only library functions
+
+Sean Barrett and others show us the way to create and use relatively small include files for library code. I recommend that you read the FAQ on his [[https://github.com/nothings/stb][stb]] repository at GitHub.
+
+This repository holds my own bits of code that either aren't part of the C standard or don't work quite the way I want them to.
+
+Troy Brumley, blametroi@gmail.com, May 2024.
+
+So let it be written,
+So let it be done.
+
+** installation and use
+
+I keep all these headers in my ~$HOME/.local/include/~ directory and add that to my ~$CPATH~ in varioius ~makefiles~.
+
+Include the appropriate headers in your project. Each header has a preprocessor variable to control when the executable code will be included. ~#define~ this in only one source file per linked output.
+
+** license
+
+It's all public domain as far as I'm concerned, but you can use this software either as public domain under the unlicense or under the terms of the MIT license.
+
+(h/t to Sean Barrett at nothings.org for the most clear description of usable licensing I've ever seen.)
+
+** library contents
+
+| Filename   | Description                       | Implementation Trigger    |
+|------------+-----------------------------------+---------------------------|
+| txbmisc.h  | missing functions such as min/max | TXBMISC_H_IMPLEMENTATION  |
+| txbpmute.h | iterative permutation generator   | TXBPMUTE_H_IMPLEMENTATION |
+| txbstr.h   | string utilities (tokenize)       | TXBSTR_H_IMPLEMENTATION   |
+
+The file ~testlibs.c~ demonstrates the use of some of the library functions.
