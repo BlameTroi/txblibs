@@ -25,8 +25,13 @@ extern "C" {
 #endif /* __cplusplus */
 
 /*
- * forward definitions
+ * forward declarations
  */
+
+
+/* a pseudo random integer range */
+int rand_between(int, int);
+
 
 /* various min/max functions */
 
@@ -40,6 +45,10 @@ double dmax(double, double);
 double dmin(double, double);
 
 #ifdef TXBMISC_H_IMPLEMENTATION
+
+
+/* as a general rule, i prefer to not use macros to express an algorithm */
+
 
 /* none of the macro solutions to not having min or max available
    appeal to me, so instead here are inlinable definitions for various
@@ -69,6 +78,15 @@ inline double dmax(double x, double y) {
 inline double dmin(double x, double y) {
    return x < y ? x : y;
 }
+
+/* generate a pseudo random integer between low and high inclusive. yes, this
+   isn't really secure randomness, but it's suitable for many purposes. the
+   idea is from https://stackoverflow.com/a/1202706 */
+
+inline int rand_between(int low, int high) {
+   return rand() % (high + 1 - low) + low;
+}
+
 
 #endif /* TXBMISC_H_IMPLEMENTATION */
 
