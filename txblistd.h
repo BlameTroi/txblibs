@@ -41,7 +41,7 @@ extern "C" {
 
 /*
  * a node of the doubly linked list. keying for ordering can use
- * either the id or results from the fncompare function. node
+ * either the id or results from the compare_payload function. node
  * keys must be unique within a list.
  */
 
@@ -49,8 +49,8 @@ typedef struct listd_item_t {
    long id;                        /* either a user supplied id or an odometer value */
    void *payload;                  /* if provided, usually a pointer to the payload */
    struct listd_control_t *list;   /* owning list */
-   struct listd_item_t *fwd;       /* and chain pointers */
-   struct listd_item_t *bwd;
+   struct listd_item_t *next;      /* and chain pointers */
+   struct listd_item_t *prev;
 } listd_item_t;
 
 
@@ -66,10 +66,10 @@ typedef struct listd_item_t {
  */
 
 typedef struct listd_control_t {
-   listd_item_t *first;                /* head and tail item pointers */
-   listd_item_t *last;
-   void (*fnfree)(void *);             /* if a payload is carried and if it needs to be freed, place address here */
-   long (*fncompare)(void *, void *);  /* if a payload is carried and used for keying, a compare function here */
+   listd_item_t *head;                 /* head and tail item pointers */
+   listd_item_t *tail;
+   void (*free_payload)(void *);       /* if a payload is carried and if it needs to be freed, place address here */
+   long (*compare_payload)(void *, void *);  /* if a payload is carried and used for keying, a compare function here */
    long odometer;                      /* just a counter of calls to the api */
    long makes;                         /* and the individual functions */
    long adds;
@@ -178,7 +178,7 @@ prev_item(
 bool
 reset_listd_control(listd_control_t *list) {
    assert(list->initialized);
-   if (list->first != NULL) {
+   if (list->head != NULL) {
       return false;
    }
    memset(list, 0, sizeof(*list));
@@ -199,20 +199,20 @@ free_all_items(listd_control_t *list) {
    list->odometer += 1;
    list->frees += list->count;
 
-   listd_item_t *p = list->first;
-   listd_item_t *n = NULL;
+   listd_item_t *curr = list->head;
+   listd_item_t *next = NULL;
 
-   while (p) {
+   while (curr) {
       if (list->has_payload && list->dynamic_payload) {
-         list->fnfree(p->payload);
+         list->free_payload(curr->payload);
       }
-      n = p->fwd;
-      free(p);
-      p = n;
+      next = curr->next;
+      free(curr);
+      curr = next;
    }
 
-   list->first = NULL;
-   list->last = NULL;
+   list->head = NULL;
+   list->tail = NULL;
    list->count = 0;
 }
 
@@ -235,19 +235,19 @@ make_item(listd_control_t *list, void *id_or_payload_pointer) {
    list->odometer += 1;
    list->makes += 1;
 
-   listd_item_t *n = calloc(1, sizeof(*n));
-   assert(n);
+   listd_item_t *curr = calloc(1, sizeof(*curr));
+   assert(curr);
 
-   n->list = list;
+   curr->list = list;
 
    if (list->use_id) {
-      n->id = (long)id_or_payload_pointer;
+      curr->id = (long)id_or_payload_pointer;
    } else {
-      n->id = list->odometer;
-      n->payload = id_or_payload_pointer;
+      curr->id = list->odometer;
+      curr->payload = id_or_payload_pointer;
    }
 
-   return n;
+   return curr;
 }
 
 
@@ -265,7 +265,8 @@ make_item(listd_control_t *list, void *id_or_payload_pointer) {
  * itself, as the second argument.
  *
  * if there is a payload and it is dynamically managed in memory, the
- * list's fnfree function is called to release the payload storage.
+ * list's free_payload function is called to release the payload
+ * storage.
  *
  * if the item is owned by the controlling list, its storage is freed,
  * the pointer to the item that was passed is set to NULL, and true is
@@ -289,7 +290,7 @@ free_item(listd_control_t *list, listd_item_t *(*address_of_item_pointer)) {
    }
 
    if (list->has_payload && list->dynamic_payload) {
-      list->fnfree((*address_of_item_pointer)->payload);
+      list->free_payload((*address_of_item_pointer)->payload);
    }
 
    free(*address_of_item_pointer);
@@ -301,9 +302,9 @@ free_item(listd_control_t *list, listd_item_t *(*address_of_item_pointer)) {
 
 /*
  * find a item in the list by either id or payload. the second
- * argument is used to identify the item in the list. since
- * the list is ordered, the search will stop if the item's
- * possible location is passed.
+ * argument is used to identify the item in the list. since the list
+ * is ordered, the search will stop if the item's possible location is
+ * passed.
  *
  * returns a pointer to the item in the list or NULL.
  */
@@ -314,27 +315,27 @@ find_item(listd_control_t *list, void *id_or_payload_pointer) {
    list->odometer += 1;
    list->finds += 1;
 
-   listd_item_t *p = list->first;
-   if (p == NULL) {
+   listd_item_t *curr = list->head;
+   if (curr == NULL) {
       return NULL;
    }
 
    if (!list->use_id) {
       assert(list->has_payload);
-      assert(list->fncompare);
+      assert(list->compare_payload);
    }
 
    long r;
-   while (p) {
+   while (curr) {
       r = list->use_id
-          ? p->id - (long)id_or_payload_pointer
-          : list->fncompare(p->payload, id_or_payload_pointer);
+          ? curr->id - (long)id_or_payload_pointer
+          : list->compare_payload(curr->payload, id_or_payload_pointer);
       if (r == 0) {
-         return p;
+         return curr;
       } else if (r > 0) {
          return NULL;
       }
-      p = p->fwd;
+      curr = curr->next;
    }
 
    return NULL;
@@ -353,10 +354,10 @@ count_items(listd_control_t *list) {
    list->counts += 1;
 
    long n = 0;
-   listd_item_t *p = list->first;
-   while (p) {
+   listd_item_t *curr = list->head;
+   while (curr) {
       n += 1;
-      p = p->fwd;
+      curr = curr->next;
    }
    assert(n == list->count);
 
@@ -376,10 +377,11 @@ add_item(listd_control_t *list, listd_item_t *unlinked_item) {
    list->adds += 1;
 
    /* empty list is the easy case */
-   if (list->first == NULL) {
-      list->first =unlinked_item;
-      unlinked_item->fwd = NULL;
-      unlinked_item->bwd = NULL;
+   if (list->head == NULL) {
+      list->head = unlinked_item;
+      list->tail = unlinked_item;
+      unlinked_item->next = NULL;
+      unlinked_item->prev = NULL;
       list->count += 1;
       return true;
    }
@@ -389,17 +391,17 @@ add_item(listd_control_t *list, listd_item_t *unlinked_item) {
 
    if (!list->use_id) {
       assert(list->has_payload);
-      assert(list->fncompare);
+      assert(list->compare_payload);
    }
 
-   listd_item_t *curr = list->first;
+   listd_item_t *curr = list->head;
    listd_item_t *last = NULL;
    long r = 0;
 
    while (curr) {
       r = list->use_id
           ? curr->id - unlinked_item->id
-          : list->fncompare(curr->payload, unlinked_item->payload);
+          : list->compare_payload(curr->payload, unlinked_item->payload);
       if (r == 0) {
          return false;
       }
@@ -407,36 +409,27 @@ add_item(listd_control_t *list, listd_item_t *unlinked_item) {
          break;
       }
       last = curr;
-      curr = curr->fwd;
+      curr = curr->next;
    }
 
-   /* tail of list */
+   if (curr == NULL) {              /* tail of list */
+      last->next = unlinked_item;
+      list->tail = unlinked_item;
+      unlinked_item->prev = last;
 
-   if (curr == NULL) {
-      last->fwd = unlinked_item;
-      unlinked_item->bwd = last;
-      list->last = unlinked_item;
-      list->count += 1;
-      return true;
+   } else if (curr->prev == NULL) {  /* head of list */
+      list->head = unlinked_item;
+      unlinked_item->prev = NULL;
+      unlinked_item->next = curr;
+      curr->prev = unlinked_item;
+
+   } else {                        /* middle of list */
+      curr->prev->next = unlinked_item;
+      unlinked_item->prev = curr->prev;
+      curr->prev = unlinked_item;
+      unlinked_item->next = curr;
    }
 
-   /* head of list */
-
-   if (curr->bwd == NULL) {
-      list->first = unlinked_item;
-      unlinked_item->bwd = NULL;
-      unlinked_item->fwd = curr;
-      curr->bwd = unlinked_item;
-      list->count += 1;
-      return true;
-   }
-
-   /* middle of list */
-
-   curr->bwd->fwd = unlinked_item;
-   unlinked_item->bwd = curr->bwd;
-   curr->bwd = unlinked_item;
-   unlinked_item->fwd = curr;
    list->count += 1;
    return true;
 }
@@ -444,9 +437,9 @@ add_item(listd_control_t *list, listd_item_t *unlinked_item) {
 
 /*
  * remove a item from the list by either id or payload. the second
- * argument should be whatever the fncompare function expects as its
- * second argument. returns a pointer to the unlinked item or NULL if
- * the item was not found in the list.
+ * argument should be whatever the compare_payload function expects as
+ * its second argument. returns a pointer to the unlinked item or NULL
+ * if the item was not found in the list.
  */
 
 listd_item_t *
@@ -459,53 +452,53 @@ remove_item(listd_control_t *list, void *id_or_payload_pointer) {
 
    if (!list->use_id) {
       assert(list->has_payload);
-      assert(list->fncompare);
+      assert(list->compare_payload);
    }
 
-   listd_item_t *curr = list->first;
+   listd_item_t *curr = list->head;
    long r = 0;
 
    while (curr) {
 
       r = list->use_id
           ? curr->id - (long)id_or_payload_pointer
-          : list->fncompare(curr->payload, id_or_payload_pointer);
+          : list->compare_payload(curr->payload, id_or_payload_pointer);
 
       if (r < 0) {
-         curr = curr->fwd;
+         curr = curr->next;
          continue;
       } else if (r > 0) {
          return NULL;
       }
 
-      if (curr->fwd == NULL && curr->bwd == NULL) {
+      if (curr->next == NULL && curr->prev == NULL) {
 
          /* this is the only item */
-         list->first = NULL;
-         list->last = NULL;
+         list->head = NULL;
+         list->tail = NULL;
 
-      } else if (curr->bwd == NULL) {
+      } else if (curr->prev == NULL) {
 
          /* this is the head */
-         list->first = curr->fwd;
-         curr->fwd->bwd = NULL;
+         list->head = curr->next;
+         curr->next->prev = NULL;
 
-      } else if (curr->fwd == NULL) {
+      } else if (curr->next == NULL) {
 
          /* is this the tail? */
-         list->last = curr->bwd;
-         curr->bwd->fwd = NULL;
+         list->tail = curr->prev;
+         curr->prev->next = NULL;
 
       } else {
 
          /* somewhere in the middle */
-         curr->bwd->fwd = curr->fwd;
-         curr->fwd->bwd = curr->bwd;
+         curr->prev->next = curr->next;
+         curr->next->prev = curr->prev;
       }
 
       /* removing dangling pointers and return */
-      curr->fwd = NULL;
-      curr->bwd = NULL;
+      curr->next = NULL;
+      curr->prev = NULL;
       list->count -= 1;
       return curr;
    }
@@ -530,23 +523,23 @@ next_item(listd_control_t *list, listd_item_t *(*next_item)) {
    list->nexts += 1;
 
    if (*next_item == NULL) {
-      if (list->first == NULL) {
+      if (list->head == NULL) {
          return NULL;
       }
-      *next_item = list->first;
+      *next_item = list->head;
       return *next_item;
    }
 
-   *next_item = (*next_item)->fwd;
+   *next_item = (*next_item)->next;
    return *next_item;
 }
 
 
 /*
- * iterate over items moving backward. the second argument is a pointer
- * to the address of item to iterate from. each call updates this
- * address as context for repeated calls. setting this to NULL means
- * iterate from the tail of the list. returns the next item in
+ * iterate over items moving backward. the second argument is a
+ * pointer to the address of item to iterate from. each call updates
+ * this address as context for repeated calls. setting this to NULL
+ * means iterate from the tail of the list. returns the next item in
  * sequence or NULL if no more items are available.
  */
 
@@ -557,14 +550,14 @@ prev_item(listd_control_t *list, listd_item_t *(*prior_item)) {
    list->prevs += 1;
 
    if (*prior_item == NULL) {
-      if (list->first == NULL) {
+      if (list->head == NULL) {
          return NULL;
       }
-      *prior_item = list->last;
+      *prior_item = list->tail;
       return *prior_item;
    }
 
-   *prior_item = (*prior_item)->bwd;
+   *prior_item = (*prior_item)->prev;
    return *prior_item;
 }
 

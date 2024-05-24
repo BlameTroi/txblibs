@@ -61,7 +61,7 @@ test_setup(void) {
    list_by_payload.dynamic_payload = false;
    list_by_payload.has_payload = true;
    list_by_payload.use_id = false;
-   list_by_payload.fncompare = payload_compare;
+   list_by_payload.compare_payload = payload_compare;
    list_by_payload.initialized = true;
 
    /* let's use a different seed than 1, but not time() because i want
@@ -99,10 +99,10 @@ void
 test_teardown(void) {
 
    print_listd_control_stats(&list_by_id, "identity");
-   listd_item_t *p = list_by_id.first;
+   listd_item_t *p = list_by_id.head;
    listd_item_t *n = NULL;
    while (p) {
-      n = p->fwd;
+      n = p->next;
       free_item(&list_by_id, &p);
       p = n;
    }
@@ -110,10 +110,10 @@ test_teardown(void) {
    list_by_id.initialized = false;
 
    print_listd_control_stats(&list_by_payload, "payload");
-   p = list_by_payload.first;
+   p = list_by_payload.head;
    n = NULL;
    while (p) {
-      n = p->fwd;
+      n = p->next;
       free_item(&list_by_payload, &p);
       p = n;
    }
@@ -139,16 +139,16 @@ MU_TEST(test_create) {
    listd_item_t *n = NULL;
 
    n = make_item(&list_by_id, (void *)147);
-   mu_assert_int_eq(true, n->fwd == NULL);
-   mu_assert_int_eq(true, n->bwd == NULL);
+   mu_assert_int_eq(true, n->next == NULL);
+   mu_assert_int_eq(true, n->prev == NULL);
    mu_assert_int_eq(147, n->id);
    free_item(&list_by_id, &n);
    mu_assert_int_eq(true, n == NULL);
 
    char *s = strdup("this is a sentence");
    n = make_item(&list_by_payload, s);
-   mu_assert_int_eq(true, n->fwd == NULL);
-   mu_assert_int_eq(true, n->bwd == NULL);
+   mu_assert_int_eq(true, n->next == NULL);
+   mu_assert_int_eq(true, n->prev == NULL);
    mu_assert_string_eq("this is a sentence", n->payload);
    mu_assert_int_eq(strlen(s), strlen(n->payload));
    free_item(&list_by_payload, &n);
@@ -199,19 +199,19 @@ MU_TEST(test_insert_ends) {
    mu_assert_int_eq(true, r);
    mu_assert_int_eq(2, list_by_id.count);
    mu_assert_int_eq(2, count_items(&list_by_id));
-   mu_assert_int_eq(true, n->bwd == head);
-   mu_assert_int_eq(true, n->fwd == NULL);
-   mu_assert_int_eq(true, head->bwd == NULL);
-   mu_assert_int_eq(true, head->fwd == n);
+   mu_assert_int_eq(true, n->prev == head);
+   mu_assert_int_eq(true, n->next == NULL);
+   mu_assert_int_eq(true, head->prev == NULL);
+   mu_assert_int_eq(true, head->next == n);
    tail = make_item(&list_by_id, (void *)20);
    r = add_item(&list_by_id, tail);
    mu_assert_int_eq(true, r);
    mu_assert_int_eq(3, list_by_id.count);
    mu_assert_int_eq(3, count_items(&list_by_id));
-   mu_assert_int_eq(true, n->bwd == head);
-   mu_assert_int_eq(true, n->fwd == tail);
-   mu_assert_int_eq(true, tail->fwd == NULL);
-   mu_assert_int_eq(true, tail->bwd == n);
+   mu_assert_int_eq(true, n->prev == head);
+   mu_assert_int_eq(true, n->next == tail);
+   mu_assert_int_eq(true, tail->next == NULL);
+   mu_assert_int_eq(true, tail->prev == n);
 
    n = make_item(&list_by_payload, "bbbb");
    r = add_item(&list_by_payload, n);
@@ -220,19 +220,19 @@ MU_TEST(test_insert_ends) {
    mu_assert_int_eq(true, r);
    mu_assert_int_eq(2, list_by_payload.count);
    mu_assert_int_eq(2, count_items(&list_by_payload));
-   mu_assert_int_eq(true, n->bwd == head);
-   mu_assert_int_eq(true, n->fwd == NULL);
-   mu_assert_int_eq(true, head->bwd == NULL);
-   mu_assert_int_eq(true, head->fwd == n);
+   mu_assert_int_eq(true, n->prev == head);
+   mu_assert_int_eq(true, n->next == NULL);
+   mu_assert_int_eq(true, head->prev == NULL);
+   mu_assert_int_eq(true, head->next == n);
    tail = make_item(&list_by_payload, "zzzz");
    r = add_item(&list_by_payload, tail);
    mu_assert_int_eq(true, r);
    mu_assert_int_eq(3, list_by_payload.count);
    mu_assert_int_eq(3, count_items(&list_by_payload));
-   mu_assert_int_eq(true, n->bwd == head);
-   mu_assert_int_eq(true, n->fwd == tail);
-   mu_assert_int_eq(true, tail->fwd == NULL);
-   mu_assert_int_eq(true, tail->bwd == n);
+   mu_assert_int_eq(true, n->prev == head);
+   mu_assert_int_eq(true, n->next == tail);
+   mu_assert_int_eq(true, tail->next == NULL);
+   mu_assert_int_eq(true, tail->prev == n);
 
 }
 
@@ -396,12 +396,12 @@ MU_TEST(test_iteration) {
    mu_assert_int_eq(true, n == first);
    int count = 0;
    mu_assert_int_eq(true, n == curr);
-   mu_assert_int_eq(true, n->fwd != NULL);
-   mu_assert_int_eq(true, n->bwd == NULL);
+   mu_assert_int_eq(true, n->next != NULL);
+   mu_assert_int_eq(true, n->prev == NULL);
    first = n;
    while (n) {
       count += 1;
-      if (n->fwd == NULL) {
+      if (n->next == NULL) {
          last = n;
       }
       n = next_item(&list_by_id, &curr);
