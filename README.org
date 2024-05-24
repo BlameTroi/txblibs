@@ -28,5 +28,6 @@ It's all public domain as far as I'm concerned, but you can use this software ei
 | txbmisc.h  | missing functions such as min/max | TXBMISC_H_IMPLEMENTATION  |
 | txbpmute.h | iterative permutation generator   | TXBPMUTE_H_IMPLEMENTATION |
 | txbstr.h   | string utilities (tokenize)       | TXBSTR_H_IMPLEMENTATION   |
+| txblistd.h | doubly linked list management     | TXBLISTD_H_IMPLEMENTATION |
 
 The file ~testlibs.c~ demonstrates the use of some of the library functions.
