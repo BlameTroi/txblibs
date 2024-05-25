@@ -28,10 +28,12 @@ extern "C" {
  * forward declarations
  */
 
-
 /* a pseudo random integer range */
 int rand_between(int, int);
 
+/* shuffle n items using the fisher-yates algorithm */
+void
+shuffle(void **cards, int n);
 
 /* various min/max functions */
 
@@ -46,9 +48,7 @@ double dmin(double, double);
 
 #ifdef TXBMISC_H_IMPLEMENTATION
 
-
 /* as a general rule, i prefer to not use macros to express an algorithm */
-
 
 /* none of the macro solutions to not having min or max available
    appeal to me, so instead here are inlinable definitions for various
@@ -87,6 +87,22 @@ inline int rand_between(int low, int high) {
    return rand() % (high + 1 - low) + low;
 }
 
+/* shuffle an array of items using the fisher-yates algorithm. the
+   array is updated in place. by using an array of void pointers, any
+   objects can be shuffled. uses rand_between() and the usual comments
+   regarding rand() and srand() apply. */
+
+void
+shuffle(void **cards, int n) {
+   int i = 100;
+   while (i > 0) {
+      int r = rand_between(1, i);
+      void *s = cards[r-1];
+      cards[r-1] = cards[i-1];
+      cards[i-1] = s;
+      i -= 1;
+   }
+}
 
 #endif /* TXBMISC_H_IMPLEMENTATION */
 
