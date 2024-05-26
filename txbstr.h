@@ -47,7 +47,7 @@ extern "C" {
    free(ret);             free the spit pointers */
 
 char **
-splitString(
+split_string(
    const char *str,           /* string to split */
    const char *sep            /* string of possible separator character */
 );
@@ -72,7 +72,7 @@ splitString(
  */
 
 char **
-splitString(const char *str, const char *sep) {
+split_string(const char *str, const char *sep) {
 
    /* the list of tokens, an array, NULL terminated. these all point
       into a copy of `str` if one is made. */

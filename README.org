@@ -23,6 +23,8 @@ It's all public domain as far as I'm concerned, but you can use this software ei
 
 ** library contents
 
+Functions are in what I think are sensible file groupings.
+
 | Filename   | Description                       | Implementation Trigger    |
 |------------+-----------------------------------+---------------------------|
 | txbmisc.h  | missing functions such as min/max | TXBMISC_H_IMPLEMENTATION  |
@@ -30,4 +32,45 @@ It's all public domain as far as I'm concerned, but you can use this software ei
 | txbstr.h   | string utilities (tokenize)       | TXBSTR_H_IMPLEMENTATION   |
 | txblistd.h | doubly linked list management     | TXBLISTD_H_IMPLEMENTATION |
 
-The file ~testlibs.c~ demonstrates the use of some of the library functions.
+The file ~testlibs.c~ demonstrates the use of some of the library functions. The file ~unittest.c~ has tests for doubly linked lists and other one off functions.
+
+*** functions
+
+**** ~txbmisc.h~
+
+| Signature                  | Description                                            |
+|----------------------------+--------------------------------------------------------|
+| int rand_between(int, int) | non cryptographically secure random integer in a range |
+| void shuffle(void **, int) | shuffle an array of pointers or long integers          |
+| long *factors_of(long)     | returns an array of the factors of a long integer      |
+| ?max(?,?) and ?min(?,?)    | min and max for various numeric types                  |
+
+**** ~txbpmute.h~
+
+| Signature                    | Description                                             |
+|------------------------------+---------------------------------------------------------|
+| int permute_next(int, int**) | permutes the values in an integer array of a given size |
+
+**** ~txbstr.h~
+
+| Signature                         | Description                                      |
+|-----------------------------------+--------------------------------------------------|
+| char** split_string(char*, char*) | splits a string on runs of any of the separators |
+
+**** ~txblistd.h~
+
+list is listd_control_t
+item is listd_item_t
+
+| Signature                         | Description                                                 |
+|-----------------------------------+-------------------------------------------------------------|
+| bool reset_listd_control(list*)   | resets/clears the list control block                        |
+| void free_all_items(list*)        | remove and free memory for all items on a list              |
+| item *make_item(list*, void*)     | allocate and initialize an unlinked item and attach payload |
+| bool free_item(list*, item**)     | free an unlinked item and its payload                       |
+| item *find_item(list*, void*)     | does an item with a matching payload key exist in the list  |
+| int count_items(list*)            | how many items are on the list                              |
+| bool add_item(list*, item*)       | and unlinked item from make_item to the list                |
+| item *remove_item(list*, void*)   | unlink item with a matching payload key from the list       |
+| item *next_item(list*, item**)    | iterate forward through the items on the list               |
+| item *prev_item(list*, item**)    | as next_item, but backward                                  |

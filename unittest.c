@@ -1,4 +1,4 @@
-/*  unittest.c -- working through a doubly linked list implementation using unit tests -- troy brumley */
+/*  unittest.c -- units for my header libraries -- troy brumley */
 
 /* released to the public domain, troy brumley, may 2024 */
 
@@ -17,6 +17,8 @@
 
 /*
  * testing my doubly linked list implementation.
+ *
+ * testing of factoring.
  */
 
 /*
@@ -571,6 +573,73 @@ MU_TEST(test_free_list) {
 
 
 /*
+ * tests for factors_of
+ */
+
+MU_TEST(test_factor) {
+   int factors2[] = {1, 2, 0};
+   int factors4[] = {1, 2, 4, 0};
+   int factors20[] = {1, 2, 4, 5, 10, 20, 0};
+   long *result = NULL;
+   int i = 0;
+
+   result = factors_of(2);
+   i = 0;
+   while (factors2[i]) {
+      mu_assert_int_eq(factors2[i], result[i]);
+      i += 1;
+   }
+   free(result);
+
+   result = factors_of(0);
+   mu_assert_int_eq(true, result == NULL);
+   result = factors_of(-33);
+   mu_assert_int_eq(true, result == NULL);
+
+   result = factors_of(4);
+   i = 0;
+   while (factors4[i]) {
+      mu_assert_int_eq(factors4[i], result[i]);
+      i += 1;
+   }
+   free(result);
+
+   result = factors_of(20);
+   i = 0;
+   while (factors4[i]) {
+      mu_assert_int_eq(factors20[i], result[i]);
+      i += 1;
+   }
+   free(result);
+
+   /* left overs left in just to exercise the code */
+   result = factors_of(99);
+   free(result);
+   result = factors_of(100);
+   free(result);
+   result = factors_of(999);
+   free(result);
+   result = factors_of(1000);
+   free(result);
+   result = factors_of(9999);
+   free(result);
+   result = factors_of(10000);
+   free(result);
+   result = factors_of(99999);
+   free(result);
+   result = factors_of(100000);
+   free(result);
+   result = factors_of(999999);
+   free(result);
+   result = factors_of(1000000);
+   free(result);
+   result = factors_of(33100000);
+   free(result);
+
+}
+
+
+/*
  * here we define the whole test suite. sadly there's no runtime
  * introspection. there is probably an opportunity for an elisp helper
  * to create the suite in the editor, but for now it's just a matter
@@ -598,6 +667,9 @@ MU_TEST_SUITE(test_suite) {
    MU_RUN_TEST(test_find);
    MU_RUN_TEST(test_remove);
    MU_RUN_TEST(test_free_list);
+
+   MU_RUN_TEST(test_factor);
+
 }
 
 

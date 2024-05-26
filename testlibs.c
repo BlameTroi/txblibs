@@ -66,7 +66,7 @@ main() {
    char *s = "this is a test string";
    printf("splitting '%s'\n", s);
 
-   char **splits = splitString(s, " ");
+   char **splits = split_string(s, " ");
    int i = 1;
    while (splits[i]) {
       printf("'%s'\n", splits[i]);

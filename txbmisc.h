@@ -35,8 +35,11 @@ int rand_between(int, int);
 void
 shuffle(void **cards, int n);
 
-/* various min/max functions */
+/* return an array of the factors of n */
+long *
+factors_of(long n);
 
+/* various min/max functions */
 int max(int, int);
 int min(int, int);
 int imax(int, int);
@@ -94,7 +97,7 @@ inline int rand_between(int low, int high) {
 
 void
 shuffle(void **cards, int n) {
-   int i = 100;
+   int i = n;
    while (i > 0) {
       int r = rand_between(1, i);
       void *s = cards[r-1];
@@ -103,6 +106,53 @@ shuffle(void **cards, int n) {
       i -= 1;
    }
 }
+
+
+/* returns an array of integers long enough to hold the factors of
+   n and a trailing NULL entry. the caller is responsible for freeing
+   the array when it is no longer needed. returns NULL if n < 1. */
+
+long *
+factors_of(long n) {
+   if (n < 1) {
+      return NULL;
+   }
+
+   /* allocate space for a dynamically sized array of longs. starting
+      size is 64 entries, of which the last entry is reserved for
+      a trailing NULL value. grows by doubling, but that should be
+      rarely needed. there are 64 factors of 999,999 and 49 of
+      1,000,000. */
+   int lim = 64;
+   long *factors = calloc(lim, sizeof(*factors));
+   int f = 0;
+
+   /* just count up from 1 to half, tack on n, and we're done. */
+   long i = 1;
+   long half = n / 2;
+   while (i <= half) {
+      if (n % i == 0) {
+         factors[f] = i;
+         f += 1;
+
+         /* if we're approaching the end of the allocation,
+            we know we need at least one more entry so
+            grow the array. */
+         if (f + 2 >= lim) {
+            long *grow = calloc(lim * 2, sizeof(*factors));
+            memcpy(grow, factors, lim * sizeof(*factors));
+            free(factors);
+            factors = grow;
+            lim = lim * 2;
+         }
+      }
+      i += 1;
+   }
+
+   factors[f] = n;
+   return factors;
+}
+
 
 #endif /* TXBMISC_H_IMPLEMENTATION */
 
