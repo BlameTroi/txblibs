@@ -638,7 +638,6 @@ MU_TEST(test_factor) {
 
 }
 
-
 /*
  * here we define the whole test suite. sadly there's no runtime
  * introspection. there is probably an opportunity for an elisp helper
@@ -655,6 +654,7 @@ MU_TEST_SUITE(test_suite) {
 
    /* run your tests here */
 
+   printf("\n\ndoubly linked list\n\n");
    MU_RUN_TEST(test_create);
    MU_RUN_TEST(test_count);
    MU_RUN_TEST(test_insert_ends);
@@ -668,6 +668,7 @@ MU_TEST_SUITE(test_suite) {
    MU_RUN_TEST(test_remove);
    MU_RUN_TEST(test_free_list);
 
+   printf("\n\nfactors\n\n");
    MU_RUN_TEST(test_factor);
 
 }

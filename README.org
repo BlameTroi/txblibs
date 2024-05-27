@@ -44,6 +44,8 @@ The file ~testlibs.c~ demonstrates the use of some of the library functions. The
 | void shuffle(void **, int) | shuffle an array of pointers or long integers          |
 | long *factors_of(long)     | returns an array of the factors of a long integer      |
 | ?max(?,?) and ?min(?,?)    | min and max for various numeric types                  |
+| bool is_even(long)         |                                                        |
+| bool is_odd(long)          |                                                        |
 
 **** ~txbpmute.h~
 

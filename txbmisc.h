@@ -49,6 +49,10 @@ long lmin(long, long);
 double dmax(double, double);
 double dmin(double, double);
 
+/* common tests */
+bool is_even(long);
+bool is_odd(long);
+
 #ifdef TXBMISC_H_IMPLEMENTATION
 
 /* as a general rule, i prefer to not use macros to express an algorithm */
@@ -81,6 +85,18 @@ inline double dmax(double x, double y) {
 inline double dmin(double x, double y) {
    return x < y ? x : y;
 }
+
+/* quick bit test for even or odd. */
+
+inline bool is_even(long n) {
+   return !(n & 1);
+}
+
+
+inline bool is_odd(long n) {
+   return (n & 1);
+}
+
 
 /* generate a pseudo random integer between low and high inclusive. yes, this
    isn't really secure randomness, but it's suitable for many purposes. the
