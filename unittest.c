@@ -15,12 +15,28 @@
 #define TXBLISTD_H_IMPLEMENTATION
 #include "txblistd.h"
 
-/*
- * testing my doubly linked list implementation.
- *
- * testing of factoring.
- */
+#define TXBSTR_H_IMPLEMENTATION
+#include "txbstr.h"
 
+
+/*
+ * this just keeps growing and growing, but i resist splitting it out
+ * into separate files just yet.
+ *
+ * tests for:
+ *
+ * txblistd -- doubly linked list
+ *
+ * txbstr -- string and character in string functions
+ *
+ * txbmisc -- factor
+ *            min/max
+ *
+ * txbpmute -- permutation and combination
+ *
+ * txbpat -- pattern matching
+ */
+
 /*
  * global state and constants. i want a better way to create an
  * instance of the list, but for now this is sufficient.
@@ -38,11 +54,10 @@ long
 payload_compare(void *s1, void *s2) {
    return strcmp(s1, s2);
 }
-
+
 /*
- * minunit setup and teardown of infrastructure.
+ * minunit setup and teardown of listd infratstructure.
  */
-
 
 #define RAND_SEED 6803
 
@@ -72,35 +87,11 @@ test_setup(void) {
 }
 
 
-/* this is called by test_teardown for each list, but it's usually
-   not needed so there's a hard coded return at the head of the
-   function. */
-
-void
-print_listd_control_stats(listd_control_t *cb, char *s) {
-   return; /* not active */
-   if (s == NULL) {
-      printf("\nitem stats:\n");
-   } else {
-      printf("\n'%s' item stats:\n", s);
-   }
-   printf("   count: %ld\n", cb->count);
-   printf("   makes: %ld\n", cb->makes);
-   printf("    adds: %ld\n", cb->adds);
-   printf(" removes: %ld\n", cb->removes);
-   printf("   finds: %ld\n", cb->finds);
-   printf("   nexts: %ld\n", cb->nexts);
-   printf("   prevs: %ld\n", cb->prevs);
-   printf("odometer: %ld\n\n", cb->odometer);
-}
-
-
 /* after each test, release the items and lists properly. */
 
 void
 test_teardown(void) {
 
-   print_listd_control_stats(&list_by_id, "identity");
    listd_item_t *p = list_by_id.head;
    listd_item_t *n = NULL;
    while (p) {
@@ -111,7 +102,6 @@ test_teardown(void) {
    memset(&list_by_id, 0xfe, sizeof(list_by_id));
    list_by_id.initialized = false;
 
-   print_listd_control_stats(&list_by_payload, "payload");
    p = list_by_payload.head;
    n = NULL;
    while (p) {
@@ -121,12 +111,10 @@ test_teardown(void) {
    }
    memset(&list_by_payload, 0xfe, sizeof(list_by_payload));
    list_by_payload.initialized = false;
-
 }
-
-
+
 /*
- * the tests:
+ * the doubly linked list tests:
  *
  * there's a lot of white box testing in here peeking at the structore of
  * list items and such from early testing. that may not be proper unit
@@ -137,7 +125,7 @@ test_teardown(void) {
 
 /* build a item and check out its state, then free it. */
 
-MU_TEST(test_create) {
+MU_TEST(test_list_create) {
    listd_item_t *n = NULL;
 
    n = make_item(&list_by_id, (void *)147);
@@ -162,7 +150,7 @@ MU_TEST(test_create) {
 
 /* add one item and confirm that count_items finds it */
 
-MU_TEST(test_count) {
+MU_TEST(test_list_count) {
    listd_item_t *n = NULL;
    bool r;
 
@@ -188,7 +176,7 @@ MU_TEST(test_count) {
 /* in a non-empty list, test inserting items at the head and tail
    of the list */
 
-MU_TEST(test_insert_ends) {
+MU_TEST(test_list_insert) {
    listd_item_t *n = NULL;
    listd_item_t *head = NULL;
    listd_item_t *tail = NULL;
@@ -241,7 +229,7 @@ MU_TEST(test_insert_ends) {
 
 /* confirm that attempting to add an duplicate item id is not allowed */
 
-MU_TEST(test_duplicate) {
+MU_TEST(test_list_duplicates) {
    listd_item_t *n = NULL;
    listd_item_t *d = NULL;
    bool r;
@@ -271,7 +259,7 @@ MU_TEST(test_duplicate) {
 
 /* try to insert between existing items */
 
-MU_TEST(test_chaining) {
+MU_TEST(test_list_chaining) {
    listd_item_t *head = NULL;
    listd_item_t *tail = NULL;
    listd_item_t *inside = NULL;
@@ -305,7 +293,7 @@ MU_TEST(test_chaining) {
 
 /* volume tests, sometimes you just gotta throw spaghetti at the wall */
 
-MU_TEST(test_many_asc) {
+MU_TEST(test_list_many_asc) {
    listd_item_t *n = NULL;
    bool r;
    char *digits[100];
@@ -334,10 +322,9 @@ MU_TEST(test_many_asc) {
    for (long i = 0; i < 100; i++) {
       free(digits[i]);
    }
-
 }
 
-MU_TEST(test_many_dsc) {
+MU_TEST(test_list_many_dsc) {
    for (long i = 0; i < 100; i++) {
       listd_item_t *n = make_item(&list_by_id, (void *)(100 - i));
       bool r = add_item(&list_by_id, n);
@@ -349,7 +336,7 @@ MU_TEST(test_many_dsc) {
    mu_assert_int_eq(100, count_items(&list_by_id));
 }
 
-MU_TEST(test_many_random) {
+MU_TEST(test_list_many_random) {
 
    /* srand() is reseeded every test_setup */
    mu_assert_int_eq(0, count_items(&list_by_id));
@@ -368,10 +355,9 @@ MU_TEST(test_many_random) {
    mu_assert_int_eq(inserted, count_items(&list_by_id));
 }
 
-
 /* test iterations. */
 
-MU_TEST(test_iteration) {
+MU_TEST(test_list_iteration) {
 
    listd_item_t *first = NULL;
    listd_item_t *last = NULL;
@@ -430,10 +416,9 @@ MU_TEST(test_iteration) {
    mu_assert_int_eq(n->id, middle->id + 1);
 }
 
-
 /* test finding items. */
 
-MU_TEST(test_find) {
+MU_TEST(test_list_find) {
    listd_item_t *middle = NULL;
    listd_item_t *n = NULL;
 
@@ -458,10 +443,9 @@ MU_TEST(test_find) {
    mu_assert_int_eq(true, NULL == find_item(&list_by_id, (void *)101));
 }
 
-
 /* and of course removal */
 
-MU_TEST(test_remove) {
+MU_TEST(test_list_remove) {
    listd_item_t *first = NULL;
    listd_item_t *last = NULL;
    listd_item_t *middle = NULL;
@@ -539,10 +523,9 @@ MU_TEST(test_remove) {
    }
 }
 
-
 /* test freeing all the items in a populated list. */
 
-MU_TEST(test_free_list) {
+MU_TEST(test_list_free) {
    listd_item_t *n = NULL;
    char *digits[100];
    long r;
@@ -570,11 +553,32 @@ MU_TEST(test_free_list) {
       free(digits[i]);
    }
 }
-
+
 
 /*
- * tests for factors_of
+ * begin tests for miscellaneous functions:
+ *
+ * txbmisc is a catch all of things that don't warrant their own distinct
+ * library header.
  */
+
+/* min and max */
+
+MU_TEST(test_min_max) {
+   mu_assert_int_eq(1, min(1, 2));
+   mu_assert_int_eq(1, min(2, 1));
+   mu_assert_int_eq(2, max(1, 2));
+   mu_assert_int_eq(2, max(2, 1));
+}
+
+MU_TEST(test_even_odd) {
+   mu_assert(is_odd(1), "should be odd");
+   mu_assert(is_even(2), "should be even");
+}
+
+/* still to do: shuffle, can we even? */
+
+/* tests for factors_of */
 
 MU_TEST(test_factor) {
    int factors2[] = {1, 2, 0};
@@ -635,8 +639,55 @@ MU_TEST(test_factor) {
    free(result);
    result = factors_of(33100000);
    free(result);
-
 }
+
+/*
+ * begin tests for string and character functions:
+ *
+ * these are all in txbstr.
+ */
+
+/* test split_string and friends */
+
+MU_TEST(test_split_string) {
+   char *s = "this is a test string";
+   char **splits = split_string(s, " ");
+   char *ver[] = {NULL, "this", "is", "a", "test", "string", NULL};
+   long i = 1;
+   while (splits[i]) {
+      mu_assert_string_eq(ver[i], splits[i]);
+      i += 1;
+   }
+   free(splits[0]);
+   free(splits);
+
+   s = "and, now, for, something! else?";
+   splits = split_string(s, " ,?");
+   char *ver2[] = {NULL, "and", "now", "for", "something!", "else", NULL};
+   i = 1;
+   while (splits[i]) {
+      mu_assert_string_eq(ver2[i], splits[i]);
+      i += 1;
+   }
+   free(splits[0]);
+   free(splits);
+}
+
+MU_TEST(test_chars) {
+   mu_assert_int_eq(1, pos_char("asdf", 0, 's'));
+   mu_assert_int_eq(-1, pos_char("qwerty", 0, 's'));
+   mu_assert_int_eq(-1, pos_char("asdf", 2, 's'));
+   mu_assert_int_eq(0, pos_char("this not that", 0, 't'));
+   mu_assert_int_eq(7, pos_char("this not that", 1, 't'));
+   mu_assert_int_eq(7, pos_char("this not that", 7, 't'));
+   mu_assert_int_eq(9, pos_char("this not that", 8, 't'));
+   mu_assert_int_eq(12, pos_char("this not that", 10, 't'));
+   mu_assert_int_eq(12, pos_char("this not that", 12, 't'));
+   mu_assert_int_eq(-1, pos_char("", 0, 'x'));
+   mu_assert_int_eq(-1, pos_char("asdf", 5, 'f'));
+   mu_assert_int_eq(-1, pos_char("zxcvb", -3, 'g'));
+}
+
 
 /*
  * here we define the whole test suite. sadly there's no runtime
@@ -655,22 +706,30 @@ MU_TEST_SUITE(test_suite) {
    /* run your tests here */
 
    printf("\n\ndoubly linked list\n\n");
-   MU_RUN_TEST(test_create);
-   MU_RUN_TEST(test_count);
-   MU_RUN_TEST(test_insert_ends);
-   MU_RUN_TEST(test_duplicate);
-   MU_RUN_TEST(test_chaining);
-   MU_RUN_TEST(test_many_asc);
-   MU_RUN_TEST(test_many_dsc);
-   MU_RUN_TEST(test_many_random);
-   MU_RUN_TEST(test_iteration);
-   MU_RUN_TEST(test_find);
-   MU_RUN_TEST(test_remove);
-   MU_RUN_TEST(test_free_list);
+   MU_RUN_TEST(test_list_create);
+   MU_RUN_TEST(test_list_count);
+   MU_RUN_TEST(test_list_insert);
+   MU_RUN_TEST(test_list_duplicates);
+   MU_RUN_TEST(test_list_chaining);
+   MU_RUN_TEST(test_list_many_asc);
+   MU_RUN_TEST(test_list_many_dsc);
+   MU_RUN_TEST(test_list_many_random);
+   MU_RUN_TEST(test_list_iteration);
+   MU_RUN_TEST(test_list_find);
+   MU_RUN_TEST(test_list_remove);
+   MU_RUN_TEST(test_list_free);
 
-   printf("\n\nfactors\n\n");
+   printf("\n\nstring and character\n\n");
+   MU_RUN_TEST(test_split_string);
+   MU_RUN_TEST(test_chars);
+
+   printf("\n\nfactor\n\n");
+   MU_RUN_TEST(test_min_max);
+   MU_RUN_TEST(test_even_odd);
    MU_RUN_TEST(test_factor);
 
+   printf("\n\npermute\n\n");
+   /* to be provided */
 }
 
 

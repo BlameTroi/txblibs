@@ -25,7 +25,7 @@ extern "C" {
 #endif /* __cplusplus */
 
 /*
- * forward definitions
+ * forward declarations
  */
 
 /* split a string at (runs of) separators
@@ -51,6 +51,26 @@ split_string(
    const char *str,           /* string to split */
    const char *sep            /* string of possible separator character */
 );
+
+
+/* count how many times a character occurs in a string */
+
+long
+count_char(
+   const char *str,
+   char c
+);
+
+/* return the position of the next occurance of c in str starting
+   at pos. */
+
+long
+pos_char(
+   const char *str,
+   long pos,
+   char c
+);
+
 
 #ifdef TXBSTR_H_IMPLEMENTATION
 
@@ -162,6 +182,32 @@ split_string(const char *str, const char *sep) {
       but may have a few extra NULL pointers tacked on the end. */
 
    return results;
+}
+
+long
+count_char(const char *str, char c) {
+   long n = 0;
+   while (*str) {
+      if (*str == c) {
+         n += 1;
+      }
+      str += 1;
+   }
+   return n;
+}
+
+long
+pos_char(const char *str, long pos, char c) {
+   if (pos > strlen(str)) {
+      return -1;
+   }
+   while (str[pos]) {
+      if (str[pos] == c) {
+         return pos;
+      }
+      pos += 1;
+   }
+   return -1;
 }
 
 #endif /* TXBSTR_H_IMPLEMENTATION */

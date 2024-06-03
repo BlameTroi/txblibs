@@ -15,6 +15,7 @@
  * to copy, modify, publish, and distribute this file as you see fit.
  */
 
+#include <stdbool.h>
 
 #ifdef TXBMISC_H_IMPLEMENTATION
 #include <string.h>
@@ -54,7 +55,7 @@ bool is_even(long);
 bool is_odd(long);
 
 #ifdef TXBMISC_H_IMPLEMENTATION
-
+
 /* as a general rule, i prefer to not use macros to express an algorithm */
 
 /* none of the macro solutions to not having min or max available
@@ -85,19 +86,17 @@ inline double dmax(double x, double y) {
 inline double dmin(double x, double y) {
    return x < y ? x : y;
 }
-
+
 /* quick bit test for even or odd. */
 
 inline bool is_even(long n) {
    return !(n & 1);
 }
 
-
 inline bool is_odd(long n) {
    return (n & 1);
 }
-
-
+
 /* generate a pseudo random integer between low and high inclusive. yes, this
    isn't really secure randomness, but it's suitable for many purposes. the
    idea is from https://stackoverflow.com/a/1202706 */
@@ -105,7 +104,7 @@ inline bool is_odd(long n) {
 inline int rand_between(int low, int high) {
    return rand() % (high + 1 - low) + low;
 }
-
+
 /* shuffle an array of items using the fisher-yates algorithm. the
    array is updated in place. by using an array of void pointers, any
    objects can be shuffled. uses rand_between() and the usual comments
@@ -122,8 +121,7 @@ shuffle(void **cards, int n) {
       i -= 1;
    }
 }
-
-
+
 /* returns an array of integers long enough to hold the factors of
    n and a trailing NULL entry. the caller is responsible for freeing
    the array when it is no longer needed. returns NULL if n < 1. */

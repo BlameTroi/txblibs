@@ -2,7 +2,6 @@
 #ifndef TXBPMUTE_H
 #define TXBPMUTE_H
 
-
 /*
  * released to the public domain by Troy Brumley blametroi@gmail.com
  *
@@ -15,7 +14,6 @@
  * to copy, modify, publish, and distribute this file as you see fit.
  */
 
-
 #ifdef TXBPMUTE_H_IMPLEMENTATION
 #include <string.h>
 #endif /* TXBPMUTE_H_IMPLEMENTATION */
@@ -24,14 +22,13 @@
 extern "C" {
 #endif /* __cplusplus */
 
-
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 
 /*
- * forward definitions
+ * forward declarations
  */
 
 /*
