@@ -31,6 +31,7 @@ Functions are in what I think are sensible file groupings.
 | txbpmute.h | iterative permutation generator   | TXBPMUTE_H_IMPLEMENTATION |
 | txbstr.h   | string utilities (tokenize)       | TXBSTR_H_IMPLEMENTATION   |
 | txblistd.h | doubly linked list management     | TXBLISTD_H_IMPLEMENTATION |
+| txbabort.h | abort and abort_if                | TXBABORT_H_IMPLEMENTATION |
 
 The file ~testlibs.c~ demonstrates the use of some of the library functions. The file ~unittest.c~ has tests for doubly linked lists and other one off functions.
 
@@ -76,3 +77,7 @@ item is listd_item_t
 | item *remove_item(list*, void*)   | unlink item with a matching payload key from the list       |
 | item *next_item(list*, item**)    | iterate forward through the items on the list               |
 | item *prev_item(list*, item**)    | as next_item, but backward                                  |
+
+**** ~txbabort.h~
+
+This file defines two macros, ~abort(msg)~ and ~abort_if(cond, msg)~ which call the functions ~do_abort~ and ~do_abort_if~ to report the error message and then end the process via ~exit(EXIT_FAILURE)~.
