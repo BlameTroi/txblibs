@@ -54,6 +54,13 @@ double dmin(double, double);
 bool is_even(long);
 bool is_odd(long);
 
+bool is_digit(char);
+bool is_word_char(char);
+bool is_whitespace(char);
+bool is_control(char);
+bool is_punctuation(char);
+bool is_bracketing(char);
+
 #ifdef TXBMISC_H_IMPLEMENTATION
 
 /* as a general rule, i prefer to not use macros to express an algorithm */
@@ -95,6 +102,27 @@ inline bool is_even(long n) {
 
 inline bool is_odd(long n) {
    return (n & 1);
+}
+
+/* quick character classifications, by us-ascii and programmer centric rules. */
+
+inline bool is_digit(char c) {
+   return c >= '0' && c <= '9';
+}
+inline bool is_word_char(char c) {
+   return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
+}
+inline bool is_whitespace(char c) {
+   return c == ' ' || c == '\n' || c == '\f' || c == '\r' || c == '\t';
+}
+inline bool is_control(char c) {
+   return c > '\0' && c < ' ';
+}
+inline bool is_punctuation(char c) {
+   return c == '.' || c == ',' || c == '?' || c == '!' || c == ';' || c == ':';
+}
+inline bool is_bracketing(char c) {
+   return c == '[' || c == '(' || c == '{' || c == '}' || c == ')' || c == ']';
 }
 
 /* generate a pseudo random integer between low and high inclusive. yes, this

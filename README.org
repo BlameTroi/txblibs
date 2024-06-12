@@ -39,14 +39,20 @@ The file ~testlibs.c~ demonstrates the use of some of the library functions. The
 
 **** ~txbmisc.h~
 
-| Signature                  | Description                                            |
-|----------------------------+--------------------------------------------------------|
-| int rand_between(int, int) | non cryptographically secure random integer in a range |
-| void shuffle(void **, int) | shuffle an array of pointers or long integers          |
-| long *factors_of(long)     | returns an array of the factors of a long integer      |
-| ?max(?,?) and ?min(?,?)    | min and max for various numeric types                  |
-| bool is_even(long)         |                                                        |
-| bool is_odd(long)          |                                                        |
+| Signature                  | Description                                              |
+|----------------------------+----------------------------------------------------------|
+| int rand_between(int, int) | non cryptographically secure random integer in a range   |
+| void shuffle(void **, int) | shuffle an array of pointers or long integers            |
+| long *factors_of(long)     | returns an array of the factors of a long integer        |
+| ?max(?,?) and ?min(?,?)    | min and max for various numeric types                    |
+| bool is_even(long)         |                                                          |
+| bool is_odd(long)          |                                                          |
+| bool is_digit(char)        | various character classification tests, i'm a            |
+| bool is_word_char(char)    | us programmer so the definitions are from my perspective |
+| bool is_whitespace(char)   |                                                          |
+| bool is_punctuation(char)  |                                                          |
+| bool is_control(char)      |                                                          |
+| bool is_bracketing(char)   |                                                          |
 
 **** ~txbpmute.h~
 
