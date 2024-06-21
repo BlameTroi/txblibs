@@ -25,13 +25,15 @@ It's all public domain as far as I'm concerned, but you can use this software ei
 
 Functions are in what I think are sensible file groupings.
 
-| Filename   | Description                       | Implementation Trigger    |
-|------------+-----------------------------------+---------------------------|
-| txbmisc.h  | missing functions such as min/max | TXBMISC_H_IMPLEMENTATION  |
-| txbpmute.h | iterative permutation generator   | TXBPMUTE_H_IMPLEMENTATION |
-| txbstr.h   | string utilities (tokenize)       | TXBSTR_H_IMPLEMENTATION   |
-| txblistd.h | doubly linked list management     | TXBLISTD_H_IMPLEMENTATION |
-| txbabort.h | abort and abort_if                | TXBABORT_H_IMPLEMENTATION |
+| Filename   | Description                              | Implementation Trigger    |
+|------------+------------------------------------------+---------------------------|
+| txbmisc.h  | missing functions such as min/max        | TXBMISC_H_IMPLEMENTATION  |
+| txbpmute.h | iterative permutation generator          | TXBPMUTE_H_IMPLEMENTATION |
+| txbstr.h   | string utilities (tokenize)              | TXBSTR_H_IMPLEMENTATION   |
+| txblistd.h | doubly linked list management            | TXBLISTD_H_IMPLEMENTATION |
+| txbabort.h | abort and abort_if                       | TXBABORT_H_IMPLEMENTATION |
+| txbpat.h   | big enough subset of regular expressions | TXBPAT_H_IMPLEMENTATION   |
+|            |                                          |                           |
 
 The file ~testlibs.c~ demonstrates the use of some of the library functions. The file ~unittest.c~ has tests for doubly linked lists and other one off functions.
 
@@ -53,36 +55,59 @@ The file ~testlibs.c~ demonstrates the use of some of the library functions. The
 | bool is_punctuation(char)  |                                                          |
 | bool is_control(char)      |                                                          |
 | bool is_bracketing(char)   |                                                          |
+|                            |                                                          |
 
 **** ~txbpmute.h~
 
 | Signature                    | Description                                             |
 |------------------------------+---------------------------------------------------------|
 | int permute_next(int, int**) | permutes the values in an integer array of a given size |
+|                              |                                                         |
 
 **** ~txbstr.h~
 
-| Signature                         | Description                                      |
-|-----------------------------------+--------------------------------------------------|
-| char** split_string(char*, char*) | splits a string on runs of any of the separators |
+str is char *
+
+| Signature                     | Description                                      |
+|-------------------------------+--------------------------------------------------|
+| char** split_string(str, str) | splits a string on runs of any of the separators |
+|                               |                                                  |
 
 **** ~txblistd.h~
 
-list is listd_control_t
+list is listd_control_t *
 item is listd_item_t
 
-| Signature                         | Description                                                 |
-|-----------------------------------+-------------------------------------------------------------|
-| bool reset_listd_control(list*)   | resets/clears the list control block                        |
-| void free_all_items(list*)        | remove and free memory for all items on a list              |
-| item *make_item(list*, void*)     | allocate and initialize an unlinked item and attach payload |
-| bool free_item(list*, item**)     | free an unlinked item and its payload                       |
-| item *find_item(list*, void*)     | does an item with a matching payload key exist in the list  |
-| int count_items(list*)            | how many items are on the list                              |
-| bool add_item(list*, item*)       | and unlinked item from make_item to the list                |
-| item *remove_item(list*, void*)   | unlink item with a matching payload key from the list       |
-| item *next_item(list*, item**)    | iterate forward through the items on the list               |
-| item *prev_item(list*, item**)    | as next_item, but backward                                  |
+| Signature                      | Description                                                 |
+|--------------------------------+-------------------------------------------------------------|
+| bool reset_listd_control(list) | resets/clears the list control block                        |
+| void free_all_items(list)      | remove and free memory for all items on a list              |
+| item *make_item(list, void*)   | allocate and initialize an unlinked item and attach payload |
+| bool free_item(list, item**)   | free an unlinked item and its payload                       |
+| item *find_item(list, void*)   | does an item with a matching payload key exist in the list  |
+| int count_items(list)          | how many items are on the list                              |
+| bool add_item(list, item*)     | and unlinked item from make_item to the list                |
+| item *remove_item(list, void*) | unlink item with a matching payload key from the list       |
+| item *next_item(list, item**)  | iterate forward through the items on the list               |
+| item *prev_item(list, item**)  | as next_item, but backward                                  |
+|                                |                                                             |
+
+**** ~txbpat.h~
+
+a reasonable subset of regular expression pattern matching. no grouping via ~()~ or selection via ~|~. ~{,}~ quantifiers are not implemented, but ~*~, ~?~, and ~+~ are. there are some entry point declarations not explicitly exposed in the header file for debugging and testing, but they are not marked static in the implementation and can be declared as needed. 
+
+pat is cpat_t *
+str is char *
+
+| Signature                  | Description                                             |
+|----------------------------+---------------------------------------------------------|
+| str convert_glob(str)      | convert a filename glob to a regular expression         |
+| pat compile_pattern(str)   | compile a regular expression for later match processing |
+| bool match(str, pat)       | does a string satisfy a pattern                         |
+| bool glob_match(str, pat)  | does a string file name match using glob rules?         |
+| str decompile_pattern(pat) | return a string representation of the pattern           |
+| str pattern_source(pat)    | return a read only copy of the original pattern source  |
+|                            |                                                         |
 
 **** ~txbabort.h~
 

@@ -2,7 +2,6 @@
 
 /* released to the public domain, troy brumley, may 2024 */
 
-#include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,15 +9,10 @@
 
 #include "minunit.h"
 
-#define TXBMISC_H_IMPLEMENTATION
-#include "txbmisc.h"
-
-#define TXBSTR_H_IMPLEMENTATION
-#include "txbstr.h"
-
 #define TXBABORT_H_IMPLEMENTATION
 #include "txbabort.h"
-
+#define TXBMISC_H_IMPLEMENTATION
+#include "txbmisc.h"
 #define TXBPAT_H_IMPLEMENTATION
 #include "txbpat.h"
 
