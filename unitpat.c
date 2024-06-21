@@ -869,19 +869,57 @@ MU_TEST(test_match_classes) {
 
 MU_TEST(test_convert_globs) {
    const char *str = NULL;
-   const cpat_t *pat = NULL;
+
+   debug_on("glob convert");
 
    /* glob searches don't return hidden files by default in unix like systems */
    str = convert_glob("*.*");
+   mu_should(strcmp(str, "^.*\\..*$") == 0);
+   free((void *)str);
+
+   str = convert_glob("dir/file.ext");
+   mu_should(strcmp(str, "^dir/file\\.ext$") == 0);
+   free((void *)str);
+
+   debug_off(NULL);
+}
+
+MU_TEST(test_match_globs) {
+   const char *str = NULL;
+   const cpat_t *pat = NULL;
+
+   debug_on("glob match");
+
+   str = convert_glob("*.*");
    pat = compile_pattern(str);
-   mu_should(strcmp(str, ".*\\..*") == 0);
+   mu_should(glob_match("README.org", pat));
+   mu_shouldnt(glob_match(".gitignore", pat));
+   mu_should(glob_match("a.out", pat));
    free((void *)str);
    free((void *)pat);
 
-   str = convert_glob("dir/file.ext");
-   mu_should(strcmp(str, "dir/file\\.ext") == 0);
+   str = convert_glob(".*.*");
+   pat = compile_pattern(str);
+   mu_shouldnt(glob_match(".gitignore", pat));
+   mu_shouldnt(glob_match("txbpat.h", pat));
+   mu_should(glob_match(".asdf.txt", pat));
    free((void *)str);
+   free((void *)pat);
+
+   str = convert_glob(".*");
+   pat = compile_pattern(str);
+   mu_should(glob_match(".gitignore", pat));
+   mu_shouldnt(glob_match("txbpat.h", pat));
+   /* actually, the following probably doesn't match on windows
+    * file systems, but it does on my mac and i imagine other
+    * unix like systems as well, so i'm treating this match
+    * as if it is correct. */
+   mu_should(glob_match(".asdf.txt", pat));
+
+   debug_off(NULL);
 }
+
+
 
 /*
  * pull in stuff you want to breakpoint debug.
@@ -932,6 +970,7 @@ MU_TEST_SUITE(test_suite) {
    /* file name globbing */
 
    MU_RUN_TEST(test_convert_globs);
+   MU_RUN_TEST(test_match_globs);
 
    /* breakpointing */
    MU_RUN_TEST(test_breakpoint);

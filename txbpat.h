@@ -1200,6 +1200,11 @@ compile_pattern(const char *raw) {
  * this string can be passed to compile_pattern for later match
  * processing.
  *
+ * periods are half assed anchors given their use as filename
+ * separators in dos, but they aren't in unix like systems. i'm
+ * basically ignoring their specialness outside of the first
+ * position of the string.
+ *
  * the library client is responsible for releasing the string's
  * storage when it is no longer needed.
  *
@@ -1212,7 +1217,14 @@ convert_glob(const char *glob) {
 
    /* no input should return a match almost anything */
    if (glob == NULL || strlen(glob) == 0) {
+      if (debugging) {
+         printf("+++convert_glob(null) => \"^[^.]*$");
+      }
       return strdup("^[^.]*$");
+   }
+
+   if (debugging) {
+      printf("\n>>>convert_glob(\"%s\")\n", glob);
    }
 
    /* pattern buffer is 32 or twice the size of the incoming
@@ -1221,6 +1233,8 @@ convert_glob(const char *glob) {
    int pg = 0;
    int ps = 0;
    char *str = malloc(str_max);
+   str[ps] = '^';
+   ps += 1;
    /* TODO decision point here based on leading . in glob */
    while (glob[pg]) {
 
@@ -1284,7 +1298,11 @@ convert_glob(const char *glob) {
    }
 
    /* close the pattern and return */
-   str[ps] = '\0';
+   str[ps] = '$';
+   str[ps+1] = '\0';
+   if (debugging) {
+      printf("<<<convert_glob(\"%s\") => \"%s\"\n", glob, str);
+   }
    return str;
 }
 
@@ -1699,6 +1717,8 @@ match(const char *str, const cpat_t *pat) {
    int ps = 0;
    int pm = -1;
 
+   abort_if(!str || !pat, "match called with illegal missing arguments");
+
    if (debugging) {
       printf("\n\n>>>match(\"%s\", \"%s\")\n", str, pattern_source(pat));
    }
@@ -1718,12 +1738,48 @@ match(const char *str, const cpat_t *pat) {
  * if the pattern matches the string within the rules for globbing.
  * you should use convert_glob to produce a regular expression style
  * search string and then compile it with compile_pattern.
+ *
+ * globbing wants the whole string to be a filename, so the match has
+ * to be from the start of the string. currently not checking to see
+ * if the whole string is consumed yet.
  */
 
 bool
 glob_match(const char *str, const cpat_t *pat) {
-   /* not yet implemented */
-   return false;
+
+   int ps = 0;
+   int pm = -1;
+
+   abort_if(!str || !pat, "glob_match called with illegal missing arguments");
+
+   if (debugging) {
+      printf("\n\n>>>glob_match(\"%s\", \"%s\")\n", str, pattern_source(pat));
+   }
+
+   /* boy this is ugly */
+   if (str[0] == '.') {
+      int pp = 0;
+      if (pat[pp] == PAT_BEG) {
+         pp = next_pattern(pat, pp);
+      }
+      if (pat[pp] == PAT_BOL) {
+         pp = next_pattern(pat, pp);
+      }
+      if (pat[pp] == PAT_LIT) {
+         if (pat[pp+2] == '.') {
+            pm = match_from(str, ps, pat, 0);
+         } else {
+            pm = -1;
+         }
+      }
+   } else {
+      pm = match_from(str, ps, pat, 0);
+   }
+
+   if (debugging) {
+      printf("<<<glob_match(\"%s\", \"%s\") => %s\n", str, pattern_source(pat), pm == 0 ? "true" : "false");
+   }
+   return pm == 0;
 }
 
 
