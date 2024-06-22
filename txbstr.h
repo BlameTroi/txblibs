@@ -46,7 +46,7 @@ extern "C" {
    free(ret[0]);          free the string copy
    free(ret);             free the spit pointers */
 
-char **
+const char **
 split_string(
    const char *str,           /* string to split */
    const char *sep            /* string of possible separator character */
@@ -55,7 +55,7 @@ split_string(
 
 /* count how many times a character occurs in a string */
 
-long
+int
 count_char(
    const char *str,
    char c
@@ -64,10 +64,10 @@ count_char(
 /* return the position of the next occurance of c in str starting
    at pos. */
 
-long
+int
 pos_char(
    const char *str,
-   long pos,
+   int pos,
    char c
 );
 
@@ -91,13 +91,16 @@ pos_char(
  * pointer array.
  */
 
-char **
-split_string(const char *str, const char *sep) {
+const char **
+split_string(
+   const char *str,
+   const char *sep
+) {
 
    /* the list of tokens, an array, NULL terminated. these all point
       into a copy of `str` if one is made. */
 
-   char **results = NULL;
+   const char **results = NULL;
 
    /*
     * guards for special cases:
@@ -184,9 +187,12 @@ split_string(const char *str, const char *sep) {
    return results;
 }
 
-long
-count_char(const char *str, char c) {
-   long n = 0;
+int
+count_char(
+   const char *str,
+   char c
+) {
+   int n = 0;
    while (*str) {
       if (*str == c) {
          n += 1;
@@ -196,8 +202,12 @@ count_char(const char *str, char c) {
    return n;
 }
 
-long
-pos_char(const char *str, long pos, char c) {
+int
+pos_char(
+   const char *str,
+   int pos,
+   char c
+) {
    if (pos > strlen(str)) {
       return -1;
    }

@@ -651,14 +651,14 @@ MU_TEST(test_factor) {
 
 MU_TEST(test_split_string) {
    char *s = "this is a test string";
-   char **splits = split_string(s, " ");
+   const char **splits = split_string(s, " ");
    char *ver[] = {NULL, "this", "is", "a", "test", "string", NULL};
    long i = 1;
    while (splits[i]) {
       mu_assert_string_eq(ver[i], splits[i]);
       i += 1;
    }
-   free(splits[0]);
+   free((void *)splits[0]);
    free(splits);
 
    s = "and, now, for, something! else?";
@@ -669,7 +669,7 @@ MU_TEST(test_split_string) {
       mu_assert_string_eq(ver2[i], splits[i]);
       i += 1;
    }
-   free(splits[0]);
+   free((void *)splits[0]);
    free(splits);
 }
 

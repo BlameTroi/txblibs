@@ -66,14 +66,14 @@ main() {
    char *s = "this is a test string";
    printf("splitting '%s'\n", s);
 
-   char **splits = split_string(s, " ");
+   const char **splits = split_string(s, " ");
    int i = 1;
    while (splits[i]) {
       printf("'%s'\n", splits[i]);
       i += 1;
    }
 
-   free(splits[0]);
+   free((void *)splits[0]);
    free(splits);
 
    return 0;
