@@ -1,6 +1,4 @@
-/* txbpmute.h -- blametroi's common utility functions -- */
-#ifndef TXBPMUTE_H
-#define TXBPMUTE_H
+/* pmute.c -- blametroi's common utility functions -- */
 
 /*
  * released to the public domain by Troy Brumley blametroi@gmail.com
@@ -14,51 +12,11 @@
  * to copy, modify, publish, and distribute this file as you see fit.
  */
 
-#ifdef TXBPMUTE_H_IMPLEMENTATION
 #include <string.h>
-#endif /* TXBPMUTE_H_IMPLEMENTATION */
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-
-/*
- * forward declarations
- */
-
-/*
- * permute_next(int n, int *ints)
- *
- */
-
-/* return the next possible permutation of the n unique integers in
-   the array ints. to get all possible iterations, start with the
-   elements of ints in ascending order. the array is updated on each
-   call and the function returns 0 when no more permutations are
-   possible.
-
-   sample code:
-
-   int n = 5;
-   int ints[n];
-   for (int i = 0; i < n; i++)
-      ints[i] = i;
-   print_current(n, ints);
-   while (permute_next(n, ints))
-      print_current(&iter, n, ints); */
-
-int
-permute_next(
-   int n,        /* number of integers in the array *ints */
-   int *ints     /* n unique integers */
-);
-
-#ifdef TXBPMUTE_H_IMPLEMENTATION
+#include "../inc/pmute.h"
 
 
 /* permute the 'n' unique integers in 'ints' on successive calls until
@@ -125,11 +83,3 @@ permute_next(int n, int *ints) {
    /* no more permutations available */
    return 0;
 }
-
-#endif /* TXBPMUTE_H_IMPLEMENTATION */
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-#endif /* TXBPMUTE_H */

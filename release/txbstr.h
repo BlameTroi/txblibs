@@ -1,6 +1,12 @@
+/*
+ * single file header generated via:
+ * buildhdr --macro TXBSTR --pub inc/str.h --priv src/str.c 
+ */
+
+#ifndef TXBSTR_SINGLE_HEADER
+#define TXBSTR_SINGLE_HEADER
+/* *** begin pub *** */
 /* txbstr.h -- blametroi's common utility functions -- */
-#ifndef TXBSTR_H
-#define TXBSTR_H
 
 
 /*
@@ -16,35 +22,29 @@
  */
 
 
-#ifdef TXBSTR_H_IMPLEMENTATION
-#include <string.h>
-#endif /* TXBSTR_H_IMPLEMENTATION */
-
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-/*
- * forward declarations
- */
 
 /* split a string at (runs of) separators
-
-   strdup is used to make a copy of the string and that string is
-   then written over by strtok to find and mark the splits.
-
-   returns the copy and splits in an array which is big enough to hold
-   a pointer to the copy, pointers to each split, and a trailing NULL
-   pointer:
-
-      `copy | tok1 | tok2 | ... | tokn | NULL`
-
-   there can have a few extra NULL pointers tacked on the end but you
-   should not count on their presence. this memory should be released
-   when no longer needed in two steps:
-
-   free(ret[0]);          free the string copy
-   free(ret);             free the spit pointers */
+ *
+ * strdup is used to make a copy of the string and that string is
+ * then written over by strtok to find and mark the splits.
+ *
+ * returns the copy and splits in an array which is big enough to hold
+ * a pointer to the copy, pointers to each split, and a trailing NULL
+ * pointer:
+ *
+ *    `copy | tok1 | tok2 | ... | tokn | NULL`
+ *
+ * there can have a few extra NULL pointers tacked on the end but you
+ * should not count on their presence. this memory should be released
+ * when no longer needed in two steps:
+ *
+ * free(ret[0]);          free the string copy
+ * free(ret);             free the spit pointers
+ */
 
 const char **
 split_string(
@@ -53,7 +53,9 @@ split_string(
 );
 
 
-/* count how many times a character occurs in a string */
+/*
+ * count how many times a character occurs in a string
+ */
 
 int
 count_char(
@@ -61,8 +63,11 @@ count_char(
    char c
 );
 
-/* return the position of the next occurance of c in str starting
-   at pos. */
+
+/*
+ * return the position of the next occurance of c in str starting
+ * at pos.
+ */
 
 int
 pos_char(
@@ -71,8 +76,33 @@ pos_char(
    char c
 );
 
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
+/* *** end pub *** */
 
-#ifdef TXBSTR_H_IMPLEMENTATION
+#endif /* TXBSTR_SINGLE_HEADER */
+
+#ifdef TXBSTR_IMPLEMENTATION
+#undef TXBSTR_IMPLEMENTATION
+/* *** begin priv *** */
+/* str.c -- blametroi's common utility functions -- */
+
+/*
+ * released to the public domain by Troy Brumley blametroi@gmail.com
+ *
+ * this is a header only implementation of various bits of code that i
+ * keep repeating in my hobby programming that i want around without
+ * the hassle of managing library dependencies.
+ *
+ * this software is dual-licensed to the public domain and under the
+ * following license: you are granted a perpetual, irrevocable license
+ * to copy, modify, publish, and distribute this file as you see fit.
+ */
+
+
+#include <stdlib.h>
+#include <string.h>
 
 
 /*
@@ -186,7 +216,7 @@ split_string(
 
    return results;
 }
-
+
 int
 count_char(
    const char *str,
@@ -201,7 +231,7 @@ count_char(
    }
    return n;
 }
-
+
 int
 pos_char(
    const char *str,
@@ -219,11 +249,6 @@ pos_char(
    }
    return -1;
 }
+/* *** end priv *** */
 
-#endif /* TXBSTR_H_IMPLEMENTATION */
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-#endif /* TXBSTR_H */
+#endif /* TXBSTR_IMPLEMENTATION */

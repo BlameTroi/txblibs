@@ -1,6 +1,12 @@
+/*
+ * single file header generated via:
+ * buildhdr --macro TXBLISTD --pub inc/listd.h --priv src/listd.c 
+ */
+
+#ifndef TXBLISTD_SINGLE_HEADER
+#define TXBLISTD_SINGLE_HEADER
+/* *** begin pub *** */
 /* txblistd.h -- blametroi's doubly linked list functions -- */
-#ifndef TXBLISTD_H
-#define TXBLISTD_H
 
 /*
  * a header only implementation of a doubly linked list.
@@ -24,15 +30,7 @@
  * to copy, modify, publish, and distribute this file as you see fit.
  */
 
-
-#ifdef TXBLISTD_H_IMPLEMENTATION
-
-#include <assert.h>
 #include <stdbool.h>
-#include <stdlib.h>
-#include <string.h>
-
-#endif /* TXBLISTD_H_IMPLEMENTATION */
 
 #ifdef __cplusplus
 extern "C" {
@@ -167,8 +165,49 @@ prev_item(
    listd_item_t *(*prior_item)
 );
 
-#ifdef TXBLISTD_H_IMPLEMENTATION
-
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
+/* *** end pub *** */
+
+#endif /* TXBLISTD_SINGLE_HEADER */
+
+#ifdef TXBLISTD_IMPLEMENTATION
+#undef TXBLISTD_IMPLEMENTATION
+/* *** begin priv *** */
+/* listd.c -- blametroi's doubly linked list functions -- */
+
+
+/*
+ * a header only implementation of a doubly linked list.
+ *
+ * the list is kept in order by a key, which can be either an
+ * identifying long integer, or by some unique value in the payload
+ * that each list node carries.
+ *
+ * each list will have a control block containing the approriate
+ * counters, links, configuration information, and when function
+ * pointers for routines to compare payload key values and to
+ * dynamically free payload storage when a node is freed.
+ *
+ * the api is reasonably complete, but i'm still leaving the setup for
+ * the list control blocks in open user code.
+ *
+ * released to the public domain by Troy Brumley blametroi@gmail.com
+ *
+ * this software is dual-licensed to the public domain and under the
+ * following license: you are granted a perpetual, irrevocable license
+ * to copy, modify, publish, and distribute this file as you see fit.
+ */
+
+
+
+#include <assert.h>
+#include <stdbool.h>
+#include <stdlib.h>
+#include <string.h>
+
+
 /*
  * initialize or reset the list control block. if the list is not
  * empty, the attempt fails and false is returned.
@@ -184,7 +223,7 @@ reset_listd_control(listd_control_t *list) {
    list->initialized = false;
    return true;
 }
-
+
 /*
  * remove and free all of the items linked on the list. this is
  * equivalent to repeatedly calling remove_item and free_item on
@@ -213,7 +252,7 @@ free_all_items(listd_control_t *list) {
    list->tail = NULL;
    list->count = 0;
 }
-
+
 /*
  * allocate storage and do basic initialization of a list item. this
  * storage should be freed when no longer needed. while it can be
@@ -246,7 +285,7 @@ make_item(listd_control_t *list, void *id_or_payload_pointer) {
 
    return curr;
 }
-
+
 /*
  * free a item's storage. this expects the item to be owned by the
  * controlling list but does not check to see if the item is on the
@@ -294,7 +333,7 @@ free_item(listd_control_t *list, listd_item_t *(*address_of_item_pointer)) {
 
    return true;
 }
-
+
 /*
  * find a item in the list by either id or payload. the second
  * argument is used to identify the item in the list. since the list
@@ -335,7 +374,7 @@ find_item(listd_control_t *list, void *id_or_payload_pointer) {
 
    return NULL;
 }
-
+
 /*
  * returns the count of the items on the link list by chasing the
  * link chain.
@@ -357,7 +396,7 @@ count_items(listd_control_t *list) {
 
    return n;
 }
-
+
 /*
  * add a item to the list. returns true if the item was added, or false if
  * the item is a duplicate another item in the list.
@@ -426,7 +465,7 @@ add_item(listd_control_t *list, listd_item_t *unlinked_item) {
    list->count += 1;
    return true;
 }
-
+
 /*
  * remove a item from the list by either id or payload. the second
  * argument should be whatever the compare_payload function expects as
@@ -498,7 +537,7 @@ remove_item(listd_control_t *list, void *id_or_payload_pointer) {
    /* it's not there */
    return NULL;
 }
-
+
 /*
  * iterate over items moving forward. the second argument is a pointer
  * to the address of item to iterate from. each call updates this
@@ -524,7 +563,7 @@ next_item(listd_control_t *list, listd_item_t *(*next_item)) {
    *next_item = (*next_item)->next;
    return *next_item;
 }
-
+
 /*
  * iterate over items moving backward. the second argument is a
  * pointer to the address of item to iterate from. each call updates
@@ -550,12 +589,6 @@ prev_item(listd_control_t *list, listd_item_t *(*prior_item)) {
    *prior_item = (*prior_item)->prev;
    return *prior_item;
 }
+/* *** end priv *** */
 
-
-#endif /* TXBLISTD_H_IMPLEMENTATION */
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-#endif /* TXBLISTD_H */
+#endif /* TXBLISTD_IMPLEMENTATION */

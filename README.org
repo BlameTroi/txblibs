@@ -11,7 +11,9 @@ So let it be done.
 
 ** installation and use
 
-I keep all these headers in my ~$HOME/.local/include/~ directory and add that to my ~$CPATH~ in varioius ~makefiles~.
+The headers to use are in the ~release~ subdirectory. They are built from the ~makefile~ with my version of the library packer program, found in the ~buildhdr~ subdirectory. The source for each header is a pair of files in the ~inc~ and ~src~ subdirctories. txbabort.h is build from inc/abort.h and src/abort.c, and so on.
+
+I keep all the release headers in my ~$HOME/.local/include/~ directory and add that to my ~$CPATH~ in varioius ~makefiles~.
 
 Include the appropriate headers in your project. Each header has a preprocessor variable to control when the executable code will be included. ~#define~ this in only one source file per linked output.
 
@@ -25,15 +27,15 @@ It's all public domain as far as I'm concerned, but you can use this software ei
 
 Functions are in what I think are sensible file groupings.
 
-| Filename   | Description                              | Implementation Trigger    |
-|------------+------------------------------------------+---------------------------|
-| txbmisc.h  | missing functions such as min/max        | TXBMISC_H_IMPLEMENTATION  |
-| txbpmute.h | iterative permutation generator          | TXBPMUTE_H_IMPLEMENTATION |
-| txbstr.h   | string utilities (tokenize)              | TXBSTR_H_IMPLEMENTATION   |
-| txblistd.h | doubly linked list management            | TXBLISTD_H_IMPLEMENTATION |
-| txbabort.h | abort and abort_if                       | TXBABORT_H_IMPLEMENTATION |
-| txbpat.h   | big enough subset of regular expressions | TXBPAT_H_IMPLEMENTATION   |
-|            |                                          |                           |
+| Filename   | Description                              | Implementation Trigger  |
+|------------+------------------------------------------+-------------------------|
+| txbmisc.h  | missing functions such as min/max        | TXBMISC_IMPLEMENTATION  |
+| txbpmute.h | iterative permutation generator          | TXBPMUTE_IMPLEMENTATION |
+| txbstr.h   | string utilities (tokenize)              | TXBSTR_IMPLEMENTATION   |
+| txblistd.h | doubly linked list management            | TXBLISTD_IMPLEMENTATION |
+| txbabort.h | abort and abort_if                       | TXBABORT_IMPLEMENTATION |
+| txbpat.h   | big enough subset of regular expressions | TXBPAT_IMPLEMENTATION   |
+|            |                                          |                         |
 
 The file ~testlibs.c~ demonstrates the use of some of the library functions. The file ~unittest.c~ has tests for doubly linked lists and other one off functions.
 

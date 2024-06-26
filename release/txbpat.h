@@ -1,7 +1,12 @@
-/* txbpat.h -- blametroi's common utility functions -- */
-#ifndef TXBPAT_H
-#define TXBPAT_H
+/*
+ * single file header generated via:
+ * buildhdr --macro TXBPAT --pub inc/pat.h --priv src/pat.c 
+ */
 
+#ifndef TXBPAT_SINGLE_HEADER
+#define TXBPAT_SINGLE_HEADER
+/* *** begin pub *** */
+/* pat.h -- blametroi's common utility functions -- */
 
 /*
  * released to the public domain by Troy Brumley blametroi@gmail.com
@@ -14,6 +19,7 @@
  * following license: you are granted a perpetual, irrevocable license
  * to copy, modify, publish, and distribute this file as you see fit.
  */
+
 
 /*
  * a match string expression is compiled into pattern buffer. the
@@ -54,14 +60,13 @@
  * more repetitions of abc, and instead will match (abc, abc), abc))
  * and so on.
  */
-
+
+#include <stdbool.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-#include <stdbool.h>
-
-
 /*
  * externally visible declarations/forwards:
  *
@@ -240,9 +245,75 @@ glob_match(
    const char *str,
    const cpat_t *pat
 );
-
-#ifdef TXBPAT_H_IMPLEMENTATION
 
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
+/* *** end pub *** */
+
+#endif /* TXBPAT_SINGLE_HEADER */
+
+#ifdef TXBPAT_IMPLEMENTATION
+#undef TXBPAT_IMPLEMENTATION
+/* *** begin priv *** */
+/* pat.c -- blametroi's common utility functions -- */
+
+
+/*
+ * released to the public domain by Troy Brumley blametroi@gmail.com
+ *
+ * this is a header only implementation of various bits of code that i
+ * keep repeating in my hobby programming that i want around without
+ * the hassle of managing library dependencies.
+ *
+ * this software is dual-licensed to the public domain and under the
+ * following license: you are granted a perpetual, irrevocable license
+ * to copy, modify, publish, and distribute this file as you see fit.
+ */
+
+
+/*
+ * a match string expression is compiled into pattern buffer. the
+ * buffer is a one dimensional array of unsigned integers. a pattern
+ * item occupies at least one entry in the array. the item code is
+ * symbolically identified by the macros PAT_???.
+ *
+ * the first item in the array is always PAT_BEG, and the last is
+ * always PAT_END. PAT_END is guaranteed to be followed by an
+ * unsigned integer zero.
+ *
+ * pattern items occupy a variable number of slots.
+ *
+ * many single character match string specifications take only
+ * one slot:
+ *
+ * ^ for start of line, $ for end of line, and . for any single
+ * character matches all take one slot.
+ *
+ * common character type matches for digits, letters, and whitespace
+ * all take one slot (\d, \w, \s) as do their negations.
+ *
+ * quantifiers (*, ?, +) all take only one slot.
+ *
+ * character classes or groups, where any one character can be matched
+ * or excluded from a list ([], [^]) occupy three slots plus one slot
+ * for each character in the group.
+ *
+ * runs of characters to match exactly also occupy three slots plus
+ * one slot for each character in the run.
+ *
+ * while literals are stored and processed as runs in the pattern
+ * buffer, a quantifier following a literal run actually only refers
+ * to the _last_ character of the run. [ab]cde* matches acd, bcd,
+ * bcdeeeee, and so on, not acdecde.
+ *
+ * as yet there is no match grouping so (abc)* does not mean zero or
+ * more repetitions of abc, and instead will match (abc, abc), abc))
+ * and so on.
+ */
+
+#include <stdbool.h>
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -251,6 +322,8 @@ glob_match(
 #include "txbmisc.h"
 #include "txbstr.h"
 #include "txbabort.h"
+
+
 
 /*
  * these functions provide a limited implementation of regular
@@ -318,7 +391,7 @@ glob_match(
  * any character or token not listed above is treated as a literal to
  * be matched exactly.
  */
-
+
 /*
  * programming notes:
  *
@@ -344,7 +417,7 @@ glob_match(
  * deal either way, and this approach should handle switching to
  * wchar_t based strings instead of char without much difficulty.
  */
-
+
 /*
  * these are debugging and testing helpers. they are not included in
  * the external declarations for txbpat but they aren't marked static
@@ -408,7 +481,7 @@ displayable_match_code(cpat_t code) {
    }
    return match_codes[i].text;
 }
-
+
 /*
  * miscellaneous predicates and helpers.
  */
@@ -451,7 +524,7 @@ next_pattern(const cpat_t *pat, const int pp) {
    int np = pp + pattern_lengtn(pat, pp);
    return np;
 }
-
+
 /*
  * use the debug_on and debug_off functions to toggle display of
  * compiled patterns and other logging as needed.
@@ -474,7 +547,7 @@ debug_off(char *msg) {
    }
    debugging = false;
 }
-
+
 /*
  * a copy of the original pattern source string is carried in the
  * pat_beg entry at the start of the compiled pattern buffer.
@@ -563,7 +636,7 @@ print_compiled_pattern(cpat_t *pat) {
 
    }
 }
-
+
 /*
  * validate_compiled_pattern provides a way to compare a pattern
  * against an expected value.
@@ -592,7 +665,7 @@ validate_compiled_pattern(const cpat_t *pat, int *val) {
    }
    return true;
 }
-
+
 
 /*
  * expand_range creates a new copy of the pattern string with any embedded ranges in
@@ -645,7 +718,7 @@ expand_range(const char *raw) {
    exp[pe] = '\0';
    return exp;
 }
-
+
 /*
  * add_pattern_item is called by compile_pattern to build the encoded
  * pattern buffer from a pattern match string.
@@ -760,7 +833,7 @@ add_pattern_item(
       pat[*pos] = this_item;
    }
 }
-
+
 /*
  * reorganize the pattern buffer. this is done to put quantifiers
  * ahead of the item they refer to which simplifies the match
@@ -866,7 +939,7 @@ reorganize_pattern_buffer(const cpat_t *pat) {
 
    return res;
 }
-
+
 /*
  * compile_pattern takes a match string and creates an encoded pattern
  * for use by match.
@@ -1193,7 +1266,7 @@ compile_pattern(const char *raw) {
 
    return pat;
 }
-
+
 /*
  * convert a dos like file globbing string to a proper search string.
  *
@@ -1305,7 +1378,7 @@ convert_glob(const char *glob) {
    }
    return str;
 }
-
+
 /*
  * match_this_item is called by match_from and match_from_r to
  * determine if the string at the current position matches with the
@@ -1490,7 +1563,7 @@ match_this_item(
    abort(em);
    return false;
 }
-
+
 /*
  * match_from is called either by match to check a full string against
  * a pattern, or recursively to match a substring against the
@@ -1704,7 +1777,7 @@ match_from(
    }
    return res;
 }
-
+
 /*
  * match takes a string and a compiled pattern and returns true if the
  * pattern is found at least once in the string. the match is
@@ -1732,7 +1805,7 @@ match(const char *str, const cpat_t *pat) {
    }
    return pm != -1;
 }
-
+
 /*
  * glob_match takes a string and a compiled pattern and returns true
  * if the pattern matches the string within the rules for globbing.
@@ -1781,12 +1854,6 @@ glob_match(const char *str, const cpat_t *pat) {
    }
    return pm == 0;
 }
+/* *** end priv *** */
 
-
-#endif /* TXBPAT_H_IMPLEMENTATION */
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-#endif /* TXBPAT_H */
+#endif /* TXBPAT_IMPLEMENTATION */

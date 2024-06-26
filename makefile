@@ -13,19 +13,25 @@ LDFLAGS=
 
 
 clean:
-	rm -rf *.o *.dSYM/ unitpat
+	rm release/txb*.h
 
 
-all: unitpat
+all: abort listd misc pat pmute str
 
+abort: inc/abort.h src/abort.c
+	buildhdr --macro TXBABORT --intro LICENSE --pub inc/abort.h --priv src/abort.c >release/txbabort.h
 
-run:
-	./unitpat
+listd: inc/listd.h src/listd.c
+	buildhdr --macro TXBLISTD --intro LICENSE --pub inc/listd.h --priv src/listd.c >release/txblistd.h
 
+misc: inc/misc.h src/misc.c
+	buildhdr --macro TXBMISC --intro LICENSE --pub inc/misc.h --priv src/misc.c >release/txbmisc.h
 
-unitpat.o: unitpat.c txbpat.h
-	$(CC) $(CFLAGS) -c unitpat.c
+pat: inc/pat.h src/pat.c
+	buildhdr --macro TXBPAT --intro LICENSE --pub inc/pat.h --priv src/pat.c >release/txbpat.h
 
+pmute: inc/pmute.h src/pmute.c
+	buildhdr --macro TXBPMUTE --inro LICENSE --pub inc/pmute.h --priv src/pmute.c >release/txbpmute.h
 
-unitpat: unitpat.o 
-	$(CC) $(CFLAGS) -o unitpat unitpat.o $(LDFLAGS)
+str: inc/str.h src/str.c
+	buildhdr --macro TXBSTR --intro LICENSE --pub inc/str.h --priv src/str.c >release/txbstr.h
