@@ -31,7 +31,7 @@ pat: inc/pat.h src/pat.c
 	buildhdr --macro TXBPAT --intro LICENSE --pub inc/pat.h --priv src/pat.c >release/txbpat.h
 
 pmute: inc/pmute.h src/pmute.c
-	buildhdr --macro TXBPMUTE --inro LICENSE --pub inc/pmute.h --priv src/pmute.c >release/txbpmute.h
+	buildhdr --macro TXBPMUTE --intro LICENSE --pub inc/pmute.h --priv src/pmute.c >release/txbpmute.h
 
 str: inc/str.h src/str.c
 	buildhdr --macro TXBSTR --intro LICENSE --pub inc/str.h --priv src/str.c >release/txbstr.h
