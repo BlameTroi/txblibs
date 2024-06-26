@@ -1,17 +1,15 @@
 /* pat.h -- blametroi's common utility functions -- */
 
 /*
- * released to the public domain by Troy Brumley blametroi@gmail.com
+ * this is a header only implementation of a subset of a regular
+ * expression parser and pattern matcher.
  *
- * this is a header only implementation of various bits of code that i
- * keep repeating in my hobby programming that i want around without
- * the hassle of managing library dependencies.
+ * released to the public domain by Troy Brumley blametroi@gmail.com
  *
  * this software is dual-licensed to the public domain and under the
  * following license: you are granted a perpetual, irrevocable license
  * to copy, modify, publish, and distribute this file as you see fit.
  */
-
 
 /*
  * a match string expression is compiled into pattern buffer. the
@@ -52,13 +50,13 @@
  * more repetitions of abc, and instead will match (abc, abc), abc))
  * and so on.
  */
-
+
 #include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-
+
 /*
  * externally visible declarations/forwards:
  *
@@ -66,7 +64,6 @@ extern "C" {
  * pattern buffer, and META for the character in the pattern source
  * string.
  */
-
 
 /*
  * compiled pattern item codes.
@@ -105,7 +102,6 @@ extern "C" {
 #define PAT_DIG        86
 #define PAT_NOT_DIG    87
 #define PAT_END        99
-
 
 /*
  * pattern meta characters:
@@ -148,7 +144,6 @@ extern "C" {
 #define META_REP_COUNT  '{'
 #define META_REP_END_COUNT '}'
 
-
 /*
  * a compiled pattern buffer is a zero terminated list of unsigned
  * integers. the pattern item code is symbolically identfied by the
@@ -159,11 +154,10 @@ extern "C" {
  * responsible for releasing it.
  *
  * as an aid to debugging, the original pattern definition string
- * is available at the end of pattern buffer.
+ * is available in the pattern buffer.
  */
 
 typedef unsigned int cpat_t;
-
 
 /*
  * these functions can be used to turn on various undocumented debug
@@ -176,7 +170,6 @@ debug_on(char *optional_print);
 void
 debug_off(char *optional_print);
 
-
 /*
  * given a null terminated match string, return a compiled pattern
  * buffer.
@@ -185,14 +178,12 @@ debug_off(char *optional_print);
 const cpat_t *
 compile_pattern(const char *str);
 
-
 /*
  * retrieve a copy of the source of the compiled pattern.
  */
 
 const char *
 pattern_source(const cpat_t *);
-
 
 /*
  * decompile the pattern buffer, which might be different than the
@@ -201,7 +192,6 @@ pattern_source(const cpat_t *);
 
 char *
 decompile_pattern(const cpat_t *);
-
 
 /*
  * converts a DOS like glob pattern for filenames into a match string
@@ -212,7 +202,6 @@ const char *
 convert_glob(
    const char *str
 );
-
 
 /*
  * match a string, generally assumed to be a line of text, against a
@@ -225,7 +214,6 @@ match(
    const cpat_t *pat
 );
 
-
 /*
  * match a string, generally assumed to be a file name, against a
  * compiled pattern, while honoring some globbing restrictions for
@@ -237,7 +225,6 @@ glob_match(
    const char *str,
    const cpat_t *pat
 );
-
 
 #ifdef __cplusplus
 }

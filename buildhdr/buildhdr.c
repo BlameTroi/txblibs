@@ -1,56 +1,26 @@
-/* txbuildh.c -- blametroi's c single file header library packager -- troy brumley*/
+/* buildhdr.c -- blametroi's c single file header library packager -- troy brumley*/
 
 /* released to the public domain, troy brumley, june 2024 */
 
-#include <errno.h>
+#include <sys/errno.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <dirent.h>
+#include <sys/unistd.h>
 #include <unistd.h>
 
-#define TXBABORT_H_IMPLEMENTATION
+#define TXBABORT_IMPLEMENTATION
 #include "txbabort.h"
 
-#define TXBSTR_H_IMPLEMENTATION
+#define TXBSTR_IMPLEMENTATION
 #include "txbstr.h"
 
-#define TXBMISC_H_IMPLEMENTATION
+#define TXBMISC_IMPLEMENTATION
 #include "txbmisc.h"
 
-#define TXBPAT_H_IMPLEMENTATION
+#define TXBPAT_IMPLEMENTATION
 #include "txbpat.h"
-
-
-void
-list_dir(const char *str) {
-   DIR *dirp;
-   if (str) {
-      dirp = opendir(str);
-   } else {
-      dirp = opendir(".");
-   }
-   abort_if(!dirp, "could not open directory");
-   const char *glob = "*.c";
-   const char *gexp = convert_glob(glob);
-   const cpat_t *gpat = compile_pattern(gexp);
-   struct dirent *dp;
-   while ((dp = readdir(dirp)) != NULL) {
-      printf("%s\n", dp->d_name);
-      if (glob_match(dp->d_name, gpat)) {
-         printf("found %s for glob %s regexp %s\n", dp->d_name, glob, pattern_source(gpat));
-      }
-   }
-   closedir(dirp);
-}
-
-void
-list_args(int argc, const char **argv) {
-   for (int i = 0; i < argc; i++) {
-      printf("%2d\t%s\n", i, argv[i]);
-   }
-}
 
 /*
  * sometime globals are the right answer, but grouping them in a typedef namespace
@@ -86,7 +56,7 @@ ctx_t ctx = {
 };
 
 /*
- * common predicates and small helper functions.
+ * common predicates and helper functions.
  */
 
 
@@ -114,6 +84,7 @@ pat_include_prefix(void) {
    }
    return pat;
 }
+
 
 /*
  * is a string a valid macro prefix?
@@ -162,10 +133,38 @@ is_endarg(const char *str) {
 }
 
 
-/* is this a formfeed line? */
+/*
+ * does this line begin with a formfeed?
+ */
+
 bool
 is_formfeed(const char *str) {
    return str && str[0] == '\f' && strlen(str) > 1;
+}
+
+
+/*
+ * if the line is a #includde directive, does it reference one of the
+ * file in --priv? if so, it should be suppressed.
+ */
+
+bool
+is_suppressable_header(char *str) {
+   if (!match(str, pat_include_prefix())) {
+      return false;
+   }
+   for (int i = 0; i < ctx.pub_count; i++) {
+      /* the .h in the filename will treat the . as a wildcard, but that's
+       * good enough for our purposes. */
+      const cpat_t *pat = compile_pattern(ctx.argv[ctx.pub_start + 1 + i]);
+      abort_if(pat == NULL,
+               "could not compile suppressable header file name pattern");
+      if (match(str, pat)) {
+         return true;
+      }
+      free((void *)pat);
+   }
+   return false;
 }
 
 /*
@@ -332,6 +331,7 @@ arguments_ok(void) {
    }
 
    /* make sure we have at least one public file */
+
    i = get_next_optval(ctx.pub_start);
    if (i == -1) {
       bad_args = true;
@@ -395,6 +395,11 @@ arguments_ok(void) {
    return !bad_args;
 }
 
+/*
+ * copy file line by line to ouptut, typically stdout. there is minimal
+ * error handling. lines are arbitrarily maxed at 4k.
+ */
+
 void
 print_file(FILE *where, const char *name) {
    FILE *there = fopen(name, "r");
@@ -418,24 +423,11 @@ print_file(FILE *where, const char *name) {
    fclose(there);
 }
 
-bool
-is_suppressable_header(char *str) {
-   if (!match(str, pat_include_prefix())) {
-      return false;
-   }
-   for (int i = 0; i < ctx.pub_count; i++) {
-      /* the .h in the filename will treat the . as a wildcard, but that's
-       * good enough for our purposes. */
-      const cpat_t *pat = compile_pattern(ctx.argv[ctx.pub_start + 1 + i]);
-      abort_if(pat == NULL,
-               "could not compile suppressable header file name pattern");
-      if (match(str, pat)) {
-         return true;
-      }
-      free((void *)pat);
-   }
-   return false;
-}
+
+/*
+ * a version of print_file that will suppress any #include
+ * directives that appear to reference files in --priv.
+ */
 
 void
 print_file_suppress_headers(FILE *where, const char *name) {
@@ -462,10 +454,19 @@ print_file_suppress_headers(FILE *where, const char *name) {
    }
    fclose(there);
 }
+
+/*
+ * write each section, --intro, --pub, --priv, and finally --outro.
+ *
+ * --intro and --outro are expected to be plain text files and their
+ * entire contents are bracketed within \/\* and \*\/.
+ *
+ * --pub and --priv are expected to be valid C source files.
+ */
 
 void
 write_intro(void) {
-   fprintf(stdout, "/*\n * single file header generated via:\n\n");
+   fprintf(stdout, "/*\n * single file header generated via:\n");
    for (int i = 0; i < ctx.argc; i++) {
       if (i == 0) {
          fprintf(stdout, " * %s ", get_filename(ctx.argv[i]));
@@ -500,8 +501,8 @@ write_pub(void) {
 
 void
 write_priv(void) {
-   fprintf(stdout, "\n#ifndef %s_IMPLEMENTATION\n", ctx.macro_prefix);
-   fprintf(stdout, "#define %s_IMPLEMENTATION\n", ctx.macro_prefix);
+   fprintf(stdout, "\n#ifdef %s_IMPLEMENTATION\n", ctx.macro_prefix);
+   fprintf(stdout, "#undef %s_IMPLEMENTATION\n", ctx.macro_prefix);
    if (ctx.priv_count > 0) {
       fprintf(stdout, "/* *** begin priv *** */\n");
       for (int i = 0; i < ctx.priv_count; i++) {

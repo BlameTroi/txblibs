@@ -1,4 +1,4 @@
-/* txblistd.h -- blametroi's doubly linked list functions -- */
+/* listd.h -- blametroi's doubly linked list functions -- */
 
 /*
  * a header only implementation of a doubly linked list.
@@ -28,7 +28,6 @@
 extern "C" {
 #endif /* __cplusplus */
 
-
 /*
  * a node of the doubly linked list. keying for ordering can use
  * either the id or results from the compare_payload function. node
@@ -42,7 +41,6 @@ typedef struct listd_item_t {
    struct listd_item_t *next;      /* and chain pointers */
    struct listd_item_t *prev;
 } listd_item_t;
-
 
 /*
  * double list control block holding chain pointers and other
@@ -76,7 +74,6 @@ typedef struct listd_control_t {
    bool dynamic_payload;               /* and the payload should be freed when the item is freed */
 } listd_control_t;
 
-
 /*
  * forward declarations for all functions.
  *
@@ -90,12 +87,10 @@ typedef struct listd_control_t {
  * is not initialized, or it appears that the link chain is broken.
  */
 
-
 bool
 reset_listd_control(
    listd_control_t *list
 );
-
 
 void
 free_all_items(
@@ -109,13 +104,11 @@ make_item(
    void *id_or_payload_pointer
 );
 
-
 bool
 free_item(
    listd_control_t *list,
    listd_item_t **address_of_item_pointer
 );
-
 
 listd_item_t *
 find_item(
@@ -123,12 +116,10 @@ find_item(
    void *id_or_payload_pointer
 );
 
-
 int
 count_items(
    listd_control_t *list
 );
-
 
 bool
 add_item(
@@ -136,20 +127,17 @@ add_item(
    listd_item_t *unlinked_item
 );
 
-
 listd_item_t *
 remove_item(
    listd_control_t *list,
    void *id_or_payload_pointer
 );
 
-
 listd_item_t *
 next_item(
    listd_control_t *list,
    listd_item_t *(*next_item)
 );
-
 
 listd_item_t *
 prev_item(

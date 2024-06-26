@@ -13,26 +13,14 @@ LDFLAGS=
 
 
 clean:
-	rm -rf *.o *.dSYM/ buildhdr unitbuild
+	rm -rf *.o *.dSYM/ buildhdr 
 
 
-all: unitbuild buildhdr
+all: buildhdr
 
 
-run:
-	./unitbuild
-
-
-buildhdr.o: buildhdr.c buildhdr.h
+buildhdr.o: buildhdr.c
 	$(CC) $(CFLAGS) -c buildhdr.c
-
-
-unitbuild.o: unitbuild.c
-	$(CC) $(CFLAGS) -c unitbuild.c
-
-
-unitbuild: unitbuild.o
-	$(CC) $(CFLAGS) -o unitbuild unitbuild.o $(LDFLAGS)
 
 
 buildhdr: buildhdr.o

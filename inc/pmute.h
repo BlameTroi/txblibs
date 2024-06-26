@@ -1,22 +1,19 @@
 /* pmute.h -- blametroi's common utility functions -- */
 
 /*
- * released to the public domain by Troy Brumley blametroi@gmail.com
+ * this is a header only implementation of a function to permute an
+ * array of integers.
  *
- * this is a header only implementation of various bits of code that i
- * keep repeating in my hobby programming that i want around without
- * the hassle of managing library dependencies.
+ * released to the public domain by Troy Brumley blametroi@gmail.com
  *
  * this software is dual-licensed to the public domain and under the
  * following license: you are granted a perpetual, irrevocable license
  * to copy, modify, publish, and distribute this file as you see fit.
  */
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-
 
 /*
  * permute_next(int n, int *ints)

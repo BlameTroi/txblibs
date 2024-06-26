@@ -1,15 +1,8 @@
-# just a makefile
+# makefile for my various c single file header libraries
 
 .POSIX:
 
-.PHONY: clean all run
-
-
-CC=clang
-# CFLAGS=-Wall -g3 -std=c99
-CFLAGS=-fsanitize=address -Wall -g3 -O0 -std=c99
-# LDFLAGS=-lm
-LDFLAGS=
+.PHONY: clean all
 
 
 clean:

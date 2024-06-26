@@ -46,14 +46,15 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef TXBMISC_SINGLE_HEADER
 #define TXBMISC_SINGLE_HEADER
 /* *** begin pub *** */
-/* txbmisc.h -- blametroi's common utility functions -- */
+/* misc.h -- blametroi's common utility functions -- */
 
 /*
- * released to the public domain by Troy Brumley blametroi@gmail.com
- *
  * this is a header only implementation of various bits of code that i
  * keep repeating in my hobby programming that i want around without
- * the hassle of managing library dependencies.
+ * the hassle of managing library dependencies. all functions are
+ * small and i think pretty obvious.
+ *
+ * released to the public domain by Troy Brumley blametroi@gmail.com
  *
  * this software is dual-licensed to the public domain and under the
  * following license: you are granted a perpetual, irrevocable license
@@ -110,13 +111,16 @@ bool is_bracketing(char);
 /* *** begin priv *** */
 /* misc.c -- blametroi's common utility functions -- */
 
-
 /*
- * released to the public domain by Troy Brumley blametroi@gmail.com
+ * a header only implementation of various bits of code don't fit in
+ * any of my other single c header file libraries.
  *
- * this is a header only implementation of various bits of code that i
- * keep repeating in my hobby programming that i want around without
- * the hassle of managing library dependencies.
+ * many of these functions are marked for inlining. some of the
+ * numeric functions us long instead of int to deal with some of the
+ * big numbers seen in problems from advent of code and other puzzle
+ * sites.
+ *
+ * released to the public domain by Troy Brumley blametroi@gmail.com
  *
  * this software is dual-licensed to the public domain and under the
  * following license: you are granted a perpetual, irrevocable license
@@ -126,7 +130,6 @@ bool is_bracketing(char);
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-
 
 
 /* as a general rule, i prefer to not use macros to express an algorithm */
@@ -177,7 +180,6 @@ dmin(double x, double y) {
    return x < y ? x : y;
 }
 
-
 /*
  * quick bit test for even or odd.
  */
@@ -192,9 +194,9 @@ is_odd(long n) {
    return (n & 1);
 }
 
-
 /*
- *quick character classifications, by us-ascii and programmer centric rules.
+ * quick character classifications, by us-ascii programmer centric
+ * rules.
  */
 
 inline bool
@@ -204,12 +206,18 @@ is_digit(char c) {
 
 inline bool
 is_word_char(char c) {
-   return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
+   return (c >= 'a' && c <= 'z') ||
+          (c >= 'A' && c <= 'Z') ||
+          c == '_';
 }
 
 inline bool
 is_whitespace(char c) {
-   return c == ' ' || c == '\n' || c == '\f' || c == '\r' || c == '\t';
+   return c == ' ' ||
+          c == '\n' ||
+          c == '\f' ||
+          c == '\r' ||
+          c == '\t';
 }
 
 inline bool
@@ -219,14 +227,23 @@ is_control(char c) {
 
 inline bool
 is_punctuation(char c) {
-   return c == '.' || c == ',' || c == '?' || c == '!' || c == ';' || c == ':';
+   return c == '.' ||
+          c == ',' ||
+          c == '?' ||
+          c == '!' ||
+          c == ';' ||
+          c == ':';
 }
 
 inline bool
 is_bracketing(char c) {
-   return c == '[' || c == '(' || c == '{' || c == '}' || c == ')' || c == ']';
+   return c == '[' ||
+          c == '(' ||
+          c == '{' ||
+          c == '}' ||
+          c == ')' ||
+          c == ']';
 }
-
 
 /*
  * generate a pseudo random integer between low and high inclusive. yes, this
@@ -235,10 +252,12 @@ is_bracketing(char c) {
  */
 
 inline int
-rand_between(int low, int high) {
+rand_between(
+   int low,
+   int high
+) {
    return rand() % (high + 1 - low) + low;
 }
-
 
 /*
  * shuffle an array of items using the fisher-yates algorithm. the
@@ -248,7 +267,10 @@ rand_between(int low, int high) {
  */
 
 void
-shuffle(void **cards, int n) {
+shuffle(
+   void **cards,
+   int n
+) {
    int i = n;
    while (i > 0) {
       int r = rand_between(1, i);
@@ -260,13 +282,16 @@ shuffle(void **cards, int n) {
 }
 
 /*
- * returns an array of integers long enough to hold the factors of
- * n and a trailing NULL entry. the caller is responsible for freeing
- * the array when it is no longer needed. returns NULL if n < 1.
+ * returns an array of long integers with at least enough entries to
+ * hold the factors of n and a trailing NULL entry. the caller is
+ * responsible for freeing the array when it is no longer needed.
+ * returns NULL if n < 1.
  */
 
 long *
-factors_of(long n) {
+factors_of(
+   long n
+) {
    if (n < 1) {
       return NULL;
    }

@@ -1,25 +1,24 @@
-/* txbstr.h -- blametroi's common utility functions -- */
-
+/* str.h -- blametroi's common utility functions -- */
 
 /*
- * released to the public domain by Troy Brumley blametroi@gmail.com
+ * this is a header only implementation of a split string function
+ * that works the way i think such a functino should. other bits of
+ * character and string manipulation support will be added as
+ * needed.
  *
- * this is a header only implementation of various bits of code that i
- * keep repeating in my hobby programming that i want around without
- * the hassle of managing library dependencies.
+ * released to the public domain by Troy Brumley blametroi@gmail.com
  *
  * this software is dual-licensed to the public domain and under the
  * following license: you are granted a perpetual, irrevocable license
  * to copy, modify, publish, and distribute this file as you see fit.
  */
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-
-/* split a string at (runs of) separators
+/*
+ * split a string at (runs of) separators
  *
  * strdup is used to make a copy of the string and that string is
  * then written over by strtok to find and mark the splits.
@@ -44,7 +43,6 @@ split_string(
    const char *sep            /* string of possible separator character */
 );
 
-
 /*
  * count how many times a character occurs in a string
  */
@@ -54,7 +52,6 @@ count_char(
    const char *str,
    char c
 );
-
 
 /*
  * return the position of the next occurance of c in str starting

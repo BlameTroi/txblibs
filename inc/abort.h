@@ -1,18 +1,15 @@
-/* txbabort.h -- blametroi's common utility functions -- */
-
+/* abort.h -- blametroi's common utility functions -- */
 
 /*
- * released to the public domain by Troy Brumley blametroi@gmail.com
+ * a header only implementation of abort and report helper functions
+ * and macros.
  *
- * this is a header only implementation of various bits of code that i
- * keep repeating in my hobby programming that i want around without
- * the hassle of managing library dependencies.
+ * released to the public domain by Troy Brumley blametroi@gmail.com
  *
  * this software is dual-licensed to the public domain and under the
  * following license: you are granted a perpetual, irrevocable license
  * to copy, modify, publish, and distribute this file as you see fit.
  */
-
 
 #ifdef __cplusplus
 extern "C" {

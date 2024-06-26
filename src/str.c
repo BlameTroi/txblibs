@@ -1,17 +1,17 @@
 /* str.c -- blametroi's common utility functions -- */
 
 /*
- * released to the public domain by Troy Brumley blametroi@gmail.com
+ * this is a header only implementation of a split string function
+ * that works the way i think such a functino should. other bits of
+ * character and string manipulation support will be added as
+ * needed.
  *
- * this is a header only implementation of various bits of code that i
- * keep repeating in my hobby programming that i want around without
- * the hassle of managing library dependencies.
+ * released to the public domain by Troy Brumley blametroi@gmail.com
  *
  * this software is dual-licensed to the public domain and under the
  * following license: you are granted a perpetual, irrevocable license
  * to copy, modify, publish, and distribute this file as you see fit.
  */
-
 
 #include <stdlib.h>
 #include <string.h>
@@ -144,7 +144,7 @@ count_char(
    }
    return n;
 }
-
+
 int
 pos_char(
    const char *str,

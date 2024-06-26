@@ -1,6 +1,5 @@
 /* listd.c -- blametroi's doubly linked list functions -- */
 
-
 /*
  * a header only implementation of a doubly linked list.
  *
@@ -23,8 +22,6 @@
  * to copy, modify, publish, and distribute this file as you see fit.
  */
 
-
-
 #include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -38,7 +35,9 @@
  */
 
 bool
-reset_listd_control(listd_control_t *list) {
+reset_listd_control(
+   listd_control_t *list
+) {
    assert(list->initialized);
    if (list->head != NULL) {
       return false;
@@ -55,7 +54,9 @@ reset_listd_control(listd_control_t *list) {
  */
 
 void
-free_all_items(listd_control_t *list) {
+free_all_items(
+   listd_control_t *list
+) {
    assert(list->initialized);
    list->odometer += 1;
    list->frees += list->count;
@@ -90,7 +91,10 @@ free_all_items(listd_control_t *list) {
  */
 
 listd_item_t *
-make_item(listd_control_t *list, void *id_or_payload_pointer) {
+make_item(
+   listd_control_t *list,
+   void *id_or_payload_pointer
+) {
    assert(list->initialized);
    list->odometer += 1;
    list->makes += 1;
@@ -113,10 +117,12 @@ make_item(listd_control_t *list, void *id_or_payload_pointer) {
 /*
  * free a item's storage. this expects the item to be owned by the
  * controlling list but does not check to see if the item is on the
- * link chain. you should have removed the item from the list before
- * calling free if you intend to remove the item from the list.
+ * link chain.
  *
- * a item created by make_item can be freed by this function even if
+ * you should have removed the item from the list before calling free
+ * if you intend to remove the item from the list.
+ *
+ * an item created by make_item can be freed by this function even if
  * it was never added to the list. this is the preferred method for
  * freeing items.
  *
@@ -136,7 +142,10 @@ make_item(listd_control_t *list, void *id_or_payload_pointer) {
  */
 
 bool
-free_item(listd_control_t *list, listd_item_t *(*address_of_item_pointer)) {
+free_item(
+   listd_control_t *list,
+   listd_item_t *(*address_of_item_pointer)
+) {
    assert(list->initialized);
    list->odometer += 1;
    list->frees += 1;
@@ -168,7 +177,10 @@ free_item(listd_control_t *list, listd_item_t *(*address_of_item_pointer)) {
  */
 
 listd_item_t *
-find_item(listd_control_t *list, void *id_or_payload_pointer) {
+find_item(
+   listd_control_t *list,
+   void *id_or_payload_pointer
+) {
    assert(list->initialized);
    list->odometer += 1;
    list->finds += 1;
@@ -205,7 +217,9 @@ find_item(listd_control_t *list, void *id_or_payload_pointer) {
  */
 
 int
-count_items(listd_control_t *list) {
+count_items(
+   listd_control_t *list
+) {
    assert(list->initialized);
    list->odometer += 1;
    list->counts += 1;
@@ -227,7 +241,10 @@ count_items(listd_control_t *list) {
  */
 
 bool
-add_item(listd_control_t *list, listd_item_t *unlinked_item) {
+add_item(
+   listd_control_t *list,
+   listd_item_t *unlinked_item
+) {
    assert(list->initialized && unlinked_item);
    list->odometer += 1;
    list->adds += 1;
@@ -298,7 +315,10 @@ add_item(listd_control_t *list, listd_item_t *unlinked_item) {
  */
 
 listd_item_t *
-remove_item(listd_control_t *list, void *id_or_payload_pointer) {
+remove_item(
+   listd_control_t *list,
+   void *id_or_payload_pointer
+) {
    assert(list->initialized);
    list->odometer += 1;
    list->removes += 1;
@@ -371,7 +391,10 @@ remove_item(listd_control_t *list, void *id_or_payload_pointer) {
  */
 
 listd_item_t *
-next_item(listd_control_t *list, listd_item_t *(*next_item)) {
+next_item(
+   listd_control_t *list,
+   listd_item_t *(*next_item)
+) {
    assert(list->initialized);
    list->odometer += 1;
    list->nexts += 1;
@@ -397,7 +420,10 @@ next_item(listd_control_t *list, listd_item_t *(*next_item)) {
  */
 
 listd_item_t *
-prev_item(listd_control_t *list, listd_item_t *(*prior_item)) {
+prev_item(
+   listd_control_t *list,
+   listd_item_t *(*prior_item)
+) {
    assert(list->initialized);
    list->odometer += 1;
    list->prevs += 1;

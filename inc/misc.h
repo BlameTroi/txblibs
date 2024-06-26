@@ -1,11 +1,12 @@
-/* txbmisc.h -- blametroi's common utility functions -- */
+/* misc.h -- blametroi's common utility functions -- */
 
 /*
- * released to the public domain by Troy Brumley blametroi@gmail.com
- *
  * this is a header only implementation of various bits of code that i
  * keep repeating in my hobby programming that i want around without
- * the hassle of managing library dependencies.
+ * the hassle of managing library dependencies. all functions are
+ * small and i think pretty obvious.
+ *
+ * released to the public domain by Troy Brumley blametroi@gmail.com
  *
  * this software is dual-licensed to the public domain and under the
  * following license: you are granted a perpetual, irrevocable license

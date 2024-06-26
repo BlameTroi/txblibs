@@ -1,18 +1,15 @@
-/* pat.c -- blametroi's common utility functions -- */
-
+/* pat.c -- blametroi's regular expression and pattern matching -- */
 
 /*
  * released to the public domain by Troy Brumley blametroi@gmail.com
  *
- * this is a header only implementation of various bits of code that i
- * keep repeating in my hobby programming that i want around without
- * the hassle of managing library dependencies.
+ * this is a header only implementation of a subset of a regular
+ * expression parser and pattern matcher.
  *
  * this software is dual-licensed to the public domain and under the
  * following license: you are granted a perpetual, irrevocable license
  * to copy, modify, publish, and distribute this file as you see fit.
  */
-
 
 /*
  * a match string expression is compiled into pattern buffer. the
@@ -65,8 +62,7 @@
 #include "txbabort.h"
 
 #include "../inc/pat.h"
-
-
+
 /*
  * these functions provide a limited implementation of regular
  * expressions and file name globbing expressions.
@@ -210,7 +206,9 @@ const match_code_t match_codes[] = {
  */
 
 const char *
-displayable_match_code(cpat_t code) {
+displayable_match_code(
+   cpat_t code
+) {
    int i = 0;
    while (match_codes[i].text != NULL) {
       if (code == match_codes[i].code) {
@@ -231,10 +229,14 @@ displayable_match_code(cpat_t code) {
 static
 inline
 bool
-is_quantifier(cpat_t p) {
-   return p == PAT_REP0M || p == PAT_REP1M || p == PAT_REP01 || p == PAT_REP_COUNT;
+is_quantifier(
+   cpat_t p
+) {
+   return p == PAT_REP0M ||   /* * */
+          p == PAT_REP1M ||   /* + */
+          p == PAT_REP01 ||   /* ? */
+          p == PAT_REP_COUNT; /* {,} */
 }
-
 
 /*
  * get position of next piece of the pattern, or the length of the
@@ -243,7 +245,10 @@ is_quantifier(cpat_t p) {
 
 static
 int
-pattern_lengtn(const cpat_t *pat, const int pp) {
+pattern_length(
+   const cpat_t *pat,
+   const int pp
+) {
    int pl = 0;
    if (pat[pp] == PAT_CCLASS || pat[pp] == PAT_NOT_CCLASS || pat[pp] == PAT_LIT) {
       pl = 2 + pat[pp+1];
@@ -262,9 +267,11 @@ pattern_lengtn(const cpat_t *pat, const int pp) {
 
 static
 int
-next_pattern(const cpat_t *pat, const int pp) {
-   int np = pp + pattern_lengtn(pat, pp);
-   return np;
+next_pattern(
+   const cpat_t *pat,
+   const int pp
+) {
+   return pp + pattern_length(pat, pp);
 }
 
 /*
@@ -275,7 +282,9 @@ next_pattern(const cpat_t *pat, const int pp) {
 static bool debugging = false;
 
 void
-debug_on(char *msg) {
+debug_on(
+   char *msg
+) {
    if (msg) {
       printf(">>>debug_on: %s\n", msg);
    }
@@ -283,7 +292,9 @@ debug_on(char *msg) {
 }
 
 void
-debug_off(char *msg) {
+debug_off(
+   char *msg
+) {
    if (msg) {
       printf("<<<debug_off: %s\n", msg);
    }
@@ -296,7 +307,9 @@ debug_off(char *msg) {
  */
 
 const char *
-pattern_source(const cpat_t *pat) {
+pattern_source(
+   const cpat_t *pat
+) {
    if (pat == NULL || *pat != PAT_BEG) {
       return "not a valid pattern";
    }
@@ -310,7 +323,9 @@ pattern_source(const cpat_t *pat) {
  */
 
 char *
-decompile_pattern(const cpat_t *pat) {
+decompile_pattern(
+   const cpat_t *pat
+) {
    if (pat == NULL || *pat != PAT_BEG) {
       return strdup("not a valid pattern");
    }
@@ -324,7 +339,9 @@ decompile_pattern(const cpat_t *pat) {
  */
 
 void
-print_compiled_pattern(cpat_t *pat) {
+print_compiled_pattern(
+   cpat_t *pat
+) {
    printf("compiled pattern: \n");
    int i = 0;
    while (pat[i] != 0) {
@@ -388,7 +405,10 @@ print_compiled_pattern(cpat_t *pat) {
  */
 
 bool
-validate_compiled_pattern(const cpat_t *pat, int *val) {
+validate_compiled_pattern(
+   const cpat_t *pat,
+   int *val
+) {
    if (pat == NULL || *pat != PAT_BEG) {
       return false;
    }
@@ -408,7 +428,6 @@ validate_compiled_pattern(const cpat_t *pat, int *val) {
    return true;
 }
 
-
 /*
  * expand_range creates a new copy of the pattern string with any embedded ranges in
  * character classes.
@@ -418,7 +437,9 @@ validate_compiled_pattern(const cpat_t *pat, int *val) {
 
 static
 char *
-expand_range(const char *raw) {
+expand_range(
+   const char *raw
+) {
    int exp_max = max(64, strlen(raw) * 2);
    char *exp = malloc(exp_max);
    int pr = 0;
@@ -586,7 +607,9 @@ add_pattern_item(
 
 static
 cpat_t *
-reorganize_pattern_buffer(const cpat_t *pat) {
+reorganize_pattern_buffer(
+   const cpat_t *pat
+) {
 
    int res_size = 0;
    cpat_t *res = NULL;
@@ -720,7 +743,9 @@ reorganize_pattern_buffer(const cpat_t *pat) {
 
 const
 cpat_t *
-compile_pattern(const char *raw) {
+compile_pattern(
+   const char *raw
+) {
 
    if (debugging) {
       printf("\n\n>>>compile_pattern(\"%s\")>>>\n", raw);
@@ -1028,7 +1053,9 @@ compile_pattern(const char *raw) {
  */
 
 const char *
-convert_glob(const char *glob) {
+convert_glob(
+   const char *glob
+) {
 
    /* no input should return a match almost anything */
    if (glob == NULL || strlen(glob) == 0) {
@@ -1528,7 +1555,10 @@ match_from(
  */
 
 bool
-match(const char *str, const cpat_t *pat) {
+match(
+   const char *str,
+   const cpat_t *pat
+) {
    int ps = 0;
    int pm = -1;
 
@@ -1560,7 +1590,10 @@ match(const char *str, const cpat_t *pat) {
  */
 
 bool
-glob_match(const char *str, const cpat_t *pat) {
+glob_match(
+   const char *str,
+   const cpat_t *pat
+) {
 
    int ps = 0;
    int pm = -1;
