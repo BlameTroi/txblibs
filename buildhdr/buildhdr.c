@@ -1,6 +1,25 @@
 /* buildhdr.c -- blametroi's c single file header library packager -- troy brumley*/
 
-/* released to the public domain, troy brumley, june 2024 */
+/*
+ * buildhdr is my take on Apoorva Joshi's single_header_packer.py. i
+ * use almost the same command line format but i let the shell do the
+ * file globbing so files are delimited by spaces instead of commas.
+ *
+ * buildhdr --macro MACRO_PREFIX
+ *         [--intro <files>]
+ *          --pub <files>
+ *         [--priv <files>]
+ *         [--outro <files>]
+ *
+ * the component files are wrapped with a header and implementation
+ * guards and writtent ot standard output.
+ *
+ * released to the public domain, troy brumley, june 2024
+ *
+ * this software is dual-licensed to the public domain and under the
+ * following license: you are granted a perpetual, irrevocable license
+ * to copy, modify, publish, and distribute this file as you see fit.
+ */
 
 #include <sys/errno.h>
 #include <stdbool.h>
@@ -59,12 +78,13 @@ ctx_t ctx = {
  * common predicates and helper functions.
  */
 
-
 /*
  * lazy initializers for match patterns.
  */
 const cpat_t *
-pat_macro_prefix(void) {
+pat_macro_prefix(
+   void
+) {
    static const cpat_t *pat = NULL;
    if (pat == NULL) {
       pat = compile_pattern("^[A-Z][A-Z_]*$");
@@ -75,7 +95,9 @@ pat_macro_prefix(void) {
 }
 
 const cpat_t *
-pat_include_prefix(void) {
+pat_include_prefix(
+   void
+) {
    static const cpat_t *pat = NULL;
    if (pat == NULL) {
       pat = compile_pattern("^ *#include +[<\"].+[>\"]");
@@ -85,7 +107,6 @@ pat_include_prefix(void) {
    return pat;
 }
 
-
 /*
  * is a string a valid macro prefix?
  */
@@ -94,15 +115,15 @@ is_valid_macro_prefix(const char *str) {
    return match(str, pat_macro_prefix());
 }
 
-
 /*
  * is a string a possible long option name (--text)?
  */
 bool
-is_longopt(const char *str) {
+is_longopt(
+   const char *str
+) {
    return str && strlen(str) > 2 && str[0] == '-' && str[1] == '-';
 }
-
 
 /*
  * get filename from end of a path.
@@ -110,7 +131,9 @@ is_longopt(const char *str) {
 
 const
 char *
-get_filename(const char *str) {
+get_filename(
+   const char *str
+) {
    const char *result = NULL;
    const char **tokens = split_string(str, "/\\:");
    int i = 1;
@@ -123,25 +146,26 @@ get_filename(const char *str) {
    return result;
 }
 
-
 /*
  * is a string a possible end of argment flag (--)?
  */
 bool
-is_endarg(const char *str) {
+is_endarg(
+   const char *str
+) {
    return str && strlen(str) == 2 && str[0] == '-' && str[1] == '-';
 }
-
 
 /*
  * does this line begin with a formfeed?
  */
 
 bool
-is_formfeed(const char *str) {
+is_formfeed(
+   const char *str
+) {
    return str && str[0] == '\f' && strlen(str) > 1;
 }
-
 
 /*
  * if the line is a #includde directive, does it reference one of the
@@ -149,7 +173,9 @@ is_formfeed(const char *str) {
  */
 
 bool
-is_suppressable_header(char *str) {
+is_suppressable_header(
+   char *str
+) {
    if (!match(str, pat_include_prefix())) {
       return false;
    }
@@ -180,7 +206,9 @@ is_suppressable_header(char *str) {
  */
 
 int
-get_longopt(const char *str) {
+get_longopt(
+   const char *str
+) {
    if (ctx.argv == NULL || str == NULL || *str == '\0' || !is_longopt(str)) {
       return -1;
    }
@@ -208,7 +236,9 @@ get_longopt(const char *str) {
  */
 
 int
-get_next_optval(int i) {
+get_next_optval(
+   int i
+) {
    if (ctx.argv[i] == NULL ||
          ctx.argv[i+1] == NULL ||
          is_longopt(ctx.argv[i+1]) ||
@@ -225,7 +255,9 @@ get_next_optval(int i) {
  */
 
 const char *
-get_macro_prefix(void) {
+get_macro_prefix(
+   void
+) {
    int i = get_longopt("--macro");
    if (i == -1 || ctx.argv[i] == NULL) {
       return NULL;
@@ -242,11 +274,13 @@ get_macro_prefix(void) {
  */
 
 void
-usage(FILE *where) {
+usage(
+   FILE *where
+) {
    if (where == NULL) {
       where = stdout;
    }
-   fprintf(where, "usage: %s --macro MACRO_PREFIX [--intro <files>] --pub <files>[ --priv <files>] [--outro <files>]\n\n", get_filename(ctx.argv[0]));
+   fprintf(where, "usage: %s --macro MACRO_PREFIX [--intro <files>] --pub <files> [--priv <files>] [--outro <files>]\n\n", get_filename(ctx.argv[0]));
    fprintf(where, "Combines one or more files to create a C single file header library.\n\n");
    fprintf(where, " --macro  required  is a prefix for header guard macros.\n");
    fprintf(where, " --intro  optional  one or more plain text files to include in a doc\n");
@@ -265,13 +299,14 @@ usage(FILE *where) {
  * deal with arguments, get context set up.
  */
 
-
 /*
  * -h, -?, and --help are synonyms people...
  */
 
 bool
-wants_help(void) {
+wants_help(
+   void
+) {
    /* there are many ways to ask for help, respond to the ones we know. */
    for (int i = 1; i < ctx.argc; i++) {
       if (strcmp("-?", ctx.argv[i]) == 0 ||
@@ -282,8 +317,7 @@ wants_help(void) {
    }
    return false;
 }
-
-
+
 /*
  * parse arguments into ctx, report any errors found. all file
  * arguments must be readable, and the macro prefix and at least one
@@ -291,7 +325,9 @@ wants_help(void) {
  */
 
 bool
-arguments_ok(void) {
+arguments_ok(
+   void
+) {
 
    bool bad_args = false;
 
@@ -401,7 +437,10 @@ arguments_ok(void) {
  */
 
 void
-print_file(FILE *where, const char *name) {
+print_file(
+   FILE *where,
+   const char *name
+) {
    FILE *there = fopen(name, "r");
    if (there == NULL) {
       fprintf(stderr, "can not open file %s\n", name);
@@ -423,14 +462,16 @@ print_file(FILE *where, const char *name) {
    fclose(there);
 }
 
-
 /*
  * a version of print_file that will suppress any #include
  * directives that appear to reference files in --priv.
  */
 
 void
-print_file_suppress_headers(FILE *where, const char *name) {
+print_file_suppress_headers(
+   FILE *where,
+   const char *name
+) {
    FILE *there = fopen(name, "r");
    if (there == NULL) {
       fprintf(stderr, "can not open file %s\n", name);
@@ -465,7 +506,9 @@ print_file_suppress_headers(FILE *where, const char *name) {
  */
 
 void
-write_intro(void) {
+write_intro(
+   void
+) {
    fprintf(stdout, "/*\n * single file header generated via:\n");
    for (int i = 0; i < ctx.argc; i++) {
       if (i == 0) {
@@ -486,7 +529,9 @@ write_intro(void) {
 }
 
 void
-write_pub(void) {
+write_pub(
+   void
+) {
    fprintf(stdout, "\n#ifndef %s_SINGLE_HEADER\n", ctx.macro_prefix);
    fprintf(stdout, "#define %s_SINGLE_HEADER\n", ctx.macro_prefix);
    if (ctx.pub_count > 0) {
@@ -500,7 +545,9 @@ write_pub(void) {
 }
 
 void
-write_priv(void) {
+write_priv(
+   void
+) {
    fprintf(stdout, "\n#ifdef %s_IMPLEMENTATION\n", ctx.macro_prefix);
    fprintf(stdout, "#undef %s_IMPLEMENTATION\n", ctx.macro_prefix);
    if (ctx.priv_count > 0) {
@@ -514,7 +561,9 @@ write_priv(void) {
 }
 
 void
-write_outro(void) {
+write_outro(
+   void
+) {
    if (ctx.outro_count > 0) {
       fprintf(stdout, "/* *** begin outro ***\n");
       for (int i = 0; i < ctx.intro_count; i++) {
@@ -530,7 +579,10 @@ write_outro(void) {
  */
 
 int
-main(int argc, const char **argv) {
+main(
+   int argc,
+   const char **argv
+) {
    ctx.argc = argc;
    ctx.argv = argv;
 
