@@ -7,13 +7,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define TXBMISC_H_IMPLEMENTATION
-#include "txbmisc.h"
-#define TXBSTR_H_IMPLEMENTATION
-#include "txbstr.h"
-#define TXBPMUTE_H_IMPLEMENTATION
-#include "txbpmute.h"
-
+#include "../inc/misc.h"
+#include "../inc/str.h"
+#include "../inc/pmute.h"
 
 /* logging */
 
@@ -26,7 +22,6 @@ print_current(int *iter, int n, int *ints) {
    }
    printf("\n");
 }
-
 
 /* permutation driver, iterative */
 

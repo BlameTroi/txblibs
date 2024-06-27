@@ -9,14 +9,9 @@
 
 #include "minunit.h"
 
-#define TXBMISC_H_IMPLEMENTATION
-#include "txbmisc.h"
-
-#define TXBLISTD_H_IMPLEMENTATION
-#include "txblistd.h"
-
-#define TXBSTR_H_IMPLEMENTATION
-#include "txbstr.h"
+#include "../inc/misc.h"
+#include "../inc/listd.h"
+#include "../inc/str.h"
 
 
 /*
