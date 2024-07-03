@@ -1,7 +1,6 @@
-# just a makefile
+# test stand alone object versions of the libs
 
 .POSIX:
-
 .PHONY: clean all run
 
 CC=clang
@@ -10,10 +9,15 @@ CFLAGS=-fsanitize=address -Wall -g3 -O0 -std=c99
 # LDFLAGS=-lm
 LDFLAGS=
 
-clean:
-	rm -rf *.o *.dSYM/ unitpat unittest testlibs
+all: unitpq unitpat testlibs unittest
 
-all: unitpat unittest testlibs
+clean:
+	rm -rf *.o *.dSYM/ unitpat unittest testlibs unitpq
+
+
+#####################################################
+# these are the libs not as single file headers yet #
+#####################################################
 
 abort.o: ../inc/abort.h ../src/abort.c
 	$(CC) $(CFLAGS) -c ../src/abort.c
@@ -21,31 +25,46 @@ abort.o: ../inc/abort.h ../src/abort.c
 misc.o: ../inc/misc.h ../src/misc.c
 	$(CC) $(CFLAGS) -c ../src/misc.c
 
-str.o: ../inc/str.h ../src/str.c
-	$(CC) $(CFLAGS) -c ../src/str.c
+listd.o: ../inc/listd.h ../src/listd.c
+	$(CC) $(CFLAGS) -c ../src/listd.c
 
-pat.o: ../inc/pat.h ../src/pat.c
+pat.o: ../inc/pat.h ../src/pat.c ../inc/misc.h ../inc/abort.h ../inc/str.h
 	$(CC) $(CFLAGS) -c ../src/pat.c
 
 pmute.o: ../inc/pmute.h ../src/pmute.c
 	$(CC) $(CFLAGS) -c ../src/pmute.c
 
-listd.o: ../inc/listd.h ../src/listd.c
-	$(CC) $(CFLAGS) -c ../src/listd.c
+pq.o: ../inc/pq.h ../src/pq.c
+	$(CC) $(CFLAGS) -c ../src/pq.c
 
-testlibs.o: testlibs.c
+str.o: ../inc/str.h ../src/str.c
+	$(CC) $(CFLAGS) -c ../src/str.c
+
+
+##########################################################
+# these are the test drivers for the various libs, mostl #
+# but not all are done with minunit.                     #
+##########################################################
+
+unitpq.o: unitpq.c ../inc/pq.h ../inc/misc.h
+	$(CC) $(CFLAGS) -c unitpq.c
+
+unitpq: unitpq.o pq.o misc.o
+	$(CC) $(CFLAGS) -o unitpq unitpq.o pq.o misc.o
+
+testlibs.o: testlibs.c ../inc/misc.h ../inc/str.h ../inc/pmute.h
 	$(CC) $(CFLAGS) -c testlibs.c
 
 testlibs: testlibs.o misc.o str.o pmute.o
 	$(CC) $(CFLAGS) -o testlibs testlibs.o misc.o pmute.o str.o
 
-unitpat.o: unitpat.c
+unitpat.o: unitpat.c ../inc/abort.h ../inc/misc.h ../inc/pat.h ../inc/str.h
 	$(CC) $(CFLAGS) -c unitpat.c
 
-unitpat: unitpat.o abort.o misc.o pat.o
+unitpat: unitpat.o abort.o misc.o pat.o str.o
 	$(CC) $(CFLAGS) -o unitpat unitpat.o abort.o misc.o pat.o $(LDFLAGS)
 
-unittest.o: unittest.c
+unittest.o: unittest.c ../inc/misc.h ../inc/listd.h ../inc/str.h
 	$(CC) $(CFLAGS) -c unittest.c
 
 unittest: unittest.o misc.o listd.o str.o

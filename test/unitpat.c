@@ -9,12 +9,9 @@
 
 #include "minunit.h"
 
-#define TXBABORT_H_IMPLEMENTATION
-#include "txbabort.h"
-#define TXBMISC_H_IMPLEMENTATION
-#include "txbmisc.h"
-#define TXBPAT_H_IMPLEMENTATION
-#include "txbpat.h"
+#include "../inc/abort.h"
+#include "../inc/misc.h"
+#include "../inc/pat.h"
 
 /*
  * the validate_compiled_pattern is a 'hidden' function in txbpat. it
