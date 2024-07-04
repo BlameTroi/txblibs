@@ -54,7 +54,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <stdio.h>
 #include "txbmisc.h"
 #include "txbstr.h"
 #include "txbabort.h"

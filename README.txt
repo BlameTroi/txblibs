@@ -365,15 +365,42 @@ TODO
 ====
 
 
+all:
+
+- use abort and abort_if
+
+
 abort:
 
 - improve error message support with snprintf
 
 
+listd:
+
+- review exposed api
+- tag control blocks
+
+
+misc:
+
+- ?
+
+
 pat:
 
+- remove old debugging code
 - implement decompile_pattern
 - implement {} quantifiers
 - general refactoring
 - (low priority) capture groups ()
 - (low priority) or |
+
+
+pq:
+
+- ?
+
+
+str:
+
+- add a free function for the block returned by split_string.
