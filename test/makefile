@@ -28,6 +28,9 @@ misc.o: ../inc/misc.h ../src/misc.c
 listd.o: ../inc/listd.h ../src/listd.c
 	$(CC) $(CFLAGS) -c ../src/listd.c
 
+dl.o: ../inc/dl.h ../src/dl.c
+	$(CC) $(CFLAGS) -c ../src/dl.c
+
 pat.o: ../inc/pat.h ../src/pat.c ../inc/misc.h ../inc/abort.h ../inc/str.h
 	$(CC) $(CFLAGS) -c ../src/pat.c
 
@@ -51,6 +54,12 @@ unitpq.o: unitpq.c ../inc/pq.h ../inc/misc.h
 
 unitpq: unitpq.o pq.o misc.o
 	$(CC) $(CFLAGS) -o unitpq unitpq.o pq.o misc.o
+
+unitdl.o: unitdl.c ../inc/dl.h ../inc/misc.h
+	$(CC) $(CFLAGS) -c unitdl.c
+
+unitdl: unitdl.o pq.o misc.o
+	$(CC) $(CFLAGS) -o unitdl unitdl.o dl.o misc.o
 
 testlibs.o: testlibs.c ../inc/misc.h ../inc/str.h ../inc/pmute.h
 	$(CC) $(CFLAGS) -c testlibs.c
