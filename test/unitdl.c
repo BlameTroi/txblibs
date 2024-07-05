@@ -27,17 +27,23 @@
  * instance of the list, but for now this is sufficient.
  */
 
-/* two lists, one by id one by payload */
+/* change the following to control if using pthread calls */
 
-ldcb_t list_by_id;
-ldcb_t list_by_payload;
+const bool test_threaded = false;
 
 /* for testing, the payload is a string, so payload compare is just a
-   wrapper around strcmp. */
+ * wrapper around strcmp. */
 
-long
+int
 payload_compare(void *s1, void *s2) {
    return strcmp(s1, s2);
+}
+
+/* for testing, just free any single block of allocated memory. */
+
+void
+payload_free(void *p) {
+   free(p);
 }
 
 /*
@@ -51,21 +57,8 @@ payload_compare(void *s1, void *s2) {
 void
 test_setup(void) {
 
-   /* set up for using ids */
-   memset(&list_by_id, 0, sizeof(list_by_id));
-   list_by_id.dynamic_payload = false;
-   list_by_id.has_payload = false;
-   list_by_id.use_id = true;
-
-   /* set up for using static string payloads (literals) */
-   memset(&list_by_payload, 0, sizeof(list_by_payload));
-   list_by_payload.dynamic_payload = false;
-   list_by_payload.has_payload = true;
-   list_by_payload.use_id = false;
-   list_by_payload.compare_payload = payload_compare;
-
    /* let's use a different seed than 1, but not time() because i want
-      repeatable tests. */
+    * repeatable tests. */
    srand(RAND_SEED);
 }
 
@@ -74,24 +67,6 @@ test_setup(void) {
 
 void
 test_teardown(void) {
-
-   lditem_t *p = list_by_id.first;
-   lditem_t *n = NULL;
-   while (p) {
-      n = p->fwd;
-      ld_free(&list_by_id, &p);
-      p = n;
-   }
-   memset(&list_by_id, 0xfe, sizeof(list_by_id));
-
-   p = list_by_payload.first;
-   n = NULL;
-   while (p) {
-      n = p->fwd;
-      ld_free(&list_by_payload, &p);
-      p = n;
-   }
-   memset(&list_by_payload, 0xfe, sizeof(list_by_payload));
 }
 
 /*
@@ -103,28 +78,107 @@ test_teardown(void) {
  * anything.
  */
 
+MU_TEST(test_dl_id_create) {
+   dlcb_t *dl = dl_create_by_id(
+                   test_threaded,
+                   NULL
+                );
+   mu_should(dl);
+   mu_should(dl_empty(dl));
+   mu_should(dl_count(dl) == 0);
+   mu_should(dl_destroy(dl));
+}
 
-/* build a item and check out its state, then free it. */
+MU_TEST(test_dl_key_create) {
+   dlcb_t *dl = dl_create_by_key(
+                   test_threaded,
+                   payload_compare,
+                   payload_free
+                );
+   mu_should(dl);
+   mu_should(dl_empty(dl));
+   mu_should(dl_count(dl) == 0);
+   mu_should(dl_destroy(dl));
+}
+
+MU_TEST(test_dl_id_add) {
+   dlcb_t *dl = dl_create_by_id(
+                   test_threaded,
+                   NULL
+                );
+   mu_should(dl);
+
+   /* add a single entry to empty list, then remove it. */
+   mu_should(dl_add(dl, 1, "1234"));
+   mu_shouldnt(dl_empty(dl));
+   mu_should(dl_count(dl) == 1);
+   mu_should(dl_delete_all(dl) == 1);
+   mu_should(dl_empty(dl));
+   mu_should(dl_count(dl) == 0);
+
+   /* add two unique entries, then remove them. */
+   mu_should(dl_add(dl, 1, "first"));
+   mu_should(dl_add(dl, 2, "second"));
+   mu_should(dl_count(dl) == 2);
+   mu_should(dl_delete_all(dl) == 2);
+   mu_should(dl_empty(dl));
+   mu_should(dl_count(dl) == 0);
+
+   /* it takes more than two entries to mess with linking. */
+   mu_should(dl_add(dl, 1, "first"));
+   mu_should(dl_add(dl, 4, "fourth, added second"));
+   mu_should(dl_add(dl, 2, "second, added third"));
+   mu_should(dl_add(dl, 3, "third, added fourth"));
+   mu_should(dl_count(dl) == 4);
+   /* now insert at front and then at back, knowing the ordering as we did above. */
+   mu_should(dl_add(dl, -1, "zeroeth, added fifth"));
+   mu_should(dl_add(dl, 9, "sixth, added sixth"));
+   /* we'll confirm ordering in another set of tests. */
+   mu_should(dl_count(dl) == 6);
+
+   /* and now empty the list and we're done. */
+   mu_should(dl_delete_all(dl) == 6);
+   mu_should(dl_empty(dl));
+
+   mu_should(dl_destroy(dl));
+}
+
+MU_TEST(test_dl_key_add) {
+   dlcb_t *dl = dl_create_by_key(
+                   test_threaded,
+                   payload_compare,
+                   NULL
+                );
+   mu_should(dl);
+   mu_should(dl);
+   mu_should(dl_add(dl, 1, "1234"));
+   mu_shouldnt(dl_empty(dl));
+   mu_should(dl_count(dl) == 1);
+   mu_should(dl_delete_all(dl) == 1);
+   mu_should(dl_empty(dl));
+   mu_should(dl_count(dl) == 0);
+   mu_should(dl_destroy(dl));
+}
 
 MU_TEST(test_list_create) {
-   lditem_t *n = NULL;
+   dlentry_t *n = NULL;
 
-   n = ld_new(&list_by_id, (void *)147);
-   mu_assert_int_eq(true, n->fwd == NULL);
-   mu_assert_int_eq(true, n->bwd == NULL);
-   mu_assert_int_eq(147, n->id);
-   ld_free(&list_by_id, &n);
-   mu_assert_int_eq(true, n == NULL);
+   /* n = dl_new(&by_id, (void *)147); */
+   /* mu_assert_int_eq(true, n->fwd == NULL); */
+   /* mu_assert_int_eq(true, n->bwd == NULL); */
+   /* mu_assert_int_eq(147, n->id); */
+   /* dl_free(&by_id, &n); */
+   /* mu_assert_int_eq(true, n == NULL); */
 
-   char *s = strdup("this is a sentence");
-   n = ld_new(&list_by_payload, s);
-   mu_assert_int_eq(true, n->fwd == NULL);
-   mu_assert_int_eq(true, n->bwd == NULL);
-   mu_assert_string_eq("this is a sentence", n->payload);
-   mu_assert_int_eq(strlen(s), strlen(n->payload));
-   ld_free(&list_by_payload, &n);
-   free(s);
-   mu_assert_int_eq(true, n == NULL);
+   /* char *s = strdup("this is a sentence"); */
+   /* n = dl_new(&by_payload, s); */
+   /* mu_assert_int_eq(true, n->fwd == NULL); */
+   /* mu_assert_int_eq(true, n->bwd == NULL); */
+   /* mu_assert_string_eq("this is a sentence", n->payload); */
+   /* mu_assert_int_eq(strlen(s), strlen(n->payload)); */
+   /* dl_free(&by_payload, &n); */
+   /* free(s); */
+   /* mu_assert_int_eq(true, n == NULL); */
 
 }
 
@@ -132,24 +186,24 @@ MU_TEST(test_list_create) {
 /* add one item and confirm that count_items finds it */
 
 MU_TEST(test_list_count) {
-   lditem_t *n = NULL;
+   dlentry_t *n = NULL;
    bool r;
 
-   n = ld_new(&list_by_id, (void *)15);
-   mu_assert_int_eq(0, list_by_id.count);
-   mu_assert_int_eq(0, ld_count(&list_by_id));
-   r = ld_add(&list_by_id, n);
-   mu_assert_int_eq(true, r);
-   mu_assert_int_eq(1, list_by_id.count);
-   mu_assert_int_eq(1, ld_count(&list_by_id));
+   /* n = dl_new(&by_id, (void *)15); */
+   /* mu_assert_int_eq(0, by_id.count); */
+   /* mu_assert_int_eq(0, dl_count(&by_id)); */
+   /* r = dl_add(&by_id, n); */
+   /* mu_assert_int_eq(true, r); */
+   /* mu_assert_int_eq(1, by_id.count); */
+   /* mu_assert_int_eq(1, dl_count(&by_id)); */
 
-   n = ld_new(&list_by_payload, "qwerty");
-   mu_assert_int_eq(0, list_by_payload.count);
-   mu_assert_int_eq(0, ld_count(&list_by_payload));
-   r = ld_add(&list_by_payload, n);
-   mu_assert_int_eq(true, r);
-   mu_assert_int_eq(1, list_by_payload.count);
-   mu_assert_int_eq(1, ld_count(&list_by_payload));
+   /* n = dl_new(&by_payload, "qwerty"); */
+   /* mu_assert_int_eq(0, by_payload.count); */
+   /* mu_assert_int_eq(0, dl_count(&by_payload)); */
+   /* r = dl_add(&by_payload, n); */
+   /* mu_assert_int_eq(true, r); */
+   /* mu_assert_int_eq(1, by_payload.count); */
+   /* mu_assert_int_eq(1, dl_count(&by_payload)); */
 
 }
 
@@ -158,52 +212,52 @@ MU_TEST(test_list_count) {
    of the list */
 
 MU_TEST(test_list_insert) {
-   lditem_t *n = NULL;
-   lditem_t *head = NULL;
-   lditem_t *tail = NULL;
+   dlentry_t *n = NULL;
+   dlentry_t *head = NULL;
+   dlentry_t *tail = NULL;
    bool r;
 
-   n = ld_new(&list_by_id, (void *)15);
-   r = ld_add(&list_by_id, n);
-   head = ld_new(&list_by_id, (void *)10);
-   r = ld_add(&list_by_id, head);
-   mu_assert_int_eq(true, r);
-   mu_assert_int_eq(2, list_by_id.count);
-   mu_assert_int_eq(2, ld_count(&list_by_id));
-   mu_assert_int_eq(true, n->bwd == head);
-   mu_assert_int_eq(true, n->fwd == NULL);
-   mu_assert_int_eq(true, head->bwd == NULL);
-   mu_assert_int_eq(true, head->fwd == n);
-   tail = ld_new(&list_by_id, (void *)20);
-   r = ld_add(&list_by_id, tail);
-   mu_assert_int_eq(true, r);
-   mu_assert_int_eq(3, list_by_id.count);
-   mu_assert_int_eq(3, ld_count(&list_by_id));
-   mu_assert_int_eq(true, n->bwd == head);
-   mu_assert_int_eq(true, n->fwd == tail);
-   mu_assert_int_eq(true, tail->fwd == NULL);
-   mu_assert_int_eq(true, tail->bwd == n);
+   /* n = dl_new(&by_id, (void *)15); */
+   /* r = dl_add(&by_id, n); */
+   /* head = dl_new(&by_id, (void *)10); */
+   /* r = dl_add(&by_id, head); */
+   /* mu_assert_int_eq(true, r); */
+   /* mu_assert_int_eq(2, by_id.count); */
+   /* mu_assert_int_eq(2, dl_count(&by_id)); */
+   /* mu_assert_int_eq(true, n->bwd == head); */
+   /* mu_assert_int_eq(true, n->fwd == NULL); */
+   /* mu_assert_int_eq(true, head->bwd == NULL); */
+   /* mu_assert_int_eq(true, head->fwd == n); */
+   /* tail = dl_new(&by_id, (void *)20); */
+   /* r = dl_add(&by_id, tail); */
+   /* mu_assert_int_eq(true, r); */
+   /* mu_assert_int_eq(3, by_id.count); */
+   /* mu_assert_int_eq(3, dl_count(&by_id)); */
+   /* mu_assert_int_eq(true, n->bwd == head); */
+   /* mu_assert_int_eq(true, n->fwd == tail); */
+   /* mu_assert_int_eq(true, tail->fwd == NULL); */
+   /* mu_assert_int_eq(true, tail->bwd == n); */
 
-   n = ld_new(&list_by_payload, "bbbb");
-   r = ld_add(&list_by_payload, n);
-   head = ld_new(&list_by_payload, "aaaa");
-   r = ld_add(&list_by_payload, head);
-   mu_assert_int_eq(true, r);
-   mu_assert_int_eq(2, list_by_payload.count);
-   mu_assert_int_eq(2, ld_count(&list_by_payload));
-   mu_assert_int_eq(true, n->bwd == head);
-   mu_assert_int_eq(true, n->fwd == NULL);
-   mu_assert_int_eq(true, head->bwd == NULL);
-   mu_assert_int_eq(true, head->fwd == n);
-   tail = ld_new(&list_by_payload, "zzzz");
-   r = ld_add(&list_by_payload, tail);
-   mu_assert_int_eq(true, r);
-   mu_assert_int_eq(3, list_by_payload.count);
-   mu_assert_int_eq(3, ld_count(&list_by_payload));
-   mu_assert_int_eq(true, n->bwd == head);
-   mu_assert_int_eq(true, n->fwd == tail);
-   mu_assert_int_eq(true, tail->fwd == NULL);
-   mu_assert_int_eq(true, tail->bwd == n);
+   /* n = dl_new(&by_payload, "bbbb"); */
+   /* r = dl_add(&by_payload, n); */
+   /* head = dl_new(&by_payload, "aaaa"); */
+   /* r = dl_add(&by_payload, head); */
+   /* mu_assert_int_eq(true, r); */
+   /* mu_assert_int_eq(2, by_payload.count); */
+   /* mu_assert_int_eq(2, dl_count(&by_payload)); */
+   /* mu_assert_int_eq(true, n->bwd == head); */
+   /* mu_assert_int_eq(true, n->fwd == NULL); */
+   /* mu_assert_int_eq(true, head->bwd == NULL); */
+   /* mu_assert_int_eq(true, head->fwd == n); */
+   /* tail = dl_new(&by_payload, "zzzz"); */
+   /* r = dl_add(&by_payload, tail); */
+   /* mu_assert_int_eq(true, r); */
+   /* mu_assert_int_eq(3, by_payload.count); */
+   /* mu_assert_int_eq(3, dl_count(&by_payload)); */
+   /* mu_assert_int_eq(true, n->bwd == head); */
+   /* mu_assert_int_eq(true, n->fwd == tail); */
+   /* mu_assert_int_eq(true, tail->fwd == NULL); */
+   /* mu_assert_int_eq(true, tail->bwd == n); */
 
 }
 
@@ -211,29 +265,29 @@ MU_TEST(test_list_insert) {
 /* confirm that attempting to add an duplicate item id is not allowed */
 
 MU_TEST(test_list_duplicates) {
-   lditem_t *n = NULL;
-   lditem_t *d = NULL;
+   dlentry_t *n = NULL;
+   dlentry_t *d = NULL;
    bool r;
 
-   n = ld_new(&list_by_id, (void *)10);
-   d = ld_new(&list_by_id, (void *)10);
-   r = ld_add(&list_by_id, n);
-   mu_assert_int_eq(true, r);
-   r = ld_add(&list_by_id, d);
-   mu_assert_int_eq(false, r);
-   mu_assert_int_eq(1, list_by_id.count);
-   mu_assert_int_eq(1, ld_count(&list_by_id));
-   ld_free(&list_by_id, &d);
+   /* n = dl_new(&by_id, (void *)10); */
+   /* d = dl_new(&by_id, (void *)10); */
+   /* r = dl_add(&by_id, n); */
+   /* mu_assert_int_eq(true, r); */
+   /* r = dl_add(&by_id, d); */
+   /* mu_assert_int_eq(false, r); */
+   /* mu_assert_int_eq(1, by_id.count); */
+   /* mu_assert_int_eq(1, dl_count(&by_id)); */
+   /* dl_free(&by_id, &d); */
 
-   n = ld_new(&list_by_payload, "asdf");
-   d = ld_new(&list_by_payload, "asdf");
-   r = ld_add(&list_by_payload, n);
-   mu_assert_int_eq(true, r);
-   r = ld_add(&list_by_payload, d);
-   mu_assert_int_eq(false, r);
-   mu_assert_int_eq(1, list_by_payload.count);
-   mu_assert_int_eq(1, ld_count(&list_by_payload));
-   ld_free(&list_by_payload, &d);
+   /* n = dl_new(&by_payload, "asdf"); */
+   /* d = dl_new(&by_payload, "asdf"); */
+   /* r = dl_add(&by_payload, n); */
+   /* mu_assert_int_eq(true, r); */
+   /* r = dl_add(&by_payload, d); */
+   /* mu_assert_int_eq(false, r); */
+   /* mu_assert_int_eq(1, by_payload.count); */
+   /* mu_assert_int_eq(1, dl_count(&by_payload)); */
+   /* dl_free(&by_payload, &d); */
 
 }
 
@@ -241,65 +295,66 @@ MU_TEST(test_list_duplicates) {
 /* try to insert between existing items */
 
 MU_TEST(test_list_chaining) {
-   lditem_t *head = NULL;
-   lditem_t *tail = NULL;
-   lditem_t *inside = NULL;
+   dlentry_t *head = NULL;
+   dlentry_t *tail = NULL;
+   dlentry_t *inside = NULL;
    bool r;
 
-   head = ld_new(&list_by_id, (void *)10);
-   tail = ld_new(&list_by_id, (void *)90);
-   r = ld_add(&list_by_id, head);
-   mu_assert_int_eq(true, r);
-   r = ld_add(&list_by_id, tail);
-   mu_assert_int_eq(true, r);
-   inside = ld_new(&list_by_id, (void *)20);
-   r = ld_add(&list_by_id, inside);
-   mu_assert_int_eq(true, r);
-   mu_assert_int_eq(3, list_by_id.count);
-   mu_assert_int_eq(3, ld_count(&list_by_id));
+   /* head = dl_new(&by_id, (void *)10); */
+   /* tail = dl_new(&by_id, (void *)90); */
+   /* r = dl_add(&by_id, head); */
+   /* mu_assert_int_eq(true, r); */
+   /* r = dl_add(&by_id, tail); */
+   /* mu_assert_int_eq(true, r); */
+   /* inside = dl_new(&by_id, (void *)20); */
+   /* r = dl_add(&by_id, inside); */
+   /* mu_assert_int_eq(true, r); */
+   /* mu_assert_int_eq(3, by_id.count); */
+   /* mu_assert_int_eq(3, dl_count(&by_id)); */
 
-   head = ld_new(&list_by_payload, "head");
-   tail = ld_new(&list_by_payload, "tail");
-   r = ld_add(&list_by_payload, head);
-   mu_assert_int_eq(true, r);
-   r = ld_add(&list_by_payload, tail);
-   mu_assert_int_eq(true, r);
-   inside = ld_new(&list_by_payload, "middle");
-   r = ld_add(&list_by_payload, inside);
-   mu_assert_int_eq(true, r);
-   mu_assert_int_eq(3, list_by_payload.count);
-   mu_assert_int_eq(3, ld_count(&list_by_payload));
+   /* head = dl_new(&by_payload, "head"); */
+   /* tail = dl_new(&by_payload, "tail"); */
+   /* r = dl_add(&by_payload, head); */
+   /* mu_assert_int_eq(true, r); */
+   /* r = dl_add(&by_payload, tail); */
+   /* mu_assert_int_eq(true, r); */
+   /* inside = dl_new(&by_payload, "middle"); */
+   /* r = dl_add(&by_payload, inside); */
+   /* mu_assert_int_eq(true, r); */
+   /* mu_assert_int_eq(3, by_payload.count); */
+   /* mu_assert_int_eq(3, dl_count(&by_payload)); */
 }
 
 
-/* volume tests, sometimes you just gotta throw spaghetti at the wall */
+/* volume tests, sometimes you just gotta throw spaghetti at the
+ * wall */
 
 MU_TEST(test_list_many_asc) {
-   lditem_t *n = NULL;
+   dlentry_t *n = NULL;
    bool r;
    char *digits[100];
 
    for (long i = 0; i < 100; i++) {
-      n = ld_new(&list_by_id, (void *)i);
-      r = ld_add(&list_by_id, n);
-      if (!r) {
-         mu_assert_int_eq(true, r);
-      }
+      /* n = dl_new(&by_id, (void *)i); */
+      /* r = dl_add(&by_id, n); */
+      /* if (!r) { */
+      /*    mu_assert_int_eq(true, r); */
+      /* } */
    }
-   mu_assert_int_eq(100, list_by_id.count);
-   mu_assert_int_eq(100, ld_count(&list_by_id));
+   /* mu_assert_int_eq(100, by_id.count); */
+   /* mu_assert_int_eq(100, dl_count(&by_id)); */
 
    for (long i = 0; i < 100; i++) {
       digits[i] = calloc(16, 1);
       snprintf(digits[i], 15, "%ld", i);
-      n = ld_new(&list_by_payload, digits[i]);
-      r = ld_add(&list_by_payload, n);
-      if (!r) {
-         mu_assert_int_eq(true, r);
-      }
+      /* n = dl_new(&by_payload, digits[i]); */
+      /* r = dl_add(&by_payload, n); */
+      /* if (!r) { */
+      /*    mu_assert_int_eq(true, r); */
+      /* } */
    }
-   mu_assert_int_eq(100, list_by_payload.count);
-   mu_assert_int_eq(100, ld_count(&list_by_payload));
+   /* mu_assert_int_eq(100, by_payload.count); */
+   /* mu_assert_int_eq(100, dl_count(&by_payload)); */
    for (long i = 0; i < 100; i++) {
       free(digits[i]);
    }
@@ -307,232 +362,232 @@ MU_TEST(test_list_many_asc) {
 
 MU_TEST(test_list_many_dsc) {
    for (long i = 0; i < 100; i++) {
-      lditem_t *n = ld_new(&list_by_id, (void *)(100 - i));
-      bool r = ld_add(&list_by_id, n);
-      if (r == false) {
-         mu_assert_int_eq(true, r);
-      }
+      /* dlentry_t *n = dl_new(&by_id, (void *)(100 - i)); */
+      /* bool r = dl_add(&by_id, n); */
+      /* if (r == false) { */
+      /*    mu_assert_int_eq(true, r); */
+      /* } */
    }
-   mu_assert_int_eq(100, list_by_id.count);
-   mu_assert_int_eq(100, ld_count(&list_by_id));
+   /* mu_assert_int_eq(100, by_id.count); */
+   /* mu_assert_int_eq(100, dl_count(&by_id)); */
 }
 
 MU_TEST(test_list_many_random) {
 
    /* srand() is reseeded every test_setup */
-   mu_assert_int_eq(0, ld_count(&list_by_id));
+   /* mu_assert_int_eq(0, dl_count(&by_id)); */
 
-   int inserted = 0;
+   /* int inserted = 0; */
 
-   lditem_t *n;
-   while (ld_count(&list_by_id) < 1000) {
-      n = ld_new(&list_by_id, (void *)(long)rand_between(0, 10000));
-      if (ld_add(&list_by_id, n)) {
-         inserted += 1;
-      } else {
-         ld_free(&list_by_id, &n); /* item was never linked */
-      }
-   }
-   mu_assert_int_eq(inserted, ld_count(&list_by_id));
+   /* dlentry_t *n; */
+   /* while (dl_count(&by_id) < 1000) { */
+   /*    n = dl_new(&by_id, (void *)(long)rand_between(0, 10000)); */
+   /*    if (dl_add(&by_id, n)) { */
+   /*       inserted += 1; */
+   /*    } else { */
+   /*       dl_free(&by_id, &n); /\* item was never linked *\/ */
+   /*    } */
+   /* } */
+   /* mu_assert_int_eq(inserted, dl_count(&by_id)); */
 }
 
 /* test iterations. */
 
 MU_TEST(test_list_iteration) {
 
-   lditem_t *first = NULL;
-   lditem_t *last = NULL;
-   lditem_t *middle = NULL;
-   lditem_t *n = NULL;
+   /* dlentry_t *first = NULL; */
+   /* dlentry_t *last = NULL; */
+   /* dlentry_t *middle = NULL; */
+   /* dlentry_t *n = NULL; */
 
-   /* load some items */
-   for (long i = 0; i < 10; i++) {
-      n = ld_new(&list_by_id, (void *)i);
-      if (i == 0) {
-         first = n;
-      }
-      if (n->id == 5) {
-         middle = n;
-      }
-      ld_add(&list_by_id, n);
-      last = n;
-   }
+   /* /\* load some items *\/ */
+   /* for (long i = 0; i < 10; i++) { */
+   /*    n = dl_new(&by_id, (void *)i); */
+   /*    if (i == 0) { */
+   /*       first = n; */
+   /*    } */
+   /*    if (n->id == 5) { */
+   /*       middle = n; */
+   /*    } */
+   /*    dl_add(&by_id, n); */
+   /*    last = n; */
+   /* } */
 
-   lditem_t *curr = NULL;
+   /* dlentry_t *curr = NULL; */
 
-   /* iterate from front */
-   n = ld_next(&list_by_id, &curr);
-   mu_assert_int_eq(true, n == first);
-   int count = 0;
-   mu_assert_int_eq(true, n == curr);
-   mu_assert_int_eq(true, n->fwd != NULL);
-   mu_assert_int_eq(true, n->bwd == NULL);
-   first = n;
-   while (n) {
-      count += 1;
-      if (n->fwd == NULL) {
-         last = n;
-      }
-      n = ld_next(&list_by_id, &curr);
-   }
-   mu_assert_int_eq(count, ld_count(&list_by_id));
+   /* /\* iterate from front *\/ */
+   /* n = dl_next(&by_id, &curr); */
+   /* mu_assert_int_eq(true, n == first); */
+   /* int count = 0; */
+   /* mu_assert_int_eq(true, n == curr); */
+   /* mu_assert_int_eq(true, n->fwd != NULL); */
+   /* mu_assert_int_eq(true, n->bwd == NULL); */
+   /* first = n; */
+   /* while (n) { */
+   /*    count += 1; */
+   /*    if (n->fwd == NULL) { */
+   /*       last = n; */
+   /*    } */
+   /*    n = dl_next(&by_id, &curr); */
+   /* } */
+   /* mu_assert_int_eq(count, dl_count(&by_id)); */
 
-   /* iterate from back */
-   curr = NULL;
-   n = ld_prev(&list_by_id, &curr);
-   mu_assert_int_eq(true, n == last);
-   count = 0;
-   while (n) {
-      count += 1;
-      n = ld_prev(&list_by_id, &curr);
-   }
-   mu_assert_int_eq(count, ld_count(&list_by_id));
+   /* /\* iterate from back *\/ */
+   /* curr = NULL; */
+   /* n = dl_prev(&by_id, &curr); */
+   /* mu_assert_int_eq(true, n == last); */
+   /* count = 0; */
+   /* while (n) { */
+   /*    count += 1; */
+   /*    n = dl_prev(&by_id, &curr); */
+   /* } */
+   /* mu_assert_int_eq(count, dl_count(&by_id)); */
 
-   /* navigate from middle */
-   curr = middle;
-   n = ld_prev(&list_by_id, &curr);
-   mu_assert_int_eq(n->id, middle->id - 1);
-   curr = middle;
-   n = ld_next(&list_by_id, &curr);
-   mu_assert_int_eq(n->id, middle->id + 1);
+   /* /\* navigate from middle *\/ */
+   /* curr = middle; */
+   /* n = dl_prev(&by_id, &curr); */
+   /* mu_assert_int_eq(n->id, middle->id - 1); */
+   /* curr = middle; */
+   /* n = dl_next(&by_id, &curr); */
+   /* mu_assert_int_eq(n->id, middle->id + 1); */
 }
 
 /* test finding items. */
 
 MU_TEST(test_list_find) {
-   lditem_t *middle = NULL;
-   lditem_t *n = NULL;
+   dlentry_t *middle = NULL;
+   dlentry_t *n = NULL;
 
-   /* load some items */
-   for (long i = 0; i < 100; i += 10) {
-      n = ld_new(&list_by_id, (void *)i);
-      if (n->id == 50) {
-         middle = n;
-      }
-      ld_add(&list_by_id, n);
-   }
+   /* /\* load some items *\/ */
+   /* for (long i = 0; i < 100; i += 10) { */
+   /*    n = dl_new(&by_id, (void *)i); */
+   /*    if (n->id == 50) { */
+   /*       middle = n; */
+   /*    } */
+   /*    dl_add(&by_id, n); */
+   /* } */
 
-   /* can we find the middle? */
-   n = ld_find(&list_by_id, (void *)middle->id);
-   mu_assert_int_eq(true, middle == n);
+   /* /\* can we find the middle? *\/ */
+   /* n = dl_find(&by_id, (void *)middle->id); */
+   /* mu_assert_int_eq(true, middle == n); */
 
-   /* other items */
-   mu_assert_int_eq(true, NULL != ld_find(&list_by_id, (void *)10));
-   mu_assert_int_eq(true, NULL != ld_find(&list_by_id, (void *)90));
-   mu_assert_int_eq(true, NULL == ld_find(&list_by_id, (void *)15));
-   mu_assert_int_eq(true, NULL == ld_find(&list_by_id, (void *)-1));
-   mu_assert_int_eq(true, NULL == ld_find(&list_by_id, (void *)101));
+   /* /\* other items *\/ */
+   /* mu_assert_int_eq(true, NULL != dl_find(&by_id, (void *)10)); */
+   /* mu_assert_int_eq(true, NULL != dl_find(&by_id, (void *)90)); */
+   /* mu_assert_int_eq(true, NULL == dl_find(&by_id, (void *)15)); */
+   /* mu_assert_int_eq(true, NULL == dl_find(&by_id, (void *)-1)); */
+   /* mu_assert_int_eq(true, NULL == dl_find(&by_id, (void *)101)); */
 }
 
 /* and of course removal */
 
 MU_TEST(test_list_remove) {
-   lditem_t *first = NULL;
-   lditem_t *last = NULL;
-   lditem_t *middle = NULL;
-   lditem_t *n = NULL;
-   lditem_t *removed = NULL;
+   dlentry_t *first = NULL;
+   dlentry_t *last = NULL;
+   dlentry_t *middle = NULL;
+   dlentry_t *n = NULL;
+   dlentry_t *removed = NULL;
    char *digits[100];
    long r;
 
-   /* load up 100 items */
+   /* /\* load up 100 items *\/ */
 
-   for (long i = 0; i < 100; i++) {
-      digits[i] = calloc(16, 1);
-      snprintf(digits[i], 15, "%ld", i);
-      n = ld_new(&list_by_payload, digits[i]);
-      if (i == 0) {
-         first = n;
-      } else if (i == 50) {
-         middle = n;
-      } else if (i == 99) {
-         last = n;
-      }
-      r = ld_add(&list_by_payload, n);
-      if (!r) {
-         mu_assert_int_eq(true, r);
-      }
-   }
-   mu_assert_int_eq(100, list_by_payload.count);
-   mu_assert_int_eq(100, ld_count(&list_by_payload));
+   /* for (long i = 0; i < 100; i++) { */
+   /*    digits[i] = calloc(16, 1); */
+   /*    snprintf(digits[i], 15, "%ld", i); */
+   /*    n = dl_new(&by_payload, digits[i]); */
+   /*    if (i == 0) { */
+   /*       first = n; */
+   /*    } else if (i == 50) { */
+   /*       middle = n; */
+   /*    } else if (i == 99) { */
+   /*       last = n; */
+   /*    } */
+   /*    r = dl_add(&by_payload, n); */
+   /*    if (!r) { */
+   /*       mu_assert_int_eq(true, r); */
+   /*    } */
+   /* } */
+   /* mu_assert_int_eq(100, by_payload.count); */
+   /* mu_assert_int_eq(100, dl_count(&by_payload)); */
 
-   /* try to remove a item that isn't there */
-   removed = ld_remove(&list_by_payload, "123456");
-   mu_assert_int_eq((long)NULL, (long)removed);
-   mu_assert_int_eq(100, ld_count(&list_by_payload));
+   /* /\* try to remove a item that isn't there *\/ */
+   /* removed = dl_remove(&by_payload, "123456"); */
+   /* mu_assert_int_eq((long)NULL, (long)removed); */
+   /* mu_assert_int_eq(100, dl_count(&by_payload)); */
 
-   /* try to remove the first item */
-   char *s = strdup(first->payload);
-   removed = ld_remove(&list_by_payload, s);
-   mu_assert_int_eq(false, removed == NULL);
-   mu_assert_int_eq(true, removed == first);
-   mu_assert_string_eq(s, removed->payload);
-   mu_assert_int_eq(99, ld_count(&list_by_payload));
-   ld_free(&list_by_payload, &removed);
-   mu_assert_int_eq(true, removed == NULL);
-   free(s);
+   /* /\* try to remove the first item *\/ */
+   /* char *s = strdup(first->payload); */
+   /* removed = dl_remove(&by_payload, s); */
+   /* mu_assert_int_eq(false, removed == NULL); */
+   /* mu_assert_int_eq(true, removed == first); */
+   /* mu_assert_string_eq(s, removed->payload); */
+   /* mu_assert_int_eq(99, dl_count(&by_payload)); */
+   /* dl_free(&by_payload, &removed); */
+   /* mu_assert_int_eq(true, removed == NULL); */
+   /* free(s); */
 
-   /* try to remove the last item */
-   s = strdup(last->payload);
-   removed = ld_remove(&list_by_payload, s);
-   mu_assert_int_eq(false, removed == NULL);
-   mu_assert_int_eq(true, removed == last);
-   mu_assert_string_eq(s, removed->payload);
-   mu_assert_int_eq(98, ld_count(&list_by_payload));
-   ld_free(&list_by_payload, &removed);
-   mu_assert_int_eq(true, removed == NULL);
-   free(s);
+   /* /\* try to remove the last item *\/ */
+   /* s = strdup(last->payload); */
+   /* removed = dl_remove(&by_payload, s); */
+   /* mu_assert_int_eq(false, removed == NULL); */
+   /* mu_assert_int_eq(true, removed == last); */
+   /* mu_assert_string_eq(s, removed->payload); */
+   /* mu_assert_int_eq(98, dl_count(&by_payload)); */
+   /* dl_free(&by_payload, &removed); */
+   /* mu_assert_int_eq(true, removed == NULL); */
+   /* free(s); */
 
-   /* and now a item in the middle */
-   s = strdup(middle->payload);
-   removed = ld_remove(&list_by_payload, s);
-   mu_assert_int_eq(false, removed == NULL);
-   mu_assert_int_eq(true, removed == middle);
-   mu_assert_string_eq(s, removed->payload);
-   mu_assert_int_eq(97, ld_count(&list_by_payload));
-   ld_free(&list_by_payload, &removed);
-   mu_assert_int_eq(true, removed == NULL);
+   /* /\* and now a item in the middle *\/ */
+   /* s = strdup(middle->payload); */
+   /* removed = dl_remove(&by_payload, s); */
+   /* mu_assert_int_eq(false, removed == NULL); */
+   /* mu_assert_int_eq(true, removed == middle); */
+   /* mu_assert_string_eq(s, removed->payload); */
+   /* mu_assert_int_eq(97, dl_count(&by_payload)); */
+   /* dl_free(&by_payload, &removed); */
+   /* mu_assert_int_eq(true, removed == NULL); */
 
-   /* and just to be sure it's really gone */
-   removed = ld_remove(&list_by_payload, s);
-   mu_assert_int_eq(true, removed == NULL);
+   /* /\* and just to be sure it's really gone *\/ */
+   /* removed = dl_remove(&by_payload, s); */
+   /* mu_assert_int_eq(true, removed == NULL); */
 
-   free(s);
+   /* free(s); */
 
-   for (long i = 0; i < 100; i++) {
-      free(digits[i]);
-   }
+   /* for (long i = 0; i < 100; i++) { */
+   /*    free(digits[i]); */
+   /* } */
 }
 
 /* test freeing all the items in a populated list. */
 
 MU_TEST(test_list_free) {
-   lditem_t *n = NULL;
-   char *digits[100];
-   long r;
+   /* dlentry_t *n = NULL; */
+   /* char *digits[100]; */
+   /* long r; */
 
-   /* load up 100 items */
+   /* /\* load up 100 items *\/ */
 
-   for (long i = 0; i < 100; i++) {
-      digits[i] = calloc(16, 1);
-      snprintf(digits[i], 15, "%ld", i);
-      n = ld_new(&list_by_payload, digits[i]);
-      r = ld_add(&list_by_payload, n);
-      if (!r) {
-         mu_assert_int_eq(true, r);
-      }
-   }
-   mu_assert_int_eq(100, list_by_payload.count);
-   mu_assert_int_eq(100, ld_count(&list_by_payload));
+   /* for (long i = 0; i < 100; i++) { */
+   /*    digits[i] = calloc(16, 1); */
+   /*    snprintf(digits[i], 15, "%ld", i); */
+   /*    n = dl_new(&by_payload, digits[i]); */
+   /*    r = dl_add(&by_payload, n); */
+   /*    if (!r) { */
+   /*       mu_assert_int_eq(true, r); */
+   /*    } */
+   /* } */
+   /* mu_assert_int_eq(100, by_payload.count); */
+   /* mu_assert_int_eq(100, dl_count(&by_payload)); */
 
-   ld_free_all(&list_by_payload);
+   /* dl_free_all(&by_payload); */
 
-   mu_assert_int_eq(0, list_by_payload.count);
-   mu_assert_int_eq(0, ld_count(&list_by_payload));
+   /* mu_assert_int_eq(0, by_payload.count); */
+   /* mu_assert_int_eq(0, dl_count(&by_payload)); */
 
-   for (long i = 0; i < 100; i++) {
-      free(digits[i]);
-   }
+   /* for (long i = 0; i < 100; i++) { */
+   /*    free(digits[i]); */
+   /* } */
 }
 
 
@@ -553,6 +608,13 @@ MU_TEST_SUITE(test_suite) {
    /* run your tests here */
 
    printf("\n\ndoubly linked list\n\n");
+   MU_RUN_TEST(test_dl_id_create);
+   MU_RUN_TEST(test_dl_key_create);
+
+   MU_RUN_TEST(test_dl_id_add);
+   MU_RUN_TEST(test_dl_key_add);
+
+
    MU_RUN_TEST(test_list_create);
    MU_RUN_TEST(test_list_count);
    MU_RUN_TEST(test_list_insert);

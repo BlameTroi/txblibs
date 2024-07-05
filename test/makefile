@@ -58,7 +58,7 @@ unitpq: unitpq.o pq.o misc.o
 unitdl.o: unitdl.c ../inc/dl.h ../inc/misc.h
 	$(CC) $(CFLAGS) -c unitdl.c
 
-unitdl: unitdl.o pq.o misc.o
+unitdl: unitdl.o dl.o misc.o
 	$(CC) $(CFLAGS) -o unitdl unitdl.o dl.o misc.o
 
 testlibs.o: testlibs.c ../inc/misc.h ../inc/str.h ../inc/pmute.h
