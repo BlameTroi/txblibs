@@ -10,10 +10,10 @@ CFLAGS=-fsanitize=address -Wall -g3 -O0 -std=c99
 # LDFLAGS=-lm
 LDFLAGS=
 
-all: unitpq unitpat testlibs unittest
+all: unitpq unitpat testlibs unittest unitdl
 
 clean:
-	rm -rf *.o *.dSYM/ unitpat unittest testlibs unitpq
+	rm -rf *.o *.dSYM/ unitpat unittest testlibs unitpq unitdl
 
 
 #####################################################
@@ -53,7 +53,7 @@ unitpq.o: unitpq.c ../inc/pq.h ../inc/misc.h
 unitpq: unitpq.o pq.o misc.o
 	$(CC) $(CFLAGS) -o unitpq unitpq.o pq.o misc.o
 
-unitdl.o: unitdl.c ../inc/dl.h ../inc/misc.h
+unitdl.o: unitdl.c ../inc/dl.h ../inc/misc.h ../inc/abort.h
 	$(CC) $(CFLAGS) -c unitdl.c
 
 unitdl: unitdl.o dl.o misc.o abort.o

@@ -26,7 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../inc/abort.h"
+#include "txbabort.h"
 #include "../inc/dl.h"
 
 /*

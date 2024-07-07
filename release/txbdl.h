@@ -341,7 +341,7 @@ dl_get_previous(
 #include <stdlib.h>
 #include <string.h>
 
-#include "../inc/abort.h"
+#include "txbabort.h"
 
 /*
  * functions prefixed by dl_ are the api for the doubly linked list.
