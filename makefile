@@ -5,7 +5,7 @@
 .PHONY: clean all
 
 
-all: abort listd misc pat pmute pq str
+all: abort dl misc pat pmute pq str
 
 
 clean:
@@ -15,8 +15,8 @@ clean:
 abort: inc/abort.h src/abort.c
 	buildhdr --macro TXBABORT --intro LICENSE --pub inc/abort.h --priv src/abort.c >release/txbabort.h
 
-listd: inc/listd.h src/listd.c
-	buildhdr --macro TXBLISTD --intro LICENSE --pub inc/listd.h --priv src/listd.c >release/txblistd.h
+dl: inc/dl.h src/dl.c
+	buildhdr --macro TXBDL --intro LICENSE --pub inc/dl.h --priv src/dl.c >release/txbdl.h
 
 misc: inc/misc.h src/misc.c
 	buildhdr --macro TXBMISC --intro LICENSE --pub inc/misc.h --priv src/misc.c >release/txbmisc.h

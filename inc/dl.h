@@ -1,4 +1,4 @@
-/* listd.h -- blametroi's doubly linked list functions -- */
+/* dl.h -- blametroi's doubly linked list functions -- */
 
 /*
  * a header only implementation of a doubly linked list.

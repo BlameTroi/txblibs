@@ -5,7 +5,7 @@
 
 CC=clang
 # CFLAGS=-Wall -g3 -std=c99
-# CFLAGS=-Wall -O3 -std=c99
+# CFLAGS=-Wall -O2 -std=c99
 CFLAGS=-fsanitize=address -Wall -g3 -O0 -std=c99
 # LDFLAGS=-lm
 LDFLAGS=
@@ -25,9 +25,6 @@ abort.o: ../inc/abort.h ../src/abort.c
 
 misc.o: ../inc/misc.h ../src/misc.c
 	$(CC) $(CFLAGS) -c ../src/misc.c
-
-listd.o: ../inc/listd.h ../src/listd.c
-	$(CC) $(CFLAGS) -c ../src/listd.c
 
 dl.o: ../inc/dl.h ../src/dl.c ../inc/abort.h
 	$(CC) $(CFLAGS) -c ../src/dl.c
@@ -74,8 +71,8 @@ unitpat.o: unitpat.c ../inc/abort.h ../inc/misc.h ../inc/pat.h ../inc/str.h
 unitpat: unitpat.o abort.o misc.o pat.o str.o
 	$(CC) $(CFLAGS) -o unitpat unitpat.o abort.o misc.o pat.o $(LDFLAGS)
 
-unittest.o: unittest.c ../inc/misc.h ../inc/listd.h ../inc/str.h
+unittest.o: unittest.c ../inc/misc.h ../inc/str.h
 	$(CC) $(CFLAGS) -c unittest.c
 
-unittest: unittest.o misc.o listd.o str.o
-	$(CC) $(CFLAGS) -o unittest unittest.o misc.o listd.o str.o $(LDFLAGS)
+unittest: unittest.o misc.o str.o
+	$(CC) $(CFLAGS) -o unittest unittest.o misc.o str.o $(LDFLAGS)

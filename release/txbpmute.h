@@ -113,9 +113,6 @@ permute_next(
  * to copy, modify, publish, and distribute this file as you see fit.
  */
 
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
 
 
 

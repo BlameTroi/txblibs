@@ -61,7 +61,7 @@ A simple structure:
 │   └── makefile
 ├── inc                      [headers for building libraries]
 │   ├── abort.h
-│   ├── listd.h
+│   ├── dl.h
 │   ├── misc.h
 │   ├── pat.h
 │   ├── pmute.h
@@ -70,7 +70,7 @@ A simple structure:
 ├── makefile
 ├── release                  [release build of libraries]
 │   ├── txbabort.h
-│   ├── txblistd.h
+│   ├── txbdl.h
 │   ├── txbmisc.h
 │   ├── txbpat.h
 │   ├── txbpmute.h
@@ -78,7 +78,7 @@ A simple structure:
 │   └── txbstr.h
 ├── src                      [source for building libraries]
 │   ├── abort.c
-│   ├── listd.c
+│   ├── dl.c
 │   ├── misc.c
 │   ├── pat.c
 │   ├── pmute.c
@@ -87,6 +87,7 @@ A simple structure:
 └── test                     [source for testing]
     ├── makefile
     ├── testlibs.c
+    ├── unitdl.c
     ├── unitpat.c
     ├── unitpq.c
     └── unittest.c
@@ -112,7 +113,7 @@ These are the headers:
 | File       | Description                                           |
 |------------+-------------------------------------------------------|
 | txbabort.h | abort and abort_if                                    |
-| txblistd.h | doubly linked list                                    |
+| txbdl.h    | doubly linked list                                    |
 | txbmisc.h  | "missing" functions such as min/max                   |
 | txbpat.h   | subset of regular expressions                         |
 | txbpmute.h | iterative permutation generator                       |
@@ -265,8 +266,8 @@ Functions:
 | pos_char       | index of a character in a string.                 |
 
 
-txblistd functions
-==================
+TXBDL.H
+=======
 
 This library provides a doubly linked list that may be optionally be
 ordered. The client code presents payloads of for items in the list as
@@ -282,20 +283,19 @@ Functions:
 
 | Function            | Description                                  |
 |---------------------+----------------------------------------------|
-| reset_listd_control | resets/clears the list control block.        |
-| free_all_items      | remove and optionally free memory for all    |
-|                     | items on a list.                             |
-| make_item           | allocate and initialize an unlinked item and |
-|                     | attach its payload.                          |
-| free_item           | free an unlinked item and its payload.       |
-| find_item           | does an item with a matching payload key     |
-|                     | exist in the list?                           |
-| count_items         | how many items are on the list?              |
-| add_item            | add unlinked item to the list.               |
-| remove_item         | unlink item with a matching payload key from |
+| dl_create_by_id     | create a new doubly linked list.             |
+| dl_create_by_key    |                                              |
+| dl_destroy          | if empty, release any allocated memory for   |
 |                     | the list.                                    |
-| next_item           | iterate through the items on the list.       |
-| prev_item           | as next_item, but backwards.                 |
+| dl_empty            | is the list empty?                           |
+| dl_count            | how many items are on the list?              |
+| dl_insert           | add a new item to the list.                  |
+| dl_delete           | remove an item from the list.                |
+| dl_udpate           | update an item on the list.                  |
+| dl_get              | get a specific item from the list.           |
+| dl_get_first, _last | get the first or last item on the list.      |
+| dl_get_next,        | read forward or backward through the list    |
+| _previous           |                                              |
 
 
 TXBPAT.H
@@ -373,12 +373,6 @@ all:
 abort:
 
 - improve error message support with snprintf
-
-
-listd:
-
-- review exposed api
-- tag control blocks
 
 
 misc:

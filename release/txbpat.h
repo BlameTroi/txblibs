@@ -338,11 +338,9 @@ glob_match(
  */
 
 #include <stdbool.h>
-#include <assert.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <stdio.h>
 #include "txbmisc.h"
 #include "txbstr.h"
 #include "txbabort.h"
