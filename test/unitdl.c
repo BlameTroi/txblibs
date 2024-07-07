@@ -331,11 +331,9 @@ MU_TEST(test_dl_id_delete) {
    mu_should(strcmp(payload, "0010 bogus") == 0);
 
    /* delete 10, alternating from that starting position */
-   printf("\n");
    int deleted = 0;
    bool toggle = true;
    while (deleted < 10) {
-      printf(" %ld %s %s %d\n", id, payload, (toggle ? "deleting" : "skipping"), deleted);
       if (toggle) {
          mu_should(dl_delete(dl, id, payload));
          deleted += 1;
@@ -371,6 +369,44 @@ MU_TEST(test_dl_id_delete) {
    mu_shouldnt(dl_get(dl, &id, &payload));
    id = 510;
    mu_should(dl_get(dl, &id, &payload));
+
+   destroy_populated_id_list(dl);
+}
+
+MU_TEST(test_dl_id_update) {
+   dlcb_t *dl = create_populated_id_list();
+
+   long id;
+   void *payload;
+
+   mu_should(dl_count(dl) == 99);
+
+   /* position to head */
+   dl_get_first(dl, &id, &payload);
+   mu_should(id == 10);
+   mu_should(strcmp(payload, "0010 bogus") == 0);
+
+   /* change data of 510 */
+   id = 510;
+   payload = NULL;
+   mu_should(dl_get(dl, &id, &payload));
+   mu_should(id == 510);
+   mu_should(strcmp(payload, "0510 bogus") == 0);
+
+   payload = strdup("0510 not bogus");
+   mu_should(dl_update(dl, id, payload));
+
+   id = 200;
+   payload = NULL;
+   mu_should(dl_get(dl, &id, &payload));
+   mu_should(id == 200);
+   mu_should(strcmp(payload, "0200 bogus") == 0);
+
+   id = 510;
+   payload = NULL;
+   mu_should(dl_get(dl, &id, &payload));
+   mu_should(id == 510);
+   mu_should(strcmp(payload, "0510 not bogus") == 0);
 
    destroy_populated_id_list(dl);
 }
@@ -459,6 +495,7 @@ MU_TEST_SUITE(test_suite) {
    MU_RUN_TEST(test_dl_id_get_previous);
    MU_RUN_TEST(test_dl_id_get_next);
    MU_RUN_TEST(test_dl_id_delete);
+   MU_RUN_TEST(test_dl_id_update);
 
 
    MU_RUN_TEST(test_dl_key_create);
