@@ -1,4 +1,4 @@
-# just a makefile
+# makefile for the buildhdr c single file header library utility
 
 .POSIX:
 
@@ -7,7 +7,8 @@
 
 CC=clang
 # CFLAGS=-Wall -g3 -std=c99
-CFLAGS=-fsanitize=address -Wall -g3 -O0 -std=c99
+# CFLAGS=-fsanitize=address -Wall -g3 -O0 -std=c99
+CFLAGS=-Wall -O2 -std=c99
 # LDFLAGS=-lm
 LDFLAGS=
 
