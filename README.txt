@@ -20,14 +20,14 @@ So let it be done.
 Installation and Use
 ====================
 
-The headers to use are in the release subdirectory. They are built
-from the makefile with my version of the library packer program,
-found in the buildhdr subdirectory. The source for each header is a
-pair of files in the inc and src subdirctories. txbabort.h is
-built from inc/abort.h and src/abort.c, and so on.
+The headers to use are in the release subdirectory. They are built by
+the makefile using buildhdr (https://github.com/BlameTroi/buildhdr).
+The source for each header is a pair of files in the inc and src
+subdirctories. txbabort.h is built from inc/abort.h and src/abort.c,
+and so on.
 
 I keep all the release headers in my $HOME/.local/include/ directory
-and add that to my $CPATH in various makefiles.
+and add that to my $CPATH or in makefiles as needed.
 
 Include the appropriate headers in your project. Each header has a
 preprocessor variable to control when the executable code will be
@@ -55,10 +55,6 @@ A simple structure:
 .                            [the project]
 ├── LICENSE
 ├── README.txt
-├── buildhdr                 [source to the header packer]
-│   ├── README.txt
-│   ├── buildhdr.c
-│   └── makefile
 ├── inc                      [headers for building libraries]
 │   ├── abort.h
 │   ├── dl.h
@@ -368,16 +364,12 @@ TODO
 all:
 
 - use abort and abort_if
+- more consistency in the documentation
 
 
 abort:
 
 - improve error message support with snprintf
-
-
-misc:
-
-- ?
 
 
 pat:
@@ -389,10 +381,6 @@ pat:
 - (low priority) capture groups ()
 - (low priority) or |
 
-
-pq:
-
-- ?
 
 
 str:
