@@ -26,21 +26,6 @@
 extern "C" {
 #endif /* __cplusplus */
 
-/*
- * a node of the doubly linked list. keying for ordering can use
- * either the id or results from the compare_payload function. node
- * keys must be unique within a list.
- */
-
-#define DLNODE_TAG "--DLNO--"
-typedef struct dlnode_t {
-   char tag[8];
-   struct dlcb_t *dlcb;
-   struct dlnode_t *fwd;
-   struct dlnode_t *bwd;
-   long id;
-   void *payload;
-} dlnode_t;
 
 /*
  * double list control block holding chain pointers and other control
@@ -53,33 +38,7 @@ typedef struct dlnode_t {
  * a pointer to an instance of this control block.
  */
 
-#define DLCB_TAG "--DLCB--"
-typedef struct dlcb_t {
-   char tag[8];                   /* eye catcher */
-
-   dlnode_t *head;                /* head and tail node pointers */
-   dlnode_t *tail;
-
-   dlnode_t *work;                /* preallocated node storage, not yet used but
-                                   * a potential optimization. */
-   dlnode_t *position;            /* the last node accessed. this is needed by
-                                   * get_next and get_previous. operations that
-                                   * invalidate the position should set this to
-                                   * NULL. */
-
-   void (*payload_free)(void *);  /* if a payload needs to be freed, function pointer here */
-   int (*payload_compare)(void *, void *);  /* key compare for ordering, a la strcmp */
-
-   bool use_id;                   /* use the id field for ordering and finding */
-   bool dynamic_payload;          /* the payload should be freed when the node is freed */
-   bool threaded;                 /* protect operations with a mutex */
-
-   long odometer;                 /* just a counter of calls to the api */
-   long count;                    /* how many items are on the list? */
-
-   pthread_mutex_t mutex;         /* if threaded, block other threads when calling
-                                   * atomic code */
-} dlcb_t;
+typedef struct dlcb dlcb;
 
 /*
  * forward declarations for all functions.
@@ -111,13 +70,13 @@ typedef struct dlcb_t {
  * is returned.
  */
 
-dlcb_t *
+dlcb *
 dl_create_by_id(
    bool threaded,
    void (*free_payload)(void *)
 );
 
-dlcb_t *
+dlcb *
 dl_create_by_key(
    bool threaded,
    int (*compare_payload_key)(void *, void *),
@@ -130,7 +89,7 @@ dl_create_by_key(
 
 bool
 dl_destroy(
-   dlcb_t *dl
+   dlcb *dl
 );
 
 /*
@@ -139,7 +98,7 @@ dl_destroy(
 
 int
 dl_count(
-   dlcb_t *dl
+   dlcb *dl
 );
 
 /*
@@ -148,7 +107,7 @@ dl_count(
 
 bool
 dl_empty(
-   dlcb_t *dl
+   dlcb *dl
 );
 
 /*
@@ -157,7 +116,7 @@ dl_empty(
 
 int
 dl_delete_all(
-   dlcb_t *dl
+   dlcb *dl
 );
 
 /*
@@ -174,21 +133,21 @@ dl_delete_all(
 
 bool
 dl_insert(
-   dlcb_t *dl,
+   dlcb *dl,
    long id,
    void *payload
 );
 
 bool
 dl_delete(
-   dlcb_t *dl,
+   dlcb *dl,
    long id,
    void *payload
 );
 
 bool
 dl_update(
-   dlcb_t *dl,
+   dlcb *dl,
    long id,
    void *payload
 );
@@ -222,35 +181,35 @@ dl_update(
 
 bool
 dl_get(
-   dlcb_t *dl,
+   dlcb *dl,
    long *id,
    void *(*payload)
 );
 
 bool
 dl_get_first(
-   dlcb_t *dl,
+   dlcb *dl,
    long *id,
    void *(*payload)
 );
 
 bool
 dl_get_last(
-   dlcb_t *dl,
+   dlcb *dl,
    long *id,
    void *(*payload)
 );
 
 bool
 dl_get_next(
-   dlcb_t *dl,
+   dlcb *dl,
    long *id,
    void *(*payload)
 );
 
 bool
 dl_get_previous(
-   dlcb_t *dl,
+   dlcb *dl,
    long *id,
    void *(*payload)
 );

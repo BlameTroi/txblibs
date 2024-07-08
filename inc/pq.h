@@ -17,58 +17,43 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#define PQENTRY_TAG "--PQEN--"
-typedef struct pqentry_t {
-   char tag[8];
-   long priority;
-   struct pqentry_t *bwd;
-   struct pqentry_t *fwd;
-   void *payload;
-} pqentry_t;
-
-#define PQCB_TAG "--PQCB--"
-typedef struct pqcb_t {
-   char tag[8];
-   pqentry_t *first;
-   pqentry_t *last;
-   bool threaded;
-   pthread_mutex_t mutex;
-} pqcb_t;
+typedef struct pqcb pqcb;
 
 bool
 pq_empty(
-   pqcb_t *
+   pqcb *
 );
 
 void
 pq_put(
-   pqcb_t *,
+   pqcb *,
    long,
-   void *);
+   void *
+);
 
 void *
 pq_get(
-   pqcb_t *
+   pqcb *
 );
 
 void *
 pq_peek(
-   pqcb_t *
+   pqcb *
 );
 
-pqcb_t *
+pqcb *
 pq_create(
    bool
 );
 
 bool
 pq_destroy(
-   pqcb_t *
+   pqcb *
 );
 
 int
 pq_count(
-   pqcb_t *
+   pqcb *
 );
 
 #ifdef __cplusplus

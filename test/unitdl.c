@@ -86,15 +86,15 @@ test_teardown(void) {
  * 100 items to work with, ids or keys run from 10 to 1000 by 10s.
  */
 
-dlcb_t *
+dlcb *
 create_populated_id_list(void) {
    char buffer[100];
    memset(buffer, 0, 100 * sizeof(char));
 
-   dlcb_t *dl = dl_create_by_id(
-                   USE_THREADING,
-                   payload_free
-                );
+   dlcb *dl = dl_create_by_id(
+                 USE_THREADING,
+                 payload_free
+              );
    assert(dl &&
           "error creating test data linked list");
 
@@ -107,13 +107,13 @@ create_populated_id_list(void) {
 }
 
 void
-destroy_populated_id_list(dlcb_t *dl) {
+destroy_populated_id_list(dlcb *dl) {
    dl_delete_all(dl);
    dl_destroy(dl);
    dl = NULL;
 }
 
-dlcb_t *
+dlcb *
 create_populated_key_list(
    int(*optional_payload_compare)(void *, void *)
 ) {
@@ -124,11 +124,11 @@ create_populated_key_list(
    if (optional_payload_compare == NULL) {
       optional_payload_compare = payload_compare;
    }
-   dlcb_t *dl = dl_create_by_key(
-                   USE_THREADING,
-                   optional_payload_compare,
-                   payload_free
-                );
+   dlcb *dl = dl_create_by_key(
+                 USE_THREADING,
+                 optional_payload_compare,
+                 payload_free
+              );
    assert(dl &&
           "error creating test data linked list");
 
@@ -141,7 +141,7 @@ create_populated_key_list(
 }
 
 void
-destroy_populated_key_list(dlcb_t *dl) {
+destroy_populated_key_list(dlcb *dl) {
    dl_delete_all(dl);
    dl_destroy(dl);
    dl = NULL;
@@ -152,10 +152,10 @@ destroy_populated_key_list(dlcb_t *dl) {
  */
 
 MU_TEST(test_dl_id_create) {
-   dlcb_t *dl = dl_create_by_id(
-                   USE_THREADING,
-                   NULL
-                );
+   dlcb *dl = dl_create_by_id(
+                 USE_THREADING,
+                 NULL
+              );
    mu_should(dl);
    mu_should(dl_empty(dl));
    mu_should(dl_count(dl) == 0);
@@ -167,10 +167,10 @@ MU_TEST(test_dl_id_create) {
  */
 
 MU_TEST(test_dl_id_add) {
-   dlcb_t *dl = dl_create_by_id(
-                   USE_THREADING,
-                   NULL
-                );
+   dlcb *dl = dl_create_by_id(
+                 USE_THREADING,
+                 NULL
+              );
    mu_should(dl_insert(dl, 1, "1234"));
    mu_shouldnt(dl_empty(dl));
    mu_should(dl_count(dl) == 1);
@@ -185,10 +185,10 @@ MU_TEST(test_dl_id_add) {
  */
 
 MU_TEST(test_dl_id_add_multiple) {
-   dlcb_t *dl = dl_create_by_id(
-                   USE_THREADING,
-                   NULL
-                );
+   dlcb *dl = dl_create_by_id(
+                 USE_THREADING,
+                 NULL
+              );
    /* add two unique entries, then remove them. */
    mu_should(dl_insert(dl, 1, "first"));
    mu_should(dl_insert(dl, 2, "second"));
@@ -217,10 +217,10 @@ MU_TEST(test_dl_id_add_multiple) {
 }
 
 MU_TEST(test_dl_id_add_duplicate) {
-   dlcb_t *dl = dl_create_by_id(
-                   USE_THREADING,
-                   NULL
-                );
+   dlcb *dl = dl_create_by_id(
+                 USE_THREADING,
+                 NULL
+              );
    for (int i = 1; i < 10; i++) {
       dl_insert(dl, i, NULL);
    }
@@ -240,10 +240,10 @@ MU_TEST(test_dl_id_add_duplicate) {
  */
 
 MU_TEST(test_dl_id_add_random) {
-   dlcb_t *dl = dl_create_by_id(
-                   USE_THREADING,
-                   payload_free
-                );
+   dlcb *dl = dl_create_by_id(
+                 USE_THREADING,
+                 payload_free
+              );
    int generated = 0;
    int added = 0;
    int duplicated = 0;
@@ -268,7 +268,7 @@ MU_TEST(test_dl_id_add_random) {
  */
 
 MU_TEST(test_dl_id_get_first) {
-   dlcb_t *dl = create_populated_id_list();
+   dlcb *dl = create_populated_id_list();
    long id;
    void *payload;
    mu_should(dl_get_first(dl, &id, &payload));
@@ -282,7 +282,7 @@ MU_TEST(test_dl_id_get_first) {
  */
 
 MU_TEST(test_dl_id_get_last) {
-   dlcb_t *dl = create_populated_id_list();
+   dlcb *dl = create_populated_id_list();
    long id;
    void *payload;
    mu_should(dl_get_last(dl, &id, &payload));
@@ -296,7 +296,7 @@ MU_TEST(test_dl_id_get_last) {
  */
 
 MU_TEST(test_dl_id_get) {
-   dlcb_t *dl = create_populated_id_list();
+   dlcb *dl = create_populated_id_list();
 
    long id;
    void *payload;
@@ -339,7 +339,7 @@ MU_TEST(test_dl_id_get) {
  */
 
 MU_TEST(test_dl_id_get_previous) {
-   dlcb_t *dl = create_populated_id_list();
+   dlcb *dl = create_populated_id_list();
    long id;
    void *payload;
 
@@ -380,7 +380,7 @@ MU_TEST(test_dl_id_get_previous) {
  */
 
 MU_TEST(test_dl_id_get_next) {
-   dlcb_t *dl = create_populated_id_list();
+   dlcb *dl = create_populated_id_list();
    long id;
    void *payload;
 
@@ -421,7 +421,7 @@ MU_TEST(test_dl_id_get_next) {
  */
 
 MU_TEST(test_dl_id_delete) {
-   dlcb_t *dl = create_populated_id_list();
+   dlcb *dl = create_populated_id_list();
    long id;
    void *payload;
 
@@ -487,7 +487,7 @@ MU_TEST(test_dl_id_delete) {
  */
 
 MU_TEST(test_dl_id_update) {
-   dlcb_t *dl = create_populated_id_list();
+   dlcb *dl = create_populated_id_list();
 
    long id;
    void *payload;
@@ -531,11 +531,11 @@ MU_TEST(test_dl_id_update) {
  */
 
 MU_TEST(test_dl_key_create) {
-   dlcb_t *dl = dl_create_by_key(
-                   USE_THREADING,
-                   payload_compare,
-                   payload_free
-                );
+   dlcb *dl = dl_create_by_key(
+                 USE_THREADING,
+                 payload_compare,
+                 payload_free
+              );
    mu_should(dl);
    mu_should(dl_empty(dl));
    mu_should(dl_count(dl) == 0);
@@ -543,11 +543,11 @@ MU_TEST(test_dl_key_create) {
 }
 
 MU_TEST(test_dl_key_add) {
-   dlcb_t *dl = dl_create_by_key(
-                   USE_THREADING,
-                   payload_compare,
-                   NULL
-                );
+   dlcb *dl = dl_create_by_key(
+                 USE_THREADING,
+                 payload_compare,
+                 NULL
+              );
    mu_should(dl);
    mu_should(dl);
    mu_should(dl_insert(dl, 1, "1234"));
@@ -560,11 +560,11 @@ MU_TEST(test_dl_key_add) {
 }
 
 MU_TEST(test_dl_key_add_random) {
-   dlcb_t *dl = dl_create_by_key(
-                   USE_THREADING,
-                   payload_compare_long,
-                   payload_free
-                );
+   dlcb *dl = dl_create_by_key(
+                 USE_THREADING,
+                 payload_compare_long,
+                 payload_free
+              );
    int generated = 0;
    int added = 0;
    int duplicated = 0;
@@ -585,10 +585,10 @@ MU_TEST(test_dl_key_add_random) {
 }
 
 MU_TEST(test_dl_key_add_multiple) {
-   dlcb_t *dl = dl_create_by_id(
-                   USE_THREADING,
-                   NULL
-                );
+   dlcb *dl = dl_create_by_id(
+                 USE_THREADING,
+                 NULL
+              );
 
    /* add two unique entries, then remove them. */
    mu_should(dl_insert(dl, 1, "first"));
@@ -618,7 +618,7 @@ MU_TEST(test_dl_key_add_multiple) {
 }
 
 MU_TEST(test_dl_key_add_duplicate) {
-   dlcb_t *dl = dl_create_by_key(USE_THREADING, payload_compare_long, NULL);
+   dlcb *dl = dl_create_by_key(USE_THREADING, payload_compare_long, NULL);
    for (int i = 1; i < 10; i++) {
       dl_insert(dl, i, (void *)(long)i);
    }
@@ -633,7 +633,7 @@ MU_TEST(test_dl_key_add_duplicate) {
 }
 
 MU_TEST(test_dl_key_get_first) {
-   dlcb_t *dl = create_populated_key_list(NULL);
+   dlcb *dl = create_populated_key_list(NULL);
    long id;
    void *payload;
    mu_should(dl_get_first(dl, &id, &payload));
@@ -642,7 +642,7 @@ MU_TEST(test_dl_key_get_first) {
 }
 
 MU_TEST(test_dl_key_get_last) {
-   dlcb_t *dl = create_populated_key_list(NULL);
+   dlcb *dl = create_populated_key_list(NULL);
    long id;
    void *payload;
 
@@ -653,7 +653,7 @@ MU_TEST(test_dl_key_get_last) {
 }
 
 MU_TEST(test_dl_key_get) {
-   dlcb_t *dl = create_populated_key_list(NULL);
+   dlcb *dl = create_populated_key_list(NULL);
    long id;
    void *payload = NULL;
 
@@ -688,7 +688,7 @@ MU_TEST(test_dl_key_get) {
 }
 
 MU_TEST(test_dl_key_get_previous) {
-   dlcb_t *dl = create_populated_key_list(NULL);
+   dlcb *dl = create_populated_key_list(NULL);
 
    long id;
    void *payload;
@@ -723,7 +723,7 @@ MU_TEST(test_dl_key_get_previous) {
 }
 
 MU_TEST(test_dl_key_get_next) {
-   dlcb_t *dl = create_populated_key_list(NULL);
+   dlcb *dl = create_populated_key_list(NULL);
    long id;
    void *payload;
    /* somewhere in the list */
@@ -757,7 +757,7 @@ MU_TEST(test_dl_key_get_next) {
 }
 
 MU_TEST(test_dl_key_delete) {
-   dlcb_t *dl = create_populated_key_list(NULL);
+   dlcb *dl = create_populated_key_list(NULL);
 
    long id;
    void *payload;
@@ -814,7 +814,7 @@ MU_TEST(test_dl_key_delete) {
 }
 
 MU_TEST(test_dl_key_update) {
-   dlcb_t *dl = create_populated_key_list(payload_compare_char4);
+   dlcb *dl = create_populated_key_list(payload_compare_char4);
 
    long id;
    void *payload;

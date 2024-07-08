@@ -46,27 +46,27 @@ bool test_threaded = false;
  */
 
 MU_TEST(test_pq_create) {
-   pqcb_t *pq = pq_create(test_threaded);
+   pqcb *pq = pq_create(test_threaded);
    mu_should(pq);
    mu_should(pq_destroy(pq));
 }
 
 MU_TEST(test_pq_empty) {
-   pqcb_t *pq = pq_create(test_threaded);
+   pqcb *pq = pq_create(test_threaded);
    mu_should(pq_empty(pq));
    mu_should(pq_count(pq) == 0);
    mu_should(pq_destroy(pq));
 }
 
 MU_TEST(test_pq_access_empty) {
-   pqcb_t *pq = pq_create(test_threaded);
+   pqcb *pq = pq_create(test_threaded);
    mu_should(pq_peek(pq) == NULL);
    mu_should(pq_get(pq) == NULL);
    mu_should(pq_destroy(pq));
 }
 
 MU_TEST(test_pq_add_first) {
-   pqcb_t *pq = pq_create(test_threaded);
+   pqcb *pq = pq_create(test_threaded);
    pq_put(pq, 100, "100");
    mu_shouldnt(pq_empty(pq));
    mu_should(pq_count(pq) == 1);
@@ -80,7 +80,7 @@ MU_TEST(test_pq_add_first) {
 }
 
 MU_TEST(test_pq_read_loop) {
-   pqcb_t *pq = pq_create(true);
+   pqcb *pq = pq_create(true);
    pq_put(pq, 100, "100");
    pq_put(pq, 99, "99");
    pq_put(pq, 101, "101");
@@ -95,7 +95,7 @@ MU_TEST(test_pq_read_loop) {
 }
 
 MU_TEST(test_pq_rand_volume) {
-   pqcb_t *pq = pq_create(test_threaded);
+   pqcb *pq = pq_create(test_threaded);
    pq_put(pq, 1024, (void *)1024);
    pq_put(pq, 8888, (void *)8888);
    pq_put(pq, -3, (void *)-3);
@@ -118,7 +118,6 @@ MU_TEST(test_pq_rand_volume) {
    printf("\n");
    mu_should(pq_empty(pq));
    mu_should(pq_count(pq) == 0);
-   mu_should(pq->first == pq->last);
 }
 
 /*
