@@ -65,58 +65,43 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 extern "C" {
 #endif /* __cplusplus */
 
-#define PQENTRY_TAG "--PQEN--"
-typedef struct pqentry_t {
-   char tag[8];
-   long priority;
-   struct pqentry_t *bwd;
-   struct pqentry_t *fwd;
-   void *payload;
-} pqentry_t;
-
-#define PQCB_TAG "--PQCB--"
-typedef struct pqcb_t {
-   char tag[8];
-   pqentry_t *first;
-   pqentry_t *last;
-   bool threaded;
-   pthread_mutex_t mutex;
-} pqcb_t;
+typedef struct pqcb pqcb;
 
 bool
 pq_empty(
-   pqcb_t *
+   pqcb *
 );
 
 void
 pq_put(
-   pqcb_t *,
+   pqcb *,
    long,
-   void *);
+   void *
+);
 
 void *
 pq_get(
-   pqcb_t *
+   pqcb *
 );
 
 void *
 pq_peek(
-   pqcb_t *
+   pqcb *
 );
 
-pqcb_t *
+pqcb *
 pq_create(
    bool
 );
 
 bool
 pq_destroy(
-   pqcb_t *
+   pqcb *
 );
 
 int
 pq_count(
-   pqcb_t *
+   pqcb *
 );
 
 #ifdef __cplusplus
@@ -147,6 +132,28 @@ pq_count(
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+
+
+/*
+ * transparent control block definitions.
+ */
+#define PQENTRY_TAG "--PQEN--"
+typedef struct pqentry {
+   char tag[8];
+   long priority;
+   struct pqentry *bwd;
+   struct pqentry *fwd;
+   void *payload;
+} pqentry;
+
+#define PQCB_TAG "--PQCB--"
+struct pqcb {
+   char tag[8];
+   pqentry *first;
+   pqentry *last;
+   bool threaded;
+   pthread_mutex_t mutex;
+};
 
 
 /*
@@ -204,13 +211,15 @@ pq_count(
 
 static
 bool
-prim_pq_empty(pqcb_t *pq) {
+prim_pq_empty(
+   pqcb *pq
+) {
    return pq->first == NULL;
 }
 
 bool
 pq_empty(
-   pqcb_t *pq
+   pqcb *pq
 ) {
    assert(pq &&
           memcmp(pq->tag, PQCB_TAG, sizeof(pq->tag)) == 0 &&
@@ -232,10 +241,10 @@ pq_empty(
 static
 int
 prim_pq_count(
-   pqcb_t *pq
+   pqcb *pq
 ) {
    int i = 0;
-   pqentry_t *qe = pq->first;
+   pqentry *qe = pq->first;
    while (qe) {
       i += 1;
       qe = qe->fwd;
@@ -245,7 +254,7 @@ prim_pq_count(
 
 int
 pq_count(
-   pqcb_t *pq
+   pqcb *pq
 ) {
    assert(pq &&
           memcmp(pq->tag, PQCB_TAG, sizeof(pq->tag)) == 0 &&
@@ -265,12 +274,12 @@ pq_count(
  */
 
 static
-pqentry_t *
+pqentry *
 pq_new_entry(
    long priority,
    void *payload
 ) {
-   pqentry_t *qe = malloc(sizeof(*qe));
+   pqentry *qe = malloc(sizeof(*qe));
    memset(qe, 0, sizeof(*qe));
    memcpy(qe->tag, PQENTRY_TAG, sizeof(qe->tag));
    qe->priority = priority;
@@ -287,11 +296,11 @@ pq_new_entry(
 static
 void
 prim_pq_put(
-   pqcb_t *pq,
+   pqcb *pq,
    long priority,
    void *payload
 ) {
-   pqentry_t *qe = pq_new_entry(priority, payload);
+   pqentry *qe = pq_new_entry(priority, payload);
 
    /* empty is easy.  */
    if (prim_pq_empty(pq)) {
@@ -316,7 +325,7 @@ prim_pq_put(
    }
 
    /* find an insertion point. */
-   pqentry_t *p = pq->first;
+   pqentry *p = pq->first;
    while (p) {
       if (p->priority < qe->priority) {
          p = p->fwd;
@@ -335,7 +344,7 @@ prim_pq_put(
 
 void
 pq_put(
-   pqcb_t *pq,
+   pqcb *pq,
    long priority,
    void *payload
 ) {
@@ -358,12 +367,12 @@ pq_put(
 static
 void *
 prim_pq_get(
-   pqcb_t *pq
+   pqcb *pq
 ) {
    if (prim_pq_empty(pq)) {
       return NULL;
    }
-   pqentry_t *qe = pq->last;
+   pqentry *qe = pq->last;
    void *payload = qe->payload;
    pq->last = qe->bwd;
    free(qe);
@@ -377,7 +386,7 @@ prim_pq_get(
 
 void *
 pq_get(
-   pqcb_t *pq
+   pqcb *pq
 ) {
    assert(pq &&
           memcmp(pq->tag, PQCB_TAG, sizeof(pq->tag)) == 0 &&
@@ -398,7 +407,7 @@ pq_get(
 
 void *
 prim_pq_peek(
-   pqcb_t *pq
+   pqcb *pq
 ) {
    if (prim_pq_empty(pq)) {
       return NULL;
@@ -408,7 +417,7 @@ prim_pq_peek(
 
 void *
 pq_peek(
-   pqcb_t *pq
+   pqcb *pq
 ) {
    assert(pq &&
           memcmp(pq->tag, PQCB_TAG, sizeof(pq->tag)) == 0 &&
@@ -428,11 +437,11 @@ pq_peek(
  * create a new priority queue.
  */
 
-pqcb_t *
+pqcb *
 pq_create(
    bool threaded
 ) {
-   pqcb_t *pq = malloc(sizeof(*pq));
+   pqcb *pq = malloc(sizeof(*pq));
    assert(pq && "could not allocate PQCB");
    memset(pq, 0, sizeof(*pq));
    memcpy(pq->tag, PQCB_TAG, sizeof(pq->tag));
@@ -456,7 +465,7 @@ pq_create(
 
 bool
 pq_destroy(
-   pqcb_t *pq
+   pqcb *pq
 ) {
    assert(pq &&
           memcmp(pq->tag, PQCB_TAG, sizeof(pq->tag)) == 0 &&

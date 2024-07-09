@@ -74,21 +74,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 extern "C" {
 #endif /* __cplusplus */
 
-/*
- * a node of the doubly linked list. keying for ordering can use
- * either the id or results from the compare_payload function. node
- * keys must be unique within a list.
- */
-
-#define DLNODE_TAG "--DLNO--"
-typedef struct dlnode_t {
-   char tag[8];
-   struct dlcb_t *dlcb;
-   struct dlnode_t *fwd;
-   struct dlnode_t *bwd;
-   long id;
-   void *payload;
-} dlnode_t;
 
 /*
  * double list control block holding chain pointers and other control
@@ -101,33 +86,7 @@ typedef struct dlnode_t {
  * a pointer to an instance of this control block.
  */
 
-#define DLCB_TAG "--DLCB--"
-typedef struct dlcb_t {
-   char tag[8];                   /* eye catcher */
-
-   dlnode_t *head;                /* head and tail node pointers */
-   dlnode_t *tail;
-
-   dlnode_t *work;                /* preallocated node storage, not yet used but
-                                   * a potential optimization. */
-   dlnode_t *position;            /* the last node accessed. this is needed by
-                                   * get_next and get_previous. operations that
-                                   * invalidate the position should set this to
-                                   * NULL. */
-
-   void (*payload_free)(void *);  /* if a payload needs to be freed, function pointer here */
-   int (*payload_compare)(void *, void *);  /* key compare for ordering, a la strcmp */
-
-   bool use_id;                   /* use the id field for ordering and finding */
-   bool dynamic_payload;          /* the payload should be freed when the node is freed */
-   bool threaded;                 /* protect operations with a mutex */
-
-   long odometer;                 /* just a counter of calls to the api */
-   long count;                    /* how many items are on the list? */
-
-   pthread_mutex_t mutex;         /* if threaded, block other threads when calling
-                                   * atomic code */
-} dlcb_t;
+typedef struct dlcb dlcb;
 
 /*
  * forward declarations for all functions.
@@ -159,13 +118,13 @@ typedef struct dlcb_t {
  * is returned.
  */
 
-dlcb_t *
+dlcb *
 dl_create_by_id(
    bool threaded,
    void (*free_payload)(void *)
 );
 
-dlcb_t *
+dlcb *
 dl_create_by_key(
    bool threaded,
    int (*compare_payload_key)(void *, void *),
@@ -178,7 +137,7 @@ dl_create_by_key(
 
 bool
 dl_destroy(
-   dlcb_t *dl
+   dlcb *dl
 );
 
 /*
@@ -187,7 +146,7 @@ dl_destroy(
 
 int
 dl_count(
-   dlcb_t *dl
+   dlcb *dl
 );
 
 /*
@@ -196,7 +155,7 @@ dl_count(
 
 bool
 dl_empty(
-   dlcb_t *dl
+   dlcb *dl
 );
 
 /*
@@ -205,7 +164,7 @@ dl_empty(
 
 int
 dl_delete_all(
-   dlcb_t *dl
+   dlcb *dl
 );
 
 /*
@@ -222,21 +181,21 @@ dl_delete_all(
 
 bool
 dl_insert(
-   dlcb_t *dl,
+   dlcb *dl,
    long id,
    void *payload
 );
 
 bool
 dl_delete(
-   dlcb_t *dl,
+   dlcb *dl,
    long id,
    void *payload
 );
 
 bool
 dl_update(
-   dlcb_t *dl,
+   dlcb *dl,
    long id,
    void *payload
 );
@@ -270,35 +229,35 @@ dl_update(
 
 bool
 dl_get(
-   dlcb_t *dl,
+   dlcb *dl,
    long *id,
    void *(*payload)
 );
 
 bool
 dl_get_first(
-   dlcb_t *dl,
+   dlcb *dl,
    long *id,
    void *(*payload)
 );
 
 bool
 dl_get_last(
-   dlcb_t *dl,
+   dlcb *dl,
    long *id,
    void *(*payload)
 );
 
 bool
 dl_get_next(
-   dlcb_t *dl,
+   dlcb *dl,
    long *id,
    void *(*payload)
 );
 
 bool
 dl_get_previous(
-   dlcb_t *dl,
+   dlcb *dl,
    long *id,
    void *(*payload)
 );
@@ -344,6 +303,51 @@ dl_get_previous(
 #include "txbabort.h"
 
 /*
+ * a node of the doubly linked list. keying for ordering can use
+ * either the id or results from the compare_payload function. node
+ * keys must be unique within a list.
+ */
+
+#define DLNODE_TAG "--DLNO--"
+typedef struct dlnode {
+   char tag[8];
+   dlcb *dlcb;
+   struct dlnode *fwd;
+   struct dlnode *bwd;
+   long id;
+   void *payload;
+} dlnode;
+
+#define DLCB_TAG "--DLCB--"
+struct dlcb {
+   char tag[8];                   /* eye catcher */
+
+   dlnode *head;                  /* head and tail node pointers */
+   dlnode *tail;
+
+   dlnode *work;                  /* preallocated node storage, not yet used but
+                                   * a potential optimization. */
+   dlnode *position;              /* the last node accessed. this is needed by
+                                   * get_next and get_previous. operations that
+                                   * invalidate the position should set this to
+                                   * NULL. */
+
+   void (*payload_free)(void *);  /* if a payload needs to be freed, function pointer here */
+   int (*payload_compare)(void *, void *);  /* key compare for ordering, a la strcmp */
+
+   bool use_id;                   /* use the id field for ordering and finding */
+   bool dynamic_payload;          /* the payload should be freed when the node is freed */
+   bool threaded;                 /* protect operations with a mutex */
+
+   long odometer;                 /* just a counter of calls to the api */
+   long count;                    /* how many items are on the list? */
+
+   pthread_mutex_t mutex;         /* if threaded, block other threads when calling
+                                   * atomic code */
+};
+
+
+/*
  * functions prefixed by dl_ are the api for the doubly linked list.
  *
  * functions prefixed by atomic_ are viewed as atomic by this library
@@ -371,10 +375,10 @@ dl_get_previous(
 static
 int
 atomic_compare_id_or_key(
-   dlcb_t *dl,
+   dlcb *dl,
    long id,
    void *payload,
-   dlnode_t *existing
+   dlnode *existing
 ) {
    assert((id || payload) &&
           "error missing id or key");
@@ -408,14 +412,14 @@ atomic_compare_id_or_key(
 static
 bool
 atomic_insert(
-   dlcb_t *dl,
+   dlcb *dl,
    long id,
    void *payload
 ) {
    /* build new list entry */
-   dlnode_t *new = NULL;
-   new = malloc(sizeof(dlnode_t));
-   memset(new, 0, sizeof(dlnode_t));
+   dlnode *new = NULL;
+   new = malloc(sizeof(dlnode));
+   memset(new, 0, sizeof(dlnode));
    memcpy(new->tag, DLNODE_TAG, sizeof(new->tag));
    new->dlcb = dl;
    new->payload = payload;
@@ -438,7 +442,7 @@ atomic_insert(
 
    /* can't have duplicate id/key */
    if (rf == ID_KEY_EQ || rl == ID_KEY_EQ) {
-      memset(new, 254, sizeof(dlnode_t));
+      memset(new, 254, sizeof(dlnode));
       free(new);
       return false;
    }
@@ -459,14 +463,14 @@ atomic_insert(
 
    /* chase the link chain and insert where appropriate */
 
-   dlnode_t *curr = dl->head->fwd;
+   dlnode *curr = dl->head->fwd;
 
    while (curr) {
       int r = atomic_compare_id_or_key(dl, new->id, new->payload, curr);
 
       /* duplicate key, discard */
       if (r == ID_KEY_EQ) {
-         memset(new, 254, sizeof(dlnode_t));
+         memset(new, 254, sizeof(dlnode));
          free(new);
          return false;
       }
@@ -483,7 +487,6 @@ atomic_insert(
       new->bwd->fwd = new;
       curr->bwd = new;
       return true;
-
    }
 
    /* if we fall out of the link chase loop, something is
@@ -500,14 +503,14 @@ atomic_insert(
  */
 
 static
-dlcb_t *
+dlcb *
 atomic_create(
    bool threaded,
    bool use_id,
    void (*payload_free)(void *),
    int (*payload_compare)(void *, void *)
 ) {
-   dlcb_t *dl = malloc(sizeof(*dl));
+   dlcb *dl = malloc(sizeof(*dl));
    assert(dl &&
           "could not allocate DLCB");
    memset(dl, 0, sizeof(*dl));
@@ -548,7 +551,7 @@ atomic_create(
 static
 bool
 atomic_empty(
-   dlcb_t *dl
+   dlcb *dl
 ) {
    return dl->head == NULL;
 }
@@ -561,10 +564,10 @@ atomic_empty(
 static
 int
 atomic_count(
-   dlcb_t *list
+   dlcb *list
 ) {
    int n = 0;
-   dlnode_t *curr = list->head;
+   dlnode *curr = list->head;
    while (curr) {
       n += 1;
       curr = curr->fwd;
@@ -580,17 +583,17 @@ atomic_count(
 static
 int
 atomic_delete_all(
-   dlcb_t *dl
+   dlcb *dl
 ) {
-   dlnode_t *curr = dl->head;
-   dlnode_t *next = NULL;
+   dlnode *curr = dl->head;
+   dlnode *next = NULL;
    int deleted = 0;
    while (curr) {
       if (dl->dynamic_payload) {
          dl->payload_free(curr->payload);
       }
       next = curr->fwd;
-      memset(curr, 254, sizeof(dlnode_t));
+      memset(curr, 254, sizeof(dlnode));
       free(curr);
       deleted += 1;
       curr = next;
@@ -603,7 +606,7 @@ atomic_delete_all(
 
 bool
 atomic_get(
-   dlcb_t *dl,
+   dlcb *dl,
    long *id,
    void *(*payload)
 ) {
@@ -621,7 +624,7 @@ atomic_get(
    }
 
    /* search */
-   dlnode_t *curr = dl->head;
+   dlnode *curr = dl->head;
    while (curr) {
       int r = atomic_compare_id_or_key(dl, *id, *payload, curr);
       if (r == ID_KEY_GT) {
@@ -640,7 +643,7 @@ atomic_get(
 
 bool
 atomic_get_next(
-   dlcb_t *dl,
+   dlcb *dl,
    long *id,
    void *(*payload)
 ) {
@@ -663,7 +666,7 @@ atomic_get_next(
 
    /* move to next node and set this as the current position in the dl.
     * if the node exists, update the caller's id and payload. */
-   dlnode_t *curr = dl->position->fwd;
+   dlnode *curr = dl->position->fwd;
    dl->position = curr;
    if (curr) {
       *id = curr->id;
@@ -674,7 +677,7 @@ atomic_get_next(
 
 bool
 atomic_get_previous(
-   dlcb_t *dl,
+   dlcb *dl,
    long *id,
    void *(*payload)
 ) {
@@ -697,7 +700,7 @@ atomic_get_previous(
 
    /* move to prior node and set this as the current position in the dl.
     * if the node exists, update the caller's id and payload. */
-   dlnode_t *curr = dl->position->bwd;
+   dlnode *curr = dl->position->bwd;
    dl->position = curr;
    if (curr) {
       *id = curr->id;
@@ -708,7 +711,7 @@ atomic_get_previous(
 
 bool
 atomic_get_first(
-   dlcb_t *dl,
+   dlcb *dl,
    long *id,
    void *(*payload)
 ) {
@@ -724,7 +727,7 @@ atomic_get_first(
 
 bool
 atomic_get_last(
-   dlcb_t *dl,
+   dlcb *dl,
    long *id,
    void *(*payload)
 ) {
@@ -741,14 +744,14 @@ atomic_get_last(
 static
 bool
 atomic_delete(
-   dlcb_t *dl,
+   dlcb *dl,
    long id,
    void *payload
 ) {
 
    /* find where this item is in the list. */
 
-   dlnode_t *curr = dl->head;
+   dlnode *curr = dl->head;
    int r = 0;
 
    /* TODO optimization by checking last in dlcb */
@@ -791,7 +794,7 @@ atomic_delete(
          curr->fwd->bwd = curr->bwd;
       }
 
-      memset(curr, 254, sizeof(dlnode_t));
+      memset(curr, 254, sizeof(dlnode));
       free(curr);
       return true;
    }
@@ -803,14 +806,14 @@ atomic_delete(
 static
 bool
 atomic_update(
-   dlcb_t *dl,
+   dlcb *dl,
    long id,
    void *payload
 ) {
 
    /* find where this item is in the list. */
 
-   dlnode_t *curr = dl->head;
+   dlnode *curr = dl->head;
    int r = 0;
 
    /* TODO optimization by checking last in dlcb */
@@ -851,7 +854,7 @@ atomic_update(
  * list depending on keying choice.
  */
 
-dlcb_t *
+dlcb *
 dl_create_by_id(
    bool threaded,
    void (*free_payload)(void *)
@@ -864,7 +867,7 @@ dl_create_by_id(
           );
 }
 
-dlcb_t *
+dlcb *
 dl_create_by_key(
    bool threaded,
    int (*compare_payload_key)(void *, void *),
@@ -884,7 +887,7 @@ dl_create_by_key(
 
 bool
 dl_destroy(
-   dlcb_t *dl
+   dlcb *dl
 ) {
    assert(dl &&
           memcmp(dl->tag, DLCB_TAG, sizeof(dl->tag)) == 0 &&
@@ -895,10 +898,10 @@ dl_destroy(
             ;
       }
       if (dl->work) {
-         memset(dl->work, 254, sizeof(dlnode_t));
+         memset(dl->work, 254, sizeof(dlnode));
          free(dl->work);
       }
-      memset(dl, 254, sizeof(dlcb_t));
+      memset(dl, 254, sizeof(dlcb));
       free(dl);
       return true;
    }
@@ -907,7 +910,7 @@ dl_destroy(
 
 bool
 dl_empty(
-   dlcb_t *dl
+   dlcb *dl
 ) {
    assert(dl &&
           memcmp(dl->tag, DLCB_TAG, sizeof(dl->tag)) == 0 &&
@@ -925,7 +928,7 @@ dl_empty(
 
 int
 dl_count(
-   dlcb_t *dl
+   dlcb *dl
 ) {
    assert(dl &&
           memcmp(dl->tag, DLCB_TAG, sizeof(dl->tag)) == 0 &&
@@ -946,7 +949,7 @@ dl_count(
 
 int
 dl_delete_all(
-   dlcb_t *dl
+   dlcb *dl
 ) {
    assert(dl &&
           memcmp(dl->tag, DLCB_TAG, sizeof(dl->tag)) == 0 &&
@@ -965,7 +968,7 @@ dl_delete_all(
 
 bool
 dl_insert(
-   dlcb_t *dl,
+   dlcb *dl,
    long id,
    void *payload
 ) {
@@ -988,7 +991,7 @@ dl_insert(
 
 bool
 dl_delete(
-   dlcb_t *dl,
+   dlcb *dl,
    long id,
    void *payload
 ) {
@@ -1011,7 +1014,7 @@ dl_delete(
 
 bool
 dl_update(
-   dlcb_t *dl,
+   dlcb *dl,
    long id,
    void *payload
 ) {
@@ -1031,7 +1034,7 @@ dl_update(
 
 bool
 dl_get(
-   dlcb_t *dl,
+   dlcb *dl,
    long *id,
    void *(*payload)
 ) {
@@ -1051,7 +1054,7 @@ dl_get(
 
 bool
 dl_get_first(
-   dlcb_t *dl,
+   dlcb *dl,
    long *id,
    void *(*payload)
 ) {
@@ -1071,7 +1074,7 @@ dl_get_first(
 
 bool
 dl_get_last(
-   dlcb_t *dl,
+   dlcb *dl,
    long *id,
    void *(*payload)
 ) {
@@ -1091,7 +1094,7 @@ dl_get_last(
 
 bool
 dl_get_next(
-   dlcb_t *dl,
+   dlcb *dl,
    long *id,
    void *(*payload)
 ) {
@@ -1111,7 +1114,7 @@ dl_get_next(
 
 bool
 dl_get_previous(
-   dlcb_t *dl,
+   dlcb *dl,
    long *id,
    void *(*payload)
 ) {
