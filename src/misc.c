@@ -22,7 +22,10 @@
 
 #include "../inc/misc.h"
 
-/* as a general rule, i prefer to not use macros to express an algorithm */
+/*
+ * as a general rule, i prefer to not use macros to express an algorithm. macros
+ * are for plumbing.
+ */
 
 /*
  * none of the macro solutions to not having min or max available
@@ -57,6 +60,36 @@ lmax(long x, long y) {
 
 inline long
 lmin(long x, long y) {
+   return x < y ? x : y;
+}
+
+inline unsigned int
+umax(unsigned int x, unsigned int y) {
+   return x > y ? x : y;
+}
+
+inline unsigned int
+umin(unsigned int x, unsigned int y) {
+   return x < y ? x : y;
+}
+
+inline unsigned int
+uimax(unsigned int x, unsigned int y) {
+   return x > y ? x : y;
+}
+
+inline unsigned int
+uimin(unsigned int x, unsigned int y) {
+   return x < y ? x : y;
+}
+
+inline unsigned long
+ulmax(unsigned long x, unsigned long y) {
+   return x > y ? x : y;
+}
+
+inline unsigned long
+ulmin(unsigned long x, unsigned long y) {
    return x < y ? x : y;
 }
 
@@ -133,6 +166,34 @@ is_bracketing(char c) {
           c == '}' ||
           c == ')' ||
           c == ']';
+}
+
+/*
+ * brian kernighan's algorithm for counting set bits in a variable.
+ */
+
+inline int
+one_bits_in(unsigned long n) {
+   int count = 0;
+   while (n) {
+      n = n & (n-1);
+      count += 1;
+   }
+   return count;
+}
+
+/*
+ * comparators for functions such as qsort.
+ */
+
+int
+fn_cmp_int_asc(const void *a, const void *b) {
+   return *(int*)a - *(int*)b;
+}
+
+int
+fn_cmp_int_dsc(const void *a, const void *b) {
+   return *(int*)b - *(int*)a;
 }
 
 /*

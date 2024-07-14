@@ -37,6 +37,12 @@ int imax(int, int);
 int imin(int, int);
 long lmax(long, long);
 long lmin(long, long);
+unsigned int umax(unsigned int, unsigned int);
+unsigned int umin(unsigned int, unsigned int);
+unsigned int uimax(unsigned int, unsigned int);
+unsigned int uimin(unsigned int, unsigned int);
+unsigned long ulmax(unsigned long, unsigned long);
+unsigned long ulmin(unsigned long, unsigned long);
 double dmax(double, double);
 double dmin(double, double);
 
@@ -50,6 +56,13 @@ bool is_whitespace(char);
 bool is_control(char);
 bool is_punctuation(char);
 bool is_bracketing(char);
+
+/* how many bits are on in an unsigned long? */
+int one_bits_in(unsigned long);
+
+/* some common comparator functions for things like qsort */
+int fn_cmp_int_asc(const void *, const void *);
+int fn_cmp_int_dsc(const void *, const void *);
 
 #ifdef __cplusplus
 }
