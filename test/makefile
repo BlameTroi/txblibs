@@ -56,8 +56,8 @@ unitpq: unitpq.o pq.o misc.o
 unitdl.o: unitdl.c ../inc/dl.h ../inc/misc.h ../inc/abort.h
 	$(CC) $(CFLAGS) -c unitdl.c
 
-unitdl: unitdl.o dl.o misc.o abort.o
-	$(CC) $(CFLAGS) -o unitdl unitdl.o dl.o misc.o abort.o
+unitdl: unitdl.o dl.o misc.o abort.o str.o
+	$(CC) $(CFLAGS) -o unitdl unitdl.o dl.o misc.o abort.o str.o
 
 testlibs.o: testlibs.c ../inc/misc.h ../inc/str.h ../inc/pmute.h
 	$(CC) $(CFLAGS) -c testlibs.c
@@ -69,7 +69,7 @@ unitpat.o: unitpat.c ../inc/abort.h ../inc/misc.h ../inc/pat.h ../inc/str.h
 	$(CC) $(CFLAGS) -c unitpat.c
 
 unitpat: unitpat.o abort.o misc.o pat.o str.o
-	$(CC) $(CFLAGS) -o unitpat unitpat.o abort.o misc.o pat.o $(LDFLAGS)
+	$(CC) $(CFLAGS) -o unitpat unitpat.o abort.o misc.o pat.o str.o $(LDFLAGS)
 
 unittest.o: unittest.c ../inc/misc.h ../inc/str.h
 	$(CC) $(CFLAGS) -c unittest.c

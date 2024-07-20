@@ -134,6 +134,16 @@ is_word_char(char c) {
           c == '_';
 }
 
+bool
+is_lowercase(char c) {
+   return c >= 'a' && c <= 'z';
+}
+
+bool
+is_uppercase(char c) {
+   return c >= 'A' && c <= 'Z';
+}
+
 inline bool
 is_whitespace(char c) {
    return c == ' ' ||

@@ -83,12 +83,32 @@ extern "C" {
  *
  * free(ret[0]);          free the string copy
  * free(ret);             free the spit pointers
+ *
+ * or better yet, call free_split(ret).
  */
 
 const char **
 split_string(
    const char *str,           /* string to split */
    const char *sep            /* string of possible separator character */
+);
+
+/*
+ * free the block returned by split_string
+ */
+
+void
+free_split(
+   const char **splits        /* splits[0] & splits are both malloced */
+);
+
+/*
+ * strdup is not standard, wtf?
+ */
+
+char *
+dup_string(
+   const char *str
 );
 
 /*
@@ -147,7 +167,7 @@ pos_char(
  * `sep`. unlike some split implementations, adjacent separators do
  * not result in empty substrings.
  *
- * internally, a copy of `str` is made with strdup and then is marked
+ * internally, a copy of `str` is made with dup_string and then is marked
  * by strtok.
  *
  * returns an array of string pointers. the first entry is a pointer
@@ -182,7 +202,7 @@ split_string(
    /* empty string, a copy of same */
    if (strlen(str) == 0) {
       results = calloc(3, sizeof(char *));
-      results[0] = strdup(str);
+      results[0] = dup_string(str);
       results[1] = results[0];
       return results;
    }
@@ -190,7 +210,7 @@ split_string(
    /* empty separators, same as empty string */
    if (sep == NULL || strlen(sep) == 0) {
       results = calloc(3, sizeof(char *));
-      results[0] = strdup(str);
+      results[0] = dup_string(str);
       results[1] = results[0];
       return results;
    }
@@ -202,7 +222,7 @@ split_string(
    /* a copy of the whole string, strtok will break into multiple
       substrings with NULs. */
 
-   char *cpy = strdup(str);
+   char *cpy = dup_string(str);
 
    /* how many tokens can we have at a maximum? adjacent separators
       count as one separator, but we don't care at this point. over
@@ -252,6 +272,33 @@ split_string(
       but may have a few extra NULL pointers tacked on the end. */
 
    return results;
+}
+
+/*
+ * free the block returned by split_string
+ */
+
+void
+free_split(
+   const char **splits        /* splits[0] & splits are both malloced */
+) {
+   free((void *)splits[0]);
+   free(splits);
+}
+
+/*
+ * i just learned that strdup is not standard. another silly seeming
+ * omission in c.
+ */
+
+char *
+dup_string(
+   const char *str
+) {
+   size_t len = strlen(str) + 1;
+   char *dup = malloc(len);
+   strcpy(dup, str);
+   return dup;
 }
 
 int

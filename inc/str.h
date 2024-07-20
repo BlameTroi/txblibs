@@ -35,12 +35,32 @@ extern "C" {
  *
  * free(ret[0]);          free the string copy
  * free(ret);             free the spit pointers
+ *
+ * or better yet, call free_split(ret).
  */
 
 const char **
 split_string(
    const char *str,           /* string to split */
    const char *sep            /* string of possible separator character */
+);
+
+/*
+ * free the block returned by split_string
+ */
+
+void
+free_split(
+   const char **splits        /* splits[0] & splits are both malloced */
+);
+
+/*
+ * strdup is not standard, wtf?
+ */
+
+char *
+dup_string(
+   const char *str
 );
 
 /*

@@ -610,9 +610,9 @@ decompile_pattern(
    const cpat_t *pat
 ) {
    if (pat == NULL || *pat != PAT_BEG) {
-      return strdup("not a valid pattern");
+      return dup_string("not a valid pattern");
    }
-   return strdup("decompile_pattern not implemented");
+   return dup_string("decompile_pattern not implemented");
 }
 
 /*
@@ -1345,7 +1345,7 @@ convert_glob(
       if (debugging) {
          printf("+++convert_glob(null) => \"^[^.]*$");
       }
-      return strdup("^[^.]*$");
+      return dup_string("^[^.]*$");
    }
 
    if (debugging) {

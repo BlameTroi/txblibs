@@ -9,6 +9,7 @@
 
 #include "minunit.h"
 
+#include "../inc/str.h"
 #include "../inc/abort.h"
 #include "../inc/misc.h"
 #include "../inc/pat.h"
@@ -664,9 +665,9 @@ MU_TEST(test_match_literals) {
    mu_shouldnt(match("what was thi", pat));
    mu_shouldnt(match("x", pat));
 
-   /* strdup shows we aren't using a bad pointer elsewhere */
+   /* dup_string shows we aren't using a bad pointer elsewhere */
 
-   char *dup = strdup("this");
+   char *dup = dup_string("this");
    mu_should(match(dup, pat));
    free(dup);
    free((void *)pat);

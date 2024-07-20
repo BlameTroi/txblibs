@@ -114,7 +114,7 @@ These are the headers:
 | txbpat.h   | subset of regular expressions                         |
 | txbpmute.h | iterative permutation generator                       |
 | txbpq.h    | simple priority queue                                 |
-| txbstr.h   | split and tokenize strings                            |
+| txbstr.h   | split/tokenize strings, dup_string, others            |
 
 Some of these reference each other. At present you may need to include
 and define the implementation trigger for a header that you don't
@@ -215,6 +215,8 @@ Functions:
 | is_digit       | is a character a decimal digit?                   |
 | is_word_char   | is a character a word character (us ascii letters |
 |                | and the underscore _)?                            |
+| is_lowercase   | a-z, us ascii letters?                            |
+| is_uppercase   | A-Z, us ascii letters?                            |
 | is_whitespace  | is the character a whitespace character (space,   |
 |                | tab, newline)?                                    |
 | is_punctuation | is the character an american english              |
@@ -257,6 +259,10 @@ Functions:
 | Function       | Description                                       |
 |----------------+---------------------------------------------------|           
 | split_string   | splits a string on runs of any of the separators. |
+| free_split     | split_string allocates two blocks, this frees     |
+|                | them properly.                                    |
+| dup_string     | today i learned strdup is not a standard, so i    |
+|                | rolled my own.                                    |
 | count_char     | how many times does a character appear in a       |
 |                | string.                                           |
 | pos_char       | index of a character in a string.                 |
@@ -310,7 +316,8 @@ in the implementation and can be declared as needed.
 
 Depends on:
 
-stdbool.h, stdlib.h, stdio.h, string.h, txbmisc.h, txbabort.h
+stdbool.h, stdlib.h, stdio.h, string.h, txbmisc.h, txbabort.h,
+txbstr.h
 
 Functions:
 
@@ -380,9 +387,3 @@ pat:
 - general refactoring
 - (low priority) capture groups ()
 - (low priority) or |
-
-
-
-str:
-
-- add a free function for the block returned by split_string.

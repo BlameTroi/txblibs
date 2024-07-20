@@ -100,7 +100,7 @@ create_populated_id_list(void) {
 
    for (int i = 10; i < 1000; i += 10) {
       snprintf(buffer, 99, "%04d bogus", i);
-      dl_insert(dl, i, strdup(buffer));
+      dl_insert(dl, i, dup_string(buffer));
    }
 
    return dl;
@@ -134,7 +134,7 @@ create_populated_key_list(
 
    for (int i = 10; i < 1000; i += 10) {
       snprintf(buffer, 99, "%04d i'm a key", i);
-      dl_insert(dl, i, strdup(buffer));
+      dl_insert(dl, i, dup_string(buffer));
    }
 
    return dl;
@@ -506,7 +506,7 @@ MU_TEST(test_dl_id_update) {
    mu_should(id == 510);
    mu_should(strcmp(payload, "0510 bogus") == 0);
 
-   payload = strdup("0510 not bogus");
+   payload = dup_string("0510 not bogus");
    mu_should(dl_update(dl, id, payload));
 
    id = 200;
@@ -830,7 +830,7 @@ MU_TEST(test_dl_key_update) {
    mu_should(dl_get(dl, &id, &payload));
    mu_should(strcmp(payload, "0510 i'm a key") == 0);
 
-   payload = strdup("0510 not bogus");
+   payload = dup_string("0510 not bogus");
    mu_should(dl_update(dl, id, payload));
 
    payload = "0200";

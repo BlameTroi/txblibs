@@ -56,6 +56,8 @@ bool is_whitespace(char);
 bool is_control(char);
 bool is_punctuation(char);
 bool is_bracketing(char);
+bool is_lowercase(char);
+bool is_uppercase(char);
 
 /* how many bits are on in an unsigned long? */
 int one_bits_in(unsigned long);
