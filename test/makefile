@@ -10,10 +10,10 @@ CFLAGS=-fsanitize=address -Wall -g3 -O0 -std=c99
 # LDFLAGS=-lm
 LDFLAGS=
 
-all: unitpq unitpat testlibs unittest unitdl
+all: unitpq unitpat testlibs unittest unitdl unitmd5
 
 clean:
-	rm -rf *.o *.dSYM/ unitpat unittest testlibs unitpq unitdl
+	rm -rf *.o *.dSYM/ unitpat unittest testlibs unitpq unitdl unitmd5
 
 
 #####################################################
@@ -23,11 +23,14 @@ clean:
 abort.o: ../inc/abort.h ../src/abort.c
 	$(CC) $(CFLAGS) -c ../src/abort.c
 
-misc.o: ../inc/misc.h ../src/misc.c
-	$(CC) $(CFLAGS) -c ../src/misc.c
-
 dl.o: ../inc/dl.h ../src/dl.c ../inc/abort.h
 	$(CC) $(CFLAGS) -c ../src/dl.c
+
+md5.o: ../inc/md5.h ../src/md5.c
+	$(CC) $(CFLAGS) -c ../src/md5.c
+
+misc.o: ../inc/misc.h ../src/misc.c
+	$(CC) $(CFLAGS) -c ../src/misc.c
 
 pat.o: ../inc/pat.h ../src/pat.c ../inc/misc.h ../inc/abort.h ../inc/str.h
 	$(CC) $(CFLAGS) -c ../src/pat.c
@@ -42,10 +45,16 @@ str.o: ../inc/str.h ../src/str.c
 	$(CC) $(CFLAGS) -c ../src/str.c
 
 
-##########################################################
-# these are the test drivers for the various libs, mostl #
-# but not all are done with minunit.                     #
-##########################################################
+#########################################################
+# these are the test drivers for the various libs, most #
+# but not all are done with minunit.                    #
+#########################################################
+
+unitmd5.o: unitmd5.c ../inc/md5.h ../src/md5.c
+	$(CC) $(CFLAGS) -c unitmd5.c
+
+unitmd5: unitmd5.o md5.o
+	$(CC) $(CFLAGS) -o unitmd5 unitmd5.o md5.o
 
 unitpq.o: unitpq.c ../inc/pq.h ../inc/misc.h
 	$(CC) $(CFLAGS) -c unitpq.c

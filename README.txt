@@ -58,6 +58,7 @@ A simple structure:
 ├── inc                      [headers for building libraries]
 │   ├── abort.h
 │   ├── dl.h
+│   ├── md5.h
 │   ├── misc.h
 │   ├── pat.h
 │   ├── pmute.h
@@ -67,6 +68,7 @@ A simple structure:
 ├── release                  [release build of libraries]
 │   ├── txbabort.h
 │   ├── txbdl.h
+│   ├── txbmd5.h
 │   ├── txbmisc.h
 │   ├── txbpat.h
 │   ├── txbpmute.h
@@ -75,6 +77,7 @@ A simple structure:
 ├── src                      [source for building libraries]
 │   ├── abort.c
 │   ├── dl.c
+│   ├── md5.c
 │   ├── misc.c
 │   ├── pat.c
 │   ├── pmute.c
@@ -84,6 +87,7 @@ A simple structure:
     ├── makefile
     ├── testlibs.c
     ├── unitdl.c
+    ├── unitmd5.c
     ├── unitpat.c
     ├── unitpq.c
     └── unittest.c
@@ -110,6 +114,7 @@ These are the headers:
 |------------+-------------------------------------------------------|
 | txbabort.h | abort and abort_if                                    |
 | txbdl.h    | doubly linked list                                    |
+| txbmd5.h   | md-5 hash (credit to Bryce Wilson)                    |
 | txbmisc.h  | "missing" functions such as min/max                   |
 | txbpat.h   | subset of regular expressions                         |
 | txbpmute.h | iterative permutation generator                       |
@@ -184,6 +189,17 @@ Error checking is generally limited. Obvious fatal errors such as NULL
 or invalid control block pointers will fail with an assert. A to do
 item is to replace the naked asserts with the abort and abort_if
 macros and be more consistent in the reporting of errors.
+
+
+TXBMD5.H
+========
+
+I've needed an MD-5 hash for Advent of Code often enough that I
+decided to put something in this libraries. I found Bryce Wilson's
+lean and clean C implementation at https://github.com/Zunawe/md5-c
+that he was kind enough to release with no restrictions or credit
+required. He gets a tip of the hat anyway. I've massaged the source
+to fit my preferences, but he did the heavy lifting.
 
 
 TXBMISC.H
