@@ -157,7 +157,7 @@ extern "C" {
  * is available in the pattern buffer.
  */
 
-typedef unsigned int cpat_t;
+typedef unsigned int cpat;
 
 /*
  * these functions can be used to turn on various undocumented debug
@@ -175,7 +175,7 @@ debug_off(char *optional_print);
  * buffer.
  */
 
-const cpat_t *
+const cpat *
 compile_pattern(const char *str);
 
 /*
@@ -183,7 +183,7 @@ compile_pattern(const char *str);
  */
 
 const char *
-pattern_source(const cpat_t *);
+pattern_source(const cpat *);
 
 /*
  * decompile the pattern buffer, which might be different than the
@@ -191,7 +191,7 @@ pattern_source(const cpat_t *);
  */
 
 char *
-decompile_pattern(const cpat_t *);
+decompile_pattern(const cpat *);
 
 /*
  * converts a DOS like glob pattern for filenames into a match string
@@ -211,7 +211,7 @@ convert_glob(
 bool
 match(
    const char *str,
-   const cpat_t *pat
+   const cpat *pat
 );
 
 /*
@@ -223,7 +223,7 @@ match(
 bool
 glob_match(
    const char *str,
-   const cpat_t *pat
+   const cpat *pat
 );
 
 #ifdef __cplusplus

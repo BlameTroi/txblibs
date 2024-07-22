@@ -23,7 +23,7 @@
  */
 
 bool
-validate_compiled_pattern(const cpat_t *, int *);
+validate_compiled_pattern(const cpat *, int *);
 
 /*
  * a sample directory for glob testing:
@@ -71,7 +71,7 @@ test_teardown(void) {
  */
 
 MU_TEST(test_compile_literals) {
-   const cpat_t *pat = NULL;
+   const cpat *pat = NULL;
    int *val = NULL;
 
    /* various length literals */
@@ -185,7 +185,7 @@ MU_TEST(test_compile_literals) {
  */
 
 MU_TEST(test_compile_metas) {
-   const cpat_t *pat = NULL;
+   const cpat *pat = NULL;
    int *val = NULL;
 
    /* line anchors */
@@ -320,7 +320,7 @@ MU_TEST(test_compile_metas) {
  */
 
 MU_TEST(test_compile_ranges) {
-   const cpat_t *pat = NULL;
+   const cpat *pat = NULL;
    int *val = NULL;
 
    /* a big range */
@@ -379,7 +379,7 @@ MU_TEST(test_compile_ranges) {
  */
 
 MU_TEST(test_compile_class_metas) {
-   const cpat_t *pat = NULL;
+   const cpat *pat = NULL;
    int *val = NULL;
 
    pat = compile_pattern("ibm s/3\\d0");
@@ -430,7 +430,7 @@ MU_TEST(test_compile_class_metas) {
  */
 
 MU_TEST(test_compile_quantifiers) {
-   const cpat_t *pat = NULL;
+   const cpat *pat = NULL;
    int *val = NULL;
 
    /* a line which may or may not be empty */
@@ -518,7 +518,7 @@ MU_TEST(test_compile_quantifiers) {
  * match quantifiers, trying to hit edge cases.
  */
 MU_TEST(test_match_star) {
-   const cpat_t *pat = NULL;
+   const cpat *pat = NULL;
 
    pat = compile_pattern("^a*b");
    mu_should(pat);
@@ -563,7 +563,7 @@ MU_TEST(test_match_star) {
 }
 
 MU_TEST(test_match_quantifiers) {
-   const cpat_t *pat = NULL;
+   const cpat *pat = NULL;
 
    pat = compile_pattern("a+bc");
    mu_should(match("aabc", pat));
@@ -643,7 +643,7 @@ MU_TEST(test_match_quantifiers) {
  */
 
 MU_TEST(test_match_any) {
-   const cpat_t *pat = NULL;
+   const cpat *pat = NULL;
 
    pat = compile_pattern("as.f");
    mu_should(match("asdf", pat));
@@ -657,7 +657,7 @@ MU_TEST(test_match_any) {
  */
 
 MU_TEST(test_match_literals) {
-   const cpat_t *pat = NULL;
+   const cpat *pat = NULL;
 
    pat = compile_pattern("this");
    mu_should(match("what is this?", pat));
@@ -678,7 +678,7 @@ MU_TEST(test_match_literals) {
  */
 
 MU_TEST(test_match_class_metas) {
-   const cpat_t *pat = NULL;
+   const cpat *pat = NULL;
 
    pat = compile_pattern("\\d60");
    mu_should(match("460", pat));
@@ -745,7 +745,7 @@ MU_TEST(test_match_class_metas) {
  */
 
 MU_TEST(test_match_edgecases) {
-   const cpat_t *pat = NULL;
+   const cpat *pat = NULL;
 
    /* empty pattern */
 
@@ -776,7 +776,7 @@ MU_TEST(test_match_edgecases) {
  */
 
 MU_TEST(test_match_anchors) {
-   const cpat_t *pat = NULL;
+   const cpat *pat = NULL;
 
    /* asdf at the start of a line */
 
@@ -811,7 +811,7 @@ MU_TEST(test_match_anchors) {
  */
 
 MU_TEST(test_match_classes) {
-   const cpat_t *pat = NULL;
+   const cpat *pat = NULL;
 
    /* any of a b c d in first position */
 
@@ -884,7 +884,7 @@ MU_TEST(test_convert_globs) {
 
 MU_TEST(test_match_globs) {
    const char *str = NULL;
-   const cpat_t *pat = NULL;
+   const cpat *pat = NULL;
 
    debug_on("glob match");
 
@@ -924,7 +924,7 @@ MU_TEST(test_match_globs) {
  */
 
 MU_TEST(test_breakpoint) {
-   const cpat_t *pat = NULL;
+   const cpat *pat = NULL;
    pat = compile_pattern("asdf?gh");
    /* put whatever you want to breakpoint here */
    free((void *)pat);

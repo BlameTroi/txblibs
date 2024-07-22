@@ -164,7 +164,7 @@
 
 typedef struct match_code_t {
    char meta;
-   cpat_t code;
+   cpat code;
    char *text;
 } match_code_t;
 
@@ -205,7 +205,7 @@ const match_code_t match_codes[] = {
 
 const char *
 displayable_match_code(
-   cpat_t code
+   cpat code
 ) {
    int i = 0;
    while (match_codes[i].text != NULL) {
@@ -228,7 +228,7 @@ static
 inline
 bool
 is_quantifier(
-   cpat_t p
+   cpat p
 ) {
    return p == PAT_REP0M ||   /* * */
           p == PAT_REP1M ||   /* + */
@@ -244,7 +244,7 @@ is_quantifier(
 static
 int
 pattern_length(
-   const cpat_t *pat,
+   const cpat *pat,
    const int pp
 ) {
    int pl = 0;
@@ -266,7 +266,7 @@ pattern_length(
 static
 int
 next_pattern(
-   const cpat_t *pat,
+   const cpat *pat,
    const int pp
 ) {
    return pp + pattern_length(pat, pp);
@@ -306,7 +306,7 @@ debug_off(
 
 const char *
 pattern_source(
-   const cpat_t *pat
+   const cpat *pat
 ) {
    if (pat == NULL || *pat != PAT_BEG) {
       return "not a valid pattern";
@@ -322,7 +322,7 @@ pattern_source(
 
 char *
 decompile_pattern(
-   const cpat_t *pat
+   const cpat *pat
 ) {
    if (pat == NULL || *pat != PAT_BEG) {
       return dup_string("not a valid pattern");
@@ -338,7 +338,7 @@ decompile_pattern(
 
 void
 print_compiled_pattern(
-   cpat_t *pat
+   cpat *pat
 ) {
    printf("compiled pattern: \n");
    int i = 0;
@@ -404,7 +404,7 @@ print_compiled_pattern(
 
 bool
 validate_compiled_pattern(
-   const cpat_t *pat,
+   const cpat *pat,
    int *val
 ) {
    if (pat == NULL || *pat != PAT_BEG) {
@@ -414,10 +414,10 @@ validate_compiled_pattern(
    /* begin and end are assumed */
    pat += next_pattern(pat, 0);
    for (int i = 0; val[i]!= -1; i++) {
-      if (pat[i] != (cpat_t)val[i]) {
+      if (pat[i] != (cpat)val[i]) {
          if (debugging) {
             printf("\ndifference at position %d\n     got: (%3d) '%s'\nexpected: (%3d) '%s'\n", i+1,
-                   val[i], displayable_match_code((cpat_t)val[i]),
+                   val[i], displayable_match_code((cpat)val[i]),
                    (int)pat[i], displayable_match_code(pat[i]));
          }
          return false;
@@ -507,7 +507,7 @@ expand_range(
 
 static void
 add_pattern_item(
-   cpat_t *pat,               /* a compiled pattern from the search string */
+   cpat *pat,                 /* a compiled pattern from the search string */
    int *pos,                  /* in-out arg: current position in pat */
    int max,                   /* maximum position in pat */
    int item,                  /* pattern match code */
@@ -524,7 +524,7 @@ add_pattern_item(
    pat[*pos] = item;
 
    if (item == PAT_BEG) {
-      pat[*pos+1] = (strlen(str)+1) / sizeof(cpat_t) + 2;
+      pat[*pos+1] = (strlen(str)+1) / sizeof(cpat) + 2;
       pat[*pos+2] = 0;
       strcpy((char *)(pat+*pos+2), str);
       *pos = 2 + pat[*pos+1];
@@ -543,7 +543,7 @@ add_pattern_item(
    } else if (item == PAT_CCLASS || item == PAT_NOT_CCLASS) {
       if (pat[last_item] == item) {
          pat[last_item+1] += 1;
-         pat[*pos] = (cpat_t)str[*from];
+         pat[*pos] = (cpat)str[*from];
          *pos += 1;
          this_item = last_item; /* this pointer stays at last until we get a new pattern code */
          *from += 1;
@@ -574,7 +574,7 @@ add_pattern_item(
 
       pat[*pos] = item;
       pat[*pos+1] = 1;
-      pat[*pos+2] = (cpat_t)str[*from];
+      pat[*pos+2] = (cpat)str[*from];
       *pos += 3;
       *from += 1;
 
@@ -604,13 +604,13 @@ add_pattern_item(
  */
 
 static
-cpat_t *
+cpat *
 reorganize_pattern_buffer(
-   const cpat_t *pat
+   const cpat *pat
 ) {
 
    int res_size = 0;
-   cpat_t *res = NULL;
+   cpat *res = NULL;
 
    /* the size of the optimized pattern buffer will be large enough to
     * hold all existing entries. any end of class markers are deleted
@@ -634,8 +634,8 @@ reorganize_pattern_buffer(
    res_size += 2; /* allow for end marker and trailing 0 */
 
    /* allocate and clear the new pattern buffer. */
-   res = malloc(res_size * sizeof(cpat_t));
-   memset(res, 0, res_size * sizeof(cpat_t));
+   res = malloc(res_size * sizeof(cpat));
+   memset(res, 0, res_size * sizeof(cpat));
 
    /* position in original (pp) and new (pr) buffers */
    int pp = 0;
@@ -740,7 +740,7 @@ reorganize_pattern_buffer(
  */
 
 const
-cpat_t *
+cpat *
 compile_pattern(
    const char *raw
 ) {
@@ -759,11 +759,11 @@ compile_pattern(
     * for 0xdead as eye catcher. */
 
    int max_pat = 3 * max(strlen(str), 16) + 3;
-   cpat_t *pat = malloc(max_pat * sizeof(cpat_t));
+   cpat *pat = malloc(max_pat * sizeof(cpat));
    abort_if(
       pat == NULL,
       "could not allocate pattern buffer");
-   memset(pat, 0xde, max_pat * sizeof(cpat_t));
+   memset(pat, 0xde, max_pat * sizeof(cpat));
 
    /* the current position within the string (ps) and pattern buffer
     * (pp). these are updated mostly within add_pattern_item, but
@@ -780,7 +780,7 @@ compile_pattern(
     * characters are added until the end of group token is seen. */
 
    bool in_class = false;
-   cpat_t class_pattern_code = 0;
+   cpat class_pattern_code = 0;
 
    /* place begining of pattern marker in the buffer. it includes the
     * raw match pattern that is being compiled. adding the beginning
@@ -1017,7 +1017,7 @@ compile_pattern(
     * item. if a one was seen, we'll want to reorder the items in the
     * pattern buffer. */
 
-   cpat_t *temp = reorganize_pattern_buffer(pat);
+   cpat *temp = reorganize_pattern_buffer(pat);
    free(pat);
    pat = temp;
 
@@ -1159,7 +1159,7 @@ bool
 match_this_item(
    const char *str,             /* entire string to match */
    int *ps,                     /* IN-OUT position to start match at */
-   const cpat_t *p              /* current pattern item in buffer */
+   const cpat *p                /* current pattern item in buffer */
 ) {
 
    /* caching the current character from the string saves a little typing
@@ -1349,7 +1349,7 @@ int
 match_from(
    const char *str,           /* the entire string to match */
    int from,                  /* current starting position in string */
-   const cpat_t *pat,         /* the compiled pattern buffer */
+   const cpat *pat,           /* the compiled pattern buffer */
    int pp                     /* current item position in pattern */
 ) {
    bool done = false;
@@ -1555,7 +1555,7 @@ match_from(
 bool
 match(
    const char *str,
-   const cpat_t *pat
+   const cpat *pat
 ) {
    int ps = 0;
    int pm = -1;
@@ -1590,7 +1590,7 @@ match(
 bool
 glob_match(
    const char *str,
-   const cpat_t *pat
+   const cpat *pat
 ) {
 
    int ps = 0;
