@@ -30,6 +30,16 @@ sb_create_blksize(
 );
 
 /*
+ * create a new empty string builder with no backing buffer. it's
+ * /dev/null for string builders.
+ */
+
+sbcb *
+sb_create_null(
+   void
+);
+
+/*
  * create a new empty string builder with a defaulted initial buffer
  * size.
  */
