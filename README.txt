@@ -63,6 +63,8 @@ A simple structure:
 │   ├── pat.h
 │   ├── pmute.h
 │   ├── pq.h
+│   ├── rs.h
+│   ├── sb.h
 │   └── str.h
 ├── makefile
 ├── release                  [release build of libraries]
@@ -73,6 +75,8 @@ A simple structure:
 │   ├── txbpat.h
 │   ├── txbpmute.h
 │   ├── txbpq.h
+│   ├── txbrs.h
+│   ├── txbsb.h
 │   └── txbstr.h
 ├── src                      [source for building libraries]
 │   ├── abort.c
@@ -82,6 +86,8 @@ A simple structure:
 │   ├── pat.c
 │   ├── pmute.c
 │   ├── pq.c
+│   ├── rs.c
+│   ├── sb.c
 │   └── str.c
 └── test                     [source for testing]
     ├── makefile
@@ -90,6 +96,8 @@ A simple structure:
     ├── unitmd5.c
     ├── unitpat.c
     ├── unitpq.c
+    ├── unitrs.c
+    ├── unitsb.c
     └── unittest.c
 
 
@@ -119,6 +127,8 @@ These are the headers:
 | txbpat.h   | subset of regular expressions                         |
 | txbpmute.h | iterative permutation generator                       |
 | txbpq.h    | simple priority queue                                 |
+| txbrs.h    | string read stream                                    |
+| txbsb.h    | strinb builder                                        |
 | txbstr.h   | split/tokenize strings, dup_string, others            |
 
 Some of these reference each other. At present you may need to include
@@ -379,6 +389,43 @@ TXBPQ.H
 | pq_count   | how many items are in the queue?                      |
 
 
+TXBRS.H
+=======
+
+| Function          | Description                                    |
+|-------------------+------------------------------------------------|
+| rs_create_string  | create a new reader on a copy of a string.     |
+| rs_destroy_string | release all string read stream resources.      |
+| rs_at_end         | has the last byte of the string been read?     |
+| rs_position       | current character position in string.          |
+| rs_length         | length of string.                              |
+| rs_remaining      | characters left in string.                     |
+| rs_rewind         | move to start of the string.                   |
+| rs_seek           | move to a specific character position.         |
+| rs_skip           | move some number of characters backward or     |
+|                   | forward.                                       |
+| rs_getc           | returns the next character from the string and |
+|                   | advances.                                      |
+| rs_ungetc         | back up one character, does not update string. |
+| rs_peekc          | returns the next characterf rom the string but |
+|                   | does not advance.                              |
+
+
+TXBSB.H
+=======
+
+| Function          | Description                                    |
+|-------------------+------------------------------------------------|
+| sb_create         | create new empty string builder ...            |
+| sb_create_blksize | ... with an explicit buffer size.              |
+| sb_reset          | empty the current string builder.              |
+| sb_destroy        | release string builder resources.              |
+| sb_length         | length of string stored in builder.            |
+| sb_putc           | append character to builder.                   |
+| sb_puts           | append string to builder.                      |
+| sb_to_string      | returns a copy of the string in the builder.   |
+
+
 ====
 TODO
 ====
@@ -403,3 +450,13 @@ pat:
 - general refactoring
 - (low priority) capture groups ()
 - (low priority) or |
+
+
+rs:
+
+- line oriented commands.
+
+
+sb:
+
+- non contiguous buffers.

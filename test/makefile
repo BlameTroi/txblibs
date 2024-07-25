@@ -10,10 +10,10 @@ CFLAGS=-fsanitize=address -Wall -g3 -O0 -std=c99
 # LDFLAGS=-lm
 LDFLAGS=
 
-all: unitpq unitpat testlibs unittest unitdl unitmd5
+all: unitpq unitpat testlibs unittest unitdl unitmd5 unitrs unitsb
 
 clean:
-	rm -rf *.o *.dSYM/ unitpat unittest testlibs unitpq unitdl unitmd5
+	rm -rf *.o *.dSYM/ unitpat unittest testlibs unitpq unitdl unitmd5 unitrs unitsb
 
 
 #####################################################
@@ -40,6 +40,12 @@ pmute.o: ../inc/pmute.h ../src/pmute.c
 
 pq.o: ../inc/pq.h ../src/pq.c
 	$(CC) $(CFLAGS) -c ../src/pq.c
+
+rs.o: ../inc/rs.h ../src/rs.c ../inc/str.h
+	$(CC) $(CFLAGS) -c ../src/rs.c
+
+sb.o: ../inc/sb.h ../src/sb.c ../inc/str.h
+	$(CC) $(CFLAGS) -c ../src/sb.c
 
 str.o: ../inc/str.h ../src/str.c
 	$(CC) $(CFLAGS) -c ../src/str.c
@@ -85,3 +91,15 @@ unittest.o: unittest.c ../inc/misc.h ../inc/str.h
 
 unittest: unittest.o misc.o str.o
 	$(CC) $(CFLAGS) -o unittest unittest.o misc.o str.o $(LDFLAGS)
+
+unitrs.o: unitrs.c ../inc/rs.h ../inc/str.h
+	$(CC) $(CFLAGS) -c unitrs.c
+
+unitrs: unitrs.o str.o rs.o
+	$(CC) $(CFLAGS) -o unitrs unitrs.o rs.o str.o $(LDFLAGS)
+
+unitsb.o: unitsb.c ../inc/sb.h ../inc/str.h
+	$(CC) $(CFLAGS) -c unitsb.c
+
+unitsb: unitsb.o str.o sb.o
+	$(CC) $(CFLAGS) -o unitsb unitsb.o sb.o str.o $(LDFLAGS)

@@ -5,7 +5,7 @@
 .PHONY: clean all
 
 
-all: abort dl misc pat pmute pq str md5
+all: abort dl misc pat pmute pq str md5 rs sb
 
 
 clean:
@@ -35,3 +35,9 @@ str: inc/str.h src/str.c
 
 md5: inc/md5.h src/md5.c
 	buildhdr --macro TXBMD5 --intro LICENSE --pub inc/md5.h --priv src/md5.c >release/txbmd5.h
+
+sb: inc/sb.h src/sb.c
+	buildhdr --macro TXBSB --intro LICENSE --pub inc/sb.h --priv src/sb.c >release/txbsb.h
+
+rs: inc/rs.h src/rs.c
+	buildhdr --macro TXBRS --intro LICENSE --pub inc/rs.h --priv src/rs.c >release/txbrs.h
