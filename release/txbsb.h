@@ -78,6 +78,16 @@ sb_create_blksize(
 );
 
 /*
+ * create a new empty string builder with no backing buffer. it's
+ * /dev/null for string builders.
+ */
+
+sbcb *
+sb_create_null(
+   void
+);
+
+/*
  * create a new empty string builder with a defaulted initial buffer
  * size.
  */
@@ -181,6 +191,7 @@ struct sbcb {
    size_t blksize;
    size_t buf_len;
    size_t buf_used;
+   bool is_null;
 };
 
 /*
@@ -195,12 +206,26 @@ sb_create_blksize(
    assert(sb);
    memset(sb, 0, sizeof(sbcb));
    memcpy(sb->tag, SBCB_TAG, sizeof(sb->tag));
-   sb->buf = malloc(blksize);
-   assert(sb->buf);
-   memset(sb->buf, 0, blksize);
-   sb->buf_len = blksize;
-   sb->blksize = blksize;
+   sb->is_null = blksize == 0;
+   if (!sb->is_null) {
+      sb->buf = malloc(blksize);
+      assert(sb->buf);
+      memset(sb->buf, 0, blksize);
+      sb->buf_len = blksize;
+      sb->blksize = blksize;
+   }
    return sb;
+}
+
+/*
+ * a '/dev/null' sink.
+ */
+
+sbcb *
+sb_create_null(
+   void
+) {
+   return sb_create_blksize(0);
 }
 
 /*
@@ -219,9 +244,13 @@ sb_create(
  */
 
 void
-sb_reset(sbcb *sb) {
+sb_reset(
+   sbcb *sb
+) {
    assert(sb && memcmp(sb->tag, SBCB_TAG, sizeof(sb->tag)) == 0);
-   memset(sb->buf, 0, sb->buf_len);
+   if (!sb->is_null) {
+      memset(sb->buf, 0, sb->buf_len);
+   }
    sb->buf_used = 0;
 }
 
@@ -234,8 +263,10 @@ sb_destroy(
    sbcb *sb
 ) {
    assert(sb && memcmp(sb->tag, SBCB_TAG, sizeof(sb->tag)) == 0);
-   memset(sb->buf, 253, sb->buf_len);
-   free(sb->buf);
+   if (!sb->is_null) {
+      memset(sb->buf, 253, sb->buf_len);
+      free(sb->buf);
+   }
    memset(sb, 253, sizeof(sbcb));
    free(sb);
 }
@@ -262,6 +293,7 @@ sb_grow_buffer(
    sbcb *sb
 ) {
    assert(sb && memcmp(sb->tag, SBCB_TAG, sizeof(sb->tag)) == 0);
+   assert(!sb->is_null);
    int new_len = sb->buf_len + sb->blksize;
    char *new_buf = malloc(new_len);
    assert(new_buf);
@@ -283,10 +315,12 @@ sb_putc(
    int c
 ) {
    assert(sb && memcmp(sb->tag, SBCB_TAG, sizeof(sb->tag)) == 0);
-   if (sb->buf_used == sb->buf_len) {
-      sb_grow_buffer(sb);
+   if (!sb->is_null) {
+      if (sb->buf_used == sb->buf_len) {
+         sb_grow_buffer(sb);
+      }
+      sb->buf[sb->buf_used] = c;
    }
-   sb->buf[sb->buf_used] = c;
    sb->buf_used += 1;
 }
 
@@ -299,10 +333,18 @@ sb_to_string(
    sbcb *sb
 ) {
    assert(sb && memcmp(sb->tag, SBCB_TAG, sizeof(sb->tag)) == 0);
-   char *str = malloc(sb->buf_used + 1);
-   assert(str);
-   memcpy(str, sb->buf, sb->buf_used);
-   str[sb->buf_used] = '\0';
+   char *str = NULL;
+   if (sb->is_null) {
+      str = malloc(2);
+      assert(str);
+      str[0] = '\0';
+      str[1] = '\0';
+   } else {
+      str = malloc(sb->buf_used + 1);
+      assert(str);
+      memcpy(str, sb->buf, sb->buf_used);
+      str[sb->buf_used] = '\0';
+   }
    return str;
 }
 
@@ -317,12 +359,15 @@ sb_puts(
 ) {
    assert(sb && memcmp(sb->tag, SBCB_TAG, sizeof(sb->tag)) == 0);
    assert(str);
-   /* being lazy right now */
-   char *p = str;
-   while (*p) {
-      sb_putc(sb, *p);
-      p += 1;
+   size_t additional = strlen(str);
+   if (!sb->is_null) {
+      size_t new_length = sb->buf_used + additional;
+      while (new_length >= sb->buf_len) {
+         sb_grow_buffer(sb);
+      }
+      strcpy(&sb->buf[sb->buf_used], str);
    }
+   sb->buf_used += additional;
 }
 /* *** end priv *** */
 
