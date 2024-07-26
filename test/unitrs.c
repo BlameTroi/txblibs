@@ -76,6 +76,23 @@ MU_TEST(test_rs) {
    }
    rs_destroy_string(rs);
 }
+
+MU_TEST(test_clone) {
+   rscb *original = rs_create_string("this is a test");
+   rscb *clone = rs_clone(original);
+   int c;
+   int n = 0;
+   while ((c = rs_getc(original)) != EOF) {
+      n += 1;
+   }
+   int k = 0;
+   while ((c = rs_getc(clone)) != EOF) {
+      k += 1;
+   }
+   mu_should(k == n);
+   rs_destroy_string(original);
+   rs_destroy_string(clone);
+}
 
 /*
  * here we define the whole test suite. sadly there's no runtime
@@ -94,6 +111,7 @@ MU_TEST_SUITE(test_suite) {
    /* run your tests here */
 
    MU_RUN_TEST(test_rs);
+   MU_RUN_TEST(test_clone);
 }
 
 
