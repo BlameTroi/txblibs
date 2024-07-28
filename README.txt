@@ -57,6 +57,7 @@ A simple structure:
 ├── README.txt
 ├── inc                      [headers for building libraries]
 │   ├── abort.h
+│   ├── da.h
 │   ├── dl.h
 │   ├── md5.h
 │   ├── misc.h
@@ -69,6 +70,7 @@ A simple structure:
 ├── makefile
 ├── release                  [release build of libraries]
 │   ├── txbabort.h
+│   ├── txbda.h
 │   ├── txbdl.h
 │   ├── txbmd5.h
 │   ├── txbmisc.h
@@ -80,6 +82,7 @@ A simple structure:
 │   └── txbstr.h
 ├── src                      [source for building libraries]
 │   ├── abort.c
+│   ├── da.c
 │   ├── dl.c
 │   ├── md5.c
 │   ├── misc.c
@@ -92,6 +95,7 @@ A simple structure:
 └── test                     [source for testing]
     ├── makefile
     ├── testlibs.c
+    ├── unitda.c
     ├── unitdl.c
     ├── unitmd5.c
     ├── unitpat.c
@@ -121,6 +125,7 @@ These are the headers:
 | File       | Description                                           |
 |------------+-------------------------------------------------------|
 | txbabort.h | abort and abort_if                                    |
+| txbda.h    | dynamic array                                         |
 | txbdl.h    | doubly linked list                                    |
 | txbmd5.h   | md-5 hash (credit to Bryce Wilson)                    |
 | txbmisc.h  | "missing" functions such as min/max                   |
@@ -426,6 +431,18 @@ TXBSB.H
 | sb_to_string      | returns a copy of the string in the builder.   |
 
 
+TXBDA.H
+=======
+
+| Function          | Description                                    |
+|-------------------+------------------------------------------------|
+| da_create         | create new dynamic array                       |
+| da_destroy        | release dynamic array owned resources          |
+| da_put            | add an entry at a specific index               |
+| da_get            | get the entry at a specific index              |
+| da_length         | how many entries have potentially been added   |
+
+
 ====
 TODO
 ====
@@ -460,3 +477,7 @@ rs:
 sb:
 
 - non contiguous buffers.
+
+da:
+
+- hooks for memory management of entries
