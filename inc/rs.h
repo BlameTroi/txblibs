@@ -29,6 +29,15 @@ rs_create_string(
 );
 
 /*
+ * create a clone of a string read stream.
+ */
+
+rscb *
+rs_clone(
+   rscb *original
+);
+
+/*
  * free resources for the string read stream.
  */
 

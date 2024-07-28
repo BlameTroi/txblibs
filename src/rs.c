@@ -44,14 +44,35 @@ rs_create_string(
    assert(rs);
    memset(rs, 0, sizeof(rscb));
    memcpy(rs->tag, RSCB_TAG, sizeof(rs->tag));
-   rs->len = strlen(str) + 1;
-   rs->str = malloc(rs->len);
+   rs->len = strlen(str);
+   rs->str = malloc(rs->len+1);
    strcpy(rs->str, str);
    rs->pos = 0;
    rs->eos = false;
    return rs;
 }
 
+/*
+ * create a copy of an existing read stream, duplicating its state and
+ * making a fresh copy of the backing string.
+ */
+
+rscb *
+rs_clone(
+   rscb *original
+) {
+   assert(original && memcmp(original->tag, RSCB_TAG, sizeof(original->tag)) == 0);
+   rscb *rs = malloc(sizeof(rscb));
+   assert(rs);
+   memset(rs, 0, sizeof(rscb));
+   memcpy(rs->tag, RSCB_TAG, sizeof(rs->tag));
+   rs->len = original->len;
+   rs->pos = original->pos;
+   rs->eos = original->eos;
+   rs->str = malloc(rs->len + 1);
+   strcpy(rs->str, original->str);
+   return rs;
+}
 /*
  * release all resources for the string read stream.
  */
@@ -69,6 +90,9 @@ rs_destroy_string(
 
 /*
  * has the stream reached the end? only set -after- having read to the end.
+ *
+ * this is consistent with feof(). to see if the next read will eof, use
+ * rs_peekc().
  */
 
 bool

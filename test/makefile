@@ -10,10 +10,10 @@ CFLAGS=-fsanitize=address -Wall -g3 -O0 -std=c99
 # LDFLAGS=-lm
 LDFLAGS=
 
-all: unitpq unitpat testlibs unittest unitdl unitmd5 unitrs unitsb
+all: unitpq unitpat testlibs unittest unitdl unitmd5 unitrs unitsb unitda
 
 clean:
-	rm -rf *.o *.dSYM/ unitpat unittest testlibs unitpq unitdl unitmd5 unitrs unitsb
+	rm -rf *.o *.dSYM/ unitpat unittest testlibs unitpq unitdl unitmd5 unitrs unitsb unitda
 
 
 #####################################################
@@ -50,6 +50,8 @@ sb.o: ../inc/sb.h ../src/sb.c ../inc/str.h
 str.o: ../inc/str.h ../src/str.c
 	$(CC) $(CFLAGS) -c ../src/str.c
 
+da.o: ../inc/da.h ../inc/misc.h ../src/da.c
+	$(CC) $(CFLAGS) -c ../src/da.c
 
 #########################################################
 # these are the test drivers for the various libs, most #
@@ -103,3 +105,9 @@ unitsb.o: unitsb.c ../inc/sb.h ../inc/str.h
 
 unitsb: unitsb.o str.o sb.o
 	$(CC) $(CFLAGS) -o unitsb unitsb.o sb.o str.o $(LDFLAGS)
+
+unitda.o: unitda.c ../inc/da.h ../inc/misc.h
+	$(CC) $(CFLAGS) -c unitda.c
+
+unitda: unitda.o misc.o da.o
+	$(CC) $(CFLAGS) -o unitda unitda.o misc.o da.o $(LDFLAGS)
