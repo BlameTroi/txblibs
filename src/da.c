@@ -28,8 +28,8 @@
 #define DACB_DEFAULT_SIZE 512
 struct dacb {
    char tag[8];                /* eye catcher & verification */
-   size_t length;              /* last used (via put) entry */
-   size_t size;                /* size of data in number of entries */
+   long length;                /* last used (via put) entry */
+   long size;                  /* size of data in number of entries */
    void **data;                /* pointer to the entry pointers */
 };
 
@@ -41,7 +41,7 @@ struct dacb {
 
 dacb *
 da_create(
-   size_t size_or_zero_for_default
+   unsigned long size_or_zero_for_default
 ) {
    dacb *da = malloc(sizeof(dacb));
    memset(da, 0, sizeof(dacb));
@@ -78,7 +78,7 @@ da_destroy(
 void *
 da_get(
    dacb *da,
-   size_t n
+   unsigned long n
 ) {
    assert(da && memcmp(da->tag, DACB_TAG, sizeof(da->tag)) == 0);
    assert(n < da->size);
@@ -95,7 +95,7 @@ da_get(
 void
 da_put(
    dacb *da,
-   size_t n,
+   unsigned long n,
    void *put
 ) {
    assert(da && memcmp(da->tag, DACB_TAG, sizeof(da->tag)) == 0);
@@ -120,7 +120,7 @@ da_put(
  * here.
  */
 
-size_t
+long
 da_length(
    dacb *da
 ) {

@@ -47,7 +47,7 @@ typedef struct dacb dacb;
 
 dacb *
 da_create(
-   size_t size_or_zero_for_default
+   unsigned long size_or_zero_for_default
 );
 
 /*
@@ -67,7 +67,7 @@ da_destroy(
 void *
 da_get(
    dacb *da,
-   size_t n
+   unsigned long n
 );
 
 /*
@@ -79,7 +79,7 @@ da_get(
 void
 da_put(
    dacb *da,
-   size_t n,
+   unsigned long n,
    void *put);
 
 /*
@@ -87,7 +87,7 @@ da_put(
  * the answer should be n+1.
  */
 
-size_t
+long
 da_length(
    dacb *da
 );
