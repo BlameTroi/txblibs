@@ -48,6 +48,7 @@ da_create(
    memcpy(da->tag, DACB_TAG, sizeof(da->tag));
    da->size = size_or_zero_for_default ? size_or_zero_for_default : DACB_DEFAULT_SIZE;
    da->data = malloc(da->size * sizeof(void *));
+   da->length = -1;
    memset(da->data, 0, da->size * sizeof(void *));
    return da;
 }
@@ -109,13 +110,14 @@ da_put(
    }
    da->data[n] = put;
    if (n > da->length) {
-      da->length = n + 1;
+      da->length = n;
    }
 }
 
 /*
  * report the number of elements in the array if all 0 .. n were
- * added.
+ * added. i hate zero based indices, but they are the norm so +1
+ * here.
  */
 
 size_t
@@ -123,5 +125,5 @@ da_length(
    dacb *da
 ) {
    assert(da && memcmp(da->tag, DACB_TAG, sizeof(da->tag)) == 0);
-   return da->length;
+   return da->length + 1;
 }
