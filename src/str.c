@@ -13,6 +13,7 @@
  * to copy, modify, publish, and distribute this file as you see fit.
  */
 
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -188,4 +189,32 @@ pos_char(
       pos += 1;
    }
    return -1;
+}
+
+/*
+ * ah predicates
+ */
+
+bool
+equal_string(
+   const char *a,
+   const char *b
+) {
+   return a != NULL && b != NULL && strcmp(a, b) == 0;
+}
+
+bool
+less_than_string(
+   const char *a,
+   const char *b
+) {
+   return a != NULL && b != NULL && strcmp(a, b) < 0;
+}
+
+bool
+greater_than_string(
+   const char *a,
+   const char *b
+) {
+   return a != NULL && b != NULL && strcmp(a, b) > 0;
 }

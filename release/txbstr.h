@@ -65,6 +65,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 extern "C" {
 #endif /* __cplusplus */
 
+#include <stdbool.h>
+
 /*
  * split a string at (runs of) separators
  *
@@ -133,6 +135,28 @@ pos_char(
    char c
 );
 
+/*
+ * i prefer this to constantly typing strcmp() == 0 ...
+ */
+
+bool
+equal_string(
+   const char *a,
+   const char *b
+);
+
+bool
+less_than_string(
+   const char *a,
+   const char *b
+);
+
+bool
+greater_than_string(
+   const char *a,
+   const char *b
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
@@ -158,6 +182,7 @@ pos_char(
  * to copy, modify, publish, and distribute this file as you see fit.
  */
 
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -332,6 +357,34 @@ pos_char(
       pos += 1;
    }
    return -1;
+}
+
+/*
+ * ah predicates
+ */
+
+bool
+equal_string(
+   const char *a,
+   const char *b
+) {
+   return a != NULL && b != NULL && strcmp(a, b) == 0;
+}
+
+bool
+less_than_string(
+   const char *a,
+   const char *b
+) {
+   return a != NULL && b != NULL && strcmp(a, b) < 0;
+}
+
+bool
+greater_than_string(
+   const char *a,
+   const char *b
+) {
+   return a != NULL && b != NULL && strcmp(a, b) > 0;
 }
 /* *** end priv *** */
 

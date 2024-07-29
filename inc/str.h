@@ -17,6 +17,8 @@
 extern "C" {
 #endif /* __cplusplus */
 
+#include <stdbool.h>
+
 /*
  * split a string at (runs of) separators
  *
@@ -83,6 +85,28 @@ pos_char(
    const char *str,
    int pos,
    char c
+);
+
+/*
+ * i prefer this to constantly typing strcmp() == 0 ...
+ */
+
+bool
+equal_string(
+   const char *a,
+   const char *b
+);
+
+bool
+less_than_string(
+   const char *a,
+   const char *b
+);
+
+bool
+greater_than_string(
+   const char *a,
+   const char *b
 );
 
 #ifdef __cplusplus

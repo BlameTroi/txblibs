@@ -283,7 +283,7 @@ This library mostly exists to split strings in a way that I like.
 
 Depends on:
 
-stdlib.h, string.h
+stdbool.h, stdlib.h, string.h
 
 Functions:
 
@@ -297,6 +297,9 @@ Functions:
 | count_char     | how many times does a character appear in a       |
 |                | string.                                           |
 | pos_char       | index of a character in a string.                 |
+| equal_string   | more readable predicates                          |
+| less_than_.... |                                                   |
+| greater_than_. |                                                   |
 
 
 TXBDL.H
