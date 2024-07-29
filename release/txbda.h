@@ -95,7 +95,7 @@ typedef struct dacb dacb;
 
 dacb *
 da_create(
-   unsigned long size_or_zero_for_default
+   int size_or_zero_for_default
 );
 
 /*
@@ -115,7 +115,7 @@ da_destroy(
 void *
 da_get(
    dacb *da,
-   unsigned long n
+   int n
 );
 
 /*
@@ -127,7 +127,7 @@ da_get(
 void
 da_put(
    dacb *da,
-   unsigned long n,
+   int n,
    void *put);
 
 /*
@@ -135,7 +135,7 @@ da_put(
  * the answer should be n+1.
  */
 
-long
+int
 da_length(
    dacb *da
 );
@@ -175,8 +175,8 @@ da_length(
 #define DACB_DEFAULT_SIZE 512
 struct dacb {
    char tag[8];                /* eye catcher & verification */
-   long length;                /* last used (via put) entry */
-   long size;                  /* size of data in number of entries */
+   int length;                 /* last used (via put) entry */
+   int size;                   /* size of data in number of entries */
    void **data;                /* pointer to the entry pointers */
 };
 
@@ -188,7 +188,7 @@ struct dacb {
 
 dacb *
 da_create(
-   unsigned long size_or_zero_for_default
+   int size_or_zero_for_default
 ) {
    dacb *da = malloc(sizeof(dacb));
    memset(da, 0, sizeof(dacb));
@@ -225,7 +225,7 @@ da_destroy(
 void *
 da_get(
    dacb *da,
-   unsigned long n
+   int n
 ) {
    assert(da && memcmp(da->tag, DACB_TAG, sizeof(da->tag)) == 0);
    assert(n < da->size);
@@ -242,7 +242,7 @@ da_get(
 void
 da_put(
    dacb *da,
-   unsigned long n,
+   int n,
    void *put
 ) {
    assert(da && memcmp(da->tag, DACB_TAG, sizeof(da->tag)) == 0);
@@ -267,7 +267,7 @@ da_put(
  * here.
  */
 
-long
+int
 da_length(
    dacb *da
 ) {
