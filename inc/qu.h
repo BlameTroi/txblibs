@@ -1,4 +1,4 @@
-/* pq.h -- blametroi's simple queue -- */
+/* qu.h -- blametroi's simple queue -- */
 
 /*
  * a header only implementation of a queue.
@@ -11,18 +11,29 @@
  */
 
 #include <stdbool.h>
-#include <pthread.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
+/*
+ * an instance of a queue.
+ */
+
 typedef struct qucb qucb;
+
+/*
+ * is the queue empty?
+ */
 
 bool
 qu_empty(
    qucb *
 );
+
+/*
+ * add an item to the end of the queue.
+ */
 
 void
 qu_enqueue(
@@ -30,25 +41,45 @@ qu_enqueue(
    void *
 );
 
+/*
+ * remove an item from the front of the queue.
+ */
+
 void *
 qu_dequeue(
    qucb *
 );
+
+/*
+ * return the item from the front of the queue without removing it.
+ */
 
 void *
 qu_peek(
    qucb *
 );
 
+/*
+ * create a new queue instance.
+ */
+
 qucb *
 qu_create(
    void
 );
 
+/*
+ * if the queue is empty, release its resources.
+ */
+
 bool
 qu_destroy(
    qucb *
 );
+
+/*
+ * how many items are on the queue?
+ */
 
 int
 qu_count(

@@ -61,6 +61,10 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <stdbool.h>
 #include <stdio.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 /*
  * an instance of a particular string read stream.
  */
@@ -190,6 +194,10 @@ int
 rs_peekc(
    rscb *rs
 );
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 /* *** end pub *** */
 
 #endif /* TXBRS_SINGLE_HEADER */
@@ -271,6 +279,7 @@ rs_clone(
    strcpy(rs->str, original->str);
    return rs;
 }
+
 /*
  * release all resources for the string read stream.
  */
@@ -288,6 +297,9 @@ rs_destroy_string(
 
 /*
  * has the stream reached the end? only set -after- having read to the end.
+ *
+ * this is consistent with feof(). to see if the next read will eof, use
+ * rs_peekc().
  */
 
 bool

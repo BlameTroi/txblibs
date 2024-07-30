@@ -2,7 +2,7 @@
 
 /*
  *
- * a header only implementation of a permutation.
+ * a header only implementation of a permutation generator.
  *
  * released to the public domain by Troy Brumley blametroi@gmail.com
  *

@@ -18,8 +18,12 @@
 #include <stdio.h>
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 /*
- * these are the preferred functions for calculating md5, hiding the
+ * these are the preferred functions for calculating and md5, hiding the
  * details behind functions to work over an arbitrary block of memory,
  * a string, or an opened and correctly positioned file stream.
  *
@@ -86,3 +90,7 @@ md5_get_digest(
    md5_context *ctx,
    uint8_t *result
 );
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */

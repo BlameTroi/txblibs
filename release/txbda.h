@@ -59,6 +59,10 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * to copy, modify, publish, and distribute this file as you see fit.
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 #include <stdlib.h>
 
 /*
@@ -139,6 +143,10 @@ int
 da_length(
    dacb *da
 );
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 /* *** end pub *** */
 
 #endif /* TXBDA_SINGLE_HEADER */

@@ -67,18 +67,38 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 extern "C" {
 #endif /* __cplusplus */
 
-/* a pseudo random integer range */
-int rand_between(int, int);
+/*
+ * return a non-cyptography safe pseudo random integer
+ * in an inclusive range.
+ */
 
-/* shuffle n items using the fisher-yates algorithm */
+int
+rand_between(
+   int,
+   int
+);
+
+/*
+ * shuffle an array of n items using the fisher-yates algorithm.
+ */
+
 void
-shuffle(void **cards, int n);
+shuffle(
+   void **cards,
+   int n
+);
 
-/* return an array of the factors of n */
+/*
+ * return an array of the factors of n.
+ */
+
 long *
 factors_of(long n);
 
-/* various min/max functions */
+/*
+ * various min/max functions.
+ */
+
 int max(int, int);
 int min(int, int);
 int imax(int, int);
@@ -94,25 +114,82 @@ unsigned long ulmin(unsigned long, unsigned long);
 double dmax(double, double);
 double dmin(double, double);
 
-/* common tests */
-bool is_even(long);
-bool is_odd(long);
+/*
+ * common predicates.
+ */
 
-bool is_digit(char);
-bool is_word_char(char);
-bool is_whitespace(char);
-bool is_control(char);
-bool is_punctuation(char);
-bool is_bracketing(char);
-bool is_lowercase(char);
-bool is_uppercase(char);
+bool
+is_even(
+   long
+);
+bool
+is_odd(
+   long
+);
 
-/* how many bits are on in an unsigned long? */
-int one_bits_in(unsigned long);
+bool
+is_digit(
+   char
+);
+bool
+is_word_char(
+   char
+);
 
-/* some common comparator functions for things like qsort */
-int fn_cmp_int_asc(const void *, const void *);
-int fn_cmp_int_dsc(const void *, const void *);
+bool
+is_whitespace(
+   char
+);
+
+bool
+is_control(
+   char
+);
+
+bool
+is_punctuation(
+   char
+);
+
+bool
+is_bracketing(
+   char
+);
+
+bool
+is_lowercase(
+   char
+);
+
+bool
+is_uppercase(
+   char
+);
+
+/*
+ * how many bits are on in an unsigned long?
+ */
+
+int
+one_bits_in(
+   unsigned long
+);
+
+/*
+ * some common comparator functions for things like qsort.
+ */
+
+int
+fn_cmp_int_asc(
+   const void *,
+   const void *
+);
+
+int
+fn_cmp_int_dsc(
+   const void *,
+   const void *
+);
 
 #ifdef __cplusplus
 }

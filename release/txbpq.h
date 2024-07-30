@@ -59,7 +59,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 #include <stdbool.h>
-#include <pthread.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -137,6 +136,7 @@ pq_count(
 /*
  * transparent control block definitions.
  */
+
 #define PQENTRY_TAG "--PQEN--"
 typedef struct pqentry {
    char tag[8];

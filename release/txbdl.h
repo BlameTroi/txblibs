@@ -74,7 +74,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 extern "C" {
 #endif /* __cplusplus */
 
-
 /*
  * double list control block holding chain pointers and other control
  * information. if a payload is carried, function pointers to free the

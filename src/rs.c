@@ -73,6 +73,7 @@ rs_clone(
    strcpy(rs->str, original->str);
    return rs;
 }
+
 /*
  * release all resources for the string read stream.
  */

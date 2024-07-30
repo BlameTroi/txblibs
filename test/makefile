@@ -10,11 +10,10 @@ CFLAGS=-fsanitize=address -Wall -g3 -O0 -std=c99
 # LDFLAGS=-lm
 LDFLAGS=
 
-all: unitpq unitpat testlibs unittest unitdl unitmd5 unitrs unitsb unitda
+all: testlibs unitda unitdl unitfs unitmd5 unitpat unitpq unitqu unitrs unitsb unittest
 
 clean:
-	rm -rf *.o *.dSYM/ unitpat unittest testlibs unitpq unitdl unitmd5 unitrs unitsb unitda
-
+	rm -rf *.o *.dSYM/  testlibs unitda unitdl unitfs unitmd5 unitpat unitpq unitqu unitrs unitsb unittest
 
 #####################################################
 # these are the libs not as single file headers yet #
@@ -53,10 +52,22 @@ str.o: ../inc/str.h ../src/str.c
 da.o: ../inc/da.h ../inc/misc.h ../src/da.c
 	$(CC) $(CFLAGS) -c ../src/da.c
 
+qu.o: ../inc/qu.h ../src/qu.c ../inc/str.h
+	$(CC) $(CFLAGS) -c ../src/qu.c
+
+fs.o: ../inc/fs.h ../src/fs.c
+	$(CC) $(CFLAGS) -c ../src/fs.c
+
 #########################################################
 # these are the test drivers for the various libs, most #
 # but not all are done with minunit.                    #
 #########################################################
+
+unitqu.o: unitqu.c ../inc/qu.h ../src/qu.c ../inc/str.h
+	$(CC) $(CFLAGS) -c unitqu.c
+
+unitqu: unitqu.o qu.o str.o
+	$(CC) $(CFLAGS) -o unitqu unitqu.o qu.o str.o
 
 unitmd5.o: unitmd5.c ../inc/md5.h ../src/md5.c
 	$(CC) $(CFLAGS) -c unitmd5.c
@@ -111,3 +122,9 @@ unitda.o: unitda.c ../inc/da.h ../inc/misc.h
 
 unitda: unitda.o misc.o da.o
 	$(CC) $(CFLAGS) -o unitda unitda.o misc.o da.o $(LDFLAGS)
+
+unitfs.o: unitfs.c ../inc/fs.h
+	$(CC) $(CFLAGS) -c unitfs.c
+
+unitfs: unitfs.o fs.o
+	$(CC) $(CFLAGS) -o unitfs unitfs.o fs.o $(LDFLAGS)

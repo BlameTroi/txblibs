@@ -13,6 +13,10 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 /*
  * an instance of a particular string read stream.
  */
@@ -142,3 +146,7 @@ int
 rs_peekc(
    rscb *rs
 );
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */

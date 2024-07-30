@@ -22,6 +22,7 @@
 /*
  * transparent control block definitions.
  */
+
 #define PQENTRY_TAG "--PQEN--"
 typedef struct pqentry {
    char tag[8];

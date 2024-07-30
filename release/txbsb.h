@@ -61,6 +61,10 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <stdbool.h>
 #include <stdio.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 /*
  * an instance of a string builder.
  */
@@ -152,6 +156,10 @@ char *
 sb_to_string(
    sbcb *sb
 );
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 /* *** end pub *** */
 
 #endif /* TXBSB_SINGLE_HEADER */
