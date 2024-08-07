@@ -230,7 +230,7 @@ sufficient for my needs.
 
 Depends on:
 
-stdbool.h, stdlib.h, string.h
+stdbool.h, stdint.h, stdlib.h, string.h
 
 Functions:
 
@@ -243,6 +243,7 @@ Functions:
 | ?max ?min      | various flavors of min and max, inline not macro. |
 | is_even        | is an integer even?                               |
 | is_odd         | is an integer odd?                                |
+| one_bits_in    | count one bits in an integer                      |
 | is_digit       | is a character a decimal digit?                   |
 | is_word_char   | is a character a word character (us ascii letters |
 |                | and the underscore _)?                            |
@@ -255,6 +256,10 @@ Functions:
 | is_control     | is a character an ascii control character?        |
 | is_bracketing  | is a character a bracketing or grouping           |
 |                | character such as a parenthesis or brace?         |
+| fn_cmp_xxx_asc | as needed, comparators for qsort like functions   |
+| fn_cmp_xxx_dsc |                                                   |
+| hex_pack       | convert a string of hex digits to bytes           |
+| hex_unpack     | convert a string of bytes to hex digits           |
 
 
 TXBPMUTE.H

@@ -291,3 +291,77 @@ factors_of(
    factors[f] = n;
    return factors;
 }
+
+/*
+ * convert run of bytes to displayable hex digits (unpack hex) or a
+ * string of hex digits to bytes (pack hex).
+ *
+ * returns the address of the first byte of the output buffer so the
+ * function can be used as an argument to printf. returns NULL if any
+ * error in arguments is detected.
+ */
+
+uint8_t *
+hex_pack(
+   uint8_t *hex,
+   int hexlen,
+   char *chr,
+   int chrlen
+) {
+   if (!hex || hexlen * 2 < chrlen || is_odd(chrlen) || !chr) {
+      return NULL;
+   }
+   memset(hex, 0, hexlen);
+   char *c = chr;
+   uint8_t *h = hex;
+   for (int i = 0; i < hexlen; i++) {
+      uint8_t dh = 0;
+      if (*c >= '0' && *c <= '9') {
+         dh = *c - '0';
+      } else if (*c >= 'a' && *c <= 'f') {
+         dh = *c - 'a' + 10;
+      } else if (*c >= 'A' && *c <= 'F') {
+         dh = *c - 'A' + 10;
+      } else {
+         return NULL;
+      }
+      c += 1;
+      uint8_t dl = 0;
+      if (*c >= '0' && *c <= '9') {
+         dl = *c - '0';
+      } else if (*c >= 'a' && *c <= 'f') {
+         dl = *c - 'a' + 10;
+      } else if (*c >= 'A' && *c <= 'F') {
+         dl = *c - 'A' + 10;
+      } else {
+         return NULL;
+      }
+      c += 1;
+      *h = (dh << 4) | dl;
+      h += 1;
+   }
+   return hex;
+}
+
+char *
+hex_unpack(
+   char *chr,
+   int chrlen,
+   uint8_t *hex,
+   int hexlen
+) {
+   if (!chr || chrlen < 2 * hexlen + 1 || !hex) {
+      return NULL;
+   }
+   memset(chr, 0, chrlen);
+   char *c = chr;
+   uint8_t *h = hex;
+   for (int i = 0; i < hexlen; i++) {
+      *c = "0123456789abcdef"[*h >> 4];
+      c += 1;
+      *c = "0123456789abcdef"[*h & 15];
+      c += 1;
+      h += 1;
+   }
+   return chr;
+}

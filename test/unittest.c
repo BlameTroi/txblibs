@@ -180,6 +180,15 @@ MU_TEST(test_chars) {
    mu_assert_int_eq(-1, pos_char("zxcvb", -3, 'g'));
 }
 
+MU_TEST(test_pack) {
+   char chr_buffer[64];
+   uint8_t hex_buffer[32];
+   memset(hex_buffer, 0, 32);
+   memset(chr_buffer, 0, 64);
+   hex_pack(hex_buffer, 32, "0123456789abcdef", 16);
+   hex_unpack(chr_buffer, 64, hex_buffer, 8);
+   mu_should(equal_string(chr_buffer, "0123456789abcdef"));
+}
 
 /*
  * here we define the whole test suite. sadly there's no runtime
@@ -208,6 +217,8 @@ MU_TEST_SUITE(test_suite) {
 
    printf("\n\npermute\n\n");
    /* to be provided */
+
+   MU_RUN_TEST(test_pack);
 }
 
 

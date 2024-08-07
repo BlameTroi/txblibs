@@ -211,7 +211,7 @@ qu_create(
 }
 
 /*
- * free the priority queue control block if the queue is empty.
+ * free the queue control block if the queue is empty.
  */
 
 bool

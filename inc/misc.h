@@ -14,6 +14,7 @@
  */
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -142,6 +143,27 @@ fn_cmp_int_dsc(
    const void *,
    const void *
 );
+
+/*
+ * pack and unpack hex digits.
+ */
+
+uint8_t *
+hex_pack(
+   uint8_t *hex,        /* address of output buffer */
+   int hexlen,          /* maximum length of output buffer, must be at least 1/2 of chrlen */
+   char *chr,           /* address of string of hex digits */
+   int chrlen           /* number of digits to pack, must be even */
+);
+
+char *
+hex_unpack(
+   char *chr,           /* address of output buffer */
+   int chrlen,          /* maximum length of output buffer, must be at least 2*hexlen+1 */
+   uint8_t *hex,        /* address of first byte to unpack */
+   int hexlen           /* number of bytes to unpack */
+);
+
 
 #ifdef __cplusplus
 }
