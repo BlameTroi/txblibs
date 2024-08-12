@@ -15,6 +15,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/stat.h>
 
 #include "../inc/rs.h"
 
@@ -49,6 +50,28 @@ rs_create_string(
    strcpy(rs->str, str);
    rs->pos = 0;
    rs->eos = false;
+   return rs;
+}
+
+/*
+ * create a new string readstream from the contents of an open file
+ * stream.
+ */
+
+rscb *
+rs_create_string_from_file(
+   FILE *ifile
+) {
+   rewind(ifile);
+   struct stat info;
+   fstat(fileno(ifile), &info);
+   char *data_buf = malloc(info.st_size + 1);
+   assert(data_buf);
+   fread(data_buf, info.st_size, 1, ifile);
+   rscb *rs = rs_create_string(data_buf);
+   memset(data_buf, 253, info.st_size + 1);
+   free(data_buf);
+   rewind(ifile);
    return rs;
 }
 

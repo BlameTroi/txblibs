@@ -408,6 +408,7 @@ TXBRS.H
 | Function          | Description                                    |
 |-------------------+------------------------------------------------|
 | rs_create_string  | create a new reader on a copy of a string.     |
+| ..._from_file     | create from entire contents of open file.      |
 | rs_destroy_string | release all string read stream resources.      |
 | rs_at_end         | has the last byte of the string been read?     |
 | rs_position       | current character position in string.          |

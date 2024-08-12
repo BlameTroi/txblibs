@@ -77,6 +77,15 @@ MU_TEST(test_rs) {
    rs_destroy_string(rs);
 }
 
+MU_TEST(test_file) {
+   FILE *file = fopen("unitrs.c", "r");
+   rscb *source = rs_create_string_from_file(file);
+   mu_should(source);
+   mu_should(rs_length(source) > 3000); /* just a did we get it? */
+   fclose(file);
+   rs_destroy_string(source);
+}
+
 MU_TEST(test_clone) {
    rscb *original = rs_create_string("this is a test");
    rscb *clone = rs_clone(original);
@@ -175,6 +184,7 @@ MU_TEST_SUITE(test_suite) {
    /* run your tests here */
 
    MU_RUN_TEST(test_rs);
+   MU_RUN_TEST(test_file);
    MU_RUN_TEST(test_clone);
    MU_RUN_TEST(test_gets);
 }

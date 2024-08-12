@@ -33,6 +33,16 @@ rs_create_string(
 );
 
 /*
+ * create a new string readstream from the contents of an open file
+ * stream.
+ */
+
+rscb *
+rs_create_string_from_file(
+   FILE *ifile
+);
+
+/*
  * create a clone of a string read stream.
  */
 

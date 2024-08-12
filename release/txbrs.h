@@ -81,6 +81,16 @@ rs_create_string(
 );
 
 /*
+ * create a new string readstream from the contents of an open file
+ * stream.
+ */
+
+rscb *
+rs_create_string_from_file(
+   FILE *ifile
+);
+
+/*
  * create a clone of a string read stream.
  */
 
@@ -195,6 +205,22 @@ rs_peekc(
    rscb *rs
 );
 
+/*
+ * return a line from the read stream mimicing the behavior of
+ * [f]gets(). returns at most buflen-1 characters. reading stops on a
+ * newline character or at endof stream. if a newline is read, it is
+ * stored in the output buffer. appends '\0' to the string. returns
+ * NULL if the stream is empty.
+ */
+
+char *
+rs_gets(
+   rscb *rs,
+   char *buffer,
+   int buflen
+);
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
@@ -222,6 +248,7 @@ rs_peekc(
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/stat.h>
 
 
 /*
@@ -255,6 +282,28 @@ rs_create_string(
    strcpy(rs->str, str);
    rs->pos = 0;
    rs->eos = false;
+   return rs;
+}
+
+/*
+ * create a new string readstream from the contents of an open file
+ * stream.
+ */
+
+rscb *
+rs_create_string_from_file(
+   FILE *ifile
+) {
+   rewind(ifile);
+   struct stat info;
+   fstat(fileno(ifile), &info);
+   char *data_buf = malloc(info.st_size + 1);
+   assert(data_buf);
+   fread(data_buf, info.st_size, 1, ifile);
+   rscb *rs = rs_create_string(data_buf);
+   memset(data_buf, 253, info.st_size + 1);
+   free(data_buf);
+   rewind(ifile);
    return rs;
 }
 
@@ -447,6 +496,51 @@ rs_skip(
       n -= 1;
    }
    return c != EOF && n == 0;
+}
+
+/*
+ * return a line from the read stream mimicing the behavior of
+ * [f]gets(). returns at most buflen-1 characters. reading stops on a
+ * newline character or at endof stream. if a newline is read, it is
+ * stored in the output buffer. appends '\0' to the string. returns
+ * NULL if the stream is empty.
+ */
+
+char *
+rs_gets(
+   rscb *rs,
+   char *buffer,
+   int buflen
+) {
+   assert(rs && memcmp(rs->tag, RSCB_TAG, sizeof(rs->tag)) == 0);
+   /* return null for bad arguments or when at eof */
+   if (rs->eos || buflen < 2 || buffer == NULL) {
+      return NULL;
+   }
+   char c = rs_getc(rs);
+   if (c == EOF) {
+      return NULL;
+   }
+   /* we could pull it all out directly with a memcpy but the slight
+    * performance improvement isn't worth losing the ability to swap
+    * out stream sources in the future. */
+   char *p = buffer;
+   while (c != '\n' && c != EOF && buflen > 1) {
+      *p = c;
+      p += 1;
+      *p = '\0';
+      buflen -= 1;
+      c = rs_getc(rs);
+   }
+   /* if we hit newline and there's room, store it in the buffer
+    * otherwise put whatever character back for the next request. */
+   if (c == '\n' && buflen > 1) {
+      *p = c;
+      *(p+1) = '\0';
+   } else {
+      rs_ungetc(rs);
+   }
+   return buffer;
 }
 /* *** end priv *** */
 
