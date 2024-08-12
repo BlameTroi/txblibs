@@ -147,6 +147,22 @@ rs_peekc(
    rscb *rs
 );
 
+/*
+ * return a line from the read stream mimicing the behavior of
+ * [f]gets(). returns at most buflen-1 characters. reading stops on a
+ * newline character or at endof stream. if a newline is read, it is
+ * stored in the output buffer. appends '\0' to the string. returns
+ * NULL if the stream is empty.
+ */
+
+char *
+rs_gets(
+   rscb *rs,
+   char *buffer,
+   int buflen
+);
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

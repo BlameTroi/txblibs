@@ -422,6 +422,7 @@ TXBRS.H
 | rs_ungetc         | back up one character, does not update string. |
 | rs_peekc          | returns the next characterf rom the string but |
 |                   | does not advance.                              |
+| rs_gets           | returns a string as fgets() would.             |
 
 
 TXBSB.H
@@ -475,11 +476,6 @@ pat:
 - general refactoring
 - (low priority) capture groups ()
 - (low priority) or |
-
-
-rs:
-
-- line oriented commands.
 
 
 sb:

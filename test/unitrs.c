@@ -93,6 +93,70 @@ MU_TEST(test_clone) {
    rs_destroy_string(original);
    rs_destroy_string(clone);
 }
+
+MU_TEST(test_gets) {
+   rscb *original = rs_create_string("this is a test\nthis is another test\n");
+   char *buffer = malloc(256);
+   int buflen = 255;
+   char *res = NULL;
+
+   /* test basic read of string */
+   res = rs_gets(original, buffer, buflen);
+   mu_should(res == buffer);
+   printf("%s\n", buffer);
+   mu_should(equal_string("this is a test\n", buffer));
+
+   res = rs_gets(original, buffer, buflen);
+   mu_should(res == buffer);
+   mu_should(equal_string("this is another test\n", buffer));
+
+   res = rs_gets(original, buffer, buflen);
+   mu_should(res == NULL);
+
+   rs_rewind(original);
+
+   res = rs_gets(original, buffer, 1);
+   mu_should(res == NULL);
+
+   res = rs_gets(original, NULL, 15);
+   mu_should(res == NULL);
+
+   memset(buffer, 0, buflen);
+   res = rs_gets(original, buffer, 2);
+   mu_should(strlen(buffer) == 1);
+   mu_should(buffer[0] == 't');
+
+   printf("\n");
+   rs_rewind(original);
+   while (!rs_at_end(original)) {
+      res = rs_gets(original, buffer, 3);
+      if (res == NULL) {
+         break;
+      }
+      printf("%2d %02X%02X\n", (int)strlen(buffer), buffer[0], buffer[1]);
+   }
+
+   rs_rewind(original);
+   while (!rs_at_end(original)) {
+      res = rs_gets(original, buffer, 4);
+      if (res == NULL) {
+         break;
+      }
+      printf("%2d %02X%02X%02X\n", (int)strlen(buffer), buffer[0], buffer[1], buffer[2]);
+   }
+
+   rs_rewind(original);
+   while (!rs_at_end(original)) {
+      res = rs_gets(original, buffer, 5);
+      if (res == NULL) {
+         break;
+      }
+      printf("%2d %02X%02X%02X%02X\n", (int)strlen(buffer), buffer[0], buffer[1], buffer[2], buffer[3]);
+   }
+
+   free(buffer);
+   rs_destroy_string(original);
+}
 
 /*
  * here we define the whole test suite. sadly there's no runtime
@@ -112,6 +176,7 @@ MU_TEST_SUITE(test_suite) {
 
    MU_RUN_TEST(test_rs);
    MU_RUN_TEST(test_clone);
+   MU_RUN_TEST(test_gets);
 }
 
 
