@@ -22,9 +22,9 @@
 void
 test_setup(void) {
 
-   /* let's use a different seed than 1, but not time() because i want
-      repeatable tests. */
-   srand(RAND_SEED);
+	/* let's use a different seed than 1, but not time() because i want
+	   repeatable tests. */
+	srand(RAND_SEED);
 }
 
 
@@ -37,12 +37,11 @@ test_teardown(void) {
 
 void
 print_hash(
-   uint8_t *p
+	uint8_t *p
 ) {
-   for (unsigned int i = 0; i < 16; ++i) {
-      printf("%02x", p[i]);
-   }
-   printf("\n");
+	for (unsigned int i = 0; i < 16; ++i)
+		printf("%02x", p[i]);
+	printf("\n");
 }
 
 /*
@@ -56,20 +55,20 @@ print_hash(
  */
 
 MU_TEST(test_test) {
-   /* printf("\n"); */
-   char *str1 = "abc3231929";
-   uint8_t result[16];
-   md5_string(str1, result);
-   /* print_hash(result); */
-   mu_should((result[2] & 0x0f) == 1);
-   char *str2 = "abc5017308";
-   md5_string(str2, result);
-   /* print_hash(result); */
-   mu_should((result[2] & 0x0f) == 8);
-   char *str3 = "abc5278568";
-   md5_string(str3, result);
-   /* print_hash(result); */
-   mu_should((result[2] & 0x0f) == 0x0f);
+	/* printf("\n"); */
+	char *str1 = "abc3231929";
+	uint8_t result[16];
+	md5_string(str1, result);
+	/* print_hash(result); */
+	mu_should((result[2] & 0x0f) == 1);
+	char *str2 = "abc5017308";
+	md5_string(str2, result);
+	/* print_hash(result); */
+	mu_should((result[2] & 0x0f) == 8);
+	char *str3 = "abc5278568";
+	md5_string(str3, result);
+	/* print_hash(result); */
+	mu_should((result[2] & 0x0f) == 0x0f);
 }
 
 /*
@@ -81,14 +80,14 @@ MU_TEST(test_test) {
 
 MU_TEST_SUITE(test_suite) {
 
-   /* always have a setup and teardown, even if they */
-   /* do nothing. */
+	/* always have a setup and teardown, even if they */
+	/* do nothing. */
 
-   MU_SUITE_CONFIGURE(&test_setup, &test_teardown);
+	MU_SUITE_CONFIGURE(&test_setup, &test_teardown);
 
-   /* run your tests here */
+	/* run your tests here */
 
-   MU_RUN_TEST(test_test);
+	MU_RUN_TEST(test_test);
 
 }
 
@@ -99,7 +98,7 @@ MU_TEST_SUITE(test_suite) {
 
 int
 main(int argc, char *argv[]) {
-   MU_RUN_SUITE(test_suite);
-   MU_REPORT();
-   return MU_EXIT_CODE;
+	MU_RUN_SUITE(test_suite);
+	MU_REPORT();
+	return MU_EXIT_CODE;
 }

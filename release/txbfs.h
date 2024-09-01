@@ -77,7 +77,7 @@ typedef struct fscb fscb;
 
 fscb *
 fs_create(
-   int limit
+	int limit
 );
 
 /*
@@ -86,8 +86,8 @@ fs_create(
 
 void
 fs_push(
-   fscb *fs,
-   void *item
+	fscb *fs,
+	void *item
 );
 
 /*
@@ -96,7 +96,7 @@ fs_push(
 
 void *
 fs_pop(
-   fscb *fs
+	fscb *fs
 );
 
 /*
@@ -106,7 +106,7 @@ fs_pop(
 
 void *
 fs_peek(
-   fscb *fs
+	fscb *fs
 );
 
 /*
@@ -115,22 +115,22 @@ fs_peek(
 
 bool
 fs_empty(
-   fscb *fs
+	fscb *fs
 );
 
 bool
 fs_full(
-   fscb *fs
+	fscb *fs
 );
 
 int
 fs_depth(
-   fscb *fs
+	fscb *fs
 );
 
 int
 fs_free(
-   fscb *fs
+	fscb *fs
 );
 
 /*
@@ -139,7 +139,7 @@ fs_free(
 
 bool
 fs_destroy(
-   fscb *fs
+	fscb *fs
 );
 
 #ifdef __cplusplus
@@ -175,10 +175,10 @@ fs_destroy(
 
 #define FSCB_TAG "__FSCB__"
 struct fscb {
-   char tag[8];
-   int limit;
-   int top;
-   void *stack[];
+	char tag[8];
+	int limit;
+	int top;
+	void *stack[];
 };
 
 /*
@@ -187,14 +187,14 @@ struct fscb {
 
 fscb *
 fs_create(
-   int limit
+	int limit
 ) {
-   fscb *fs = malloc(sizeof(*fs) + sizeof(void *) * (limit + 1));
-   memset(fs, 0, sizeof(*fs) + sizeof(void *) * (limit + 1));
-   memcpy(fs->tag, FSCB_TAG, sizeof(fs->tag));
-   fs->limit = limit;
-   fs->top = -1;
-   return fs;
+	fscb *fs = malloc(sizeof(*fs) + sizeof(void *) * (limit + 1));
+	memset(fs, 0, sizeof(*fs) + sizeof(void *) * (limit + 1));
+	memcpy(fs->tag, FSCB_TAG, sizeof(fs->tag));
+	fs->limit = limit;
+	fs->top = -1;
+	return fs;
 }
 
 /*
@@ -203,13 +203,13 @@ fs_create(
 
 void
 fs_push(
-   fscb *fs,
-   void *item
+	fscb *fs,
+	void *item
 ) {
-   assert(fs && memcmp(fs->tag, FSCB_TAG, sizeof(fs->tag)) == 0);
-   assert(fs->top + 1 < fs->limit);
-   fs->top += 1;
-   fs->stack[fs->top] = item;
+	assert(fs && memcmp(fs->tag, FSCB_TAG, sizeof(fs->tag)) == 0);
+	assert(fs->top + 1 < fs->limit);
+	fs->top += 1;
+	fs->stack[fs->top] = item;
 }
 
 /*
@@ -218,13 +218,13 @@ fs_push(
 
 void *
 fs_pop(
-   fscb *fs
+	fscb *fs
 ) {
-   assert(fs && memcmp(fs->tag, FSCB_TAG, sizeof(fs->tag)) == 0);
-   assert(fs->top > -1);
-   void *ret = fs->stack[fs->top];
-   fs->top -= 1;
-   return ret;
+	assert(fs && memcmp(fs->tag, FSCB_TAG, sizeof(fs->tag)) == 0);
+	assert(fs->top > -1);
+	void *ret = fs->stack[fs->top];
+	fs->top -= 1;
+	return ret;
 }
 
 /*
@@ -233,12 +233,12 @@ fs_pop(
 
 void *
 fs_peek(
-   fscb *fs
+	fscb *fs
 ) {
-   assert(fs && memcmp(fs->tag, FSCB_TAG, sizeof(fs->tag)) == 0);
-   assert(fs->top > -1);
-   void *ret = fs->stack[fs->top];
-   return ret;
+	assert(fs && memcmp(fs->tag, FSCB_TAG, sizeof(fs->tag)) == 0);
+	assert(fs->top > -1);
+	void *ret = fs->stack[fs->top];
+	return ret;
 }
 
 /*
@@ -247,34 +247,34 @@ fs_peek(
 
 bool
 fs_empty(
-   fscb *fs
+	fscb *fs
 ) {
-   assert(fs && memcmp(fs->tag, FSCB_TAG, sizeof(fs->tag)) == 0);
-   return fs->top == -1;
+	assert(fs && memcmp(fs->tag, FSCB_TAG, sizeof(fs->tag)) == 0);
+	return fs->top == -1;
 }
 
 bool
 fs_full(
-   fscb *fs
+	fscb *fs
 ) {
-   assert(fs && memcmp(fs->tag, FSCB_TAG, sizeof(fs->tag)) == 0);
-   return fs->top < fs->limit;
+	assert(fs && memcmp(fs->tag, FSCB_TAG, sizeof(fs->tag)) == 0);
+	return fs->top < fs->limit;
 }
 
 int
 fs_depth(
-   fscb *fs
+	fscb *fs
 ) {
-   assert(fs && memcmp(fs->tag, FSCB_TAG, sizeof(fs->tag)) == 0);
-   return fs->top;
+	assert(fs && memcmp(fs->tag, FSCB_TAG, sizeof(fs->tag)) == 0);
+	return fs->top;
 }
 
 int
 fs_free(
-   fscb *fs
+	fscb *fs
 ) {
-   assert(fs && memcmp(fs->tag, FSCB_TAG, sizeof(fs->tag)) == 0);
-   return fs->top - fs->limit;
+	assert(fs && memcmp(fs->tag, FSCB_TAG, sizeof(fs->tag)) == 0);
+	return fs->top - fs->limit;
 }
 
 /*
@@ -283,15 +283,14 @@ fs_free(
 
 bool
 fs_destroy(
-   fscb *fs
+	fscb *fs
 ) {
-   assert(fs && memcmp(fs->tag, FSCB_TAG, sizeof(fs->tag)) == 0);
-   if (fs->top > -1) {
-      return false;
-   }
-   memset(fs, 253, sizeof(*fs) + sizeof(void *) * (fs->limit + 1));
-   free(fs);
-   return true;
+	assert(fs && memcmp(fs->tag, FSCB_TAG, sizeof(fs->tag)) == 0);
+	if (fs->top > -1)
+		return false;
+	memset(fs, 253, sizeof(*fs) + sizeof(void *) * (fs->limit + 1));
+	free(fs);
+	return true;
 }
 /* *** end priv *** */
 

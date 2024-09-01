@@ -23,9 +23,9 @@
 void
 test_setup(void) {
 
-   /* let's use a different seed than 1, but not time() because i want
-      repeatable tests. */
-   srand(RAND_SEED);
+	/* let's use a different seed than 1, but not time() because i want
+	   repeatable tests. */
+	srand(RAND_SEED);
 }
 
 void
@@ -34,35 +34,35 @@ test_teardown(void) {
 }
 
 MU_TEST(test_da) {
-   dacb *da = NULL;
+	dacb *da = NULL;
 
-   da = da_create(10);
+	da = da_create(10);
 
-   mu_should(da);
-   mu_should(da_length(da) == 0);
+	mu_should(da);
+	mu_should(da_length(da) == 0);
 
-   int *leak = NULL;
-   int sum = 0;
-   for (int i = 0; i < 1000; i++) {
-      leak = malloc(sizeof(int));
-      *leak = rand_between(100, 900);
-      sum += *leak;
-      da_put(da, i, leak);
-      printf("%d %d\n", i, *leak);
-      leak = NULL;
-   }
-   printf("%d\n", sum);
+	int *leak = NULL;
+	int sum = 0;
+	for (int i = 0; i < 1000; i++) {
+		leak = malloc(sizeof(int));
+		*leak = rand_between(100, 900);
+		sum += *leak;
+		da_put(da, i, leak);
+		printf("%d %d\n", i, *leak);
+		leak = NULL;
+	}
+	printf("%d\n", sum);
 
-   for (int i = 0; i < 1000; i++) {
-      int *n = NULL;
-      n = da_get(da, i);
-      printf("%d %d\n", i, *n);
-      sum -= *n;
-      n = NULL;
-   }
-   printf("%d\n", sum);
-   mu_should(sum == 0);
-   da_destroy(da);
+	for (int i = 0; i < 1000; i++) {
+		int *n = NULL;
+		n = da_get(da, i);
+		printf("%d %d\n", i, *n);
+		sum -= *n;
+		n = NULL;
+	}
+	printf("%d\n", sum);
+	mu_should(sum == 0);
+	da_destroy(da);
 }
 
 /*
@@ -74,14 +74,14 @@ MU_TEST(test_da) {
 
 MU_TEST_SUITE(test_suite) {
 
-   /* always have a setup and teardown, even if they */
-   /* do nothing. */
+	/* always have a setup and teardown, even if they */
+	/* do nothing. */
 
-   MU_SUITE_CONFIGURE(&test_setup, &test_teardown);
+	MU_SUITE_CONFIGURE(&test_setup, &test_teardown);
 
-   /* run your tests here */
+	/* run your tests here */
 
-   MU_RUN_TEST(test_da);
+	MU_RUN_TEST(test_da);
 }
 
 
@@ -91,7 +91,7 @@ MU_TEST_SUITE(test_suite) {
 
 int
 main(int argc, char *argv[]) {
-   MU_RUN_SUITE(test_suite);
-   MU_REPORT();
-   return MU_EXIT_CODE;
+	MU_RUN_SUITE(test_suite);
+	MU_REPORT();
+	return MU_EXIT_CODE;
 }

@@ -29,7 +29,7 @@ typedef struct rscb rscb;
 
 rscb *
 rs_create_string(
-   const char *str
+	const char *str
 );
 
 /*
@@ -39,7 +39,7 @@ rs_create_string(
 
 rscb *
 rs_create_string_from_file(
-   FILE *ifile
+	FILE *ifile
 );
 
 /*
@@ -48,7 +48,7 @@ rs_create_string_from_file(
 
 rscb *
 rs_clone(
-   rscb *original
+	rscb *original
 );
 
 /*
@@ -57,7 +57,7 @@ rs_clone(
 
 void
 rs_destroy_string(
-   rscb *rs
+	rscb *rs
 );
 
 /*
@@ -66,7 +66,7 @@ rs_destroy_string(
 
 bool
 rs_at_end(
-   rscb *rs
+	rscb *rs
 );
 
 /*
@@ -75,7 +75,7 @@ rs_at_end(
 
 size_t
 rs_position(
-   rscb *rs
+	rscb *rs
 );
 
 /*
@@ -84,7 +84,7 @@ rs_position(
 
 size_t
 rs_length(
-   rscb *rs
+	rscb *rs
 );
 
 /*
@@ -93,7 +93,7 @@ rs_length(
 
 size_t
 rs_remaining(
-   rscb *rs
+	rscb *rs
 );
 
 /*
@@ -102,7 +102,7 @@ rs_remaining(
 
 void
 rs_rewind(
-   rscb *rs
+	rscb *rs
 );
 
 /*
@@ -112,8 +112,8 @@ rs_rewind(
 
 bool
 rs_seek(
-   rscb *rs,
-   size_t n
+	rscb *rs,
+	size_t n
 );
 
 /*
@@ -123,8 +123,8 @@ rs_seek(
 
 bool
 rs_skip(
-   rscb *rs,
-   long n
+	rscb *rs,
+	long n
 );
 
 /*
@@ -134,7 +134,7 @@ rs_skip(
 
 int
 rs_getc(
-   rscb *rs
+	rscb *rs
 );
 
 /*
@@ -144,7 +144,7 @@ rs_getc(
 
 void
 rs_ungetc(
-   rscb *rs
+	rscb *rs
 );
 
 /*
@@ -154,7 +154,7 @@ rs_ungetc(
 
 int
 rs_peekc(
-   rscb *rs
+	rscb *rs
 );
 
 /*
@@ -167,9 +167,9 @@ rs_peekc(
 
 char *
 rs_gets(
-   rscb *rs,
-   char *buffer,
-   int buflen
+	rscb *rs,
+	char *buffer,
+	int buflen
 );
 
 

@@ -17,19 +17,19 @@ extern "C" {
 
 void
 do_abort(
-   const char *msg,
-   const char *func,
-   const char *file,
-   int line
+	const char *msg,
+	const char *func,
+	const char *file,
+	int line
 );
 
 void
 do_abort_if(
-   const char *cond,
-   const char *msg,
-   const char *func,
-   const char *file,
-   int line
+	const char *cond,
+	const char *msg,
+	const char *func,
+	const char *file,
+	int line
 );
 
 #define abort(msg) do {\

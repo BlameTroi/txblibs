@@ -27,8 +27,8 @@ extern "C" {
 
 int
 rand_between(
-   int,
-   int
+	int,
+	int
 );
 
 /*
@@ -37,8 +37,8 @@ rand_between(
 
 void
 shuffle(
-   void **cards,
-   int n
+	void **cards,
+	int n
 );
 
 /*
@@ -73,50 +73,50 @@ double dmin(double, double);
 
 bool
 is_even(
-   long
+	long
 );
 bool
 is_odd(
-   long
+	long
 );
 
 bool
 is_digit(
-   char
+	char
 );
 bool
 is_word_char(
-   char
+	char
 );
 
 bool
 is_whitespace(
-   char
+	char
 );
 
 bool
 is_control(
-   char
+	char
 );
 
 bool
 is_punctuation(
-   char
+	char
 );
 
 bool
 is_bracketing(
-   char
+	char
 );
 
 bool
 is_lowercase(
-   char
+	char
 );
 
 bool
 is_uppercase(
-   char
+	char
 );
 
 /*
@@ -125,7 +125,16 @@ is_uppercase(
 
 int
 one_bits_in(
-   unsigned long
+	unsigned long
+);
+
+/*
+ * sum the integers from 1 to n.
+ */
+
+int
+sum_one_to(
+	int n
 );
 
 /*
@@ -134,14 +143,14 @@ one_bits_in(
 
 int
 fn_cmp_int_asc(
-   const void *,
-   const void *
+	const void *,
+	const void *
 );
 
 int
 fn_cmp_int_dsc(
-   const void *,
-   const void *
+	const void *,
+	const void *
 );
 
 /*
@@ -150,18 +159,18 @@ fn_cmp_int_dsc(
 
 uint8_t *
 hex_pack(
-   uint8_t *hex,        /* address of output buffer */
-   int hexlen,          /* maximum length of output buffer, must be at least 1/2 of chrlen */
-   char *chr,           /* address of string of hex digits */
-   int chrlen           /* number of digits to pack, must be even */
+	uint8_t *hex,        /* address of output buffer */
+	int hexlen,          /* maximum length of output buffer, must be at least 1/2 of chrlen */
+	char *chr,           /* address of string of hex digits */
+	int chrlen           /* number of digits to pack, must be even */
 );
 
 char *
 hex_unpack(
-   char *chr,           /* address of output buffer */
-   int chrlen,          /* maximum length of output buffer, must be at least 2*hexlen+1 */
-   uint8_t *hex,        /* address of first byte to unpack */
-   int hexlen           /* number of bytes to unpack */
+	char *chr,           /* address of output buffer */
+	int chrlen,          /* maximum length of output buffer, must be at least 2*hexlen+1 */
+	uint8_t *hex,        /* address of first byte to unpack */
+	int hexlen           /* number of bytes to unpack */
 );
 
 

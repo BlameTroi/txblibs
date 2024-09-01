@@ -28,7 +28,7 @@ typedef struct qucb qucb;
 
 bool
 qu_empty(
-   qucb *
+	qucb *
 );
 
 /*
@@ -37,8 +37,8 @@ qu_empty(
 
 void
 qu_enqueue(
-   qucb *,
-   void *
+	qucb *,
+	void *
 );
 
 /*
@@ -47,7 +47,7 @@ qu_enqueue(
 
 void *
 qu_dequeue(
-   qucb *
+	qucb *
 );
 
 /*
@@ -56,7 +56,7 @@ qu_dequeue(
 
 void *
 qu_peek(
-   qucb *
+	qucb *
 );
 
 /*
@@ -65,7 +65,7 @@ qu_peek(
 
 qucb *
 qu_create(
-   void
+	void
 );
 
 /*
@@ -74,7 +74,7 @@ qu_create(
 
 bool
 qu_destroy(
-   qucb *
+	qucb *
 );
 
 /*
@@ -83,7 +83,7 @@ qu_destroy(
 
 int
 qu_count(
-   qucb *
+	qucb *
 );
 
 #ifdef __cplusplus

@@ -68,39 +68,39 @@ typedef struct pqcb pqcb;
 
 bool
 pq_empty(
-   pqcb *
+	pqcb *
 );
 
 void
 pq_put(
-   pqcb *,
-   long,
-   void *
+	pqcb *,
+	long,
+	void *
 );
 
 void *
 pq_get(
-   pqcb *
+	pqcb *
 );
 
 void *
 pq_peek(
-   pqcb *
+	pqcb *
 );
 
 pqcb *
 pq_create(
-   bool
+	bool
 );
 
 bool
 pq_destroy(
-   pqcb *
+	pqcb *
 );
 
 int
 pq_count(
-   pqcb *
+	pqcb *
 );
 
 #ifdef __cplusplus
@@ -139,20 +139,20 @@ pq_count(
 
 #define PQENTRY_TAG "--PQEN--"
 typedef struct pqentry {
-   char tag[8];
-   long priority;
-   struct pqentry *bwd;
-   struct pqentry *fwd;
-   void *payload;
+	char tag[8];
+	long priority;
+	struct pqentry *bwd;
+	struct pqentry *fwd;
+	void *payload;
 } pqentry;
 
 #define PQCB_TAG "--PQCB--"
 struct pqcb {
-   char tag[8];
-   pqentry *first;
-   pqentry *last;
-   bool threaded;
-   pthread_mutex_t mutex;
+	char tag[8];
+	pqentry *first;
+	pqentry *last;
+	bool threaded;
+	pthread_mutex_t mutex;
 };
 
 
@@ -212,26 +212,24 @@ struct pqcb {
 static
 bool
 prim_pq_empty(
-   pqcb *pq
+	pqcb *pq
 ) {
-   return pq->first == NULL;
+	return pq->first == NULL;
 }
 
 bool
 pq_empty(
-   pqcb *pq
+	pqcb *pq
 ) {
-   assert(pq &&
-          memcmp(pq->tag, PQCB_TAG, sizeof(pq->tag)) == 0 &&
-          "invalid PQCB");
-   if (pq->threaded) {
-      pthread_mutex_lock(&pq->mutex);
-   }
-   bool ret = prim_pq_empty(pq);
-   if (pq->threaded) {
-      pthread_mutex_unlock(&pq->mutex);
-   }
-   return ret;
+	assert(pq &&
+		memcmp(pq->tag, PQCB_TAG, sizeof(pq->tag)) == 0 &&
+		"invalid PQCB");
+	if (pq->threaded)
+		pthread_mutex_lock(&pq->mutex);
+	bool ret = prim_pq_empty(pq);
+	if (pq->threaded)
+		pthread_mutex_unlock(&pq->mutex);
+	return ret;
 }
 
 /*
@@ -241,32 +239,30 @@ pq_empty(
 static
 int
 prim_pq_count(
-   pqcb *pq
+	pqcb *pq
 ) {
-   int i = 0;
-   pqentry *qe = pq->first;
-   while (qe) {
-      i += 1;
-      qe = qe->fwd;
-   }
-   return i;
+	int i = 0;
+	pqentry *qe = pq->first;
+	while (qe) {
+		i += 1;
+		qe = qe->fwd;
+	}
+	return i;
 }
 
 int
 pq_count(
-   pqcb *pq
+	pqcb *pq
 ) {
-   assert(pq &&
-          memcmp(pq->tag, PQCB_TAG, sizeof(pq->tag)) == 0 &&
-          "invalid PQCB");
-   if (pq->threaded) {
-      pthread_mutex_lock(&pq->mutex);
-   }
-   int ret = prim_pq_count(pq);
-   if (pq->threaded) {
-      pthread_mutex_unlock(&pq->mutex);
-   }
-   return ret;
+	assert(pq &&
+		memcmp(pq->tag, PQCB_TAG, sizeof(pq->tag)) == 0 &&
+		"invalid PQCB");
+	if (pq->threaded)
+		pthread_mutex_lock(&pq->mutex);
+	int ret = prim_pq_count(pq);
+	if (pq->threaded)
+		pthread_mutex_unlock(&pq->mutex);
+	return ret;
 }
 
 /*
@@ -276,17 +272,17 @@ pq_count(
 static
 pqentry *
 pq_new_entry(
-   long priority,
-   void *payload
+	long priority,
+	void *payload
 ) {
-   pqentry *qe = malloc(sizeof(*qe));
-   memset(qe, 0, sizeof(*qe));
-   memcpy(qe->tag, PQENTRY_TAG, sizeof(qe->tag));
-   qe->priority = priority;
-   qe->payload = payload;
-   qe->fwd = NULL;
-   qe->bwd = NULL;
-   return qe;
+	pqentry *qe = malloc(sizeof(*qe));
+	memset(qe, 0, sizeof(*qe));
+	memcpy(qe->tag, PQENTRY_TAG, sizeof(qe->tag));
+	qe->priority = priority;
+	qe->payload = payload;
+	qe->fwd = NULL;
+	qe->bwd = NULL;
+	return qe;
 }
 
 /*
@@ -296,68 +292,66 @@ pq_new_entry(
 static
 void
 prim_pq_put(
-   pqcb *pq,
-   long priority,
-   void *payload
+	pqcb *pq,
+	long priority,
+	void *payload
 ) {
-   pqentry *qe = pq_new_entry(priority, payload);
+	pqentry *qe = pq_new_entry(priority, payload);
 
-   /* empty is easy.  */
-   if (prim_pq_empty(pq)) {
-      pq->first = qe;
-      pq->last = qe;
-      return;
-   }
+	/* empty is easy.  */
+	if (prim_pq_empty(pq)) {
+		pq->first = qe;
+		pq->last = qe;
+		return;
+	}
 
-   /* if the priority puts it at either end of the list,
-    * it's still easy. ordering within priority is not
-    * guaranteed. */
-   if (qe->priority <= pq->first->priority) {
-      qe->fwd = pq->first;
-      qe->fwd->bwd = qe;
-      pq->first = qe;
-      return;
-   } else if (qe->priority > pq->last->priority) {
-      qe->bwd = pq->last;
-      qe->bwd->fwd = qe;
-      pq->last = qe;
-      return;
-   }
+	/* if the priority puts it at either end of the list,
+	 * it's still easy. ordering within priority is not
+	 * guaranteed. */
+	if (qe->priority <= pq->first->priority) {
+		qe->fwd = pq->first;
+		qe->fwd->bwd = qe;
+		pq->first = qe;
+		return;
+	} else if (qe->priority > pq->last->priority) {
+		qe->bwd = pq->last;
+		qe->bwd->fwd = qe;
+		pq->last = qe;
+		return;
+	}
 
-   /* find an insertion point. */
-   pqentry *p = pq->first;
-   while (p) {
-      if (p->priority < qe->priority) {
-         p = p->fwd;
-         continue;
-      }
-      qe->bwd = p->bwd;
-      p->bwd = qe;
-      qe->bwd->fwd = qe;
-      qe->fwd = p;
-      return;
-   }
+	/* find an insertion point. */
+	pqentry *p = pq->first;
+	while (p) {
+		if (p->priority < qe->priority) {
+			p = p->fwd;
+			continue;
+		}
+		qe->bwd = p->bwd;
+		p->bwd = qe;
+		qe->bwd->fwd = qe;
+		qe->fwd = p;
+		return;
+	}
 
-   /* if we get here, the queue is broken. */
-   assert(NULL && "error in priority queue chaining");
+	/* if we get here, the queue is broken. */
+	assert(NULL && "error in priority queue chaining");
 }
 
 void
 pq_put(
-   pqcb *pq,
-   long priority,
-   void *payload
+	pqcb *pq,
+	long priority,
+	void *payload
 ) {
-   assert(pq &&
-          memcmp(pq->tag, PQCB_TAG, sizeof(pq->tag)) == 0 &&
-          "invalid PQCB");
-   if (pq->threaded) {
-      pthread_mutex_lock(&pq->mutex);
-   }
-   prim_pq_put(pq, priority, payload);
-   if (pq->threaded) {
-      pthread_mutex_unlock(&pq->mutex);
-   }
+	assert(pq &&
+		memcmp(pq->tag, PQCB_TAG, sizeof(pq->tag)) == 0 &&
+		"invalid PQCB");
+	if (pq->threaded)
+		pthread_mutex_lock(&pq->mutex);
+	prim_pq_put(pq, priority, payload);
+	if (pq->threaded)
+		pthread_mutex_unlock(&pq->mutex);
 }
 
 /*
@@ -367,38 +361,35 @@ pq_put(
 static
 void *
 prim_pq_get(
-   pqcb *pq
+	pqcb *pq
 ) {
-   if (prim_pq_empty(pq)) {
-      return NULL;
-   }
-   pqentry *qe = pq->last;
-   void *payload = qe->payload;
-   pq->last = qe->bwd;
-   free(qe);
-   if (pq->last == NULL) {
-      pq->first = NULL;
-   } else {
-      pq->last->fwd = NULL;
-   }
-   return payload;
+	if (prim_pq_empty(pq))
+		return NULL;
+	pqentry *qe = pq->last;
+	void *payload = qe->payload;
+	pq->last = qe->bwd;
+	free(qe);
+	if (pq->last == NULL)
+		pq->first = NULL;
+
+	else
+		pq->last->fwd = NULL;
+	return payload;
 }
 
 void *
 pq_get(
-   pqcb *pq
+	pqcb *pq
 ) {
-   assert(pq &&
-          memcmp(pq->tag, PQCB_TAG, sizeof(pq->tag)) == 0 &&
-          "invalid PQCB");
-   if (pq->threaded) {
-      pthread_mutex_lock(&pq->mutex);
-   }
-   void *res = prim_pq_get(pq);
-   if (pq->threaded) {
-      pthread_mutex_unlock(&pq->mutex);
-   }
-   return res;
+	assert(pq &&
+		memcmp(pq->tag, PQCB_TAG, sizeof(pq->tag)) == 0 &&
+		"invalid PQCB");
+	if (pq->threaded)
+		pthread_mutex_lock(&pq->mutex);
+	void *res = prim_pq_get(pq);
+	if (pq->threaded)
+		pthread_mutex_unlock(&pq->mutex);
+	return res;
 }
 
 /*
@@ -407,30 +398,27 @@ pq_get(
 
 void *
 prim_pq_peek(
-   pqcb *pq
+	pqcb *pq
 ) {
-   if (prim_pq_empty(pq)) {
-      return NULL;
-   }
-   return pq->last->payload;
+	if (prim_pq_empty(pq))
+		return NULL;
+	return pq->last->payload;
 }
 
 void *
 pq_peek(
-   pqcb *pq
+	pqcb *pq
 ) {
-   assert(pq &&
-          memcmp(pq->tag, PQCB_TAG, sizeof(pq->tag)) == 0 &&
-          "invalid PQCB");
-   void *res = NULL;
-   if (pq->threaded) {
-      pthread_mutex_lock(&pq->mutex);
-   }
-   res = prim_pq_peek(pq);
-   if (pq->threaded) {
-      pthread_mutex_unlock(&pq->mutex);
-   }
-   return res;
+	assert(pq &&
+		memcmp(pq->tag, PQCB_TAG, sizeof(pq->tag)) == 0 &&
+		"invalid PQCB");
+	void *res = NULL;
+	if (pq->threaded)
+		pthread_mutex_lock(&pq->mutex);
+	res = prim_pq_peek(pq);
+	if (pq->threaded)
+		pthread_mutex_unlock(&pq->mutex);
+	return res;
 }
 
 /*
@@ -439,20 +427,20 @@ pq_peek(
 
 pqcb *
 pq_create(
-   bool threaded
+	bool threaded
 ) {
-   pqcb *pq = malloc(sizeof(*pq));
-   assert(pq && "could not allocate PQCB");
-   memset(pq, 0, sizeof(*pq));
-   memcpy(pq->tag, PQCB_TAG, sizeof(pq->tag));
-   pq->first = NULL;
-   pq->last = NULL;
-   pq->threaded = threaded;
-   if (threaded) {
-      assert(pthread_mutex_init(&pq->mutex, NULL) == 0 &&
-             "error initializing mutx for PQCB");
-   }
-   return pq;
+	pqcb *pq = malloc(sizeof(*pq));
+	assert(pq && "could not allocate PQCB");
+	memset(pq, 0, sizeof(*pq));
+	memcpy(pq->tag, PQCB_TAG, sizeof(pq->tag));
+	pq->first = NULL;
+	pq->last = NULL;
+	pq->threaded = threaded;
+	if (threaded) {
+		assert(pthread_mutex_init(&pq->mutex, NULL) == 0 &&
+			"error initializing mutx for PQCB");
+	}
+	return pq;
 }
 
 /*
@@ -465,21 +453,21 @@ pq_create(
 
 bool
 pq_destroy(
-   pqcb *pq
+	pqcb *pq
 ) {
-   assert(pq &&
-          memcmp(pq->tag, PQCB_TAG, sizeof(pq->tag)) == 0 &&
-          "invalid PQCB");
-   if (pq_empty(pq)) {
-      if (pq->threaded) {
-         while (EBUSY == pthread_mutex_destroy(&pq->mutex))
-            ;
-      }
-      memset(pq, 255, sizeof(*pq));
-      free(pq);
-      return true;
-   }
-   return false;
+	assert(pq &&
+		memcmp(pq->tag, PQCB_TAG, sizeof(pq->tag)) == 0 &&
+		"invalid PQCB");
+	if (pq_empty(pq)) {
+		if (pq->threaded) {
+			while (EBUSY == pthread_mutex_destroy(&pq->mutex))
+				;
+		}
+		memset(pq, 255, sizeof(*pq));
+		free(pq);
+		return true;
+	}
+	return false;
 }
 /* *** end priv *** */
 

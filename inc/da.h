@@ -51,7 +51,7 @@ typedef struct dacb dacb;
 
 dacb *
 da_create(
-   int size_or_zero_for_default
+	int size_or_zero_for_default
 );
 
 /*
@@ -61,7 +61,7 @@ da_create(
 
 void
 da_destroy(
-   dacb *da
+	dacb *da
 );
 
 /*
@@ -70,8 +70,8 @@ da_destroy(
 
 void *
 da_get(
-   dacb *da,
-   int n
+	dacb *da,
+	int n
 );
 
 /*
@@ -82,9 +82,9 @@ da_get(
 
 void
 da_put(
-   dacb *da,
-   int n,
-   void *put);
+	dacb *da,
+	int n,
+	void *put);
 
 /*
  * how many entries does the array hold if entries 0 .. n were added.
@@ -93,7 +93,7 @@ da_put(
 
 int
 da_length(
-   dacb *da
+	dacb *da
 );
 
 #ifdef __cplusplus

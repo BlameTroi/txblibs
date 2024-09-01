@@ -200,7 +200,7 @@ decompile_pattern(const cpat *);
 
 const char *
 convert_glob(
-   const char *str
+	const char *str
 );
 
 /*
@@ -210,8 +210,8 @@ convert_glob(
 
 bool
 match(
-   const char *str,
-   const cpat *pat
+	const char *str,
+	const cpat *pat
 );
 
 /*
@@ -222,8 +222,8 @@ match(
 
 bool
 glob_match(
-   const char *str,
-   const cpat *pat
+	const char *str,
+	const cpat *pat
 );
 
 #ifdef __cplusplus

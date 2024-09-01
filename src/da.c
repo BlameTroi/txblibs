@@ -27,10 +27,10 @@
 #define DACB_TAG "__DACB__"
 #define DACB_DEFAULT_SIZE 512
 struct dacb {
-   char tag[8];                /* eye catcher & verification */
-   int length;                 /* last used (via put) entry */
-   int size;                   /* size of data in number of entries */
-   void **data;                /* pointer to the entry pointers */
+	char tag[8];                /* eye catcher & verification */
+	int length;                 /* last used (via put) entry */
+	int size;                   /* size of data in number of entries */
+	void **data;                /* pointer to the entry pointers */
 };
 
 /*
@@ -41,16 +41,17 @@ struct dacb {
 
 dacb *
 da_create(
-   int size_or_zero_for_default
+	int size_or_zero_for_default
 ) {
-   dacb *da = malloc(sizeof(dacb));
-   memset(da, 0, sizeof(dacb));
-   memcpy(da->tag, DACB_TAG, sizeof(da->tag));
-   da->size = size_or_zero_for_default ? size_or_zero_for_default : DACB_DEFAULT_SIZE;
-   da->data = malloc(da->size * sizeof(void *));
-   da->length = -1;
-   memset(da->data, 0, da->size * sizeof(void *));
-   return da;
+	dacb *da = malloc(sizeof(dacb));
+	memset(da, 0, sizeof(dacb));
+	memcpy(da->tag, DACB_TAG, sizeof(da->tag));
+	da->size = size_or_zero_for_default ? size_or_zero_for_default :
+		DACB_DEFAULT_SIZE;
+	da->data = malloc(da->size *sizeof(void *));
+	da->length = -1;
+	memset(da->data, 0, da->size *sizeof(void *));
+	return da;
 }
 
 /*
@@ -61,13 +62,13 @@ da_create(
 
 void
 da_destroy(
-   dacb *da
+	dacb *da
 ) {
-   assert(da && memcmp(da->tag, DACB_TAG, sizeof(da->tag)) == 0);
-   memset(da->data, 0, da->size * sizeof(void *));
-   free(da->data);
-   memset(da, 0, sizeof(dacb));
-   free(da);
+	assert(da && memcmp(da->tag, DACB_TAG, sizeof(da->tag)) == 0);
+	memset(da->data, 0, da->size *sizeof(void *));
+	free(da->data);
+	memset(da, 0, sizeof(dacb));
+	free(da);
 }
 
 /*
@@ -77,13 +78,13 @@ da_destroy(
 
 void *
 da_get(
-   dacb *da,
-   int n
+	dacb *da,
+	int n
 ) {
-   assert(da && memcmp(da->tag, DACB_TAG, sizeof(da->tag)) == 0);
-   assert(n < da->size);
-   void *res = da->data[n];
-   return res;
+	assert(da && memcmp(da->tag, DACB_TAG, sizeof(da->tag)) == 0);
+	assert(n < da->size);
+	void *res = da->data[n];
+	return res;
 }
 
 /*
@@ -94,24 +95,23 @@ da_get(
 
 void
 da_put(
-   dacb *da,
-   int n,
-   void *put
+	dacb *da,
+	int n,
+	void *put
 ) {
-   assert(da && memcmp(da->tag, DACB_TAG, sizeof(da->tag)) == 0);
-   assert(put);
-   while (n >= da->size) {
-      void **old = da->data;
-      da->data = malloc(2 * da->size * sizeof(void *));
-      memcpy(da->data, old, da->size * sizeof(void *));
-      memset(old, 0, da->size * sizeof(void *));
-      free(old);
-      da->size = 2 * da->size;
-   }
-   da->data[n] = put;
-   if (n > da->length) {
-      da->length = n;
-   }
+	assert(da && memcmp(da->tag, DACB_TAG, sizeof(da->tag)) == 0);
+	assert(put);
+	while (n >= da->size) {
+		void **old = da->data;
+		da->data = malloc(2 * da->size *sizeof(void *));
+		memcpy(da->data, old, da->size *sizeof(void *));
+		memset(old, 0, da->size *sizeof(void *));
+		free(old);
+		da->size = 2 * da->size;
+	}
+	da->data[n] = put;
+	if (n > da->length)
+		da->length = n;
 }
 
 /*
@@ -122,8 +122,8 @@ da_put(
 
 int
 da_length(
-   dacb *da
+	dacb *da
 ) {
-   assert(da && memcmp(da->tag, DACB_TAG, sizeof(da->tag)) == 0);
-   return da->length + 1;
+	assert(da && memcmp(da->tag, DACB_TAG, sizeof(da->tag)) == 0);
+	return da->length + 1;
 }

@@ -25,11 +25,11 @@
 
 #define RSCB_TAG "__RSCB__"
 struct rscb {
-   char tag[8];
-   char *str;
-   size_t len;
-   size_t pos;
-   bool eos;
+	char tag[8];
+	char *str;
+	size_t len;
+	size_t pos;
+	bool eos;
 };
 
 /*
@@ -38,19 +38,19 @@ struct rscb {
 
 rscb *
 rs_create_string(
-   const char *str
+	const char *str
 ) {
-   assert(str);
-   rscb *rs = malloc(sizeof(rscb));
-   assert(rs);
-   memset(rs, 0, sizeof(rscb));
-   memcpy(rs->tag, RSCB_TAG, sizeof(rs->tag));
-   rs->len = strlen(str);
-   rs->str = malloc(rs->len+1);
-   strcpy(rs->str, str);
-   rs->pos = 0;
-   rs->eos = false;
-   return rs;
+	assert(str);
+	rscb *rs = malloc(sizeof(rscb));
+	assert(rs);
+	memset(rs, 0, sizeof(rscb));
+	memcpy(rs->tag, RSCB_TAG, sizeof(rs->tag));
+	rs->len = strlen(str);
+	rs->str = malloc(rs->len+1);
+	strcpy(rs->str, str);
+	rs->pos = 0;
+	rs->eos = false;
+	return rs;
 }
 
 /*
@@ -60,19 +60,19 @@ rs_create_string(
 
 rscb *
 rs_create_string_from_file(
-   FILE *ifile
+	FILE *ifile
 ) {
-   rewind(ifile);
-   struct stat info;
-   fstat(fileno(ifile), &info);
-   char *data_buf = malloc(info.st_size + 1);
-   assert(data_buf);
-   fread(data_buf, info.st_size, 1, ifile);
-   rscb *rs = rs_create_string(data_buf);
-   memset(data_buf, 253, info.st_size + 1);
-   free(data_buf);
-   rewind(ifile);
-   return rs;
+	rewind(ifile);
+	struct stat info;
+	fstat(fileno(ifile), &info);
+	char *data_buf = malloc(info.st_size + 1);
+	assert(data_buf);
+	fread(data_buf, info.st_size, 1, ifile);
+	rscb *rs = rs_create_string(data_buf);
+	memset(data_buf, 253, info.st_size + 1);
+	free(data_buf);
+	rewind(ifile);
+	return rs;
 }
 
 /*
@@ -82,19 +82,19 @@ rs_create_string_from_file(
 
 rscb *
 rs_clone(
-   rscb *original
+	rscb *original
 ) {
-   assert(original && memcmp(original->tag, RSCB_TAG, sizeof(original->tag)) == 0);
-   rscb *rs = malloc(sizeof(rscb));
-   assert(rs);
-   memset(rs, 0, sizeof(rscb));
-   memcpy(rs->tag, RSCB_TAG, sizeof(rs->tag));
-   rs->len = original->len;
-   rs->pos = original->pos;
-   rs->eos = original->eos;
-   rs->str = malloc(rs->len + 1);
-   strcpy(rs->str, original->str);
-   return rs;
+	assert(original && memcmp(original->tag, RSCB_TAG, sizeof(original->tag)) == 0);
+	rscb *rs = malloc(sizeof(rscb));
+	assert(rs);
+	memset(rs, 0, sizeof(rscb));
+	memcpy(rs->tag, RSCB_TAG, sizeof(rs->tag));
+	rs->len = original->len;
+	rs->pos = original->pos;
+	rs->eos = original->eos;
+	rs->str = malloc(rs->len + 1);
+	strcpy(rs->str, original->str);
+	return rs;
 }
 
 /*
@@ -103,13 +103,13 @@ rs_clone(
 
 void
 rs_destroy_string(
-   rscb *rs
+	rscb *rs
 ) {
-   assert(rs && memcmp(rs->tag, RSCB_TAG, sizeof(rs->tag)) == 0);
-   memset(rs->str, 253, rs->len);
-   free(rs->str);
-   memset(rs, 253, sizeof(rscb));
-   free(rs);
+	assert(rs && memcmp(rs->tag, RSCB_TAG, sizeof(rs->tag)) == 0);
+	memset(rs->str, 253, rs->len);
+	free(rs->str);
+	memset(rs, 253, sizeof(rscb));
+	free(rs);
 }
 
 /*
@@ -121,10 +121,10 @@ rs_destroy_string(
 
 bool
 rs_at_end(
-   rscb *rs
+	rscb *rs
 ) {
-   assert(rs && memcmp(rs->tag, RSCB_TAG, sizeof(rs->tag)) == 0);
-   return rs->eos;
+	assert(rs && memcmp(rs->tag, RSCB_TAG, sizeof(rs->tag)) == 0);
+	return rs->eos;
 }
 
 /*
@@ -135,13 +135,12 @@ rs_at_end(
 
 int
 rs_peekc(
-   rscb *rs
+	rscb *rs
 ) {
-   assert(rs && memcmp(rs->tag, RSCB_TAG, sizeof(rs->tag)) == 0);
-   if (rs->eos) {
-      return EOF;
-   }
-   return rs->str[rs->pos] ? rs->str[rs->pos] : EOF;
+	assert(rs && memcmp(rs->tag, RSCB_TAG, sizeof(rs->tag)) == 0);
+	if (rs->eos)
+		return EOF;
+	return rs->str[rs->pos] ? rs->str[rs->pos] : EOF;
 }
 
 /*
@@ -150,10 +149,10 @@ rs_peekc(
 
 size_t
 rs_position(
-   rscb *rs
+	rscb *rs
 ) {
-   assert(rs && memcmp(rs->tag, RSCB_TAG, sizeof(rs->tag)) == 0);
-   return rs->pos;
+	assert(rs && memcmp(rs->tag, RSCB_TAG, sizeof(rs->tag)) == 0);
+	return rs->pos;
 }
 
 /*
@@ -163,10 +162,10 @@ rs_position(
 
 size_t
 rs_length(
-   rscb *rs
+	rscb *rs
 ) {
-   assert(rs && memcmp(rs->tag, RSCB_TAG, sizeof(rs->tag)) == 0);
-   return (rs->len - 1);
+	assert(rs && memcmp(rs->tag, RSCB_TAG, sizeof(rs->tag)) == 0);
+	return (rs->len - 1);
 }
 
 /*
@@ -176,10 +175,10 @@ rs_length(
 
 size_t
 rs_remaining(
-   rscb *rs
+	rscb *rs
 ) {
-   assert(rs && memcmp(rs->tag, RSCB_TAG, sizeof(rs->tag)) == 0);
-   return (rs->len - 1) - rs->pos;
+	assert(rs && memcmp(rs->tag, RSCB_TAG, sizeof(rs->tag)) == 0);
+	return (rs->len - 1) - rs->pos;
 }
 
 /*
@@ -188,11 +187,11 @@ rs_remaining(
 
 void
 rs_rewind(
-   rscb *rs
+	rscb *rs
 ) {
-   assert(rs && memcmp(rs->tag, RSCB_TAG, sizeof(rs->tag)) == 0);
-   rs->pos = 0;
-   rs->eos = false;
+	assert(rs && memcmp(rs->tag, RSCB_TAG, sizeof(rs->tag)) == 0);
+	rs->pos = 0;
+	rs->eos = false;
 }
 
 /*
@@ -201,11 +200,11 @@ rs_rewind(
 
 bool
 rs_seek(
-   rscb *rs,
-   size_t n
+	rscb *rs,
+	size_t n
 ) {
-   assert(rs && memcmp(rs->tag, RSCB_TAG, sizeof(rs->tag)) == 0);
-   assert(NULL); /* not implemented */
+	assert(rs && memcmp(rs->tag, RSCB_TAG, sizeof(rs->tag)) == 0);
+	assert(NULL); /* not implemented */
 };
 
 /*
@@ -215,19 +214,17 @@ rs_seek(
 
 int
 rs_getc(
-   rscb *rs
+	rscb *rs
 ) {
-   assert(rs && memcmp(rs->tag, RSCB_TAG, sizeof(rs->tag)) == 0);
-   if (rs->eos) {
-      return EOF;
-   }
-   int next = rs->str[rs->pos];
-   if (next == '\0') {
-      next = EOF;
-   }
-   rs->eos = next == EOF;
-   rs->pos += 1;
-   return next;
+	assert(rs && memcmp(rs->tag, RSCB_TAG, sizeof(rs->tag)) == 0);
+	if (rs->eos)
+		return EOF;
+	int next = rs->str[rs->pos];
+	if (next == '\0')
+		next = EOF;
+	rs->eos = next == EOF;
+	rs->pos += 1;
+	return next;
 }
 
 /*
@@ -237,13 +234,13 @@ rs_getc(
 
 void
 rs_ungetc(
-   rscb *rs
+	rscb *rs
 ) {
-   assert(rs && memcmp(rs->tag, RSCB_TAG, sizeof(rs->tag)) == 0);
-   if (rs->pos > 0) {
-      rs->pos -= 1;
-      rs->eos = false;
-   }
+	assert(rs && memcmp(rs->tag, RSCB_TAG, sizeof(rs->tag)) == 0);
+	if (rs->pos > 0) {
+		rs->pos -= 1;
+		rs->eos = false;
+	}
 }
 
 /*
@@ -252,18 +249,18 @@ rs_ungetc(
 
 bool
 rs_skip(
-   rscb *rs,
-   long n) {
-   assert(rs && memcmp(rs->tag, RSCB_TAG, sizeof(rs->tag)) == 0);
-   assert(n >= 0); /* reading backward not implemented */
-   /* n == 0 is a nop but we'll allow it */
-   int c = rs_getc(rs);
-   n -= 1;
-   while (c != EOF && n) {
-      c = rs_getc(rs);
-      n -= 1;
-   }
-   return c != EOF && n == 0;
+	rscb *rs,
+	long n) {
+	assert(rs && memcmp(rs->tag, RSCB_TAG, sizeof(rs->tag)) == 0);
+	assert(n >= 0); /* reading backward not implemented */
+	/* n == 0 is a nop but we'll allow it */
+	int c = rs_getc(rs);
+	n -= 1;
+	while (c != EOF && n) {
+		c = rs_getc(rs);
+		n -= 1;
+	}
+	return c != EOF && n == 0;
 }
 
 /*
@@ -276,37 +273,34 @@ rs_skip(
 
 char *
 rs_gets(
-   rscb *rs,
-   char *buffer,
-   int buflen
+	rscb *rs,
+	char *buffer,
+	int buflen
 ) {
-   assert(rs && memcmp(rs->tag, RSCB_TAG, sizeof(rs->tag)) == 0);
-   /* return null for bad arguments or when at eof */
-   if (rs->eos || buflen < 2 || buffer == NULL) {
-      return NULL;
-   }
-   char c = rs_getc(rs);
-   if (c == EOF) {
-      return NULL;
-   }
-   /* we could pull it all out directly with a memcpy but the slight
-    * performance improvement isn't worth losing the ability to swap
-    * out stream sources in the future. */
-   char *p = buffer;
-   while (c != '\n' && c != EOF && buflen > 1) {
-      *p = c;
-      p += 1;
-      *p = '\0';
-      buflen -= 1;
-      c = rs_getc(rs);
-   }
-   /* if we hit newline and there's room, store it in the buffer
-    * otherwise put whatever character back for the next request. */
-   if (c == '\n' && buflen > 1) {
-      *p = c;
-      *(p+1) = '\0';
-   } else {
-      rs_ungetc(rs);
-   }
-   return buffer;
+	assert(rs && memcmp(rs->tag, RSCB_TAG, sizeof(rs->tag)) == 0);
+	/* return null for bad arguments or when at eof */
+	if (rs->eos || buflen < 2 || buffer == NULL)
+		return NULL;
+	char c = rs_getc(rs);
+	if (c == EOF)
+		return NULL;
+	/* we could pull it all out directly with a memcpy but the slight
+	 * performance improvement isn't worth losing the ability to swap
+	 * out stream sources in the future. */
+	char *p = buffer;
+	while (c != '\n' && c != EOF && buflen > 1) {
+		*p = c;
+		p += 1;
+		*p = '\0';
+		buflen -= 1;
+		c = rs_getc(rs);
+	}
+	/* if we hit newline and there's room, store it in the buffer
+	 * otherwise put whatever character back for the next request. */
+	if (c == '\n' && buflen > 1) {
+		*p = c;
+		*(p+1) = '\0';
+	} else
+		rs_ungetc(rs);
+	return buffer;
 }

@@ -30,7 +30,7 @@ typedef struct sbcb sbcb;
 
 sbcb *
 sb_create_blksize(
-   size_t blksize
+	size_t blksize
 );
 
 /*
@@ -40,7 +40,7 @@ sb_create_blksize(
 
 sbcb *
 sb_create_null(
-   void
+	void
 );
 
 /*
@@ -50,7 +50,7 @@ sb_create_null(
 
 sbcb *
 sb_create(
-   void
+	void
 );
 
 /*
@@ -59,7 +59,7 @@ sb_create(
 
 void
 sb_reset(
-   sbcb *sb
+	sbcb *sb
 );
 
 /*
@@ -68,7 +68,7 @@ sb_reset(
 
 void
 sb_destroy(
-   sbcb *sb
+	sbcb *sb
 );
 
 /*
@@ -77,7 +77,7 @@ sb_destroy(
 
 size_t
 sb_length(
-   sbcb *sb
+	sbcb *sb
 );
 
 /*
@@ -86,8 +86,8 @@ sb_length(
 
 void
 sb_putc(
-   sbcb *sb,
-   int c
+	sbcb *sb,
+	int c
 );
 
 /*
@@ -96,8 +96,8 @@ sb_putc(
 
 void
 sb_puts(
-   sbcb *sb,
-   char *str
+	sbcb *sb,
+	char *str
 );
 
 /*
@@ -106,7 +106,7 @@ sb_puts(
 
 char *
 sb_to_string(
-   sbcb *sb
+	sbcb *sb
 );
 
 #ifdef __cplusplus

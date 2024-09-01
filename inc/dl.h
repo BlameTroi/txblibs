@@ -71,15 +71,15 @@ typedef struct dlcb dlcb;
 
 dlcb *
 dl_create_by_id(
-   bool threaded,
-   void (*free_payload)(void *)
+	bool threaded,
+	void (*free_payload)(void *)
 );
 
 dlcb *
 dl_create_by_key(
-   bool threaded,
-   int (*compare_payload_key)(void *, void *),
-   void (*free_payload)(void *));
+	bool threaded,
+	int (*compare_payload_key)(void *, void *),
+	void (*free_payload)(void *));
 
 /*
  * destroy a doubly linked list if it is empty, releasing all
@@ -88,7 +88,7 @@ dl_create_by_key(
 
 bool
 dl_destroy(
-   dlcb *dl
+	dlcb *dl
 );
 
 /*
@@ -97,7 +97,7 @@ dl_destroy(
 
 int
 dl_count(
-   dlcb *dl
+	dlcb *dl
 );
 
 /*
@@ -106,7 +106,7 @@ dl_count(
 
 bool
 dl_empty(
-   dlcb *dl
+	dlcb *dl
 );
 
 /*
@@ -115,7 +115,7 @@ dl_empty(
 
 int
 dl_delete_all(
-   dlcb *dl
+	dlcb *dl
 );
 
 /*
@@ -132,23 +132,23 @@ dl_delete_all(
 
 bool
 dl_insert(
-   dlcb *dl,
-   long id,
-   void *payload
+	dlcb *dl,
+	long id,
+	void *payload
 );
 
 bool
 dl_delete(
-   dlcb *dl,
-   long id,
-   void *payload
+	dlcb *dl,
+	long id,
+	void *payload
 );
 
 bool
 dl_update(
-   dlcb *dl,
-   long id,
-   void *payload
+	dlcb *dl,
+	long id,
+	void *payload
 );
 
 /*
@@ -180,37 +180,37 @@ dl_update(
 
 bool
 dl_get(
-   dlcb *dl,
-   long *id,
-   void *(*payload)
+	dlcb *dl,
+	long *id,
+	void *(*payload)
 );
 
 bool
 dl_get_first(
-   dlcb *dl,
-   long *id,
-   void *(*payload)
+	dlcb *dl,
+	long *id,
+	void *(*payload)
 );
 
 bool
 dl_get_last(
-   dlcb *dl,
-   long *id,
-   void *(*payload)
+	dlcb *dl,
+	long *id,
+	void *(*payload)
 );
 
 bool
 dl_get_next(
-   dlcb *dl,
-   long *id,
-   void *(*payload)
+	dlcb *dl,
+	long *id,
+	void *(*payload)
 );
 
 bool
 dl_get_previous(
-   dlcb *dl,
-   long *id,
-   void *(*payload)
+	dlcb *dl,
+	long *id,
+	void *(*payload)
 );
 
 #ifdef __cplusplus

@@ -20,9 +20,9 @@
 void
 test_setup(void) {
 
-   /* let's use a different seed than 1, but not time() because i want
-      repeatable tests. */
-   srand(RAND_SEED);
+	/* let's use a different seed than 1, but not time() because i want
+	   repeatable tests. */
+	srand(RAND_SEED);
 }
 
 void
@@ -32,31 +32,31 @@ test_teardown(void) {
 
 MU_TEST(test_fs) {
 
-   fscb *fs = fs_create(5);
-   mu_should(fs);
-   mu_should(fs_empty(fs));
-   for (int i = 0; i < 5; i++) {
-      fs_push(fs, (void *)(long)i);
-      printf("%ld\n", (long)fs_peek(fs));
-   }
-   mu_shouldnt(fs_destroy(fs));
-   for (int i = 0; i < 5; i++) {
-      long x = (long)fs_pop(fs);
-      printf("%ld\n", x);
-   }
-   mu_should(fs_destroy(fs));
-   fs = NULL;
+	fscb *fs = fs_create(5);
+	mu_should(fs);
+	mu_should(fs_empty(fs));
+	for (int i = 0; i < 5; i++) {
+		fs_push(fs, (void *)(long)i);
+		printf("%ld\n", (long)fs_peek(fs));
+	}
+	mu_shouldnt(fs_destroy(fs));
+	for (int i = 0; i < 5; i++) {
+		long x = (long)fs_pop(fs);
+		printf("%ld\n", x);
+	}
+	mu_should(fs_destroy(fs));
+	fs = NULL;
 
-   fs = fs_create(2);
-   mu_should(fs);
-   mu_should(fs_empty(fs));
-   fs_push(fs, "a");
-   fs_push(fs, "b");
-   mu_should(fs_full(fs));
-   mu_should(fs_pop(fs));
-   mu_should(fs_pop(fs));
-   mu_should(fs_empty(fs));
-   mu_should(fs_destroy(fs));
+	fs = fs_create(2);
+	mu_should(fs);
+	mu_should(fs_empty(fs));
+	fs_push(fs, "a");
+	fs_push(fs, "b");
+	mu_should(fs_full(fs));
+	mu_should(fs_pop(fs));
+	mu_should(fs_pop(fs));
+	mu_should(fs_empty(fs));
+	mu_should(fs_destroy(fs));
 
 }
 
@@ -71,14 +71,14 @@ MU_TEST(test_fs) {
 
 MU_TEST_SUITE(test_suite) {
 
-   /* always have a setup and teardown, even if they */
-   /* do nothing. */
+	/* always have a setup and teardown, even if they */
+	/* do nothing. */
 
-   MU_SUITE_CONFIGURE(&test_setup, &test_teardown);
+	MU_SUITE_CONFIGURE(&test_setup, &test_teardown);
 
-   /* run your tests here */
+	/* run your tests here */
 
-   MU_RUN_TEST(test_fs);
+	MU_RUN_TEST(test_fs);
 }
 
 
@@ -88,7 +88,7 @@ MU_TEST_SUITE(test_suite) {
 
 int
 main(int argc, char *argv[]) {
-   MU_RUN_SUITE(test_suite);
-   MU_REPORT();
-   return MU_EXIT_CODE;
+	MU_RUN_SUITE(test_suite);
+	MU_REPORT();
+	return MU_EXIT_CODE;
 }

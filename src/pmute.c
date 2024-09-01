@@ -44,42 +44,41 @@
 
 int
 permute_next(
-   int n, int *ints
+	int n, int *ints
 ) {
 
-   int swap, j;
+	int swap, j;
 
-   for (int i = n - 1; i > 0; i--) {
+	for (int i = n - 1; i > 0; i--) {
 
-      /* find the first out of order pair working from the right */
-      if (ints[i] > ints[i - 1]) {
-         j = n - 1;
+		/* find the first out of order pair working from the right */
+		if (ints[i] > ints[i - 1]) {
+			j = n - 1;
 
-         /* find the smallest int larger than current one behind it */
-         while (ints[i - 1] > ints[j]) {
-            j -= 1;
-         }
+			/* find the smallest int larger than current one behind it */
+			while (ints[i - 1] > ints[j])
+				j -= 1;
 
-         swap = ints[i - 1];
-         ints[i - 1] = ints[j];
-         ints[j] = swap;
+			swap = ints[i - 1];
+			ints[i - 1] = ints[j];
+			ints[j] = swap;
 
-         /* reverse ordering behind current */
-         int start = i;
-         int end = n - 1;
-         while (start < end) {
-            swap = ints[start];
-            ints[start] = ints[end];
-            ints[end] = swap;
-            start += 1;
-            end -= 1;
-         }
+			/* reverse ordering behind current */
+			int start = i;
+			int end = n - 1;
+			while (start < end) {
+				swap = ints[start];
+				ints[start] = ints[end];
+				ints[end] = swap;
+				start += 1;
+				end -= 1;
+			}
 
-         /* and return this permutation */
-         return 1;
-      }
-   }
+			/* and return this permutation */
+			return 1;
+		}
+	}
 
-   /* no more permutations available */
-   return 0;
+	/* no more permutations available */
+	return 0;
 }

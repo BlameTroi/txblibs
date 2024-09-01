@@ -33,21 +33,21 @@ extern "C" {
 
 void
 md5_bytes(
-   void *input,
-   size_t len,
-   uint8_t *result
+	void *input,
+	size_t len,
+	uint8_t *result
 );
 
 void
 md5_string(
-   char *input,
-   uint8_t *result
+	char *input,
+	uint8_t *result
 );
 
 void
 md5_file(
-   FILE *file,
-   uint8_t *result
+	FILE *file,
+	uint8_t *result
 );
 
 /*
@@ -60,35 +60,35 @@ typedef struct md5_context md5_context;
 
 md5_context *
 md5_allocate_context(
-   void
+	void
 );
 
 void
 md5_release_release(
-   md5_context *ctx
+	md5_context *ctx
 );
 
 void
 md5_initialize(
-   md5_context *ctx
+	md5_context *ctx
 );
 
 void
 md5_update(
-   md5_context *ctx,
-   uint8_t *input,
-   size_t input_len
+	md5_context *ctx,
+	uint8_t *input,
+	size_t input_len
 );
 
 void
 md5_finalize(
-   md5_context *ctx
+	md5_context *ctx
 );
 
 void
 md5_get_digest(
-   md5_context *ctx,
-   uint8_t *result
+	md5_context *ctx,
+	uint8_t *result
 );
 
 #ifdef __cplusplus

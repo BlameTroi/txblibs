@@ -38,8 +38,8 @@ extern "C" {
 
 int
 permute_next(
-   int n,        /* number of integers in the array *ints */
-   int *ints     /* n unique integers */
+	int n,        /* number of integers in the array *ints */
+	int *ints     /* n unique integers */
 );
 
 #ifdef __cplusplus

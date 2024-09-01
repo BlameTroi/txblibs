@@ -163,39 +163,39 @@
 /* for printing */
 
 typedef struct match_code_t {
-   char meta;
-   cpat code;
-   char *text;
+	char meta;
+	cpat code;
+	char *text;
 } match_code_t;
 
 const match_code_t match_codes[] = {
-   { 0, PAT_BEG, ">>>BEGIN PATTERN" },
-   { 0, PAT_END, "<<<END PATTERN" },
-   { 0, PAT_FF, "\\f FORM FEED" },
-   { 0, PAT_LF, "\\n LINE FEED" },
-   { 0, PAT_LIT, "   LITERAL" },
-   { 0, PAT_TAB, "\\t TAB" },
-   { META_BOL, PAT_BOL, "^  BOL" },
-   { META_CCLASS, PAT_CCLASS, "[  BEGIN CLASS" },
-   { META_DIG, PAT_DIG, "\\d DIGIT" },
-   { META_END_CLASS, PAT_END_OF, "]  END CLASS" },
-   { META_END_GROUP, PAT_END_GROUP, ")  END GROUP" },
-   { META_EOL, PAT_EOL, "$  EOL" },
-   { META_GROUP, PAT_GROUP, "(  GROUP" },
-   { META_NCCLASS, PAT_NOT_CCLASS, "[^ BEGIN NEGATED CLASS" },
-   { META_NOT_DIG, PAT_NOT_DIG, "\\D NOT DIGIT" },
-   { META_NOT_WC, PAT_NOT_WC, "\\D NOT WORD CHARACTER" },
-   { META_NOT_WS, PAT_NOT_WS, "\\S NOT WHITESPACE" },
-   { META_OR, PAT_OR, "|  OR" },
-   { META_REP01, PAT_REP01, "?  ZERO OR ONE" },
-   { META_REP0M, PAT_REP0M, "*  REPEAT ZERO OR MORE" },
-   { META_REP1M, PAT_REP1M, "+  REPEAT ONE OR MORE" },
-   { META_REP_COUNT, PAT_REP_COUNT, "{  REPEAT COUNT" },
-   { META_REP_END_COUNT, PAT_END_REP, "}  END REPEAT COUNT" },
-   { META_WC, PAT_WC, "\\w WORD CHARACTER" },
-   { META_WILD, PAT_WILD, ".  WILD" },
-   { META_WS, PAT_WS, "\\s WHITESPACE" },
-   { 0, 0, NULL },
+	{ 0, PAT_BEG, ">>>BEGIN PATTERN" },
+	{ 0, PAT_END, "<<<END PATTERN" },
+	{ 0, PAT_FF, "\\f FORM FEED" },
+	{ 0, PAT_LF, "\\n LINE FEED" },
+	{ 0, PAT_LIT, "   LITERAL" },
+	{ 0, PAT_TAB, "\\t TAB" },
+	{ META_BOL, PAT_BOL, "^  BOL" },
+	{ META_CCLASS, PAT_CCLASS, "[  BEGIN CLASS" },
+	{ META_DIG, PAT_DIG, "\\d DIGIT" },
+	{ META_END_CLASS, PAT_END_OF, "]  END CLASS" },
+	{ META_END_GROUP, PAT_END_GROUP, ")  END GROUP" },
+	{ META_EOL, PAT_EOL, "$  EOL" },
+	{ META_GROUP, PAT_GROUP, "(  GROUP" },
+	{ META_NCCLASS, PAT_NOT_CCLASS, "[^ BEGIN NEGATED CLASS" },
+	{ META_NOT_DIG, PAT_NOT_DIG, "\\D NOT DIGIT" },
+	{ META_NOT_WC, PAT_NOT_WC, "\\D NOT WORD CHARACTER" },
+	{ META_NOT_WS, PAT_NOT_WS, "\\S NOT WHITESPACE" },
+	{ META_OR, PAT_OR, "|  OR" },
+	{ META_REP01, PAT_REP01, "?  ZERO OR ONE" },
+	{ META_REP0M, PAT_REP0M, "*  REPEAT ZERO OR MORE" },
+	{ META_REP1M, PAT_REP1M, "+  REPEAT ONE OR MORE" },
+	{ META_REP_COUNT, PAT_REP_COUNT, "{  REPEAT COUNT" },
+	{ META_REP_END_COUNT, PAT_END_REP, "}  END REPEAT COUNT" },
+	{ META_WC, PAT_WC, "\\w WORD CHARACTER" },
+	{ META_WILD, PAT_WILD, ".  WILD" },
+	{ META_WS, PAT_WS, "\\s WHITESPACE" },
+	{ 0, 0, NULL },
 };
 
 /*
@@ -205,19 +205,17 @@ const match_code_t match_codes[] = {
 
 const char *
 displayable_match_code(
-   cpat code
+	cpat code
 ) {
-   int i = 0;
-   while (match_codes[i].text != NULL) {
-      if (code == match_codes[i].code) {
-         break;
-      }
-      i += 1;
-   }
-   if (match_codes[i].text == NULL) {
-      return "!!!ERROR!!!";
-   }
-   return match_codes[i].text;
+	int i = 0;
+	while (match_codes[i].text != NULL) {
+		if (code == match_codes[i].code)
+			break;
+		i += 1;
+	}
+	if (match_codes[i].text == NULL)
+		return "!!!ERROR!!!";
+	return match_codes[i].text;
 }
 
 /*
@@ -228,12 +226,12 @@ static
 inline
 bool
 is_quantifier(
-   cpat p
+	cpat p
 ) {
-   return p == PAT_REP0M ||   /* * */
-          p == PAT_REP1M ||   /* + */
-          p == PAT_REP01 ||   /* ? */
-          p == PAT_REP_COUNT; /* {,} */
+	return p == PAT_REP0M ||   /* * */
+		p == PAT_REP1M ||   /* + */
+		p == PAT_REP01 ||   /* ? */
+		p == PAT_REP_COUNT; /* {,} */
 }
 
 /*
@@ -244,32 +242,34 @@ is_quantifier(
 static
 int
 pattern_length(
-   const cpat *pat,
-   const int pp
+	const cpat *pat,
+	const int pp
 ) {
-   int pl = 0;
-   if (pat[pp] == PAT_CCLASS || pat[pp] == PAT_NOT_CCLASS || pat[pp] == PAT_LIT) {
-      pl = 2 + pat[pp+1];
-   } else if (pat[pp] == PAT_REP_COUNT) {
-      pl = 2;
-   } else if (pat[pp] == PAT_BEG) {
-      pl = 2 + pat[pp+1];
-   } else {
-      pl = 1;
-   }
-   abort_if(
-      pl < 1,
-      "error calculating pattern length");
-   return pl;
+	int pl = 0;
+	if (pat[pp] == PAT_CCLASS || pat[pp] == PAT_NOT_CCLASS || pat[pp] == PAT_LIT)
+		pl = 2 + pat[pp+1];
+
+	else if (pat[pp] == PAT_REP_COUNT)
+		pl = 2;
+
+	else if (pat[pp] == PAT_BEG)
+		pl = 2 + pat[pp+1];
+
+	else
+		pl = 1;
+	abort_if(
+		pl < 1,
+		"error calculating pattern length");
+	return pl;
 }
 
 static
 int
 next_pattern(
-   const cpat *pat,
-   const int pp
+	const cpat *pat,
+	const int pp
 ) {
-   return pp + pattern_length(pat, pp);
+	return pp + pattern_length(pat, pp);
 }
 
 /*
@@ -281,22 +281,20 @@ static bool debugging = false;
 
 void
 debug_on(
-   char *msg
+	char *msg
 ) {
-   if (msg) {
-      printf(">>>debug_on: %s\n", msg);
-   }
-   debugging = true;
+	if (msg)
+		printf(">>>debug_on: %s\n", msg);
+	debugging = true;
 }
 
 void
 debug_off(
-   char *msg
+	char *msg
 ) {
-   if (msg) {
-      printf("<<<debug_off: %s\n", msg);
-   }
-   debugging = false;
+	if (msg)
+		printf("<<<debug_off: %s\n", msg);
+	debugging = false;
 }
 
 /*
@@ -306,12 +304,11 @@ debug_off(
 
 const char *
 pattern_source(
-   const cpat *pat
+	const cpat *pat
 ) {
-   if (pat == NULL || *pat != PAT_BEG) {
-      return "not a valid pattern";
-   }
-   return (char *)(pat+2);
+	if (pat == NULL || *pat != PAT_BEG)
+		return "not a valid pattern";
+	return (char *)(pat+2);
 }
 
 /*
@@ -322,12 +319,11 @@ pattern_source(
 
 char *
 decompile_pattern(
-   const cpat *pat
+	const cpat *pat
 ) {
-   if (pat == NULL || *pat != PAT_BEG) {
-      return dup_string("not a valid pattern");
-   }
-   return dup_string("decompile_pattern not implemented");
+	if (pat == NULL || *pat != PAT_BEG)
+		return dup_string("not a valid pattern");
+	return dup_string("decompile_pattern not implemented");
 }
 
 /*
@@ -338,60 +334,63 @@ decompile_pattern(
 
 void
 print_compiled_pattern(
-   cpat *pat
+	cpat *pat
 ) {
-   printf("compiled pattern: \n");
-   int i = 0;
-   while (pat[i] != 0) {
-      printf("%3d %s", i, displayable_match_code(pat[i]));
+	printf("compiled pattern: \n");
+	int i = 0;
+	while (pat[i] != 0) {
+		printf("%3d %s", i, displayable_match_code(pat[i]));
 
-      switch (pat[i]) {
+		switch (pat[i]) {
 
-      case PAT_BEG:
-      case PAT_BOL:
-      case PAT_EOL:
-      case PAT_WILD:
-      case PAT_END:
-      case PAT_END_OF:
-      case PAT_DIG:
-      case PAT_NOT_DIG:
-      case PAT_WC:
-      case PAT_NOT_WC:
-      case PAT_WS:
-      case PAT_NOT_WS:
-      case PAT_REP0M:
-      case PAT_REP1M:
-      case PAT_REP01:
-         printf("\n");
-         break;
+		case PAT_BEG:
+		case PAT_BOL:
+		case PAT_EOL:
+		case PAT_WILD:
+		case PAT_END:
+		case PAT_END_OF:
+		case PAT_DIG:
+		case PAT_NOT_DIG:
+		case PAT_WC:
+		case PAT_NOT_WC:
+		case PAT_WS:
+		case PAT_NOT_WS:
+		case PAT_REP0M:
+		case PAT_REP1M:
+		case PAT_REP01:
+			printf("\n");
+			break;
 
-      case PAT_CCLASS:
-      case PAT_NOT_CCLASS:
-      case PAT_LIT:
-         printf(" %d ", pat[i+1]);
-         for (int j = 0; j < pat[i+1]; j++) {
-            char c = (char)pat[i+2+j];
-            if (c >= ' ') {
-               printf("%c", (char)pat[i+2+j]);
-            } else if (c == '\n') {
-               printf("\\n");
-            } else if (c == '\t') {
-               printf("\\t");
-            } else if (c == '\f') {
-               printf("\\f");
-            } else {
-               printf("?? %x ??", c);
-            }
-         }
-         printf("\n");
-         break;
+		case PAT_CCLASS:
+		case PAT_NOT_CCLASS:
+		case PAT_LIT:
+			printf(" %d ", pat[i+1]);
+			for (int j = 0; j < pat[i+1]; j++) {
+				char c = (char)pat[i+2+j];
+				if (c >= ' ')
+					printf("%c", (char)pat[i+2+j]);
 
-      default:
-         abort("error detected in compiled pattern buffer");
-      }
-      i = next_pattern(pat, i);
+				else if (c == '\n')
+					printf("\\n");
 
-   }
+				else if (c == '\t')
+					printf("\\t");
+
+				else if (c == '\f')
+					printf("\\f");
+
+				else
+					printf("?? %x ??", c);
+			}
+			printf("\n");
+			break;
+
+		default:
+			abort("error detected in compiled pattern buffer");
+		}
+		i = next_pattern(pat, i);
+
+	}
 }
 
 /*
@@ -404,26 +403,26 @@ print_compiled_pattern(
 
 bool
 validate_compiled_pattern(
-   const cpat *pat,
-   int *val
+	const cpat *pat,
+	int *val
 ) {
-   if (pat == NULL || *pat != PAT_BEG) {
-      return false;
-   }
+	if (pat == NULL || *pat != PAT_BEG)
+		return false;
 
-   /* begin and end are assumed */
-   pat += next_pattern(pat, 0);
-   for (int i = 0; val[i]!= -1; i++) {
-      if (pat[i] != (cpat)val[i]) {
-         if (debugging) {
-            printf("\ndifference at position %d\n     got: (%3d) '%s'\nexpected: (%3d) '%s'\n", i+1,
-                   val[i], displayable_match_code((cpat)val[i]),
-                   (int)pat[i], displayable_match_code(pat[i]));
-         }
-         return false;
-      }
-   }
-   return true;
+	/* begin and end are assumed */
+	pat += next_pattern(pat, 0);
+	for (int i = 0; val[i]!= -1; i++) {
+		if (pat[i] != (cpat)val[i]) {
+			if (debugging) {
+				printf("\ndifference at position %d\n     got: (%3d) '%s'\nexpected: (%3d) '%s'\n",
+					i+1,
+					val[i], displayable_match_code((cpat)val[i]),
+					(int)pat[i], displayable_match_code(pat[i]));
+			}
+			return false;
+		}
+	}
+	return true;
 }
 
 /*
@@ -436,48 +435,46 @@ validate_compiled_pattern(
 static
 char *
 expand_range(
-   const char *raw
+	const char *raw
 ) {
-   int exp_max = max(64, strlen(raw) * 2);
-   char *exp = malloc(exp_max);
-   int pr = 0;
-   int pe = 0;
-   bool in_of = false;
-   while (raw[pr]) {
-      if (pe > exp_max * 3 / 4) {
-         exp_max += exp_max + 32;
-         exp = realloc(exp, exp_max);
-      }
-      if (raw[pr] == '\\') {
-         exp[pe] = raw[pr];
-         exp[pe+1] = raw[pr+1];
-         pe += 2;
-         pr += 2;
-         continue;
-      }
-      if (in_of && raw[pr] == '-') {
-         int c = raw[pr-1] + 1;
-         int d = raw[pr+1];
-         while (c < d) {
-            exp[pe] = (char)c;
-            c += 1;
-            pe += 1;
-         }
-         pr += 1;
-         continue;
-      }
-      if (in_of && raw[pr] == ']') {
-         in_of = false;
-      }
-      if (!in_of && raw[pr] == '[') {
-         in_of = true;
-      }
-      exp[pe] = raw[pr];
-      pe += 1;
-      pr += 1;
-   }
-   exp[pe] = '\0';
-   return exp;
+	int exp_max = max(64, strlen(raw) * 2);
+	char *exp = malloc(exp_max);
+	int pr = 0;
+	int pe = 0;
+	bool in_of = false;
+	while (raw[pr]) {
+		if (pe > exp_max * 3 / 4) {
+			exp_max += exp_max + 32;
+			exp = realloc(exp, exp_max);
+		}
+		if (raw[pr] == '\\') {
+			exp[pe] = raw[pr];
+			exp[pe+1] = raw[pr+1];
+			pe += 2;
+			pr += 2;
+			continue;
+		}
+		if (in_of && raw[pr] == '-') {
+			int c = raw[pr-1] + 1;
+			int d = raw[pr+1];
+			while (c < d) {
+				exp[pe] = (char)c;
+				c += 1;
+				pe += 1;
+			}
+			pr += 1;
+			continue;
+		}
+		if (in_of && raw[pr] == ']')
+			in_of = false;
+		if (!in_of && raw[pr] == '[')
+			in_of = true;
+		exp[pe] = raw[pr];
+		pe += 1;
+		pr += 1;
+	}
+	exp[pe] = '\0';
+	return exp;
 }
 
 /*
@@ -507,92 +504,93 @@ expand_range(
 
 static void
 add_pattern_item(
-   cpat *pat,                 /* a compiled pattern from the search string */
-   int *pos,                  /* in-out arg: current position in pat */
-   int max,                   /* maximum position in pat */
-   int item,                  /* pattern match code */
-   const char *str,           /* the input search string */
-   int *from                  /* in-out arg: current position in str */
+	cpat *pat,                 /* a compiled pattern from the search string */
+	int *pos,                  /* in-out arg: current position in pat */
+	int max,                   /* maximum position in pat */
+	int item,                  /* pattern match code */
+	const char *str,           /* the input search string */
+	int *from                  /* in-out arg: current position in str */
 ) {
-   abort_if(
-      *pos + 8 >= max,
-      "pattern buffer overflowed");
+	abort_if(
+		*pos + 8 >= max,
+		"pattern buffer overflowed");
 
-   int this_item = *pos;
-   int last_item = *pos ? pat[*pos] : 0;
+	int this_item = *pos;
+	int last_item = *pos ? pat[*pos] : 0;
 
-   pat[*pos] = item;
+	pat[*pos] = item;
 
-   if (item == PAT_BEG) {
-      pat[*pos+1] = (strlen(str)+1) / sizeof(cpat) + 2;
-      pat[*pos+2] = 0;
-      strcpy((char *)(pat+*pos+2), str);
-      *pos = 2 + pat[*pos+1];
+	if (item == PAT_BEG) {
+		pat[*pos+1] = (strlen(str)+1) / sizeof(cpat) + 2;
+		pat[*pos+2] = 0;
+		strcpy((char *)(pat+*pos+2), str);
+		*pos = 2 + pat[*pos+1];
 
-   } else if (item == PAT_END) {
-      *pos += 1;
+	} else if (item == PAT_END)
+		*pos += 1;
 
-   } else if (item == PAT_BOL || item == PAT_EOL || item == PAT_WILD) {
-      *pos += 1;
-      *from += 1;
 
-   } else if (item == PAT_REP0M || item == PAT_REP1M || item == PAT_REP01) {
-      *pos += 1;
-      *from += 1;
+	else if (item == PAT_BOL || item == PAT_EOL || item == PAT_WILD) {
+		*pos += 1;
+		*from += 1;
 
-   } else if (item == PAT_CCLASS || item == PAT_NOT_CCLASS) {
-      if (pat[last_item] == item) {
-         pat[last_item+1] += 1;
-         pat[*pos] = (cpat)str[*from];
-         *pos += 1;
-         this_item = last_item; /* this pointer stays at last until we get a new pattern code */
-         *from += 1;
-      } else {
-         pat[*pos] = item;
-         pat[*pos+1] = 0;
-         *pos += 2;
-         *from += (item == PAT_CCLASS ? 1 : 2);
-      }
+	} else if (item == PAT_REP0M || item == PAT_REP1M || item == PAT_REP01) {
+		*pos += 1;
+		*from += 1;
 
-   } else if (item == PAT_END_OF) {
-      *pos += 1;
-      *from += 1;
+	} else if (item == PAT_CCLASS || item == PAT_NOT_CCLASS) {
+		if (pat[last_item] == item) {
+			pat[last_item+1] += 1;
+			pat[*pos] = (cpat)str[*from];
+			*pos += 1;
+			this_item =
+				last_item; /* this pointer stays at last until we get a new pattern code */
+			*from += 1;
+		} else {
+			pat[*pos] = item;
+			pat[*pos+1] = 0;
+			*pos += 2;
+			*from += (item == PAT_CCLASS ? 1 : 2);
+		}
 
-   } else if (item == PAT_WS || item == PAT_NOT_WS ||
-              item == PAT_DIG || item == PAT_NOT_DIG ||
-              item == PAT_WC || item == PAT_NOT_WC) {
-      *pos += 1;
-      *from += 2; /* \char */
+	} else if (item == PAT_END_OF) {
+		*pos += 1;
+		*from += 1;
 
-   } else if (item == PAT_LIT) {
+	} else if (item == PAT_WS || item == PAT_NOT_WS ||
+		item == PAT_DIG || item == PAT_NOT_DIG ||
+		item == PAT_WC || item == PAT_NOT_WC) {
+		*pos += 1;
+		*from += 2; /* \char */
 
-      /* an optimizatino would be to combine literals into a single
-       * entry or string for comparison, but the use of quantifiers
-       * (repetition counts) made that more trouble than it was worth.
-       * literals still carry a length field but only one character is
-       * stored per literal at this time. */
+	} else if (item == PAT_LIT) {
 
-      pat[*pos] = item;
-      pat[*pos+1] = 1;
-      pat[*pos+2] = (cpat)str[*from];
-      *pos += 3;
-      *from += 1;
+		/* an optimizatino would be to combine literals into a single
+		 * entry or string for comparison, but the use of quantifiers
+		 * (repetition counts) made that more trouble than it was worth.
+		 * literals still carry a length field but only one character is
+		 * stored per literal at this time. */
 
-   } else {
+		pat[*pos] = item;
+		pat[*pos+1] = 1;
+		pat[*pos+2] = (cpat)str[*from];
+		*pos += 3;
+		*from += 1;
 
-      abort("illegal pattern item type in add_pattern_item");
+	} else
 
-   }
+		abort("illegal pattern item type in add_pattern_item");
 
-   /* remember the prior code position for character class groups and
-    * any other multi slot items so we can just add the next character
-    * instead of a whole new token. */
 
-   if (item == PAT_END) {
-      pat[*pos] = 0;
-   } else {
-      pat[*pos] = this_item;
-   }
+	/* remember the prior code position for character class groups and
+	 * any other multi slot items so we can just add the next character
+	 * instead of a whole new token. */
+
+	if (item == PAT_END)
+		pat[*pos] = 0;
+
+	else
+		pat[*pos] = this_item;
 }
 
 /*
@@ -606,101 +604,99 @@ add_pattern_item(
 static
 cpat *
 reorganize_pattern_buffer(
-   const cpat *pat
+	const cpat *pat
 ) {
 
-   int res_size = 0;
-   cpat *res = NULL;
+	int res_size = 0;
+	cpat *res = NULL;
 
-   /* the size of the optimized pattern buffer will be large enough to
-    * hold all existing entries. any end of class markers are deleted
-    * since they are an aid to compilation and have no bearing on
-    * match processing. i don't try for an exact fit, but there is
-    * much less padding than in the first pass. */
+	/* the size of the optimized pattern buffer will be large enough to
+	 * hold all existing entries. any end of class markers are deleted
+	 * since they are an aid to compilation and have no bearing on
+	 * match processing. i don't try for an exact fit, but there is
+	 * much less padding than in the first pass. */
 
-   int i = 0;
-   res_size = 1;
-   while (pat[i] != PAT_END) {
-      int n = next_pattern(pat, i);
-      if (is_quantifier(pat[i])) {
-         res_size += 4;
-      } else if (pat[i] == PAT_END_OF) {
-         res_size += 0; /* just being explicit here that we drop these in the final */
-      } else {
-         res_size += n - i;
-      }
-      i = n;
-   }
-   res_size += 2; /* allow for end marker and trailing 0 */
+	int i = 0;
+	res_size = 1;
+	while (pat[i] != PAT_END) {
+		int n = next_pattern(pat, i);
+		if (is_quantifier(pat[i]))
+			res_size += 4;
 
-   /* allocate and clear the new pattern buffer. */
-   res = malloc(res_size * sizeof(cpat));
-   memset(res, 0, res_size * sizeof(cpat));
+		else if (pat[i] == PAT_END_OF) {
+			res_size += 0; /* just being explicit here that we drop these in the final */
+		} else
+			res_size += n - i;
+		i = n;
+	}
+	res_size += 2; /* allow for end marker and trailing 0 */
 
-   /* position in original (pp) and new (pr) buffers */
-   int pp = 0;
-   int pr = 0;
+	/* allocate and clear the new pattern buffer. */
+	res = malloc(res_size *sizeof(cpat));
+	memset(res, 0, res_size *sizeof(cpat));
 
-   while (pat[pp] != PAT_END) {
+	/* position in original (pp) and new (pr) buffers */
+	int pp = 0;
+	int pr = 0;
 
-      /* quantifiers should follow the item they refer to up to this
-       * point. if we see one here we've made an error. */
-      abort_if(
-         is_quantifier(pat[pp]),
-         "optimize error, should not see a quantifier here.");
+	while (pat[pp] != PAT_END) {
 
-      /* look ahead, are we followed by a quantifier? remember that
-       * during pattern compilation character class groups have an end
-       * marker to simplify compilation. we can remove that here. */
+		/* quantifiers should follow the item they refer to up to this
+		 * point. if we see one here we've made an error. */
+		abort_if(
+			is_quantifier(pat[pp]),
+			"optimize error, should not see a quantifier here.");
 
-      int pn = next_pattern(pat, pp);
+		/* look ahead, are we followed by a quantifier? remember that
+		 * during pattern compilation character class groups have an end
+		 * marker to simplify compilation. we can remove that here. */
 
-      bool was_end_of = false;
-      if (pat[pn] == PAT_END_OF) {
-         was_end_of = true;
-         pn = next_pattern(pat, pn);
-      }
+		int pn = next_pattern(pat, pp);
 
-      /* is the real next item a quantifier? if so, copy it to output
-       * before we copy the current item. */
+		bool was_end_of = false;
+		if (pat[pn] == PAT_END_OF) {
+			was_end_of = true;
+			pn = next_pattern(pat, pn);
+		}
 
-      if (is_quantifier(pat[pn])) {
-         res[pr] = pat[pn];
-         pr += 1;
-      }
+		/* is the real next item a quantifier? if so, copy it to output
+		 * before we copy the current item. */
 
-      /* now copy the current item over. */
+		if (is_quantifier(pat[pn])) {
+			res[pr] = pat[pn];
+			pr += 1;
+		}
 
-      while (pp < pn) {
-         res[pr] = pat[pp];
-         pr += 1;
-         pp += 1;
-      }
+		/* now copy the current item over. */
 
-      /* if there was an end marker for the current item, it is no
-       * longer needed so back it off. */
+		while (pp < pn) {
+			res[pr] = pat[pp];
+			pr += 1;
+			pp += 1;
+		}
 
-      if (was_end_of) {
-         pr -= 1;
-      }
+		/* if there was an end marker for the current item, it is no
+		 * longer needed so back it off. */
 
-      /* if next item is a quantifier, we've handled it already so we
-       * can skip it. */
+		if (was_end_of)
+			pr -= 1;
 
-      if (is_quantifier(pat[pn])) {
-         pn = next_pattern(pat, pn);
-      }
+		/* if next item is a quantifier, we've handled it already so we
+		 * can skip it. */
 
-      /* handle next */
-      pp = pn;
-   }
+		if (is_quantifier(pat[pn]))
+			pn = next_pattern(pat, pn);
 
-   /* properly end the buffer and return */
+		/* handle next */
+		pp = pn;
+	}
 
-   res[pr] = PAT_END;
-   res[pr+1] = 0;
+	/* properly end the buffer and return */
 
-   return res;
+	res[pr] = PAT_END;
+	res[pr+1] = 0;
+
+	return res;
 }
 
 /*
@@ -742,294 +738,297 @@ reorganize_pattern_buffer(
 const
 cpat *
 compile_pattern(
-   const char *raw
+	const char *raw
 ) {
 
-   if (debugging) {
-      printf("\n\n>>>compile_pattern(\"%s\")>>>\n", raw);
-   }
-
-   /* do preprocessing for ranges and any other tweaks to the
-    * pattern search string. this local copy may be modified
-    * to deal with escaped characters. */
-
-   char *str = expand_range(raw);
-
-   /* allocate a compiled pattern buffer. initialzed to 0xde
-    * for 0xdead as eye catcher. */
-
-   int max_pat = 3 * max(strlen(str), 16) + 3;
-   cpat *pat = malloc(max_pat * sizeof(cpat));
-   abort_if(
-      pat == NULL,
-      "could not allocate pattern buffer");
-   memset(pat, 0xde, max_pat * sizeof(cpat));
-
-   /* the current position within the string (ps) and pattern buffer
-    * (pp). these are updated mostly within add_pattern_item, but
-    * there are a couple of instances where it's easier to bump the ps
-    * value here in compile_pattern: dealing with some c style
-    * character excapes, and the digraph token for "none of the
-    * following" which is "[^". */
-
-   int ps = 0;  /* position in string */
-   int pp = 0;  /* position in pattern buffer */
-
-   /* the behavior inside character classes ([] or [^]) is different
-    * enough that it is broken out. once a class is compiling,
-    * characters are added until the end of group token is seen. */
-
-   bool in_class = false;
-   cpat class_pattern_code = 0;
-
-   /* place begining of pattern marker in the buffer. it includes the
-    * raw match pattern that is being compiled. adding the beginning
-    * marker does not adjust ps. */
-
-   add_pattern_item(pat, &pp, max_pat, PAT_BEG, raw, &ps);
-
-   /* scan through the pattern search string mostly character by character
-    * until we hit the end of string marker. */
-
-   while (str[ps]) {
-
-      /* even if not escaped, other meta characters are not meta
-       * characters when inside a (n)one of. the only exception is
-       * that a ] must be escaped if it is part of a class. the \n,
-       * \f, and \t escapes are supported, but otherwise the backslash
-       * is consumed and the following character is passed to the
-       * grouping unaltered. */
-
-      if (in_class) {
-         if (str[ps] != META_END_CLASS) {
-            if (str[ps] == META_ESC) {
-
-               /* update position in string here to consume the
-                * escape, the escaped character itself will be
-                * addressed in add_pattern_item. */
-               ps += 1;
-
-               /* remember that str is a local copy of the raw string,
-                * so it is safe to modify here. the most common c
-                * escapes are supported. */
-               if (str[ps] == 't') {
-                  str[ps] = '\t';
-               } else if (str[ps] == 'n') {
-                  str[ps] = '\n';
-               } else if (str[ps] == 'f') {
-                  str[ps] = '\f';
-               }
-            }
-            add_pattern_item(pat, &pp, max_pat, class_pattern_code, str, &ps);
-
-         } else {
-
-            /* a grouping end marker ']' has been read. mark the end
-             * of the grouping (which acts as a nop in matching but
-             * provides a separator when compiling) and reset flags so
-             * we do normal processing. */
-
-            add_pattern_item(pat, &pp, max_pat, PAT_END_OF, str, &ps);
-            in_class = false;
-            class_pattern_code = 0;
-         }
-
-         continue;
-      }
-
-      /* outside of a grouping, each character is evaluated. several
-       * meta characters are available and entries for each are added
-       * via add_pattern_item. if the character has no special
-       * meaning, it is a literal. */
-
-      switch (str[ps]) {
-
-      case META_BOL:
-
-         /* the beginning of line meta is only a meta if it is the
-          * first character of the search string, otherwise treat it
-          * as a literal. */
-
-         if (ps == 0) {
-            add_pattern_item(pat, &pp, max_pat, PAT_BOL, str, &ps);
-         } else {
-            add_pattern_item(pat, &pp, max_pat, PAT_LIT, str, &ps);
-         }
-         break;
-
-      case META_EOL:
-
-         /* as for the beginning, so it is for the ending */
-
-         if (str[ps+1] == '\0') {
-            add_pattern_item(pat, &pp, max_pat, PAT_EOL, str, &ps);
-         } else {
-            add_pattern_item(pat, &pp, max_pat, PAT_LIT, str, &ps);
-         }
-         break;
-
-      case META_CCLASS:
-
-         /* character classes are indicated by an open square brace [.
-          * a class matches a single character with any character in
-          * the grouping. if the [ is immediately followed by a caret
-          * ^, the behavior of the class is to match any character
-          * _not_ in the class.
-          *
-          * an empty class is a fatal error.
-          *
-          * the in_class flag is set and the class is started in the
-          * pattern buffer. the special class processing at the head
-          * of the main loop will add characters to the class until
-          * the end marker ] is seen. */
-
-         in_class = true;
-         if (str[ps+1] == META_NCCLASS) {
-            abort_if(
-               str[ps+2] == ']',
-               "empty character class found in source string");
-            class_pattern_code = PAT_NOT_CCLASS;
-         } else {
-            abort_if(
-               str[ps+1] == ']',
-               "empty character class found in source string");
-            class_pattern_code = PAT_CCLASS;
-         }
-
-         add_pattern_item(pat, &pp, max_pat, class_pattern_code, str, &ps);
-         break;
-
-      case META_ESC:
-
-         /* handle a c style backslash character escape. what we do
-          * depends on the next character. there are some character
-          * classification metas to support, then a few standard c
-          * escapes, and finally when in doubt just eat the escape
-          * character and pass the following character through as a
-          * literal. */
-
-         abort_if(
-            str[ps+1] == 0,
-            "backslash escape can not be the last character of a search string");
-
-         /* character class escapes have their own pattern items. */
-
-         if (str[ps+1] == 's') {
-            add_pattern_item(pat, &pp, max_pat, PAT_WS, str, &ps);
-         } else if (str[ps+1] == 'S') {
-            add_pattern_item(pat, &pp, max_pat, PAT_NOT_WS, str, &ps);
-         } else if (str[ps+1] == 'w') {
-            add_pattern_item(pat, &pp, max_pat, PAT_WC, str, &ps);
-         } else if (str[ps+1] == 'W') {
-            add_pattern_item(pat, &pp, max_pat, PAT_NOT_WC, str, &ps);
-         } else if (str[ps+1] == 'd') {
-            add_pattern_item(pat, &pp, max_pat, PAT_DIG, str, &ps);
-         } else if (str[ps+1] == 'D') {
-            add_pattern_item(pat, &pp, max_pat, PAT_NOT_DIG, str, &ps);
-         } else {
-
-            /* consume the escape \ here by advancing ps, fix up the
-             * next character in the string if it is supported c
-             * escape, and then pass whatever the next character is
-             * through as a literal. */
-
-            ps += 1;
-            if (str[ps] == 'n') {
-               str[ps] = '\n';
-            }
-            if (str[ps] == 't') {
-               str[ps] = '\t';
-            }
-            if (str[ps] == 'f') {
-               str[ps] = '\f';
-            }
-            add_pattern_item(pat, &pp, max_pat, PAT_LIT, str, &ps);
-         }
-         break;
-
-      case META_END_CLASS:
-
-         /* the close class token should not be seen here. this is for
-          * completeness. */
-
-         abort("error parsing pattern -- unexpected close class ]");
-         break;
-
-      case META_WILD:
-
-         /* any character can match this. */
-
-         add_pattern_item(pat, &pp, max_pat, PAT_WILD, str, &ps);
-         break;
-
-      case META_REP0M:
-
-         /* the three quantifier tokens are *, +, and ?. */
-
-         add_pattern_item(pat, &pp, max_pat, PAT_REP0M, str, &ps);
-         break;
-
-      case META_REP1M:
-
-         add_pattern_item(pat, &pp, max_pat, PAT_REP1M, str, &ps);
-         break;
-
-      case META_REP01:
-
-         add_pattern_item(pat, &pp, max_pat, PAT_REP01, str, &ps);
-         break;
-
-      case META_OR:
-
-         abort("or | not yet implemented.");
-         break;
-
-      case META_REP_COUNT:
-      case META_REP_END_COUNT:
-
-         abort("repeat counts {m,n} not yet implemented.");
-         break;
-
-      case META_GROUP:
-      case META_END_GROUP:
-
-         abort("grouping via () not yet implemented.");
-         break;
-
-      default:
-
-         /* anything else is a literal */
-
-         add_pattern_item(pat, &pp, max_pat, PAT_LIT, str, &ps);
-         break;
-      }
-   }
-
-   /* place an end marker in the pattern. */
-   add_pattern_item(pat, &pp, max_pat, PAT_END, str, &ps);
-
-   /* now reorganize the pattern by moving quantifiers in front of the
-    * items they refer to, and other minor optimizations if there are
-    * any.
-    *
-    * quantifiers are more naturally specified _after_ the item they are
-    * applied to, but it's easier to program if they come _before_ the
-    * item. if a one was seen, we'll want to reorder the items in the
-    * pattern buffer. */
-
-   cpat *temp = reorganize_pattern_buffer(pat);
-   free(pat);
-   pat = temp;
-
-   if (debugging) {
-      print_compiled_pattern(pat);
-      printf("<<<compile_pattern<<<\n");
-   }
-
-   /* str is a local copy of the raw input and must be freed here. */
-   free(str);
-
-   return pat;
+	if (debugging)
+		printf("\n\n>>>compile_pattern(\"%s\")>>>\n", raw);
+
+	/* do preprocessing for ranges and any other tweaks to the
+	 * pattern search string. this local copy may be modified
+	 * to deal with escaped characters. */
+
+	char *str = expand_range(raw);
+
+	/* allocate a compiled pattern buffer. initialzed to 0xde
+	 * for 0xdead as eye catcher. */
+
+	int max_pat = 3 * max(strlen(str), 16) + 3;
+	cpat *pat = malloc(max_pat *sizeof(cpat));
+	abort_if(
+		pat == NULL,
+		"could not allocate pattern buffer");
+	memset(pat, 0xde, max_pat *sizeof(cpat));
+
+	/* the current position within the string (ps) and pattern buffer
+	 * (pp). these are updated mostly within add_pattern_item, but
+	 * there are a couple of instances where it's easier to bump the ps
+	 * value here in compile_pattern: dealing with some c style
+	 * character excapes, and the digraph token for "none of the
+	 * following" which is "[^". */
+
+	int ps = 0;  /* position in string */
+	int pp = 0;  /* position in pattern buffer */
+
+	/* the behavior inside character classes ([] or [^]) is different
+	 * enough that it is broken out. once a class is compiling,
+	 * characters are added until the end of group token is seen. */
+
+	bool in_class = false;
+	cpat class_pattern_code = 0;
+
+	/* place begining of pattern marker in the buffer. it includes the
+	 * raw match pattern that is being compiled. adding the beginning
+	 * marker does not adjust ps. */
+
+	add_pattern_item(pat, &pp, max_pat, PAT_BEG, raw, &ps);
+
+	/* scan through the pattern search string mostly character by character
+	 * until we hit the end of string marker. */
+
+	while (str[ps]) {
+
+		/* even if not escaped, other meta characters are not meta
+		 * characters when inside a (n)one of. the only exception is
+		 * that a ] must be escaped if it is part of a class. the \n,
+		 * \f, and \t escapes are supported, but otherwise the backslash
+		 * is consumed and the following character is passed to the
+		 * grouping unaltered. */
+
+		if (in_class) {
+			if (str[ps] != META_END_CLASS) {
+				if (str[ps] == META_ESC) {
+
+					/* update position in string here to consume the
+					 * escape, the escaped character itself will be
+					 * addressed in add_pattern_item. */
+					ps += 1;
+
+					/* remember that str is a local copy of the raw string,
+					 * so it is safe to modify here. the most common c
+					 * escapes are supported. */
+					if (str[ps] == 't')
+						str[ps] = '\t';
+
+					else if (str[ps] == 'n')
+						str[ps] = '\n';
+
+					else if (str[ps] == 'f')
+						str[ps] = '\f';
+				}
+				add_pattern_item(pat, &pp, max_pat, class_pattern_code, str, &ps);
+
+			} else {
+
+				/* a grouping end marker ']' has been read. mark the end
+				 * of the grouping (which acts as a nop in matching but
+				 * provides a separator when compiling) and reset flags so
+				 * we do normal processing. */
+
+				add_pattern_item(pat, &pp, max_pat, PAT_END_OF, str, &ps);
+				in_class = false;
+				class_pattern_code = 0;
+			}
+
+			continue;
+		}
+
+		/* outside of a grouping, each character is evaluated. several
+		 * meta characters are available and entries for each are added
+		 * via add_pattern_item. if the character has no special
+		 * meaning, it is a literal. */
+
+		switch (str[ps]) {
+
+		case META_BOL:
+
+			/* the beginning of line meta is only a meta if it is the
+			 * first character of the search string, otherwise treat it
+			 * as a literal. */
+
+			if (ps == 0)
+				add_pattern_item(pat, &pp, max_pat, PAT_BOL, str, &ps);
+
+			else
+				add_pattern_item(pat, &pp, max_pat, PAT_LIT, str, &ps);
+			break;
+
+		case META_EOL:
+
+			/* as for the beginning, so it is for the ending */
+
+			if (str[ps+1] == '\0')
+				add_pattern_item(pat, &pp, max_pat, PAT_EOL, str, &ps);
+
+			else
+				add_pattern_item(pat, &pp, max_pat, PAT_LIT, str, &ps);
+			break;
+
+		case META_CCLASS:
+
+			/* character classes are indicated by an open square brace [.
+			 * a class matches a single character with any character in
+			 * the grouping. if the [ is immediately followed by a caret
+			 * ^, the behavior of the class is to match any character
+			 * _not_ in the class.
+			 *
+			 * an empty class is a fatal error.
+			 *
+			 * the in_class flag is set and the class is started in the
+			 * pattern buffer. the special class processing at the head
+			 * of the main loop will add characters to the class until
+			 * the end marker ] is seen. */
+
+			in_class = true;
+			if (str[ps+1] == META_NCCLASS) {
+				abort_if(
+					str[ps+2] == ']',
+					"empty character class found in source string");
+				class_pattern_code = PAT_NOT_CCLASS;
+			} else {
+				abort_if(
+					str[ps+1] == ']',
+					"empty character class found in source string");
+				class_pattern_code = PAT_CCLASS;
+			}
+
+			add_pattern_item(pat, &pp, max_pat, class_pattern_code, str, &ps);
+			break;
+
+		case META_ESC:
+
+			/* handle a c style backslash character escape. what we do
+			 * depends on the next character. there are some character
+			 * classification metas to support, then a few standard c
+			 * escapes, and finally when in doubt just eat the escape
+			 * character and pass the following character through as a
+			 * literal. */
+
+			abort_if(
+				str[ps+1] == 0,
+				"backslash escape can not be the last character of a search string");
+
+			/* character class escapes have their own pattern items. */
+
+			if (str[ps+1] == 's')
+				add_pattern_item(pat, &pp, max_pat, PAT_WS, str, &ps);
+
+			else if (str[ps+1] == 'S')
+				add_pattern_item(pat, &pp, max_pat, PAT_NOT_WS, str, &ps);
+
+			else if (str[ps+1] == 'w')
+				add_pattern_item(pat, &pp, max_pat, PAT_WC, str, &ps);
+
+			else if (str[ps+1] == 'W')
+				add_pattern_item(pat, &pp, max_pat, PAT_NOT_WC, str, &ps);
+
+			else if (str[ps+1] == 'd')
+				add_pattern_item(pat, &pp, max_pat, PAT_DIG, str, &ps);
+
+			else if (str[ps+1] == 'D')
+				add_pattern_item(pat, &pp, max_pat, PAT_NOT_DIG, str, &ps);
+
+			else {
+
+				/* consume the escape \ here by advancing ps, fix up the
+				 * next character in the string if it is supported c
+				 * escape, and then pass whatever the next character is
+				 * through as a literal. */
+
+				ps += 1;
+				if (str[ps] == 'n')
+					str[ps] = '\n';
+				if (str[ps] == 't')
+					str[ps] = '\t';
+				if (str[ps] == 'f')
+					str[ps] = '\f';
+				add_pattern_item(pat, &pp, max_pat, PAT_LIT, str, &ps);
+			}
+			break;
+
+		case META_END_CLASS:
+
+			/* the close class token should not be seen here. this is for
+			 * completeness. */
+
+			abort("error parsing pattern -- unexpected close class ]");
+			break;
+
+		case META_WILD:
+
+			/* any character can match this. */
+
+			add_pattern_item(pat, &pp, max_pat, PAT_WILD, str, &ps);
+			break;
+
+		case META_REP0M:
+
+			/* the three quantifier tokens are *, +, and ?. */
+
+			add_pattern_item(pat, &pp, max_pat, PAT_REP0M, str, &ps);
+			break;
+
+		case META_REP1M:
+
+			add_pattern_item(pat, &pp, max_pat, PAT_REP1M, str, &ps);
+			break;
+
+		case META_REP01:
+
+			add_pattern_item(pat, &pp, max_pat, PAT_REP01, str, &ps);
+			break;
+
+		case META_OR:
+
+			abort("or | not yet implemented.");
+			break;
+
+		case META_REP_COUNT:
+		case META_REP_END_COUNT:
+
+			abort("repeat counts {m,n} not yet implemented.");
+			break;
+
+		case META_GROUP:
+		case META_END_GROUP:
+
+			abort("grouping via () not yet implemented.");
+			break;
+
+		default:
+
+			/* anything else is a literal */
+
+			add_pattern_item(pat, &pp, max_pat, PAT_LIT, str, &ps);
+			break;
+		}
+	}
+
+	/* place an end marker in the pattern. */
+	add_pattern_item(pat, &pp, max_pat, PAT_END, str, &ps);
+
+	/* now reorganize the pattern by moving quantifiers in front of the
+	 * items they refer to, and other minor optimizations if there are
+	 * any.
+	 *
+	 * quantifiers are more naturally specified _after_ the item they are
+	 * applied to, but it's easier to program if they come _before_ the
+	 * item. if a one was seen, we'll want to reorder the items in the
+	 * pattern buffer. */
+
+	cpat *temp = reorganize_pattern_buffer(pat);
+	free(pat);
+	pat = temp;
+
+	if (debugging) {
+		print_compiled_pattern(pat);
+		printf("<<<compile_pattern<<<\n");
+	}
+
+	/* str is a local copy of the raw input and must be freed here. */
+	free(str);
+
+	return pat;
 }
 
 /*
@@ -1052,98 +1051,95 @@ compile_pattern(
 
 const char *
 convert_glob(
-   const char *glob
+	const char *glob
 ) {
 
-   /* no input should return a match almost anything */
-   if (glob == NULL || strlen(glob) == 0) {
-      if (debugging) {
-         printf("+++convert_glob(null) => \"^[^.]*$");
-      }
-      return dup_string("^[^.]*$");
-   }
+	/* no input should return a match almost anything */
+	if (glob == NULL || strlen(glob) == 0) {
+		if (debugging)
+			printf("+++convert_glob(null) => \"^[^.]*$");
+		return dup_string("^[^.]*$");
+	}
 
-   if (debugging) {
-      printf("\n>>>convert_glob(\"%s\")\n", glob);
-   }
+	if (debugging)
+		printf("\n>>>convert_glob(\"%s\")\n", glob);
 
-   /* pattern buffer is 32 or twice the size of the incoming
-    * glob string */
-   int str_max = max(32, strlen(glob) * 2);
-   int pg = 0;
-   int ps = 0;
-   char *str = malloc(str_max);
-   str[ps] = '^';
-   ps += 1;
-   /* TODO decision point here based on leading . in glob */
-   while (glob[pg]) {
+	/* pattern buffer is 32 or twice the size of the incoming
+	 * glob string */
+	int str_max = max(32, strlen(glob) * 2);
+	int pg = 0;
+	int ps = 0;
+	char *str = malloc(str_max);
+	str[ps] = '^';
+	ps += 1;
+	/* TODO decision point here based on leading . in glob */
+	while (glob[pg]) {
 
-      /* if buffer down to 25%, increase by 16 characters */
-      if (ps > str_max  * 3 / 4) {
-         str_max += 16;
-         str = realloc(str, str_max);
-      }
+		/* if buffer down to 25%, increase by 16 characters */
+		if (ps > str_max  * 3 / 4) {
+			str_max += 16;
+			str = realloc(str, str_max);
+		}
 
-      /* a glob * means zero or more of anything */
-      if (glob[pg] == '*') {
-         str[ps] = '.';
-         str[ps+1] = '*';
-         ps += 2;
-         pg += 1;
-         continue;
-      }
+		/* a glob * means zero or more of anything */
+		if (glob[pg] == '*') {
+			str[ps] = '.';
+			str[ps+1] = '*';
+			ps += 2;
+			pg += 1;
+			continue;
+		}
 
-      /* a glob ? means one of anything */
-      if (glob[pg] == '?') {
-         str[ps] = '.';
-         ps += 1;
-         pg += 1;
-         continue;
-      }
+		/* a glob ? means one of anything */
+		if (glob[pg] == '?') {
+			str[ps] = '.';
+			ps += 1;
+			pg += 1;
+			continue;
+		}
 
-      /* a glob . is really a period, it must be escaped in the
-       * pattern */
-      if (glob[pg] == '.') {
-         str[ps] = '\\';
-         str[ps+1] = '.';
-         ps += 2;
-         pg += 1;
-         continue;
-      }
+		/* a glob . is really a period, it must be escaped in the
+		 * pattern */
+		if (glob[pg] == '.') {
+			str[ps] = '\\';
+			str[ps+1] = '.';
+			ps += 2;
+			pg += 1;
+			continue;
+		}
 
-      /* a [] grouping is a one of and we pass it straight through,
-       * but watch for escapes so a \] doesn't prematurely end the
-       * grouping. */
-      if (glob[pg] == '[') {
-         while (glob[pg] && glob[pg] != ']') {
-            if (glob[pg] == '\\') {
-               abort_if(
-                  glob[pg+1] == '\0',
-                  "improperly constructed [] in glob string");
-               str[ps] = glob[pg];
-               ps += 1;
-               pg += 1;
-            }
-            str[ps] = glob[pg];
-            ps += 1;
-            pg += 1;
-         }
-         continue;
-      }
+		/* a [] grouping is a one of and we pass it straight through,
+		 * but watch for escapes so a \] doesn't prematurely end the
+		 * grouping. */
+		if (glob[pg] == '[') {
+			while (glob[pg] && glob[pg] != ']') {
+				if (glob[pg] == '\\') {
+					abort_if(
+						glob[pg+1] == '\0',
+						"improperly constructed [] in glob string");
+					str[ps] = glob[pg];
+					ps += 1;
+					pg += 1;
+				}
+				str[ps] = glob[pg];
+				ps += 1;
+				pg += 1;
+			}
+			continue;
+		}
 
-      /* pass non special characters straight through */
-      str[ps] = glob[pg];
-      ps += 1;
-      pg += 1;
-   }
+		/* pass non special characters straight through */
+		str[ps] = glob[pg];
+		ps += 1;
+		pg += 1;
+	}
 
-   /* close the pattern and return */
-   str[ps] = '$';
-   str[ps+1] = '\0';
-   if (debugging) {
-      printf("<<<convert_glob(\"%s\") => \"%s\"\n", glob, str);
-   }
-   return str;
+	/* close the pattern and return */
+	str[ps] = '$';
+	str[ps+1] = '\0';
+	if (debugging)
+		printf("<<<convert_glob(\"%s\") => \"%s\"\n", glob, str);
+	return str;
 }
 
 /*
@@ -1157,178 +1153,167 @@ convert_glob(
 
 bool
 match_this_item(
-   const char *str,             /* entire string to match */
-   int *ps,                     /* IN-OUT position to start match at */
-   const cpat *p                /* current pattern item in buffer */
+	const char *str,             /* entire string to match */
+	int *ps,                     /* IN-OUT position to start match at */
+	const cpat *p                /* current pattern item in buffer */
 ) {
 
-   /* caching the current character from the string saves a little typing
-    * and might help the compiler optimize a bit. */
+	/* caching the current character from the string saves a little typing
+	 * and might help the compiler optimize a bit. */
 
-   const char c = str[*ps];
+	const char c = str[*ps];
 
-   /* first up are line anchors. most regex processors treat beginning
-    * of the match string as beginning of line, and end of the match
-    * string as end of line, and handling of embedded newline
-    * characters varies.
-    *
-    * i've opted to ignore newline characters everywhere except the
-    * last position of the match string. a newline followed by a NUL
-    * is treated as end of line, as is being positioned at the NUL.
-    * beginning of line only matches at position 0.
-    *
-    * this approach to newlines seems to provide the most
-      flexibility. */
+	/* first up are line anchors. most regex processors treat beginning
+	 * of the match string as beginning of line, and end of the match
+	 * string as end of line, and handling of embedded newline
+	 * characters varies.
+	 *
+	 * i've opted to ignore newline characters everywhere except the
+	 * last position of the match string. a newline followed by a NUL
+	 * is treated as end of line, as is being positioned at the NUL.
+	 * beginning of line only matches at position 0.
+	 *
+	 * this approach to newlines seems to provide the most
+	   flexibility. */
 
-   if (c == '\0') {
-      return *p == PAT_EOL;
-   } else if (*p == PAT_EOL) {
-      if (c == '\n' && str[*ps+1] == '\0') {
-         /* consume the newline in the match string */
-         *ps += 1;
-         return true;
-      }
-      return false;
-   } else if (*p == PAT_BOL) {
-      return (*ps == 0);
-   }
+	if (c == '\0')
+		return *p == PAT_EOL;
 
-   /* wildcard matches any single character except newline. */
+	else if (*p == PAT_EOL) {
+		if (c == '\n' && str[*ps+1] == '\0') {
+			/* consume the newline in the match string */
+			*ps += 1;
+			return true;
+		}
+		return false;
+	} else if (*p == PAT_BOL)
+		return (*ps == 0);
 
-   if (*p == PAT_WILD) {
-      if (c != '\n') {
-         *ps += 1;
-         return true;
-      } else {
-         return false;
-      }
-   }
+	/* wildcard matches any single character except newline. */
 
-   /* a literal character.
-    *
-    * an early but dropped optimization was to combine consecutive
-    * literals under one pattern item. right now literals are single
-    * character but the structure of the pattern item is left to
-    * allow for combining literals in the future.
-    *
-    * as with a character class group, p points to the pattern type,
-    * +1 is the number of items in the group, and +2 and onward are
-    * the items. */
+	if (*p == PAT_WILD) {
+		if (c != '\n') {
+			*ps += 1;
+			return true;
+		} else
+			return false;
+	}
 
-   if (*p == PAT_LIT) {
-      if (p[2] != c) {
-         return false;
-      }
-      *ps += 1;
-      return true;
-   }
+	/* a literal character.
+	 *
+	 * an early but dropped optimization was to combine consecutive
+	 * literals under one pattern item. right now literals are single
+	 * character but the structure of the pattern item is left to
+	 * allow for combining literals in the future.
+	 *
+	 * as with a character class group, p points to the pattern type,
+	 * +1 is the number of items in the group, and +2 and onward are
+	 * the items. */
 
-   /* there are a number of meta character class shorthands for
-    * frequently used character classes: digits, whitespace, and
-    * word characters (including _). */
+	if (*p == PAT_LIT) {
+		if (p[2] != c)
+			return false;
+		*ps += 1;
+		return true;
+	}
 
-   if (*p == PAT_DIG) {
-      if (is_digit(c)) {
-         *ps += 1;
-         return true;
-      } else {
-         return false;
-      }
-   } else if (*p == PAT_NOT_DIG) {
-      if (!is_digit(c)) {
-         *ps += 1;
-         return true;
-      } else {
-         return false;
-      }
-   } else if (*p == PAT_WS) {
-      if (is_whitespace(c)) {
-         *ps += 1;
-         return true;
-      } else {
-         return false;
-      }
-   } else if (*p == PAT_NOT_WS) {
-      if (!is_whitespace(c)) {
-         *ps += 1;
-         return true;
-      } else {
-         return false;
-      }
-   } else if (*p == PAT_WC) {
-      if (is_word_char(c)) {
-         *ps += 1;
-         return true;
-      } else {
-         return false;
-      }
-   } else if (*p == PAT_NOT_WC) {
-      if (!is_word_char(c)) {
-         *ps += 1;
-         return true;
-      } else {
-         return false;
-      }
-   }
+	/* there are a number of meta character class shorthands for
+	 * frequently used character classes: digits, whitespace, and
+	 * word characters (including _). */
 
-   /* common c-ish escapes */
+	if (*p == PAT_DIG) {
+		if (is_digit(c)) {
+			*ps += 1;
+			return true;
+		} else
+			return false;
+	} else if (*p == PAT_NOT_DIG) {
+		if (!is_digit(c)) {
+			*ps += 1;
+			return true;
+		} else
+			return false;
+	} else if (*p == PAT_WS) {
+		if (is_whitespace(c)) {
+			*ps += 1;
+			return true;
+		} else
+			return false;
+	} else if (*p == PAT_NOT_WS) {
+		if (!is_whitespace(c)) {
+			*ps += 1;
+			return true;
+		} else
+			return false;
+	} else if (*p == PAT_WC) {
+		if (is_word_char(c)) {
+			*ps += 1;
+			return true;
+		} else
+			return false;
+	} else if (*p == PAT_NOT_WC) {
+		if (!is_word_char(c)) {
+			*ps += 1;
+			return true;
+		} else
+			return false;
+	}
 
-   if (*p == PAT_FF) {
-      if (c == '\f') {
-         *ps += 1;
-         return true;
-      } else {
-         return false;
-      }
-   } else if (*p == PAT_LF) {
-      if (c == '\n') {
-         *ps += 1;
-         return true;
-      } else {
-         return false;
-      }
-   } else if (*p == PAT_TAB) {
-      if (c == '\t') {
-         *ps += 1;
-         return true;
-      } else {
-         return false;
-      }
-   }
+	/* common c-ish escapes */
 
-   /* a single character compared to a character class group, either
-    * one of or none of. p points to the pattern type, +1 is the
-    * number of items in the group, +2 and onward are the items. */
+	if (*p == PAT_FF) {
+		if (c == '\f') {
+			*ps += 1;
+			return true;
+		} else
+			return false;
+	} else if (*p == PAT_LF) {
+		if (c == '\n') {
+			*ps += 1;
+			return true;
+		} else
+			return false;
+	} else if (*p == PAT_TAB) {
+		if (c == '\t') {
+			*ps += 1;
+			return true;
+		} else
+			return false;
+	}
 
-   if (*p == PAT_CCLASS || *p == PAT_NOT_CCLASS) {
-      bool found = false;
-      for (int i = 0; i < p[1]; i++) {
-         if (p[i+2] == c) {
-            found = true;
-            break;
-         }
-      }
-      if (*p == PAT_CCLASS && found) {
-         *ps += 1;
-         return true;
-      }
-      if (*p == PAT_NOT_CCLASS && !found) {
-         *ps += 1;
-         return true;
-      }
-      return false;
-   }
+	/* a single character compared to a character class group, either
+	 * one of or none of. p points to the pattern type, +1 is the
+	 * number of items in the group, +2 and onward are the items. */
 
-   /* we either don't understand the pattern buffer entry, or we've been
-    * called with an entry that shouldn't reach here (eg, quantifiers such
-    * as * are handled in match_from). report and abort. */
+	if (*p == PAT_CCLASS || *p == PAT_NOT_CCLASS) {
+		bool found = false;
+		for (int i = 0; i < p[1]; i++) {
+			if (p[i+2] == c) {
+				found = true;
+				break;
+			}
+		}
+		if (*p == PAT_CCLASS && found) {
+			*ps += 1;
+			return true;
+		}
+		if (*p == PAT_NOT_CCLASS && !found) {
+			*ps += 1;
+			return true;
+		}
+		return false;
+	}
 
-   /* TODO abort needs to handle argument replacement */
-   char *em = calloc(256, sizeof(char));
-   snprintf(em, 256, "unknown pattern type code in match_this: %d %s",
-            *p, displayable_match_code(*p));
-   abort(em);
-   return false;
+	/* we either don't understand the pattern buffer entry, or we've been
+	 * called with an entry that shouldn't reach here (eg, quantifiers such
+	 * as * are handled in match_from). report and abort. */
+
+	/* TODO abort needs to handle argument replacement */
+	char *em = calloc(256, sizeof(char));
+	snprintf(em, 256, "unknown pattern type code in match_this: %d %s",
+		*p, displayable_match_code(*p));
+	abort(em);
+	return false;
 }
 
 /*
@@ -1347,202 +1332,199 @@ match_this_item(
 
 int
 match_from(
-   const char *str,           /* the entire string to match */
-   int from,                  /* current starting position in string */
-   const cpat *pat,           /* the compiled pattern buffer */
-   int pp                     /* current item position in pattern */
+	const char *str,           /* the entire string to match */
+	int from,                  /* current starting position in string */
+	const cpat *pat,           /* the compiled pattern buffer */
+	int pp                     /* current item position in pattern */
 ) {
-   bool done = false;
-   int res = from;
-   int ps = from;
+	bool done = false;
+	int res = from;
+	int ps = from;
 
-   if (debugging) {
-      printf(">>>match_from(\"%s\", %d, \"%s\", %d)\n", str, from, pattern_source(pat), pp);
-   }
+	if (debugging)
+		printf(">>>match_from(\"%s\", %d, \"%s\", %d)\n", str, from,
+			pattern_source(pat), pp);
 
-   /* skip beginning of pattern */
-   if (pat[pp] == PAT_BEG) {
-      pp = next_pattern(pat, pp);
-   }
+	/* skip beginning of pattern */
+	if (pat[pp] == PAT_BEG)
+		pp = next_pattern(pat, pp);
 
-   while (!done && pat[pp] != PAT_END) {
+	while (!done && pat[pp] != PAT_END) {
 
-      /*
-       * quantifiers (repetition) require a bit more work and possibly some
-       * recursion.
-       */
+		/*
+		 * quantifiers (repetition) require a bit more work and possibly some
+		 * recursion.
+		 */
 
-      if (is_quantifier(pat[pp])) {
+		if (is_quantifier(pat[pp])) {
 
-         if (pat[pp] == PAT_REP0M) {
+			if (pat[pp] == PAT_REP0M) {
 
-            /* the kleene *, repeat the item zero or more times */
-            /* find the last position where quantified pattern matches
-             * from the current ps. */
-            int pq = ps;
-            int lq = -1;
-            while (match_this_item(str, &pq, pat+pp+1)) {
-               lq = pq;
-            }
+				/* the kleene *, repeat the item zero or more times */
+				/* find the last position where quantified pattern matches
+				 * from the current ps. */
+				int pq = ps;
+				int lq = -1;
+				while (match_this_item(str, &pq, pat+pp+1))
+					lq = pq;
 
-            /* this is a 0 or more quantifier, so if it didn't match,
-             * it actually did match :) skip it and continue */
-            if (lq == -1) {
-               pp = next_pattern(pat, pp); /* the quantifier */
-               pp = next_pattern(pat, pp); /* the quantified */
-               continue;
-            }
+				/* this is a 0 or more quantifier, so if it didn't match,
+				 * it actually did match :) skip it and continue */
+				if (lq == -1) {
+					pp = next_pattern(pat, pp); /* the quantifier */
+					pp = next_pattern(pat, pp); /* the quantified */
+					continue;
+				}
 
-            /* now consume all matches of this pattern. */
-            while (match_this_item(str, &pq, pat+pp+1))
-               ;
+				/* now consume all matches of this pattern. */
+				while (match_this_item(str, &pq, pat+pp+1))
+					;
 
-            /* recursively check the rest of the string against
-             * the rest of the pattern. if we get a match, it will
-             * satisfy the entire match from our earlier entry so
-             * we can return.
-             *
-             * with each failed attempt, regurgitate a character
-             * consumed by this match and try again until no more
-             * characters can be reclaimed.
-             *
-             * while above we continue scanning if this item didn't
-             * consume a character, here if we roll all the way back
-             * we have already determined that the rest of the string
-             * is not matched so we can exit without checking the
-             * items again.
-             *
-             * and of course a match here completes the entire match
-             * so we can just return. */
+				/* recursively check the rest of the string against
+				 * the rest of the pattern. if we get a match, it will
+				 * satisfy the entire match from our earlier entry so
+				 * we can return.
+				 *
+				 * with each failed attempt, regurgitate a character
+				 * consumed by this match and try again until no more
+				 * characters can be reclaimed.
+				 *
+				 * while above we continue scanning if this item didn't
+				 * consume a character, here if we roll all the way back
+				 * we have already determined that the rest of the string
+				 * is not matched so we can exit without checking the
+				 * items again.
+				 *
+				 * and of course a match here completes the entire match
+				 * so we can just return. */
 
-            int pn = next_pattern(pat, pp); /* quantifier */
-            pn = next_pattern(pat, pn);  /* quantified */
-            while (!done && pq >= ps) {
-               done = match_from(str, pq, pat, pn) > -1;
-               pq -= 1;
-            }
-            if (!done) {
-               done = true;
-               res = -1;
-            }
-            continue;
+				int pn = next_pattern(pat, pp); /* quantifier */
+				pn = next_pattern(pat, pn);  /* quantified */
+				while (!done && pq >= ps) {
+					done = match_from(str, pq, pat, pn) > -1;
+					pq -= 1;
+				}
+				if (!done) {
+					done = true;
+					res = -1;
+				}
+				continue;
 
-         } else if (pat[pp] == PAT_REP01) {
+			} else if (pat[pp] == PAT_REP01) {
 
-            /* the ? quantifier for repeat an item zero or one
-               time.  */
+				/* the ? quantifier for repeat an item zero or one
+				   time.  */
 
-            /* if it doesn't match, it's actually a match for the
-             * purposes of advancing through the search string. */
-            int pq = ps;
-            if (!match_this_item(str, &pq, pat+pp+1)) {
-               pp = next_pattern(pat, pp); /* quantifier */
-               pp = next_pattern(pat, pp); /* quantified */
-               continue;
-            }
+				/* if it doesn't match, it's actually a match for the
+				 * purposes of advancing through the search string. */
+				int pq = ps;
+				if (!match_this_item(str, &pq, pat+pp+1)) {
+					pp = next_pattern(pat, pp); /* quantifier */
+					pp = next_pattern(pat, pp); /* quantified */
+					continue;
+				}
 
-            /* it did match, but maybe it shouldn't if it prevents the
-             * next item from matching.
-             *
-             * recursively check the rest of the string against the
-             * rest of the pattern. if we get a match, it will satisfy
-             * the entire match from our earlier entry so we can
-             * return.
-             *
-             * if the match failed, back off the match and try
-             * continue. */
-            int pn = next_pattern(pat, pp); /* quantifier */
-            pn = next_pattern(pat, pn);  /* quantified */
-            if (match_from(str, pq, pat, pn) > 0) {
-               done = true;
-               continue;
-            }
-            /* TODO could we always just end here with done = true,
-               res = -1? */
-            pp = next_pattern(pat, pp); /* quantifier */
-            pp = next_pattern(pat, pp); /* quantified */
-            continue;
+				/* it did match, but maybe it shouldn't if it prevents the
+				 * next item from matching.
+				 *
+				 * recursively check the rest of the string against the
+				 * rest of the pattern. if we get a match, it will satisfy
+				 * the entire match from our earlier entry so we can
+				 * return.
+				 *
+				 * if the match failed, back off the match and try
+				 * continue. */
+				int pn = next_pattern(pat, pp); /* quantifier */
+				pn = next_pattern(pat, pn);  /* quantified */
+				if (match_from(str, pq, pat, pn) > 0) {
+					done = true;
+					continue;
+				}
+				/* TODO could we always just end here with done = true,
+				   res = -1? */
+				pp = next_pattern(pat, pp); /* quantifier */
+				pp = next_pattern(pat, pp); /* quantified */
+				continue;
 
-         } else if (pat[pp] == PAT_REP1M) {
+			} else if (pat[pp] == PAT_REP1M) {
 
-            /* the + for repeat the item one or more times. if the
-             * string matches at least once, keep on matching and
-             * consuming until it doesn't. then, back off until we get
-             * a match on the rest of the pattern buffer or we can't
-             * get a match.
-             *
-             * for example, a+ab must match ab and aab. */
+				/* the + for repeat the item one or more times. if the
+				 * string matches at least once, keep on matching and
+				 * consuming until it doesn't. then, back off until we get
+				 * a match on the rest of the pattern buffer or we can't
+				 * get a match.
+				 *
+				 * for example, a+ab must match ab and aab. */
 
-            /* we need at least one match, otherwise we're done. */
-            int pq = ps;
-            if (!match_this_item(str, &pq, pat+pp+1)) {
-               done = true;
-               res = -1;
-               continue;
-            }
+				/* we need at least one match, otherwise we're done. */
+				int pq = ps;
+				if (!match_this_item(str, &pq, pat+pp+1)) {
+					done = true;
+					res = -1;
+					continue;
+				}
 
-            /* now consume all matches of this pattern. */
-            while (match_this_item(str, &pq, pat+pp+1))
-               ;
+				/* now consume all matches of this pattern. */
+				while (match_this_item(str, &pq, pat+pp+1))
+					;
 
-            /* recursively check the rest of the string against
-             * the rest of the pattern. if we get a match, it will
-             * satisfy the entire match from our earlier entry so
-             * we can return.
-             *
-             * with each failed attempt, regurgitate a character
-             * consumed by this match and try again until no more
-             * characters can be reclaimed.
-             *
-             * if we don't find a match, the whole match fails and
-             * we can return the failure status.
-             *
-             * a match here completes the entire match so we can
-             * just return. */
+				/* recursively check the rest of the string against
+				 * the rest of the pattern. if we get a match, it will
+				 * satisfy the entire match from our earlier entry so
+				 * we can return.
+				 *
+				 * with each failed attempt, regurgitate a character
+				 * consumed by this match and try again until no more
+				 * characters can be reclaimed.
+				 *
+				 * if we don't find a match, the whole match fails and
+				 * we can return the failure status.
+				 *
+				 * a match here completes the entire match so we can
+				 * just return. */
 
-            int pn = next_pattern(pat, pp); /* quantifier */
-            pn = next_pattern(pat, pn);  /* quantified */
-            while (!done && pq > ps) {
-               done = match_from(str, pq, pat, pn) > -1;
-               pq -= 1;
-            }
-            if (!done) {
-               done = true;
-               res = -1;
-            }
-            continue;
+				int pn = next_pattern(pat, pp); /* quantifier */
+				pn = next_pattern(pat, pn);  /* quantified */
+				while (!done && pq > ps) {
+					done = match_from(str, pq, pat, pn) > -1;
+					pq -= 1;
+				}
+				if (!done) {
+					done = true;
+					res = -1;
+				}
+				continue;
 
-         } else if (pat[pp] == PAT_REP_COUNT) {
-            done = true;
-            res = -1;
+			} else if (pat[pp] == PAT_REP_COUNT) {
+				done = true;
+				res = -1;
 
-         } else {
+			} else
 
-            abort("error unknown quantifier in pattern");
+				abort("error unknown quantifier in pattern");
 
-         }
 
-      } else if (!match_this_item(str, &ps, pat+pp)) {
+		} else if (!match_this_item(str, &ps, pat+pp)) {
 
-         /* match failed so we're done. */
+			/* match failed so we're done. */
 
-         done = true;
-         res = -1;
+			done = true;
+			res = -1;
 
-      } else {
+		} else {
 
-         /* match_this_item will have consumed the part of the
-          * string that matched, advance to the next pattern item
-          * and check it. */
+			/* match_this_item will have consumed the part of the
+			 * string that matched, advance to the next pattern item
+			 * and check it. */
 
-         pp = next_pattern(pat, pp);
-      }
-   }
+			pp = next_pattern(pat, pp);
+		}
+	}
 
-   if (debugging) {
-      printf("<<<match_from(\"%s\", %d, \"%s\", %d) => %d\n", str, from, pattern_source(pat), pp, res);
-   }
-   return res;
+	if (debugging)
+		printf("<<<match_from(\"%s\", %d, \"%s\", %d) => %d\n", str, from,
+			pattern_source(pat), pp, res);
+	return res;
 }
 
 /*
@@ -1554,26 +1536,25 @@ match_from(
 
 bool
 match(
-   const char *str,
-   const cpat *pat
+	const char *str,
+	const cpat *pat
 ) {
-   int ps = 0;
-   int pm = -1;
+	int ps = 0;
+	int pm = -1;
 
-   abort_if(!str || !pat, "match called with illegal missing arguments");
+	abort_if(!str || !pat, "match called with illegal missing arguments");
 
-   if (debugging) {
-      printf("\n\n>>>match(\"%s\", \"%s\")\n", str, pattern_source(pat));
-   }
-   while (str[ps] && pm == -1) {
-      pm = match_from(str, ps, pat, 0);
-      ps += 1;
-   }
+	if (debugging)
+		printf("\n\n>>>match(\"%s\", \"%s\")\n", str, pattern_source(pat));
+	while (str[ps] && pm == -1) {
+		pm = match_from(str, ps, pat, 0);
+		ps += 1;
+	}
 
-   if (debugging) {
-      printf("<<<match(\"%s\", \"%s\") => %s\n", str, pattern_source(pat), pm != -1 ? "true" : "false");
-   }
-   return pm != -1;
+	if (debugging)
+		printf("<<<match(\"%s\", \"%s\") => %s\n", str, pattern_source(pat),
+			pm != -1 ? "true" : "false");
+	return pm != -1;
 }
 
 /*
@@ -1589,41 +1570,37 @@ match(
 
 bool
 glob_match(
-   const char *str,
-   const cpat *pat
+	const char *str,
+	const cpat *pat
 ) {
 
-   int ps = 0;
-   int pm = -1;
+	int ps = 0;
+	int pm = -1;
 
-   abort_if(!str || !pat, "glob_match called with illegal missing arguments");
+	abort_if(!str || !pat, "glob_match called with illegal missing arguments");
 
-   if (debugging) {
-      printf("\n\n>>>glob_match(\"%s\", \"%s\")\n", str, pattern_source(pat));
-   }
+	if (debugging)
+		printf("\n\n>>>glob_match(\"%s\", \"%s\")\n", str, pattern_source(pat));
 
-   /* boy this is ugly */
-   if (str[0] == '.') {
-      int pp = 0;
-      if (pat[pp] == PAT_BEG) {
-         pp = next_pattern(pat, pp);
-      }
-      if (pat[pp] == PAT_BOL) {
-         pp = next_pattern(pat, pp);
-      }
-      if (pat[pp] == PAT_LIT) {
-         if (pat[pp+2] == '.') {
-            pm = match_from(str, ps, pat, 0);
-         } else {
-            pm = -1;
-         }
-      }
-   } else {
-      pm = match_from(str, ps, pat, 0);
-   }
+	/* boy this is ugly */
+	if (str[0] == '.') {
+		int pp = 0;
+		if (pat[pp] == PAT_BEG)
+			pp = next_pattern(pat, pp);
+		if (pat[pp] == PAT_BOL)
+			pp = next_pattern(pat, pp);
+		if (pat[pp] == PAT_LIT) {
+			if (pat[pp+2] == '.')
+				pm = match_from(str, ps, pat, 0);
 
-   if (debugging) {
-      printf("<<<glob_match(\"%s\", \"%s\") => %s\n", str, pattern_source(pat), pm == 0 ? "true" : "false");
-   }
-   return pm == 0;
+			else
+				pm = -1;
+		}
+	} else
+		pm = match_from(str, ps, pat, 0);
+
+	if (debugging)
+		printf("<<<glob_match(\"%s\", \"%s\") => %s\n", str, pattern_source(pat),
+			pm == 0 ? "true" : "false");
+	return pm == 0;
 }

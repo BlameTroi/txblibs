@@ -23,16 +23,16 @@
  */
 #define QUENTRY_TAG "__QUEN__"
 typedef struct quentry {
-   char tag[8];
-   struct quentry *next;
-   void *payload;
+	char tag[8];
+	struct quentry *next;
+	void *payload;
 } quentry;
 
 #define QUCB_TAG "__QUCB__"
 struct qucb {
-   char tag[8];
-   quentry *first;
-   quentry *last;
+	char tag[8];
+	quentry *first;
+	quentry *last;
 };
 
 
@@ -79,12 +79,12 @@ struct qucb {
 
 bool
 qu_empty(
-   qucb *qu
+	qucb *qu
 ) {
-   assert(qu &&
-          memcmp(qu->tag, QUCB_TAG, sizeof(qu->tag)) == 0 &&
-          "invalid QUCB");
-   return qu->first == NULL;
+	assert(qu &&
+		memcmp(qu->tag, QUCB_TAG, sizeof(qu->tag)) == 0 &&
+		"invalid QUCB");
+	return qu->first == NULL;
 }
 
 /*
@@ -93,26 +93,24 @@ qu_empty(
 
 int
 qu_count(
-   qucb *qu
+	qucb *qu
 ) {
-   assert(qu &&
-          memcmp(qu->tag, QUCB_TAG, sizeof(qu->tag)) == 0 &&
-          "invalid QUCB");
+	assert(qu &&
+		memcmp(qu->tag, QUCB_TAG, sizeof(qu->tag)) == 0 &&
+		"invalid QUCB");
 
-   if (qu->first == NULL) {
-      return 0;
-   }
-   if (qu->first == qu->last) {
-      return 1;
-   }
+	if (qu->first == NULL)
+		return 0;
+	if (qu->first == qu->last)
+		return 1;
 
-   int i = 0;
-   quentry *qe = qu->first;
-   while (qe) {
-      i += 1;
-      qe = qe->next;
-   }
-   return i;
+	int i = 0;
+	quentry *qe = qu->first;
+	while (qe) {
+		i += 1;
+		qe = qe->next;
+	}
+	return i;
 }
 
 /*
@@ -122,14 +120,14 @@ qu_count(
 static
 quentry *
 qu_new_entry(
-   void *payload
+	void *payload
 ) {
-   quentry *qe = malloc(sizeof(*qe));
-   memset(qe, 0, sizeof(*qe));
-   memcpy(qe->tag, QUENTRY_TAG, sizeof(qe->tag));
-   qe->payload = payload;
-   qe->next = NULL;
-   return qe;
+	quentry *qe = malloc(sizeof(*qe));
+	memset(qe, 0, sizeof(*qe));
+	memcpy(qe->tag, QUENTRY_TAG, sizeof(qe->tag));
+	qe->payload = payload;
+	qe->next = NULL;
+	return qe;
 }
 
 /*
@@ -138,21 +136,21 @@ qu_new_entry(
 
 void
 qu_enqueue(
-   qucb *qu,
-   void *payload
+	qucb *qu,
+	void *payload
 ) {
-   assert(qu &&
-          memcmp(qu->tag, QUCB_TAG, sizeof(qu->tag)) == 0 &&
-          "invalid QUCB");
-   quentry *new_qe = qu_new_entry(payload);
-   if (qu->first == NULL) {
-      qu->first = new_qe;
-      qu->last = new_qe;
-      return;
-   }
-   qu->last->next = new_qe;
-   qu->last = new_qe;
-   return;
+	assert(qu &&
+		memcmp(qu->tag, QUCB_TAG, sizeof(qu->tag)) == 0 &&
+		"invalid QUCB");
+	quentry *new_qe = qu_new_entry(payload);
+	if (qu->first == NULL) {
+		qu->first = new_qe;
+		qu->last = new_qe;
+		return;
+	}
+	qu->last->next = new_qe;
+	qu->last = new_qe;
+	return;
 }
 
 /*
@@ -161,19 +159,18 @@ qu_enqueue(
 
 void *
 qu_dequeue(
-   qucb *qu
+	qucb *qu
 ) {
-   assert(qu &&
-          memcmp(qu->tag, QUCB_TAG, sizeof(qu->tag)) == 0 &&
-          "invalid QUCB");
-   if (qu->first == NULL) {
-      return NULL;
-   }
-   quentry *qe = qu->first;
-   qu->first = qe->next;
-   void *res = qe->payload;
-   free(qe);
-   return res;
+	assert(qu &&
+		memcmp(qu->tag, QUCB_TAG, sizeof(qu->tag)) == 0 &&
+		"invalid QUCB");
+	if (qu->first == NULL)
+		return NULL;
+	quentry *qe = qu->first;
+	qu->first = qe->next;
+	void *res = qe->payload;
+	free(qe);
+	return res;
 }
 
 /*
@@ -182,15 +179,14 @@ qu_dequeue(
 
 void *
 qu_peek(
-   qucb *qu
+	qucb *qu
 ) {
-   assert(qu &&
-          memcmp(qu->tag, QUCB_TAG, sizeof(qu->tag)) == 0 &&
-          "invalid QUCB");
-   if (qu->first == NULL) {
-      return NULL;
-   }
-   return qu->first->payload;
+	assert(qu &&
+		memcmp(qu->tag, QUCB_TAG, sizeof(qu->tag)) == 0 &&
+		"invalid QUCB");
+	if (qu->first == NULL)
+		return NULL;
+	return qu->first->payload;
 }
 
 /*
@@ -199,15 +195,15 @@ qu_peek(
 
 qucb *
 qu_create(
-   void
+	void
 ) {
-   qucb *qu = malloc(sizeof(*qu));
-   assert(qu && "could not allocate QUCB");
-   memset(qu, 0, sizeof(*qu));
-   memcpy(qu->tag, QUCB_TAG, sizeof(qu->tag));
-   qu->first = NULL;
-   qu->last = NULL;
-   return qu;
+	qucb *qu = malloc(sizeof(*qu));
+	assert(qu && "could not allocate QUCB");
+	memset(qu, 0, sizeof(*qu));
+	memcpy(qu->tag, QUCB_TAG, sizeof(qu->tag));
+	qu->first = NULL;
+	qu->last = NULL;
+	return qu;
 }
 
 /*
@@ -216,15 +212,15 @@ qu_create(
 
 bool
 qu_destroy(
-   qucb *qu
+	qucb *qu
 ) {
-   assert(qu &&
-          memcmp(qu->tag, QUCB_TAG, sizeof(qu->tag)) == 0 &&
-          "invalid QUCB");
-   if (qu->first == NULL) {
-      memset(qu, 253, sizeof(*qu));
-      free(qu);
-      return true;
-   }
-   return false;
+	assert(qu &&
+		memcmp(qu->tag, QUCB_TAG, sizeof(qu->tag)) == 0 &&
+		"invalid QUCB");
+	if (qu->first == NULL) {
+		memset(qu, 253, sizeof(*qu));
+		free(qu);
+		return true;
+	}
+	return false;
 }

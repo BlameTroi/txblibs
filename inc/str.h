@@ -43,8 +43,8 @@ extern "C" {
 
 const char **
 split_string(
-   const char *str,           /* string to split */
-   const char *sep            /* string of possible separator character */
+	const char *str,           /* string to split */
+	const char *sep            /* string of possible separator character */
 );
 
 /*
@@ -53,7 +53,7 @@ split_string(
 
 void
 free_split(
-   const char **splits        /* splits[0] & splits are both malloced */
+	const char **splits        /* splits[0] & splits are both malloced */
 );
 
 /*
@@ -62,7 +62,7 @@ free_split(
 
 char *
 dup_string(
-   const char *str
+	const char *str
 );
 
 /*
@@ -71,8 +71,8 @@ dup_string(
 
 int
 count_char(
-   const char *str,
-   char c
+	const char *str,
+	char c
 );
 
 /*
@@ -82,9 +82,9 @@ count_char(
 
 int
 pos_char(
-   const char *str,
-   int pos,
-   char c
+	const char *str,
+	int pos,
+	char c
 );
 
 /*
@@ -93,20 +93,20 @@ pos_char(
 
 bool
 equal_string(
-   const char *a,
-   const char *b
+	const char *a,
+	const char *b
 );
 
 bool
 less_than_string(
-   const char *a,
-   const char *b
+	const char *a,
+	const char *b
 );
 
 bool
 greater_than_string(
-   const char *a,
-   const char *b
+	const char *a,
+	const char *b
 );
 
 #ifdef __cplusplus

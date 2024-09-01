@@ -20,39 +20,39 @@ typedef struct pqcb pqcb;
 
 bool
 pq_empty(
-   pqcb *
+	pqcb *
 );
 
 void
 pq_put(
-   pqcb *,
-   long,
-   void *
+	pqcb *,
+	long,
+	void *
 );
 
 void *
 pq_get(
-   pqcb *
+	pqcb *
 );
 
 void *
 pq_peek(
-   pqcb *
+	pqcb *
 );
 
 pqcb *
 pq_create(
-   bool
+	bool
 );
 
 bool
 pq_destroy(
-   pqcb *
+	pqcb *
 );
 
 int
 pq_count(
-   pqcb *
+	pqcb *
 );
 
 #ifdef __cplusplus

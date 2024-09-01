@@ -30,21 +30,21 @@ validate_compiled_pattern(const cpat *, int *);
  */
 
 char *filenames[] = {
-   "README.org",                  /* test name.* */
-   "README.md",
-   "unitteset.c",                 /* for various, like *.c */
-   "lib.h",                       /* ???.h */
-   "lib.c",
-   "mem.h",
-   "mem.c",                       /* ???.c */
-   "makefile",
-   "LICENSE",
-   "file01.c",
-   "file02.c",
-   "file11.c",
-   "file12.c",
-   ".gitignore",                  /* .* */
-   NULL
+	"README.org",                  /* test name.* */
+	"README.md",
+	"unitteset.c",                 /* for various, like *.c */
+	"lib.h",                       /* ???.h */
+	"lib.c",
+	"mem.h",
+	"mem.c",                       /* ???.c */
+	"makefile",
+	"LICENSE",
+	"file01.c",
+	"file02.c",
+	"file11.c",
+	"file12.c",
+	".gitignore",                  /* .* */
+	NULL
 };
 
 /*
@@ -53,12 +53,12 @@ char *filenames[] = {
 
 void
 test_setup(void) {
-   debug_off(NULL);
+	debug_off(NULL);
 }
 
 void
 test_teardown(void) {
-   debug_off(NULL);
+	debug_off(NULL);
 }
 
 
@@ -71,112 +71,112 @@ test_teardown(void) {
  */
 
 MU_TEST(test_compile_literals) {
-   const cpat *pat = NULL;
-   int *val = NULL;
+	const cpat *pat = NULL;
+	int *val = NULL;
 
-   /* various length literals */
+	/* various length literals */
 
-   pat = compile_pattern("a");
-   val = (int[]) {
-      PAT_LIT, 1, 'a', -1
-   };
-   mu_should(validate_compiled_pattern(pat, val));
-   free((void *)pat);
+	pat = compile_pattern("a");
+	val = (int[]) {
+		PAT_LIT, 1, 'a', -1
+	};
+	mu_should(validate_compiled_pattern(pat, val));
+	free((void *)pat);
 
-   debug_off(NULL);
-   pat = compile_pattern("ab");
-   val = (int[]) {
-      PAT_LIT, 1, 'a', PAT_LIT, 1, 'b', -1
-   };
-   mu_should(validate_compiled_pattern(pat, val));
-   free((void *)pat);
-   debug_off(NULL);
-   pat = compile_pattern("simple");
-   val = (int[]) {
-      PAT_LIT, 1, 's',
-      PAT_LIT, 1, 'i',
-      PAT_LIT, 1, 'm',
-      PAT_LIT, 1, 'p',
-      PAT_LIT, 1, 'l',
-      PAT_LIT, 1, 'e', -1
-   };
-   mu_should(validate_compiled_pattern(pat, val));
-   free((void *)pat);
+	debug_off(NULL);
+	pat = compile_pattern("ab");
+	val = (int[]) {
+		PAT_LIT, 1, 'a', PAT_LIT, 1, 'b', -1
+	};
+	mu_should(validate_compiled_pattern(pat, val));
+	free((void *)pat);
+	debug_off(NULL);
+	pat = compile_pattern("simple");
+	val = (int[]) {
+		PAT_LIT, 1, 's',
+		PAT_LIT, 1, 'i',
+		PAT_LIT, 1, 'm',
+		PAT_LIT, 1, 'p',
+		PAT_LIT, 1, 'l',
+		PAT_LIT, 1, 'e', -1
+	};
+	mu_should(validate_compiled_pattern(pat, val));
+	free((void *)pat);
 
-   /* c escape characters in literals */
+	/* c escape characters in literals */
 
-   pat = compile_pattern("a\ts\nd\ff");
-   val = (int[]) {
-      PAT_LIT, 1, 'a',
-      PAT_LIT, 1, '\t',
-      PAT_LIT, 1, 's',
-      PAT_LIT, 1, '\n',
-      PAT_LIT, 1, 'd',
-      PAT_LIT, 1, '\f',
-      PAT_LIT, 1, 'f', -1
-   };
-   mu_should(validate_compiled_pattern(pat, val));
-   free((void *)pat);
+	pat = compile_pattern("a\ts\nd\ff");
+	val = (int[]) {
+		PAT_LIT, 1, 'a',
+		PAT_LIT, 1, '\t',
+		PAT_LIT, 1, 's',
+		PAT_LIT, 1, '\n',
+		PAT_LIT, 1, 'd',
+		PAT_LIT, 1, '\f',
+		PAT_LIT, 1, 'f', -1
+	};
+	mu_should(validate_compiled_pattern(pat, val));
+	free((void *)pat);
 
-   /* escaping meta characters */
+	/* escaping meta characters */
 
-   pat = compile_pattern("\\[^abcd\\]");
-   val = (int[]) {
-      PAT_LIT, 1, '[',
-      PAT_LIT, 1, '^',
-      PAT_LIT, 1, 'a',
-      PAT_LIT, 1, 'b',
-      PAT_LIT, 1, 'c',
-      PAT_LIT, 1, 'd',
-      PAT_LIT, 1, ']', -1
-   };
-   mu_should(validate_compiled_pattern(pat, val));
-   free((void *)pat);
+	pat = compile_pattern("\\[^abcd\\]");
+	val = (int[]) {
+		PAT_LIT, 1, '[',
+		PAT_LIT, 1, '^',
+		PAT_LIT, 1, 'a',
+		PAT_LIT, 1, 'b',
+		PAT_LIT, 1, 'c',
+		PAT_LIT, 1, 'd',
+		PAT_LIT, 1, ']', -1
+	};
+	mu_should(validate_compiled_pattern(pat, val));
+	free((void *)pat);
 
-   /* some meta characters lose their meaning in different positions */
+	/* some meta characters lose their meaning in different positions */
 
-   pat = compile_pattern("a^$b");
-   val = (int[]) {
-      PAT_LIT, 1, 'a',
-      PAT_LIT, 1, '^',
-      PAT_LIT, 1, '$',
-      PAT_LIT, 1, 'b', -1
-   };
-   mu_should(validate_compiled_pattern(pat, val));
-   free((void *)pat);
+	pat = compile_pattern("a^$b");
+	val = (int[]) {
+		PAT_LIT, 1, 'a',
+		PAT_LIT, 1, '^',
+		PAT_LIT, 1, '$',
+		PAT_LIT, 1, 'b', -1
+	};
+	mu_should(validate_compiled_pattern(pat, val));
+	free((void *)pat);
 
-   pat = compile_pattern("$^");
-   val = (int[]) {
-      PAT_LIT, 1, '$',
-      PAT_LIT, 1, '^', -1
-   };
-   mu_should(validate_compiled_pattern(pat, val));
-   free((void *)pat);
+	pat = compile_pattern("$^");
+	val = (int[]) {
+		PAT_LIT, 1, '$',
+		PAT_LIT, 1, '^', -1
+	};
+	mu_should(validate_compiled_pattern(pat, val));
+	free((void *)pat);
 
-   /* meta bol and eol out of position so should be literals */
+	/* meta bol and eol out of position so should be literals */
 
-   pat = compile_pattern("as^df$q$");
-   val = (int[]) {
-      PAT_LIT, 1, 'a',
-      PAT_LIT, 1, 's',
-      PAT_LIT, 1, '^',
-      PAT_LIT, 1, 'd',
-      PAT_LIT, 1, 'f',
-      PAT_LIT, 1, '$',
-      PAT_LIT, 1, 'q',
-      PAT_EOL, -1
-   };
-   mu_should(validate_compiled_pattern(pat, val));
-   free((void *)pat);
+	pat = compile_pattern("as^df$q$");
+	val = (int[]) {
+		PAT_LIT, 1, 'a',
+		PAT_LIT, 1, 's',
+		PAT_LIT, 1, '^',
+		PAT_LIT, 1, 'd',
+		PAT_LIT, 1, 'f',
+		PAT_LIT, 1, '$',
+		PAT_LIT, 1, 'q',
+		PAT_EOL, -1
+	};
+	mu_should(validate_compiled_pattern(pat, val));
+	free((void *)pat);
 
-   /* and you have to work to get a backslash literal */
+	/* and you have to work to get a backslash literal */
 
-   pat = compile_pattern("\\\\");
-   val = (int[]) {
-      PAT_LIT, 1, '\\', -1
-   };
-   mu_should(validate_compiled_pattern(pat, val));
-   free((void *)pat);
+	pat = compile_pattern("\\\\");
+	val = (int[]) {
+		PAT_LIT, 1, '\\', -1
+	};
+	mu_should(validate_compiled_pattern(pat, val));
+	free((void *)pat);
 }
 
 /*
@@ -185,132 +185,134 @@ MU_TEST(test_compile_literals) {
  */
 
 MU_TEST(test_compile_metas) {
-   const cpat *pat = NULL;
-   int *val = NULL;
+	const cpat *pat = NULL;
+	int *val = NULL;
 
-   /* line anchors */
+	/* line anchors */
 
-   pat = compile_pattern("^");
-   val = (int[]) {
-      PAT_BOL, -1
-   };
-   mu_should(validate_compiled_pattern(pat, val));
-   free((void *)pat);
+	pat = compile_pattern("^");
+	val = (int[]) {
+		PAT_BOL, -1
+	};
+	mu_should(validate_compiled_pattern(pat, val));
+	free((void *)pat);
 
-   pat = compile_pattern("$");
-   val = (int[]) {
-      PAT_EOL, -1
-   };
-   mu_should(validate_compiled_pattern(pat, val));
-   free((void *)pat);
+	pat = compile_pattern("$");
+	val = (int[]) {
+		PAT_EOL, -1
+	};
+	mu_should(validate_compiled_pattern(pat, val));
+	free((void *)pat);
 
-   pat = compile_pattern("^$");
-   val = (int[]) {
-      PAT_BOL, PAT_EOL, -1
-   };
-   mu_should(validate_compiled_pattern(pat, val));
-   free((void *)pat);
+	pat = compile_pattern("^$");
+	val = (int[]) {
+		PAT_BOL, PAT_EOL, -1
+	};
+	mu_should(validate_compiled_pattern(pat, val));
+	free((void *)pat);
 
-   pat = compile_pattern("^.$");
-   val = (int[]) {
-      PAT_BOL, PAT_WILD, PAT_EOL, -1
-   };
-   mu_should(validate_compiled_pattern(pat, val));
-   free((void *)pat);
+	pat = compile_pattern("^.$");
+	val = (int[]) {
+		PAT_BOL, PAT_WILD, PAT_EOL, -1
+	};
+	mu_should(validate_compiled_pattern(pat, val));
+	free((void *)pat);
 
-   pat = compile_pattern("^a$");
-   val = (int[]) {
-      PAT_BOL, PAT_LIT, 1, 'a', PAT_EOL, -1
-   };
-   mu_should(validate_compiled_pattern(pat, val));
-   free((void *)pat);
+	pat = compile_pattern("^a$");
+	val = (int[]) {
+		PAT_BOL, PAT_LIT, 1, 'a', PAT_EOL, -1
+	};
+	mu_should(validate_compiled_pattern(pat, val));
+	free((void *)pat);
 
-   /* any one character */
+	/* any one character */
 
-   pat = compile_pattern(".");
-   val = (int[]) {
-      PAT_WILD, -1
-   };
-   mu_should(validate_compiled_pattern(pat, val));
-   free((void *)pat);
+	pat = compile_pattern(".");
+	val = (int[]) {
+		PAT_WILD, -1
+	};
+	mu_should(validate_compiled_pattern(pat, val));
+	free((void *)pat);
 
-   pat = compile_pattern("..");
-   val = (int[]) {
-      PAT_WILD, PAT_WILD, -1
-   };
-   mu_should(validate_compiled_pattern(pat, val));
-   free((void *)pat);
+	pat = compile_pattern("..");
+	val = (int[]) {
+		PAT_WILD, PAT_WILD, -1
+	};
+	mu_should(validate_compiled_pattern(pat, val));
+	free((void *)pat);
 
-   pat = compile_pattern("\\..");
-   val = (int[]) {
-      PAT_LIT, 1, '.', PAT_WILD, -1
-   };
-   mu_should(validate_compiled_pattern(pat, val));
-   free((void *)pat);
+	pat = compile_pattern("\\..");
+	val = (int[]) {
+		PAT_LIT, 1, '.', PAT_WILD, -1
+	};
+	mu_should(validate_compiled_pattern(pat, val));
+	free((void *)pat);
 
-   /* one of, none of */
+	/* one of, none of */
 
-   pat = compile_pattern("[asdf]");
-   val = (int[]) {
-      PAT_CCLASS, 4, 'a', 's', 'd', 'f',  -1
-   };
-   mu_should(validate_compiled_pattern(pat, val));
-   free((void *)pat);
+	pat = compile_pattern("[asdf]");
+	val = (int[]) {
+		PAT_CCLASS, 4, 'a', 's', 'd', 'f',  -1
+	};
+	mu_should(validate_compiled_pattern(pat, val));
+	free((void *)pat);
 
-   pat = compile_pattern("[^asdf]");
-   val = (int[]) {
-      PAT_NOT_CCLASS, 4, 'a', 's', 'd', 'f',  -1
-   };
-   free((void *)pat);
+	pat = compile_pattern("[^asdf]");
+	val = (int[]) {
+		PAT_NOT_CCLASS, 4, 'a', 's', 'd', 'f',  -1
+	};
+	free((void *)pat);
 
-   /* special characters within character class groups don't have
-      special meaning, but rememder that backslash gums up the works
-      anyway. */
+	/* special characters within character class groups don't have
+	   special meaning, but rememder that backslash gums up the works
+	   anyway. */
 
-   pat = compile_pattern("[^^?$.#(){}\\\\<>]");
-   val = (int[]) {
-      PAT_NOT_CCLASS, 12, '^', '?', '$', '.',  '#', '(', ')', '{', '}', '\\', '<', '>',  -1
-   };
-   mu_should(validate_compiled_pattern(pat, val));
-   free((void *)pat);
+	pat = compile_pattern("[^^?$.#(){}\\\\<>]");
+	val = (int[]) {
+		PAT_NOT_CCLASS, 12, '^', '?', '$', '.',  '#', '(', ')', '{', '}', '\\', '<',
+		'>',  -1
+	};
+	mu_should(validate_compiled_pattern(pat, val));
+	free((void *)pat);
 
-   /* escape a group closing ] ? */
+	/* escape a group closing ] ? */
 
-   pat = compile_pattern("[a\\]]");
-   val = (int[]) {
-      PAT_CCLASS, 2, 'a', ']',  -1
-   };
-   mu_should(validate_compiled_pattern(pat, val));
-   free((void *)pat);
+	pat = compile_pattern("[a\\]]");
+	val = (int[]) {
+		PAT_CCLASS, 2, 'a', ']',  -1
+	};
+	mu_should(validate_compiled_pattern(pat, val));
+	free((void *)pat);
 
-   pat = compile_pattern("[\\]]");
-   val = (int[]) {
-      PAT_CCLASS, 1, ']',  -1
-   };
-   mu_should(validate_compiled_pattern(pat, val));
-   free((void *)pat);
+	pat = compile_pattern("[\\]]");
+	val = (int[]) {
+		PAT_CCLASS, 1, ']',  -1
+	};
+	mu_should(validate_compiled_pattern(pat, val));
+	free((void *)pat);
 
-   /* multiple x of groups alternating with literal runs */
+	/* multiple x of groups alternating with literal runs */
 
-   pat = compile_pattern("[Mm]ac[Oo]s");
-   val = (int[]) {
-      PAT_CCLASS, 2, 'M', 'm',
-      PAT_LIT, 1, 'a',
-      PAT_LIT, 1, 'c',
-      PAT_CCLASS, 2, 'O', 'o',
-      PAT_LIT, 1, 's', -1
-   };
-   mu_should(validate_compiled_pattern(pat, val));
-   free((void *)pat);
+	pat = compile_pattern("[Mm]ac[Oo]s");
+	val = (int[]) {
+		PAT_CCLASS, 2, 'M', 'm',
+		PAT_LIT, 1, 'a',
+		PAT_LIT, 1, 'c',
+		PAT_CCLASS, 2, 'O', 'o',
+		PAT_LIT, 1, 's', -1
+	};
+	mu_should(validate_compiled_pattern(pat, val));
+	free((void *)pat);
 
-   /* two adjacent one ofs */
+	/* two adjacent one ofs */
 
-   pat = compile_pattern("^[ab][cd]e$");
-   val = (int[]) {
-      PAT_BOL, PAT_CCLASS, 2, 'a', 'b',  PAT_CCLASS, 2, 'c', 'd',  PAT_LIT, 1, 'e', PAT_EOL, -1
-   };
-   mu_should(validate_compiled_pattern(pat, val));
-   free((void *)pat);
+	pat = compile_pattern("^[ab][cd]e$");
+	val = (int[]) {
+		PAT_BOL, PAT_CCLASS, 2, 'a', 'b',  PAT_CCLASS, 2, 'c', 'd',  PAT_LIT, 1, 'e',
+		PAT_EOL, -1
+	};
+	mu_should(validate_compiled_pattern(pat, val));
+	free((void *)pat);
 }
 
 /*
@@ -320,55 +322,55 @@ MU_TEST(test_compile_metas) {
  */
 
 MU_TEST(test_compile_ranges) {
-   const cpat *pat = NULL;
-   int *val = NULL;
+	const cpat *pat = NULL;
+	int *val = NULL;
 
-   /* a big range */
+	/* a big range */
 
-   pat = compile_pattern("[a-z]");
-   val = (int[]) {
-      PAT_CCLASS, 26, 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
-      'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q',
-      'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-      -1
-   };
-   mu_should(validate_compiled_pattern(pat, val));
-   free((void *)pat);
+	pat = compile_pattern("[a-z]");
+	val = (int[]) {
+		PAT_CCLASS, 26, 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
+		'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q',
+		'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+		-1
+	};
+	mu_should(validate_compiled_pattern(pat, val));
+	free((void *)pat);
 
-   /* multiple ranges in an of */
+	/* multiple ranges in an of */
 
-   pat = compile_pattern("as[d-f0-3][qw]erty");
-   val = (int[]) {
-      PAT_LIT, 1, 'a',
-      PAT_LIT, 1, 's',
-      PAT_CCLASS, 7, 'd', 'e', 'f', '0', '1', '2', '3',
-      PAT_CCLASS, 2, 'q', 'w',
-      PAT_LIT, 1, 'e',
-      PAT_LIT, 1, 'r',
-      PAT_LIT, 1, 't',
-      PAT_LIT, 1, 'y',
-      -1
-   };
-   mu_should(validate_compiled_pattern(pat, val));
-   free((void *)pat);
+	pat = compile_pattern("as[d-f0-3][qw]erty");
+	val = (int[]) {
+		PAT_LIT, 1, 'a',
+		PAT_LIT, 1, 's',
+		PAT_CCLASS, 7, 'd', 'e', 'f', '0', '1', '2', '3',
+		PAT_CCLASS, 2, 'q', 'w',
+		PAT_LIT, 1, 'e',
+		PAT_LIT, 1, 'r',
+		PAT_LIT, 1, 't',
+		PAT_LIT, 1, 'y',
+		-1
+	};
+	mu_should(validate_compiled_pattern(pat, val));
+	free((void *)pat);
 
-   /* two ranges, one not needed */
+	/* two ranges, one not needed */
 
-   pat = compile_pattern("[abc-fghi-jk]");
-   val = (int[]) {
-      PAT_CCLASS, 11, 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k',  -1
-   };
-   mu_should(validate_compiled_pattern(pat, val));
-   free((void *)pat);
+	pat = compile_pattern("[abc-fghi-jk]");
+	val = (int[]) {
+		PAT_CCLASS, 11, 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k',  -1
+	};
+	mu_should(validate_compiled_pattern(pat, val));
+	free((void *)pat);
 
-   /* bad range */
+	/* bad range */
 
-   pat = compile_pattern("[^abc-b]");
-   val = (int[]) {
-      PAT_NOT_CCLASS, 4, 'a', 'b', 'c', 'b',  -1
-   };
-   mu_should(validate_compiled_pattern(pat, val));
-   free((void *)pat);
+	pat = compile_pattern("[^abc-b]");
+	val = (int[]) {
+		PAT_NOT_CCLASS, 4, 'a', 'b', 'c', 'b',  -1
+	};
+	mu_should(validate_compiled_pattern(pat, val));
+	free((void *)pat);
 }
 
 /*
@@ -379,45 +381,45 @@ MU_TEST(test_compile_ranges) {
  */
 
 MU_TEST(test_compile_class_metas) {
-   const cpat *pat = NULL;
-   int *val = NULL;
+	const cpat *pat = NULL;
+	int *val = NULL;
 
-   pat = compile_pattern("ibm s/3\\d0");
-   val = (int[]) {
-      PAT_LIT, 1, 'i',
-      PAT_LIT, 1, 'b',
-      PAT_LIT, 1, 'm',
-      PAT_LIT, 1, ' ',
-      PAT_LIT, 1, 's',
-      PAT_LIT, 1, '/',
-      PAT_LIT, 1, '3',
-      PAT_DIG,
-      PAT_LIT, 1, '0', -1
-   };
-   mu_should(validate_compiled_pattern(pat, val));
-   free((void *)pat);
+	pat = compile_pattern("ibm s/3\\d0");
+	val = (int[]) {
+		PAT_LIT, 1, 'i',
+		PAT_LIT, 1, 'b',
+		PAT_LIT, 1, 'm',
+		PAT_LIT, 1, ' ',
+		PAT_LIT, 1, 's',
+		PAT_LIT, 1, '/',
+		PAT_LIT, 1, '3',
+		PAT_DIG,
+		PAT_LIT, 1, '0', -1
+	};
+	mu_should(validate_compiled_pattern(pat, val));
+	free((void *)pat);
 
-   pat = compile_pattern("\\w = \\w [+\\-*/] \\w");
-   val = (int[]) {
-      PAT_WC,
-      PAT_LIT, 1, ' ',
-      PAT_LIT, 1, '=',
-      PAT_LIT, 1, ' ',
-      PAT_WC,
-      PAT_LIT, 1, ' ',
-      PAT_CCLASS, 4, '+', '-', '*', '/',
-      PAT_LIT, 1, ' ',
-      PAT_WC, -1
-   };
-   mu_should(validate_compiled_pattern(pat, val));
-   free((void *)pat);
+	pat = compile_pattern("\\w = \\w [+\\-*/] \\w");
+	val = (int[]) {
+		PAT_WC,
+		PAT_LIT, 1, ' ',
+		PAT_LIT, 1, '=',
+		PAT_LIT, 1, ' ',
+		PAT_WC,
+		PAT_LIT, 1, ' ',
+		PAT_CCLASS, 4, '+', '-', '*', '/',
+		PAT_LIT, 1, ' ',
+		PAT_WC, -1
+	};
+	mu_should(validate_compiled_pattern(pat, val));
+	free((void *)pat);
 
-   pat = compile_pattern("\\W\\w\\S\\s\\D\\d");
-   val = (int[]) {
-      PAT_NOT_WC, PAT_WC, PAT_NOT_WS, PAT_WS, PAT_NOT_DIG, PAT_DIG, -1
-   };
-   mu_should(validate_compiled_pattern(pat, val));
-   free((void *)pat);
+	pat = compile_pattern("\\W\\w\\S\\s\\D\\d");
+	val = (int[]) {
+		PAT_NOT_WC, PAT_WC, PAT_NOT_WS, PAT_WS, PAT_NOT_DIG, PAT_DIG, -1
+	};
+	mu_should(validate_compiled_pattern(pat, val));
+	free((void *)pat);
 }
 
 /*
@@ -430,211 +432,211 @@ MU_TEST(test_compile_class_metas) {
  */
 
 MU_TEST(test_compile_quantifiers) {
-   const cpat *pat = NULL;
-   int *val = NULL;
+	const cpat *pat = NULL;
+	int *val = NULL;
 
-   /* a line which may or may not be empty */
+	/* a line which may or may not be empty */
 
-   pat = compile_pattern("^.*$");
-   val = (int[]) {
-      PAT_BOL, PAT_REP0M, PAT_WILD, PAT_EOL, -1
-   };
-   mu_should(validate_compiled_pattern(pat, val));
-   free((void *)pat);
+	pat = compile_pattern("^.*$");
+	val = (int[]) {
+		PAT_BOL, PAT_REP0M, PAT_WILD, PAT_EOL, -1
+	};
+	mu_should(validate_compiled_pattern(pat, val));
+	free((void *)pat);
 
-   /* a line which has at least one non whitespace character */
+	/* a line which has at least one non whitespace character */
 
-   pat = compile_pattern("^\\S+$");
-   val = (int[]) {
-      PAT_BOL, PAT_REP1M, PAT_NOT_WS, PAT_EOL, -1
-   };
-   mu_should(validate_compiled_pattern(pat, val));
-   free((void *)pat);
+	pat = compile_pattern("^\\S+$");
+	val = (int[]) {
+		PAT_BOL, PAT_REP1M, PAT_NOT_WS, PAT_EOL, -1
+	};
+	mu_should(validate_compiled_pattern(pat, val));
+	free((void *)pat);
 
-   debug_off(NULL);
+	debug_off(NULL);
 
-   pat = compile_pattern("a+bc");
-   val = (int[]) {
-      PAT_REP1M, PAT_LIT, 1, 'a',
-      PAT_LIT, 1, 'b',
-      PAT_LIT, 1, 'c', -1
-   };
-   mu_should(validate_compiled_pattern(pat, val));
-   free((void *)pat);
+	pat = compile_pattern("a+bc");
+	val = (int[]) {
+		PAT_REP1M, PAT_LIT, 1, 'a',
+		PAT_LIT, 1, 'b',
+		PAT_LIT, 1, 'c', -1
+	};
+	mu_should(validate_compiled_pattern(pat, val));
+	free((void *)pat);
 
 
-   pat = compile_pattern("asdf*");
-   val = (int[]) {
-      PAT_LIT, 1, 'a',
-      PAT_LIT, 1, 's',
-      PAT_LIT, 1, 'd',
-      PAT_REP0M, PAT_LIT, 1, 'f', -1
-   };
-   mu_should(validate_compiled_pattern(pat, val));
-   free((void *)pat);
+	pat = compile_pattern("asdf*");
+	val = (int[]) {
+		PAT_LIT, 1, 'a',
+		PAT_LIT, 1, 's',
+		PAT_LIT, 1, 'd',
+		PAT_REP0M, PAT_LIT, 1, 'f', -1
+	};
+	mu_should(validate_compiled_pattern(pat, val));
+	free((void *)pat);
 
-   pat = compile_pattern("asdf*ijkl");
-   val = (int[]) {
-      PAT_LIT, 1, 'a',
-      PAT_LIT, 1, 's',
-      PAT_LIT, 1, 'd',
-      PAT_REP0M, PAT_LIT, 1, 'f',
-      PAT_LIT, 1, 'i',
-      PAT_LIT, 1, 'j',
-      PAT_LIT, 1, 'k',
-      PAT_LIT, 1, 'l',
-      -1
-   };
-   mu_should(validate_compiled_pattern(pat, val));
-   free((void *)pat);
+	pat = compile_pattern("asdf*ijkl");
+	val = (int[]) {
+		PAT_LIT, 1, 'a',
+		PAT_LIT, 1, 's',
+		PAT_LIT, 1, 'd',
+		PAT_REP0M, PAT_LIT, 1, 'f',
+		PAT_LIT, 1, 'i',
+		PAT_LIT, 1, 'j',
+		PAT_LIT, 1, 'k',
+		PAT_LIT, 1, 'l',
+		-1
+	};
+	mu_should(validate_compiled_pattern(pat, val));
+	free((void *)pat);
 
-   pat = compile_pattern("[a-e]*");
-   val = (int[]) {
-      PAT_REP0M, PAT_CCLASS, 5, 'a', 'b', 'c', 'd', 'e', -1
-   };
-   mu_should(validate_compiled_pattern(pat, val));
-   free((void *)pat);
+	pat = compile_pattern("[a-e]*");
+	val = (int[]) {
+		PAT_REP0M, PAT_CCLASS, 5, 'a', 'b', 'c', 'd', 'e', -1
+	};
+	mu_should(validate_compiled_pattern(pat, val));
+	free((void *)pat);
 
-   pat = compile_pattern("\\d*");
-   val = (int[]) {
-      PAT_REP0M, PAT_DIG, -1
-   };
-   mu_should(validate_compiled_pattern(pat, val));
-   free((void *)pat);
+	pat = compile_pattern("\\d*");
+	val = (int[]) {
+		PAT_REP0M, PAT_DIG, -1
+	};
+	mu_should(validate_compiled_pattern(pat, val));
+	free((void *)pat);
 
-   pat = compile_pattern(" *\\d+$");
-   val = (int[]) {
-      PAT_REP0M, PAT_LIT, 1, ' ',
-      PAT_REP1M, PAT_DIG,
-      PAT_EOL,
-      -1
-   };
-   free((void *)pat);
+	pat = compile_pattern(" *\\d+$");
+	val = (int[]) {
+		PAT_REP0M, PAT_LIT, 1, ' ',
+		PAT_REP1M, PAT_DIG,
+		PAT_EOL,
+		-1
+	};
+	free((void *)pat);
 
-   /* more to come */
+	/* more to come */
 }
 
 /*
  * match quantifiers, trying to hit edge cases.
  */
 MU_TEST(test_match_star) {
-   const cpat *pat = NULL;
+	const cpat *pat = NULL;
 
-   pat = compile_pattern("^a*b");
-   mu_should(pat);
-   mu_should(match("b", pat));
-   mu_should(match("ab", pat));
-   mu_should(match("aaabc", pat));
-   mu_shouldnt(match("aa", pat));
-   free((void *)pat);
+	pat = compile_pattern("^a*b");
+	mu_should(pat);
+	mu_should(match("b", pat));
+	mu_should(match("ab", pat));
+	mu_should(match("aaabc", pat));
+	mu_shouldnt(match("aa", pat));
+	free((void *)pat);
 
-   pat = compile_pattern("a*b");
-   mu_should(match("ab", pat));
-   mu_should(match("aab", pat));
-   mu_should(match("aaaaaaaaaaaaaaab", pat));
-   mu_should(match("b", pat));
-   mu_should(match("betty", pat));
-   mu_should(match("xaaaaaaaab", pat));
-   free((void *)pat);
+	pat = compile_pattern("a*b");
+	mu_should(match("ab", pat));
+	mu_should(match("aab", pat));
+	mu_should(match("aaaaaaaaaaaaaaab", pat));
+	mu_should(match("b", pat));
+	mu_should(match("betty", pat));
+	mu_should(match("xaaaaaaaab", pat));
+	free((void *)pat);
 
-   pat = compile_pattern("a*b*");
-   mu_should(match("ab", pat));
-   mu_should(match("a", pat));
-   mu_should(match("b", pat));
-   mu_should(match("cab", pat));
-   free((void *)pat);
+	pat = compile_pattern("a*b*");
+	mu_should(match("ab", pat));
+	mu_should(match("a", pat));
+	mu_should(match("b", pat));
+	mu_should(match("cab", pat));
+	free((void *)pat);
 
-   pat = compile_pattern("^a*b*");
-   mu_should(match("ab", pat));
-   mu_should(match("a", pat));
-   mu_should(match("b", pat));
-   mu_should(match("cab", pat));
-   free((void *)pat);
+	pat = compile_pattern("^a*b*");
+	mu_should(match("ab", pat));
+	mu_should(match("a", pat));
+	mu_should(match("b", pat));
+	mu_should(match("cab", pat));
+	free((void *)pat);
 
-   pat = compile_pattern("a*b$");
-   mu_should(match("b", pat));
-   mu_should(match("aab", pat));
-   mu_should(match("asdfb", pat));
-   free((void *)pat);
+	pat = compile_pattern("a*b$");
+	mu_should(match("b", pat));
+	mu_should(match("aab", pat));
+	mu_should(match("asdfb", pat));
+	free((void *)pat);
 
-   pat = compile_pattern("123*37*8");
-   mu_should(match("12378", pat));
-   free((void *)pat);
+	pat = compile_pattern("123*37*8");
+	mu_should(match("12378", pat));
+	free((void *)pat);
 }
 
 MU_TEST(test_match_quantifiers) {
-   const cpat *pat = NULL;
+	const cpat *pat = NULL;
 
-   pat = compile_pattern("a+bc");
-   mu_should(match("aabc", pat));
-   mu_should(match("abc", pat));
-   mu_should(match("abcd", pat));
-   mu_should(match("aaaaaaaaaaaaaaaaaaaaaabc", pat));
-   mu_shouldnt(match("aaba", pat));
-   free((void *)pat);
+	pat = compile_pattern("a+bc");
+	mu_should(match("aabc", pat));
+	mu_should(match("abc", pat));
+	mu_should(match("abcd", pat));
+	mu_should(match("aaaaaaaaaaaaaaaaaaaaaabc", pat));
+	mu_shouldnt(match("aaba", pat));
+	free((void *)pat);
 
-   pat = compile_pattern("a+b+c");
-   mu_should(match("abc", pat));
-   mu_should(match("aaaaaaaabc", pat));
-   mu_should(match("abbbbbbbbc", pat));
-   mu_should(match("aaaaabbbbbbcccccc", pat));
-   mu_shouldnt(match("aacb", pat));
-   mu_shouldnt(match("bbbc", pat));
-   free((void *)pat);
+	pat = compile_pattern("a+b+c");
+	mu_should(match("abc", pat));
+	mu_should(match("aaaaaaaabc", pat));
+	mu_should(match("abbbbbbbbc", pat));
+	mu_should(match("aaaaabbbbbbcccccc", pat));
+	mu_shouldnt(match("aacb", pat));
+	mu_shouldnt(match("bbbc", pat));
+	free((void *)pat);
 
-   pat = compile_pattern("a+ab");
-   mu_should(match("aab", pat));
-   mu_shouldnt(match("ab", pat));
-   mu_should(match("aaaaaab", pat));
-   free((void *)pat);
+	pat = compile_pattern("a+ab");
+	mu_should(match("aab", pat));
+	mu_shouldnt(match("ab", pat));
+	mu_should(match("aaaaaab", pat));
+	free((void *)pat);
 
-   pat = compile_pattern("a+b+c+");
-   mu_should(match("abc", pat));
-   mu_should(match("abcccccd", pat));
-   mu_should(match("abcd", pat));
-   mu_shouldnt(match("abdc", pat));
-   free((void *)pat);
+	pat = compile_pattern("a+b+c+");
+	mu_should(match("abc", pat));
+	mu_should(match("abcccccd", pat));
+	mu_should(match("abcd", pat));
+	mu_shouldnt(match("abdc", pat));
+	free((void *)pat);
 
-   pat = compile_pattern("a*b+");
-   mu_should(match("abcd", pat));
-   mu_should(match("bcda", pat));
-   mu_should(match("aabbcd", pat));
-   mu_should(match("able", pat));
-   mu_should(match("abba", pat));
-   mu_shouldnt(match("acdc", pat));
-   free((void *)pat);
+	pat = compile_pattern("a*b+");
+	mu_should(match("abcd", pat));
+	mu_should(match("bcda", pat));
+	mu_should(match("aabbcd", pat));
+	mu_should(match("able", pat));
+	mu_should(match("abba", pat));
+	mu_shouldnt(match("acdc", pat));
+	free((void *)pat);
 
-   pat = compile_pattern("^[a-e]*a\\d");
-   mu_should(match("abba9", pat));
-   mu_should(match("baba817", pat));
-   mu_shouldnt(match("babc1", pat));
-   free((void *)pat);
+	pat = compile_pattern("^[a-e]*a\\d");
+	mu_should(match("abba9", pat));
+	mu_should(match("baba817", pat));
+	mu_shouldnt(match("babc1", pat));
+	free((void *)pat);
 
-   pat = compile_pattern("^[a-e]\\d .?asdf*$");
-   mu_should(match("a9 xasdf", pat));
-   mu_should(match("e0 asd", pat));
-   free((void *)pat);
+	pat = compile_pattern("^[a-e]\\d .?asdf*$");
+	mu_should(match("a9 xasdf", pat));
+	mu_should(match("e0 asd", pat));
+	free((void *)pat);
 
-   pat = compile_pattern("asdf+");
-   mu_shouldnt(match("asd", pat));
-   mu_should(match("asdf", pat));
-   mu_should(match("asdff", pat));
-   mu_should(match("asdfff ghijklmnop", pat));
-   mu_shouldnt(match("asd f", pat));
-   free((void *)pat);
+	pat = compile_pattern("asdf+");
+	mu_shouldnt(match("asd", pat));
+	mu_should(match("asdf", pat));
+	mu_should(match("asdff", pat));
+	mu_should(match("asdfff ghijklmnop", pat));
+	mu_shouldnt(match("asd f", pat));
+	free((void *)pat);
 
-   pat = compile_pattern("asdf?");
-   mu_should(match("asdf", pat));
-   mu_should(match("asdfff g", pat));
-   mu_should(match("asd f", pat));
-   free((void *)pat);
+	pat = compile_pattern("asdf?");
+	mu_should(match("asdf", pat));
+	mu_should(match("asdfff g", pat));
+	mu_should(match("asd f", pat));
+	free((void *)pat);
 
-   pat = compile_pattern("asdf?gh");
-   mu_shouldnt(match("asdfg", pat));
-   mu_shouldnt(match("asdgkh", pat));
-   mu_should(match("asdfgh", pat));
-   mu_should(match("asdgh", pat));
-   free((void *)pat);
+	pat = compile_pattern("asdf?gh");
+	mu_shouldnt(match("asdfg", pat));
+	mu_shouldnt(match("asdgkh", pat));
+	mu_should(match("asdfgh", pat));
+	mu_should(match("asdgh", pat));
+	free((void *)pat);
 
 }
 
@@ -643,13 +645,13 @@ MU_TEST(test_match_quantifiers) {
  */
 
 MU_TEST(test_match_any) {
-   const cpat *pat = NULL;
+	const cpat *pat = NULL;
 
-   pat = compile_pattern("as.f");
-   mu_should(match("asdf", pat));
-   mu_should(match("ijklasdf", pat));
-   mu_shouldnt(match("asfd", pat));
-   free((void *)pat);
+	pat = compile_pattern("as.f");
+	mu_should(match("asdf", pat));
+	mu_should(match("ijklasdf", pat));
+	mu_shouldnt(match("asfd", pat));
+	free((void *)pat);
 }
 
 /*
@@ -657,20 +659,20 @@ MU_TEST(test_match_any) {
  */
 
 MU_TEST(test_match_literals) {
-   const cpat *pat = NULL;
+	const cpat *pat = NULL;
 
-   pat = compile_pattern("this");
-   mu_should(match("what is this?", pat));
-   mu_shouldnt(match("what was that?", pat));
-   mu_shouldnt(match("what was thi", pat));
-   mu_shouldnt(match("x", pat));
+	pat = compile_pattern("this");
+	mu_should(match("what is this?", pat));
+	mu_shouldnt(match("what was that?", pat));
+	mu_shouldnt(match("what was thi", pat));
+	mu_shouldnt(match("x", pat));
 
-   /* dup_string shows we aren't using a bad pointer elsewhere */
+	/* dup_string shows we aren't using a bad pointer elsewhere */
 
-   char *dup = dup_string("this");
-   mu_should(match(dup, pat));
-   free(dup);
-   free((void *)pat);
+	char *dup = dup_string("this");
+	mu_should(match(dup, pat));
+	free(dup);
+	free((void *)pat);
 }
 
 /*
@@ -678,66 +680,66 @@ MU_TEST(test_match_literals) {
  */
 
 MU_TEST(test_match_class_metas) {
-   const cpat *pat = NULL;
+	const cpat *pat = NULL;
 
-   pat = compile_pattern("\\d60");
-   mu_should(match("460", pat));
-   mu_shouldnt(match("a60", pat));
-   free((void *)pat);
+	pat = compile_pattern("\\d60");
+	mu_should(match("460", pat));
+	mu_shouldnt(match("a60", pat));
+	free((void *)pat);
 
-   pat = compile_pattern("\\D60");
-   mu_shouldnt(match("460", pat));
-   mu_should(match("a60", pat));
-   free((void *)pat);
+	pat = compile_pattern("\\D60");
+	mu_shouldnt(match("460", pat));
+	mu_should(match("a60", pat));
+	free((void *)pat);
 
-   pat = compile_pattern("\\s60");
-   mu_should(match(" 60", pat));
-   mu_shouldnt(match("360", pat));
-   free((void *)pat);
+	pat = compile_pattern("\\s60");
+	mu_should(match(" 60", pat));
+	mu_shouldnt(match("360", pat));
+	free((void *)pat);
 
-   pat = compile_pattern("\\S60");
-   mu_should(match("360", pat));
-   mu_shouldnt(match(" 60", pat));
-   free((void *)pat);
+	pat = compile_pattern("\\S60");
+	mu_should(match("360", pat));
+	mu_shouldnt(match(" 60", pat));
+	free((void *)pat);
 
-   pat = compile_pattern("\\w60");
-   mu_should(match("w60", pat));
-   mu_should(match("W60", pat));
-   mu_should(match("_60", pat));
-   mu_shouldnt(match("+60", pat));
-   free((void *)pat);
+	pat = compile_pattern("\\w60");
+	mu_should(match("w60", pat));
+	mu_should(match("W60", pat));
+	mu_should(match("_60", pat));
+	mu_shouldnt(match("+60", pat));
+	free((void *)pat);
 
-   pat = compile_pattern("\\W60");
-   mu_shouldnt(match("w60", pat));
-   mu_shouldnt(match("W60", pat));
-   mu_shouldnt(match("_60", pat));
-   mu_should(match("+60", pat));
-   free((void *)pat);
+	pat = compile_pattern("\\W60");
+	mu_shouldnt(match("w60", pat));
+	mu_shouldnt(match("W60", pat));
+	mu_shouldnt(match("_60", pat));
+	mu_should(match("+60", pat));
+	free((void *)pat);
 
-   pat = compile_pattern("^\\s");
-   mu_should(match("  asdf", pat));
-   mu_shouldnt(match("", pat));
-   mu_shouldnt(match("a sdf", pat));
-   mu_should(match("\tasdf", pat));
-   free((void *)pat);
+	pat = compile_pattern("^\\s");
+	mu_should(match("  asdf", pat));
+	mu_shouldnt(match("", pat));
+	mu_shouldnt(match("a sdf", pat));
+	mu_should(match("\tasdf", pat));
+	free((void *)pat);
 
-   pat = compile_pattern("\\d\\d\\d");
-   mu_should(match("000", pat));
-   mu_should(match("123", pat));
-   mu_should(match("987", pat));
-   mu_shouldnt(match(" 12", pat));
-   free((void *)pat);
+	pat = compile_pattern("\\d\\d\\d");
+	mu_should(match("000", pat));
+	mu_should(match("123", pat));
+	mu_should(match("987", pat));
+	mu_shouldnt(match(" 12", pat));
+	free((void *)pat);
 
-   pat = compile_pattern("\\D\\D\\D\\D");
-   mu_should(match("asdf", pat));
-   mu_shouldnt(match("asd9", pat));
-   mu_shouldnt(match("a", pat));
-   free((void *)pat);
+	pat = compile_pattern("\\D\\D\\D\\D");
+	mu_should(match("asdf", pat));
+	mu_shouldnt(match("asd9", pat));
+	mu_shouldnt(match("a", pat));
+	free((void *)pat);
 
-   pat = compile_pattern("\\S\\s\\D\\d\\W\\w");
-   mu_should(match("? a9+_", pat));
-   mu_shouldnt(match(" ?9a_+", pat));
-   free((void *)pat);
+	pat = compile_pattern("\\S\\s\\D\\d\\W\\w");
+	mu_should(match("? a9+_", pat));
+	mu_shouldnt(match(" ?9a_+", pat));
+	free((void *)pat);
 }
 
 /*
@@ -745,30 +747,30 @@ MU_TEST(test_match_class_metas) {
  */
 
 MU_TEST(test_match_edgecases) {
-   const cpat *pat = NULL;
+	const cpat *pat = NULL;
 
-   /* empty pattern */
+	/* empty pattern */
 
-   pat = compile_pattern("");
-   mu_should(match("anything", pat));
-   mu_shouldnt(match("", pat));
-   free((void *)pat);
+	pat = compile_pattern("");
+	mu_should(match("anything", pat));
+	mu_shouldnt(match("", pat));
+	free((void *)pat);
 
-   /* single character pattern */
+	/* single character pattern */
 
-   pat = compile_pattern("a");
-   mu_should(match("a", pat));
-   mu_should(match("ba", pat));
-   mu_shouldnt(match("", pat));
-   free((void *)pat);
+	pat = compile_pattern("a");
+	mu_should(match("a", pat));
+	mu_should(match("ba", pat));
+	mu_shouldnt(match("", pat));
+	free((void *)pat);
 
-   /* single any char */
+	/* single any char */
 
-   pat = compile_pattern(".");
-   mu_should(match("a", pat));
-   mu_should(match(".", pat));
-   mu_shouldnt(match("", pat));
-   free((void *)pat);
+	pat = compile_pattern(".");
+	mu_should(match("a", pat));
+	mu_should(match(".", pat));
+	mu_shouldnt(match("", pat));
+	free((void *)pat);
 }
 
 /*
@@ -776,32 +778,32 @@ MU_TEST(test_match_edgecases) {
  */
 
 MU_TEST(test_match_anchors) {
-   const cpat *pat = NULL;
+	const cpat *pat = NULL;
 
-   /* asdf at the start of a line */
+	/* asdf at the start of a line */
 
-   pat = compile_pattern("^asdf");
-   mu_should(match("asdf", pat));
-   mu_should(match("asdfijkl", pat));
-   mu_shouldnt(match("^asdf", pat));
-   free((void *)pat);
+	pat = compile_pattern("^asdf");
+	mu_should(match("asdf", pat));
+	mu_should(match("asdfijkl", pat));
+	mu_shouldnt(match("^asdf", pat));
+	free((void *)pat);
 
-   /* asdf at the end of a line */
+	/* asdf at the end of a line */
 
-   pat = compile_pattern("asdf$");
-   mu_should(match("the password might be asdf", pat));
-   mu_shouldnt(match("ijklasdf$", pat));
-   mu_should(match("asdf\n", pat));
-   free((void *)pat);
+	pat = compile_pattern("asdf$");
+	mu_should(match("the password might be asdf", pat));
+	mu_shouldnt(match("ijklasdf$", pat));
+	mu_should(match("asdf\n", pat));
+	free((void *)pat);
 
-   /* line holding only asdf */
+	/* line holding only asdf */
 
-   pat = compile_pattern("^asdf$");
-   mu_should(match("asdf", pat));
-   mu_shouldnt(match(" asdf ", pat));
-   mu_shouldnt(match("", pat));
-   mu_should(match("asdf\n", pat));
-   free((void *)pat);
+	pat = compile_pattern("^asdf$");
+	mu_should(match("asdf", pat));
+	mu_shouldnt(match(" asdf ", pat));
+	mu_shouldnt(match("", pat));
+	mu_should(match("asdf\n", pat));
+	free((void *)pat);
 }
 
 /*
@@ -811,48 +813,48 @@ MU_TEST(test_match_anchors) {
  */
 
 MU_TEST(test_match_classes) {
-   const cpat *pat = NULL;
+	const cpat *pat = NULL;
 
-   /* any of a b c d in first position */
+	/* any of a b c d in first position */
 
-   pat = compile_pattern("[abcd]");
-   mu_should(match("asdf", pat));
-   mu_should(match("this is billy", pat));
-   mu_shouldnt(match("qwerty", pat));
-   mu_should(match("a", pat));
-   mu_shouldnt(match("e", pat));
-   free((void *)pat);
+	pat = compile_pattern("[abcd]");
+	mu_should(match("asdf", pat));
+	mu_should(match("this is billy", pat));
+	mu_shouldnt(match("qwerty", pat));
+	mu_should(match("a", pat));
+	mu_shouldnt(match("e", pat));
+	free((void *)pat);
 
-   /* none of a b c d in first position */
+	/* none of a b c d in first position */
 
-   pat = compile_pattern("[^abcd]");
-   mu_shouldnt(match("aabcda", pat));
-   mu_should(match("this is billy", pat));
-   mu_should(match("qwerty", pat));
-   mu_shouldnt(match("a", pat));
-   mu_should(match("e", pat));
-   free((void *)pat);
+	pat = compile_pattern("[^abcd]");
+	mu_shouldnt(match("aabcda", pat));
+	mu_should(match("this is billy", pat));
+	mu_should(match("qwerty", pat));
+	mu_shouldnt(match("a", pat));
+	mu_should(match("e", pat));
+	free((void *)pat);
 
-   /* adjacent groups */
+	/* adjacent groups */
 
-   pat = compile_pattern("[ab][cd]e");
-   mu_should(match("ace", pat));
-   mu_should(match("bde", pat));
-   mu_should(match("xyz ace", pat));
-   mu_shouldnt(match("abcde", pat));
-   mu_shouldnt(match("acd", pat));
-   mu_shouldnt(match("bd", pat));
-   mu_should(match("ade", pat));
-   mu_shouldnt(match("ACE", pat));
-   free((void *)pat);
+	pat = compile_pattern("[ab][cd]e");
+	mu_should(match("ace", pat));
+	mu_should(match("bde", pat));
+	mu_should(match("xyz ace", pat));
+	mu_shouldnt(match("abcde", pat));
+	mu_shouldnt(match("acd", pat));
+	mu_shouldnt(match("bd", pat));
+	mu_should(match("ade", pat));
+	mu_shouldnt(match("ACE", pat));
+	free((void *)pat);
 
-   /* group in last position */
+	/* group in last position */
 
-   pat = compile_pattern("[+_&$]$");
-   mu_should(match("$", pat));
-   mu_shouldnt(match("$ ", pat));
-   mu_should(match("this is a long line that should match &", pat));
-   free((void *)pat);
+	pat = compile_pattern("[+_&$]$");
+	mu_should(match("$", pat));
+	mu_shouldnt(match("$ ", pat));
+	mu_should(match("this is a long line that should match &", pat));
+	free((void *)pat);
 }
 
 /*
@@ -866,55 +868,55 @@ MU_TEST(test_match_classes) {
  */
 
 MU_TEST(test_convert_globs) {
-   const char *str = NULL;
+	const char *str = NULL;
 
-   debug_on("glob convert");
+	debug_on("glob convert");
 
-   /* glob searches don't return hidden files by default in unix like systems */
-   str = convert_glob("*.*");
-   mu_should(strcmp(str, "^.*\\..*$") == 0);
-   free((void *)str);
+	/* glob searches don't return hidden files by default in unix like systems */
+	str = convert_glob("*.*");
+	mu_should(strcmp(str, "^.*\\..*$") == 0);
+	free((void *)str);
 
-   str = convert_glob("dir/file.ext");
-   mu_should(strcmp(str, "^dir/file\\.ext$") == 0);
-   free((void *)str);
+	str = convert_glob("dir/file.ext");
+	mu_should(strcmp(str, "^dir/file\\.ext$") == 0);
+	free((void *)str);
 
-   debug_off(NULL);
+	debug_off(NULL);
 }
 
 MU_TEST(test_match_globs) {
-   const char *str = NULL;
-   const cpat *pat = NULL;
+	const char *str = NULL;
+	const cpat *pat = NULL;
 
-   debug_on("glob match");
+	debug_on("glob match");
 
-   str = convert_glob("*.*");
-   pat = compile_pattern(str);
-   mu_should(glob_match("README.org", pat));
-   mu_shouldnt(glob_match(".gitignore", pat));
-   mu_should(glob_match("a.out", pat));
-   free((void *)str);
-   free((void *)pat);
+	str = convert_glob("*.*");
+	pat = compile_pattern(str);
+	mu_should(glob_match("README.org", pat));
+	mu_shouldnt(glob_match(".gitignore", pat));
+	mu_should(glob_match("a.out", pat));
+	free((void *)str);
+	free((void *)pat);
 
-   str = convert_glob(".*.*");
-   pat = compile_pattern(str);
-   mu_shouldnt(glob_match(".gitignore", pat));
-   mu_shouldnt(glob_match("txbpat.h", pat));
-   mu_should(glob_match(".asdf.txt", pat));
-   free((void *)str);
-   free((void *)pat);
+	str = convert_glob(".*.*");
+	pat = compile_pattern(str);
+	mu_shouldnt(glob_match(".gitignore", pat));
+	mu_shouldnt(glob_match("txbpat.h", pat));
+	mu_should(glob_match(".asdf.txt", pat));
+	free((void *)str);
+	free((void *)pat);
 
-   str = convert_glob(".*");
-   pat = compile_pattern(str);
-   mu_should(glob_match(".gitignore", pat));
-   mu_shouldnt(glob_match("txbpat.h", pat));
-   /* actually, the following probably doesn't match on windows
-    * file systems, but it does on my mac and i imagine other
-    * unix like systems as well, so i'm treating this match
-    * as if it is correct. */
-   mu_should(glob_match(".asdf.txt", pat));
+	str = convert_glob(".*");
+	pat = compile_pattern(str);
+	mu_should(glob_match(".gitignore", pat));
+	mu_shouldnt(glob_match("txbpat.h", pat));
+	/* actually, the following probably doesn't match on windows
+	 * file systems, but it does on my mac and i imagine other
+	 * unix like systems as well, so i'm treating this match
+	 * as if it is correct. */
+	mu_should(glob_match(".asdf.txt", pat));
 
-   debug_off(NULL);
+	debug_off(NULL);
 }
 
 
@@ -924,10 +926,10 @@ MU_TEST(test_match_globs) {
  */
 
 MU_TEST(test_breakpoint) {
-   const cpat *pat = NULL;
-   pat = compile_pattern("asdf?gh");
-   /* put whatever you want to breakpoint here */
-   free((void *)pat);
+	const cpat *pat = NULL;
+	pat = compile_pattern("asdf?gh");
+	/* put whatever you want to breakpoint here */
+	free((void *)pat);
 }
 
 /*
@@ -939,39 +941,39 @@ MU_TEST(test_breakpoint) {
 
 MU_TEST_SUITE(test_suite) {
 
-   /* always have a setup and teardown, even if they do nothing. */
+	/* always have a setup and teardown, even if they do nothing. */
 
-   MU_SUITE_CONFIGURE(&test_setup, &test_teardown);
+	MU_SUITE_CONFIGURE(&test_setup, &test_teardown);
 
-   /* test compiling a search pattern string into a pattern buffer.
-    * these rely on an exposed pattern buffer comparator. */
+	/* test compiling a search pattern string into a pattern buffer.
+	 * these rely on an exposed pattern buffer comparator. */
 
-   MU_RUN_TEST(test_compile_literals);
-   MU_RUN_TEST(test_compile_metas);
-   MU_RUN_TEST(test_compile_ranges);
-   MU_RUN_TEST(test_compile_class_metas);
-   MU_RUN_TEST(test_compile_quantifiers);
+	MU_RUN_TEST(test_compile_literals);
+	MU_RUN_TEST(test_compile_metas);
+	MU_RUN_TEST(test_compile_ranges);
+	MU_RUN_TEST(test_compile_class_metas);
+	MU_RUN_TEST(test_compile_quantifiers);
 
-   /* test various match syntax to verify that they work as
-    * intended. */
+	/* test various match syntax to verify that they work as
+	 * intended. */
 
-   MU_RUN_TEST(test_match_literals);
-   MU_RUN_TEST(test_match_class_metas);
-   MU_RUN_TEST(test_match_edgecases);
-   MU_RUN_TEST(test_match_anchors);
-   MU_RUN_TEST(test_match_any);
-   MU_RUN_TEST(test_match_classes);
-   MU_RUN_TEST(test_match_quantifiers);
+	MU_RUN_TEST(test_match_literals);
+	MU_RUN_TEST(test_match_class_metas);
+	MU_RUN_TEST(test_match_edgecases);
+	MU_RUN_TEST(test_match_anchors);
+	MU_RUN_TEST(test_match_any);
+	MU_RUN_TEST(test_match_classes);
+	MU_RUN_TEST(test_match_quantifiers);
 
-   MU_RUN_TEST(test_match_star);
+	MU_RUN_TEST(test_match_star);
 
-   /* file name globbing */
+	/* file name globbing */
 
-   MU_RUN_TEST(test_convert_globs);
-   MU_RUN_TEST(test_match_globs);
+	MU_RUN_TEST(test_convert_globs);
+	MU_RUN_TEST(test_match_globs);
 
-   /* breakpointing */
-   MU_RUN_TEST(test_breakpoint);
+	/* breakpointing */
+	MU_RUN_TEST(test_breakpoint);
 
 }
 
@@ -981,7 +983,7 @@ MU_TEST_SUITE(test_suite) {
 
 int
 main(int argc, char *argv[]) {
-   MU_RUN_SUITE(test_suite);
-   MU_REPORT();
-   return MU_EXIT_CODE;
+	MU_RUN_SUITE(test_suite);
+	MU_REPORT();
+	return MU_EXIT_CODE;
 }

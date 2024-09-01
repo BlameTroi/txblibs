@@ -29,7 +29,7 @@ typedef struct fscb fscb;
 
 fscb *
 fs_create(
-   int limit
+	int limit
 );
 
 /*
@@ -38,8 +38,8 @@ fs_create(
 
 void
 fs_push(
-   fscb *fs,
-   void *item
+	fscb *fs,
+	void *item
 );
 
 /*
@@ -48,7 +48,7 @@ fs_push(
 
 void *
 fs_pop(
-   fscb *fs
+	fscb *fs
 );
 
 /*
@@ -58,7 +58,7 @@ fs_pop(
 
 void *
 fs_peek(
-   fscb *fs
+	fscb *fs
 );
 
 /*
@@ -67,22 +67,22 @@ fs_peek(
 
 bool
 fs_empty(
-   fscb *fs
+	fscb *fs
 );
 
 bool
 fs_full(
-   fscb *fs
+	fscb *fs
 );
 
 int
 fs_depth(
-   fscb *fs
+	fscb *fs
 );
 
 int
 fs_free(
-   fscb *fs
+	fscb *fs
 );
 
 /*
@@ -91,7 +91,7 @@ fs_free(
 
 bool
 fs_destroy(
-   fscb *fs
+	fscb *fs
 );
 
 #ifdef __cplusplus
