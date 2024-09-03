@@ -433,6 +433,7 @@ TXBSB.H
 |-------------------+------------------------------------------------|
 | sb_create         | create new empty string builder ...            |
 | sb_create_blksize | ... with an explicit buffer size.              |
+| sb_create_string  | default size with a starting string value.     |
 | sb_reset          | empty the current string builder.              |
 | sb_destroy        | release string builder resources.              |
 | sb_length         | length of string stored in builder.            |

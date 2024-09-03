@@ -54,6 +54,15 @@ sb_create(
 );
 
 /*
+ * create a new string buffer with an initial string.
+ */
+
+sbcb *
+sb_create_string(
+	char *str
+);
+
+/*
  * reset string builder to empty.
  */
 

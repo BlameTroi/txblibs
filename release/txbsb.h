@@ -102,6 +102,15 @@ sb_create(
 );
 
 /*
+ * create a new string buffer with an initial string.
+ */
+
+sbcb *
+sb_create_string(
+	char *str
+);
+
+/*
  * reset string builder to empty.
  */
 
@@ -245,6 +254,19 @@ sb_create(
 	void
 ) {
 	return sb_create_blksize(SBCB_DEFAULT_BLKSIZE);
+}
+
+/*
+ * create a new string buffer with an initial string.
+ */
+
+sbcb *
+sb_create_string(
+	char *str
+) {
+	sbcb *sb = sb_create();
+	sb_puts(sb, str);
+	return sb;
 }
 
 /*
