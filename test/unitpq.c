@@ -14,6 +14,8 @@
 #include "../inc/misc.h"
 
 #include "../inc/pq.h"
+
+#include "../inc/rand.h"
 
 /*
  * minunit setup and teardown of listd infratstructure.
@@ -28,7 +30,9 @@ test_setup(void) {
 
 	/* let's use a different seed than 1, but not time() because i want
 	   repeatable tests. */
-	srand(RAND_SEED);
+	set_random_generator(RAND_DEFAULT);
+	seed_random_generator(RAND_SEED);
+
 }
 
 
@@ -101,7 +105,7 @@ MU_TEST(test_pq_rand_volume) {
 	mu_shouldnt(pq_empty(pq));
 	mu_should(pq_count(pq) == 3);
 	for (int i = 0; i < 10000; i++) {
-		long j = rand_between(0, 99999);
+		long j = random_between(0, 99999);
 		pq_put(pq, j, (void *)j);
 	}
 	mu_shouldnt(pq_empty(pq));

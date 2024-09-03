@@ -13,6 +13,7 @@
 #include "../inc/misc.h"
 #include "../inc/dl.h"
 #include "../inc/str.h"
+#include "../inc/rand.h"
 
 /*
  *
@@ -70,9 +71,12 @@ payload_free(void *p) {
 
 void
 test_setup(void) {
+
 	/* let's use a different seed than 1, but not time() because i want
-	 * repeatable tests. */
-	srand(RAND_SEED);
+	   repeatable tests. */
+	set_random_generator(RAND_DEFAULT);
+	seed_random_generator(RAND_SEED);
+
 }
 
 void
@@ -245,7 +249,7 @@ MU_TEST(test_dl_id_add_random) {
 	int duplicated = 0;
 	for (int i = 0; i < 10000; i++) {
 		int *p = malloc(sizeof(int));
-		*p = rand_between(1, 5000);
+		*p = random_between(1, 5000);
 		generated += 1;
 		if (dl_insert(dl, *p, p))
 			added += 1;
@@ -566,7 +570,7 @@ MU_TEST(test_dl_key_add_random) {
 	int duplicated = 0;
 	for (long i = 0; i < 10000; i++) {
 		long *p = malloc(sizeof(long));
-		*p = rand_between(1, 5000);
+		*p = random_between(1, 5000);
 		generated += 1;
 		if (dl_insert(dl, *p, p))
 			added += 1;

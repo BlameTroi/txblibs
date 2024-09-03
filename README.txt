@@ -64,6 +64,7 @@ A simple structure:
 │   ├── pat.h
 │   ├── pmute.h
 │   ├── pq.h
+│   ├── rand.h
 │   ├── rs.h
 │   ├── sb.h
 │   └── str.h
@@ -77,6 +78,7 @@ A simple structure:
 │   ├── txbpat.h
 │   ├── txbpmute.h
 │   ├── txbpq.h
+│   ├── txbrand.h
 │   ├── txbrs.h
 │   ├── txbsb.h
 │   └── txbstr.h
@@ -89,6 +91,7 @@ A simple structure:
 │   ├── pat.c
 │   ├── pmute.c
 │   ├── pq.c
+│   ├── rand.c
 │   ├── rs.c
 │   ├── sb.c
 │   └── str.c
@@ -100,6 +103,7 @@ A simple structure:
     ├── unitmd5.c
     ├── unitpat.c
     ├── unitpq.c
+    ├── unitrand.c
     ├── unitrs.c
     ├── unitsb.c
     └── unittest.c
@@ -132,6 +136,7 @@ These are the headers:
 | txbpat.h   | subset of regular expressions                         |
 | txbpmute.h | iterative permutation generator                       |
 | txbpq.h    | simple priority queue                                 |
+| txbrand.h  | random number suppport                                |
 | txbrs.h    | string read stream                                    |
 | txbsb.h    | strinb builder                                        |
 | txbstr.h   | split/tokenize strings, dup_string, others            |
@@ -236,9 +241,6 @@ Functions:
 
 | Function       | Description                                       |
 |----------------+---------------------------------------------------|           
-| rand_between   | return a pseudo random integer in an inclusive    |
-|                | range.                                            |
-| shuffle        | shuffle an array of pointers or long integers.    |
 | factors        | return an array of the factors of a long integer. |
 | ?max ?min      | various flavors of min and max, inline not macro. |
 | is_even        | is an integer even?                               |
@@ -279,6 +281,25 @@ Functions:
 |----------------+---------------------------------------------------|           
 | permute_next   | permute the values in an integer array of a given |
 |                | size in place.                                    |
+
+
+TXBRAND.H
+=========
+
+Random number routines. Not cryptographically safe, but either of
+stdlib's rand() and arc4random() can be selected. Seeding for rand()
+is supported.
+
+| Function              | Description                                |
+|-----------------------+--------------------------------------------|
+| set_random_generator  | select between RAND_DEFAULT for rand() and |
+|                       | RAND_RANDOM for arc4random().              |
+| seed_random_generator | only for rand().                           |
+| random_between        | return a pseudo random integer in an       |
+|                       | inclusive range.                           |
+| shuffle               | shuffle an array of pointers or long       |
+|                       | integers. using the fisher-yates algorithm |
+|                       | and whichever random generator is set.     |
 
 
 TXBSTR.H

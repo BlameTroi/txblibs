@@ -215,41 +215,6 @@ fn_cmp_int_dsc(const void *a, const void *b) {
 	return *(int *)b - *(int *)a;
 }
 
-/*
- * generate a pseudo random integer between low and high inclusive. yes, this
- * isn't really secure randomness, but it's suitable for many purposes. the
- * idea is from https://stackoverflow.com/a/1202706
- */
-
-int
-rand_between(
-	int low,
-	int high
-) {
-	return rand() % (high + 1 - low) + low;
-}
-
-/*
- * shuffle an array of items using the fisher-yates algorithm. the
- * array is updated in place. by using an array of void pointers, any
- * objects can be shuffled. uses rand_between() and the usual comments
- * regarding rand() and srand() apply.
- */
-
-void
-shuffle(
-	void **cards,
-	int n
-) {
-	int i = n;
-	while (i > 0) {
-		int r = rand_between(1, i);
-		void *s = cards[r-1];
-		cards[r-1] = cards[i-1];
-		cards[i-1] = s;
-		i -= 1;
-	}
-}
 
 /*
  * returns an array of long integers with at least enough entries to

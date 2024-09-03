@@ -5,7 +5,7 @@
 .PHONY: clean all
 
 
-all: abort da dl fs md5 misc pat pmute pq rs sb str
+all: abort da dl fs md5 misc pat pmute pq rand rs sb str
 
 
 clean:
@@ -41,6 +41,9 @@ pq: inc/pq.h src/pq.c
 
 qu: inc/qu.h src/qu.c
 	buildhdr --macro TXBQU --intro LICENSE --pub inc/qu.h --priv src/qu.c >release/txbqu.h
+
+rand: inc/rand.h src/rand.c
+	buildhdr --macro TXBRAND --intro LICENSE --pub inc/rand.h --priv src/rand.c >release/txbrand.h
 
 rs: inc/rs.h src/rs.c
 	buildhdr --macro TXBRS --intro LICENSE --pub inc/rs.h --priv src/rs.c >release/txbrs.h

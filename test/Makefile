@@ -40,6 +40,9 @@ pmute.o: ../inc/pmute.h ../src/pmute.c
 pq.o: ../inc/pq.h ../src/pq.c
 	$(CC) $(CFLAGS) -c ../src/pq.c
 
+rand.o: ../inc/rand.h ../src/rand.c
+	$(CC) $(CFLAGS) -c ../src/rand.c
+
 rs.o: ../inc/rs.h ../src/rs.c ../inc/str.h
 	$(CC) $(CFLAGS) -c ../src/rs.c
 
@@ -75,17 +78,17 @@ unitmd5.o: unitmd5.c ../inc/md5.h ../src/md5.c
 unitmd5: unitmd5.o md5.o
 	$(CC) $(CFLAGS) -o unitmd5 unitmd5.o md5.o
 
-unitpq.o: unitpq.c ../inc/pq.h ../inc/misc.h
+unitpq.o: unitpq.c ../inc/pq.h ../inc/misc.h ../inc/rand.h
 	$(CC) $(CFLAGS) -c unitpq.c
 
-unitpq: unitpq.o pq.o misc.o
-	$(CC) $(CFLAGS) -o unitpq unitpq.o pq.o misc.o
+unitpq: unitpq.o pq.o misc.o rand.o
+	$(CC) $(CFLAGS) -o unitpq unitpq.o pq.o misc.o rand.o
 
-unitdl.o: unitdl.c ../inc/dl.h ../inc/misc.h ../inc/abort.h
+unitdl.o: unitdl.c ../inc/dl.h ../inc/misc.h ../inc/abort.h ../inc/rand.h
 	$(CC) $(CFLAGS) -c unitdl.c
 
-unitdl: unitdl.o dl.o misc.o abort.o str.o
-	$(CC) $(CFLAGS) -o unitdl unitdl.o dl.o misc.o abort.o str.o
+unitdl: unitdl.o dl.o misc.o abort.o str.o rand.o
+	$(CC) $(CFLAGS) -o unitdl unitdl.o dl.o misc.o abort.o str.o rand.o
 
 testlibs.o: testlibs.c ../inc/misc.h ../inc/str.h ../inc/pmute.h
 	$(CC) $(CFLAGS) -c testlibs.c
@@ -120,11 +123,17 @@ unitsb: unitsb.o str.o sb.o
 unitda.o: unitda.c ../inc/da.h ../inc/misc.h
 	$(CC) $(CFLAGS) -c unitda.c
 
-unitda: unitda.o misc.o da.o
-	$(CC) $(CFLAGS) -o unitda unitda.o misc.o da.o $(LDFLAGS)
+unitda: unitda.o misc.o da.o rand.o
+	$(CC) $(CFLAGS) -o unitda unitda.o misc.o da.o rand.o $(LDFLAGS)
 
 unitfs.o: unitfs.c ../inc/fs.h
 	$(CC) $(CFLAGS) -c unitfs.c
 
 unitfs: unitfs.o fs.o
 	$(CC) $(CFLAGS) -o unitfs unitfs.o fs.o $(LDFLAGS)
+
+unitrand.o: unitrand.c ../inc/rand.h
+	$(CC) $(CFLAGS) -c unitrand.c
+
+unitrand: unitrand.o rand.o
+	$(CC) $(CFLAGS) -o unitrand unitrand.o rand.o $(LDFLAGS)

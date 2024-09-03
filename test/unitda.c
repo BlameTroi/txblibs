@@ -10,6 +10,8 @@
 
 #include "../inc/misc.h"
 
+#include "../inc/rand.h"
+
 #include "../inc/da.h"
 
 /*
@@ -25,7 +27,8 @@ test_setup(void) {
 
 	/* let's use a different seed than 1, but not time() because i want
 	   repeatable tests. */
-	srand(RAND_SEED);
+	set_random_generator(RAND_DEFAULT);
+	seed_random_generator(RAND_SEED);
 }
 
 void
@@ -45,7 +48,7 @@ MU_TEST(test_da) {
 	int sum = 0;
 	for (int i = 0; i < 1000; i++) {
 		leak = malloc(sizeof(int));
-		*leak = rand_between(100, 900);
+		*leak = random_between(100, 900);
 		sum += *leak;
 		da_put(da, i, leak);
 		printf("%d %d\n", i, *leak);

@@ -21,27 +21,6 @@ extern "C" {
 #endif /* __cplusplus */
 
 /*
- * return a non-cyptography safe pseudo random integer
- * in an inclusive range.
- */
-
-int
-rand_between(
-	int,
-	int
-);
-
-/*
- * shuffle an array of n items using the fisher-yates algorithm.
- */
-
-void
-shuffle(
-	void **cards,
-	int n
-);
-
-/*
  * return an array of the factors of n.
  */
 
