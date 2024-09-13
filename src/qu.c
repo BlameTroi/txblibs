@@ -21,16 +21,25 @@
 /*
  * transparent control block definitions.
  */
+
 #define QUENTRY_TAG "__QUEN__"
+#define QUENTRY_TAG_LEN 8
+#define ASSERT_QUENTRY(p, m) assert((p) && memcmp((p), QUENTRY_TAG, QUENTRY_TAG_LEN) == 0 && (m))
+#define ASSERT_QUENTRY_OR_NULL(p) assert((p) == NULL || memcmp((p), QUENTRY_TAG, QUENTRY_TAG_LEN) == 0)
+
 typedef struct quentry {
-	char tag[8];
+	char tag[QUENTRY_TAG_LEN];
 	struct quentry *next;
 	void *payload;
 } quentry;
 
 #define QUCB_TAG "__QUCB__"
+#define QUCB_TAG_LEN 8
+#define ASSERT_QUCB(p, m) assert((p) && memcmp((p), QUCB_TAG, QUCB_TAG_LEN) == 0 && (m))
+#define ASSERT_QUCB_OR_NULL(p) assert((p) == NULL || memcmp((p), QUCB_TAG, QUCB_TAG_LEN) == 0)
+
 struct qucb {
-	char tag[8];
+	char tag[QUCB_TAG_LEN];
 	quentry *first;
 	quentry *last;
 };
@@ -81,9 +90,7 @@ bool
 qu_empty(
 	qucb *qu
 ) {
-	assert(qu &&
-		memcmp(qu->tag, QUCB_TAG, sizeof(qu->tag)) == 0 &&
-		"invalid QUCB");
+	ASSERT_QUCB(qu, "invalid QUCB");
 	return qu->first == NULL;
 }
 
@@ -95,9 +102,7 @@ int
 qu_count(
 	qucb *qu
 ) {
-	assert(qu &&
-		memcmp(qu->tag, QUCB_TAG, sizeof(qu->tag)) == 0 &&
-		"invalid QUCB");
+	ASSERT_QUCB(qu, "invalid QUCB");
 
 	if (qu->first == NULL)
 		return 0;
@@ -139,9 +144,7 @@ qu_enqueue(
 	qucb *qu,
 	void *payload
 ) {
-	assert(qu &&
-		memcmp(qu->tag, QUCB_TAG, sizeof(qu->tag)) == 0 &&
-		"invalid QUCB");
+	ASSERT_QUCB(qu, "invalid QUCB");
 	quentry *new_qe = qu_new_entry(payload);
 	if (qu->first == NULL) {
 		qu->first = new_qe;
@@ -161,9 +164,7 @@ void *
 qu_dequeue(
 	qucb *qu
 ) {
-	assert(qu &&
-		memcmp(qu->tag, QUCB_TAG, sizeof(qu->tag)) == 0 &&
-		"invalid QUCB");
+	ASSERT_QUCB(qu, "invalid QUCB");
 	if (qu->first == NULL)
 		return NULL;
 	quentry *qe = qu->first;
@@ -181,9 +182,7 @@ void *
 qu_peek(
 	qucb *qu
 ) {
-	assert(qu &&
-		memcmp(qu->tag, QUCB_TAG, sizeof(qu->tag)) == 0 &&
-		"invalid QUCB");
+	ASSERT_QUCB(qu, "invalid QUCB");
 	if (qu->first == NULL)
 		return NULL;
 	return qu->first->payload;
@@ -214,9 +213,7 @@ bool
 qu_destroy(
 	qucb *qu
 ) {
-	assert(qu &&
-		memcmp(qu->tag, QUCB_TAG, sizeof(qu->tag)) == 0 &&
-		"invalid QUCB");
+	ASSERT_QUCB(qu, "invalid QUCB");
 	if (qu->first == NULL) {
 		memset(qu, 253, sizeof(*qu));
 		free(qu);

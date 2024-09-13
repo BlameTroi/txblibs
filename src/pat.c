@@ -1044,9 +1044,6 @@ compile_pattern(
  *
  * the library client is responsible for releasing the string's
  * storage when it is no longer needed.
- *
- * there there are minimal safety checks syntax errors via assert() to
- * prevent running past the end of the input string.
  */
 
 const char *

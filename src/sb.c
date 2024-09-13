@@ -22,11 +22,16 @@
  * an instance of a string builder.
  */
 
-#define SBCB_DEFAULT_BLKSIZE 256
 #define SBCB_TAG "__SBCB__"
+#define SBCB_TAG_LEN 8
+#define ASSERT_SBCB(p, m) assert((p) && memcmp((p), SBCB_TAG, SBCB_TAG_LEN) == 0 && (m))
+#define ASSERT_SBCB_OR_NULL(p) assert((p) == NULL || memcmp((p), SBCB_TAG, SBCB_TAG_LEN) == 0)
+
+
+#define SBCB_DEFAULT_BLKSIZE 256
 
 struct sbcb {
-	char tag[8];
+	char tag[SBCB_TAG_LEN];
 	char *buf;
 	size_t blksize;
 	size_t buf_len;
@@ -100,7 +105,7 @@ void
 sb_reset(
 	sbcb *sb
 ) {
-	assert(sb && memcmp(sb->tag, SBCB_TAG, sizeof(sb->tag)) == 0);
+	ASSERT_SBCB(sb, "invalid SBCB");
 	if (!sb->is_null)
 		memset(sb->buf, 0, sb->buf_len);
 	sb->buf_used = 0;
@@ -114,7 +119,7 @@ void
 sb_destroy(
 	sbcb *sb
 ) {
-	assert(sb && memcmp(sb->tag, SBCB_TAG, sizeof(sb->tag)) == 0);
+	ASSERT_SBCB(sb, "invalid SBCB");
 	if (!sb->is_null) {
 		memset(sb->buf, 253, sb->buf_len);
 		free(sb->buf);
@@ -131,7 +136,7 @@ size_t
 sb_length(
 	sbcb *sb
 ) {
-	assert(sb && memcmp(sb->tag, SBCB_TAG, sizeof(sb->tag)) == 0);
+	ASSERT_SBCB(sb, "invalid SBCB");
 	return sb->buf_used;
 }
 
@@ -144,8 +149,8 @@ static void
 sb_grow_buffer(
 	sbcb *sb
 ) {
-	assert(sb && memcmp(sb->tag, SBCB_TAG, sizeof(sb->tag)) == 0);
-	assert(!sb->is_null);
+	ASSERT_SBCB(sb, "invalid SBCB");
+	assert(!sb->is_null && "error trying to expand empty SBCB");
 	int new_len = sb->buf_len + sb->blksize;
 	char *new_buf = malloc(new_len);
 	assert(new_buf);
@@ -166,7 +171,7 @@ sb_putc(
 	sbcb *sb,
 	int c
 ) {
-	assert(sb && memcmp(sb->tag, SBCB_TAG, sizeof(sb->tag)) == 0);
+	ASSERT_SBCB(sb, "invalid SBCB");
 	if (!sb->is_null) {
 		if (sb->buf_used == sb->buf_len)
 			sb_grow_buffer(sb);
@@ -183,7 +188,7 @@ char *
 sb_to_string(
 	sbcb *sb
 ) {
-	assert(sb && memcmp(sb->tag, SBCB_TAG, sizeof(sb->tag)) == 0);
+	ASSERT_SBCB(sb, "invalid SBCB");
 	char *str = NULL;
 	if (sb->is_null) {
 		str = malloc(2);
@@ -208,8 +213,8 @@ sb_puts(
 	sbcb *sb,
 	char *str
 ) {
-	assert(sb && memcmp(sb->tag, SBCB_TAG, sizeof(sb->tag)) == 0);
-	assert(str);
+	ASSERT_SBCB(sb, "invalid SBCB");
+	assert(str && "missing string on SB_PUTS");
 	size_t additional = strlen(str);
 	if (!sb->is_null) {
 		size_t new_length = sb->buf_used + additional;

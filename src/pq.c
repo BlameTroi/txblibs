@@ -22,17 +22,24 @@
 /*
  * transparent control block definitions.
  */
+#define PQENTRY_TAG "__PQEN__"
+#define PQENTRY_TAG_LEN 8
+#define ASSERT_PQENTRY(p, m) assert((p) && memcmp((p), PQENTRY_TAG, PQENTRY_TAG_LEN) == 0 && (m))
+#define ASSERT_PQENTRY_OR_NULL(p) assert((p) == NULL || memcmp((p), PQENTRY_TAG, PQENTRY_TAG_LEN) == 0)
 
-#define PQENTRY_TAG "--PQEN--"
 typedef struct pqentry {
-	char tag[8];
+	char tag[PQENTRY_TAG_LEN];
 	long priority;
 	struct pqentry *bwd;
 	struct pqentry *fwd;
 	void *payload;
 } pqentry;
 
-#define PQCB_TAG "--PQCB--"
+#define PQCB_TAG "__PQCB__"
+#define PQCB_TAG_LEN 8
+#define ASSERT_PQCB(p, m) assert((p) && memcmp((p), PQCB_TAG, PQCB_TAG_LEN) == 0 && (m))
+#define ASSERT_PQCB_OR_NULL(p) assert((p) == NULL || memcmp((p), PQCB_TAG, PQCB_TAG_LEN) == 0)
+
 struct pqcb {
 	char tag[8];
 	pqentry *first;
@@ -107,9 +114,7 @@ bool
 pq_empty(
 	pqcb *pq
 ) {
-	assert(pq &&
-		memcmp(pq->tag, PQCB_TAG, sizeof(pq->tag)) == 0 &&
-		"invalid PQCB");
+	ASSERT_PQCB(pq, "invalid PQCB");
 	if (pq->threaded)
 		pthread_mutex_lock(&pq->mutex);
 	bool ret = prim_pq_empty(pq);
@@ -140,9 +145,7 @@ int
 pq_count(
 	pqcb *pq
 ) {
-	assert(pq &&
-		memcmp(pq->tag, PQCB_TAG, sizeof(pq->tag)) == 0 &&
-		"invalid PQCB");
+	ASSERT_PQCB(pq, "invalid PQCB");
 	if (pq->threaded)
 		pthread_mutex_lock(&pq->mutex);
 	int ret = prim_pq_count(pq);
@@ -230,9 +233,7 @@ pq_put(
 	long priority,
 	void *payload
 ) {
-	assert(pq &&
-		memcmp(pq->tag, PQCB_TAG, sizeof(pq->tag)) == 0 &&
-		"invalid PQCB");
+	ASSERT_PQCB(pq, "invalid PQCB");
 	if (pq->threaded)
 		pthread_mutex_lock(&pq->mutex);
 	prim_pq_put(pq, priority, payload);
@@ -267,9 +268,7 @@ void *
 pq_get(
 	pqcb *pq
 ) {
-	assert(pq &&
-		memcmp(pq->tag, PQCB_TAG, sizeof(pq->tag)) == 0 &&
-		"invalid PQCB");
+	ASSERT_PQCB(pq, "invalid PQCB");
 	if (pq->threaded)
 		pthread_mutex_lock(&pq->mutex);
 	void *res = prim_pq_get(pq);
@@ -295,9 +294,7 @@ void *
 pq_peek(
 	pqcb *pq
 ) {
-	assert(pq &&
-		memcmp(pq->tag, PQCB_TAG, sizeof(pq->tag)) == 0 &&
-		"invalid PQCB");
+	ASSERT_PQCB(pq, "invalid PQCB");
 	void *res = NULL;
 	if (pq->threaded)
 		pthread_mutex_lock(&pq->mutex);
@@ -341,9 +338,7 @@ bool
 pq_destroy(
 	pqcb *pq
 ) {
-	assert(pq &&
-		memcmp(pq->tag, PQCB_TAG, sizeof(pq->tag)) == 0 &&
-		"invalid PQCB");
+	ASSERT_PQCB(pq, "invalid PQCB");
 	if (pq_empty(pq)) {
 		if (pq->threaded) {
 			while (EBUSY == pthread_mutex_destroy(&pq->mutex))

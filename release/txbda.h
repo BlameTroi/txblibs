@@ -180,9 +180,14 @@ da_length(
  */
 
 #define DACB_TAG "__DACB__"
+#define DACB_TAG_LEN 8
+#define ASSERT_DACB(p, m) assert((p) && memcmp((p), DACB_TAG, DACB_TAG_LEN) == 0 && (m))
+#define ASSERT_DACB_OR_NULL(p) assert((p) == NULL || memcmp((p), DACB_TAG, DACB_TAG_LEN) == 0)
+
+
 #define DACB_DEFAULT_SIZE 512
 struct dacb {
-	char tag[8];                /* eye catcher & verification */
+	char tag[DACB_TAG_LEN];                /* eye catcher & verification */
 	int length;                 /* last used (via put) entry */
 	int size;                   /* size of data in number of entries */
 	void **data;                /* pointer to the entry pointers */
@@ -219,7 +224,7 @@ void
 da_destroy(
 	dacb *da
 ) {
-	assert(da && memcmp(da->tag, DACB_TAG, sizeof(da->tag)) == 0);
+	ASSERT_DACB(da, "invalid DACB");
 	memset(da->data, 0, da->size *sizeof(void *));
 	free(da->data);
 	memset(da, 0, sizeof(dacb));
@@ -236,7 +241,7 @@ da_get(
 	dacb *da,
 	int n
 ) {
-	assert(da && memcmp(da->tag, DACB_TAG, sizeof(da->tag)) == 0);
+	ASSERT_DACB(da, "invalid DACB");
 	assert(n < da->size);
 	void *res = da->data[n];
 	return res;
@@ -254,7 +259,7 @@ da_put(
 	int n,
 	void *put
 ) {
-	assert(da && memcmp(da->tag, DACB_TAG, sizeof(da->tag)) == 0);
+	ASSERT_DACB(da, "invalid DACB");
 	assert(put);
 	while (n >= da->size) {
 		void **old = da->data;
@@ -279,7 +284,7 @@ int
 da_length(
 	dacb *da
 ) {
-	assert(da && memcmp(da->tag, DACB_TAG, sizeof(da->tag)) == 0);
+	ASSERT_DACB(da, "invalid DACB");
 	return da->length + 1;
 }
 /* *** end priv *** */

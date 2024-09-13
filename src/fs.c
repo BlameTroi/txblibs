@@ -19,10 +19,13 @@
 /*
  * a fixed length stack, as in the stack size is set at creation.
  */
-
 #define FSCB_TAG "__FSCB__"
+#define FSCB_TAG_LEN 8
+#define ASSERT_FSCB(p, m) assert((p) && memcmp((p), FSCB_TAG, FSCB_TAG_LEN) == 0 && (m))
+#define ASSERT_FSCB_OR_NULL(p) assert((p) == NULL || memcmp((p), FSCB_TAG, FSCB_TAG_LEN) == 0)
+
 struct fscb {
-	char tag[8];
+	char tag[FSCB_TAG_LEN];
 	int limit;
 	int top;
 	void *stack[];
@@ -53,7 +56,7 @@ fs_push(
 	fscb *fs,
 	void *item
 ) {
-	assert(fs && memcmp(fs->tag, FSCB_TAG, sizeof(fs->tag)) == 0);
+	ASSERT_FSCB(fs, "invalid FSCB");
 	assert(fs->top + 1 < fs->limit);
 	fs->top += 1;
 	fs->stack[fs->top] = item;
@@ -67,7 +70,7 @@ void *
 fs_pop(
 	fscb *fs
 ) {
-	assert(fs && memcmp(fs->tag, FSCB_TAG, sizeof(fs->tag)) == 0);
+	ASSERT_FSCB(fs, "invalid FSCB");
 	assert(fs->top > -1);
 	void *ret = fs->stack[fs->top];
 	fs->top -= 1;
@@ -82,7 +85,7 @@ void *
 fs_peek(
 	fscb *fs
 ) {
-	assert(fs && memcmp(fs->tag, FSCB_TAG, sizeof(fs->tag)) == 0);
+	ASSERT_FSCB(fs, "invalid FSCB");
 	assert(fs->top > -1);
 	void *ret = fs->stack[fs->top];
 	return ret;
@@ -96,7 +99,7 @@ bool
 fs_empty(
 	fscb *fs
 ) {
-	assert(fs && memcmp(fs->tag, FSCB_TAG, sizeof(fs->tag)) == 0);
+	ASSERT_FSCB(fs, "invalid FSCB");
 	return fs->top == -1;
 }
 
@@ -104,7 +107,7 @@ bool
 fs_full(
 	fscb *fs
 ) {
-	assert(fs && memcmp(fs->tag, FSCB_TAG, sizeof(fs->tag)) == 0);
+	ASSERT_FSCB(fs, "invalid FSCB");
 	return fs->top < fs->limit;
 }
 
@@ -112,7 +115,7 @@ int
 fs_depth(
 	fscb *fs
 ) {
-	assert(fs && memcmp(fs->tag, FSCB_TAG, sizeof(fs->tag)) == 0);
+	ASSERT_FSCB(fs, "invalid FSCB");
 	return fs->top;
 }
 
@@ -120,7 +123,7 @@ int
 fs_free(
 	fscb *fs
 ) {
-	assert(fs && memcmp(fs->tag, FSCB_TAG, sizeof(fs->tag)) == 0);
+	ASSERT_FSCB(fs, "invalid FSCB");
 	return fs->top - fs->limit;
 }
 
@@ -132,7 +135,7 @@ bool
 fs_destroy(
 	fscb *fs
 ) {
-	assert(fs && memcmp(fs->tag, FSCB_TAG, sizeof(fs->tag)) == 0);
+	ASSERT_FSCB(fs, "invalid FSCB");
 	if (fs->top > -1)
 		return false;
 	memset(fs, 253, sizeof(*fs) + sizeof(void *) * (fs->limit + 1));

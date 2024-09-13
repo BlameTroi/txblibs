@@ -15,20 +15,27 @@
 extern "C" {
 #endif /* __cplusplus */
 
+/* TODO variadic arguments and better error messages */
+
+/*
+ * these are called via macro wrappers abort and abort_if, in an
+ * attempt to provide better diagnostics than straight asserts.
+ */
+
 void
 do_abort(
-	const char *msg,
-	const char *func,
-	const char *file,
+	char *msg,
+	char *func,
+	char *file,
 	int line
 );
 
 void
 do_abort_if(
-	const char *cond,
-	const char *msg,
-	const char *func,
-	const char *file,
+	char *cond,
+	char *msg,
+	char *func,
+	char *file,
 	int line
 );
 
@@ -45,3 +52,4 @@ do_abort_if(
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
+/* abort.h ends here */

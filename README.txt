@@ -59,6 +59,8 @@ A simple structure:
 │   ├── abort.h
 │   ├── da.h
 │   ├── dl.h
+│   ├── fs.h
+│   ├── dkv.h
 │   ├── md5.h
 │   ├── misc.h
 │   ├── pat.h
@@ -73,6 +75,8 @@ A simple structure:
 │   ├── txbabort.h
 │   ├── txbda.h
 │   ├── txbdl.h
+│   ├── txbfs.h
+│   ├── txbkv.h
 │   ├── txbmd5.h
 │   ├── txbmisc.h
 │   ├── txbpat.h
@@ -86,6 +90,8 @@ A simple structure:
 │   ├── abort.c
 │   ├── da.c
 │   ├── dl.c
+│   ├── fs.c
+│   ├── kv.c
 │   ├── md5.c
 │   ├── misc.c
 │   ├── pat.c
@@ -96,10 +102,12 @@ A simple structure:
 │   ├── sb.c
 │   └── str.c
 └── test                     [source for testing]
-    ├── makefile
+    ├── Makefile
     ├── testlibs.c
     ├── unitda.c
     ├── unitdl.c
+    ├── unitfs.c
+    ├── unitkv.c
     ├── unitmd5.c
     ├── unitpat.c
     ├── unitpq.c
@@ -410,6 +418,8 @@ error message and then end the process via exit(EXIT_FAILURE).
 TXBPQ.H
 =======
 
+A priority queue.
+
 | Function   | Description                                           |
 |------------+-------------------------------------------------------|
 | pq_empty   | is the queue empty?                                   |
@@ -425,6 +435,8 @@ TXBPQ.H
 
 TXBRS.H
 =======
+
+A read stream on strings (from file or memory).
 
 | Function          | Description                                    |
 |-------------------+------------------------------------------------|
@@ -450,6 +462,8 @@ TXBRS.H
 TXBSB.H
 =======
 
+A string builder.
+
 | Function          | Description                                    |
 |-------------------+------------------------------------------------|
 | sb_create         | create new empty string builder ...            |
@@ -466,6 +480,8 @@ TXBSB.H
 TXBDA.H
 =======
 
+A dynamic array.
+
 | Function          | Description                                    |
 |-------------------+------------------------------------------------|
 | da_create         | create new dynamic array                       |
@@ -473,6 +489,45 @@ TXBDA.H
 | da_put            | add an entry at a specific index               |
 | da_get            | get the entry at a specific index              |
 | da_length         | how many entries have potentially been added   |
+
+
+TXBFS.H
+=======
+
+A fixed size stack.
+
+| Function          | Description                                    |
+|-------------------+------------------------------------------------|
+| fs_create         | create a new stack of some maximum depth       |
+| fs_destroy        | release stack                                  |
+| fs_push           | push an item (pointer) on top of the stack     |
+| fs_pop            | remove and return the top item (pointer) from  |
+|                   | the stack.                                     |
+| fs_peek           | return the top item (pointer) from the stack   |
+|                   | but do not remove it.                          |
+| fs_empty          | predicates for checking stack state            |
+| fs_full           |                                                |
+| fs_depth          | returns number of items on the stack.          |
+| fs_free           | returns space available on the stack.          |
+
+
+TXBKV.H
+=======
+
+An initial pass at a key:value store.
+
+| Function          | Description                                    |
+|-------------------+------------------------------------------------|
+| kv_create         | create new key:value store                     |
+| kv_destroy        | release key:value store resources              |
+| kv_put            | add or update value for key in the store       |
+| kv_get            | get value for key in store or NULL             |
+| kv_delete         | remove a key and its value from the store      |
+| kv_exists         | check if key exists in the store               |
+| kv_empty          | is the store empty                             |
+| kv_count          | how many items are in the store                |
+| kv_keys           | return a null terminated list of keys or       |
+| kv_values         | from the store, useful for iteration           |
 
 
 ====

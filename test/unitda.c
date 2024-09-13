@@ -42,7 +42,7 @@ MU_TEST(test_da) {
 	da = da_create(10);
 
 	mu_should(da);
-	mu_should(da_length(da) == 0);
+	mu_should(da_count(da) == 0);
 
 	int *leak = NULL;
 	int sum = 0;

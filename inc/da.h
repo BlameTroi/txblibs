@@ -19,23 +19,23 @@ extern "C" {
 
 /*
  * the da is a dynmically sized array. to deal with various datatypes
- * ranging from standard types to structures the day holds pointers to
- * specific instances. in any case where the data would fit in a
- * void * pointer, the data can be passed as the pointer.
+ * ranging from standard types to structures the da holds void *
+ * pointers. storage management of elements stored in the da is
+ * the responsibility of the client. freeing the da by da_destroy
+ * only removes the dacb and supporting structures.
  *
- * management of the actual data and its storage is left to the
- * client code. a da will free its own managed storage, but it has
- * no safe way to free client data at this time. assuming the data
- * is all in separately allocated blocks, the following example
- * would work:
+ * initially all elements of the da are NULL. gaps are allowed. so,
+ * after:
  *
- * void *item = NULL;
- * for (int i = 0; i < da->length; i++) {
- *    item = da_get(da, i);
- *    free(item);
- *    da_put(da, i, NULL);
- * }
- * da_destroy(da);
+ * dacb *da = da_create(10);
+ * char *data = "1234";
+ * da_put(da, 5, data);
+ *
+ * elements 0 through 5 are defined but only element 5 is non NULL.
+ *
+ * char *readdata = da_get(da, 1); <-- returns a NULL
+ *       readdata = da_get(da, 5); <-- returns pointer to "1234"
+ *       readdata = da_get(da, 8); <-- fails
  */
 
 /*
@@ -45,8 +45,10 @@ extern "C" {
 typedef struct dacb dacb;
 
 /*
- * create a new dynamic array with an initial size of some number of
- * entries. if 0, a default value is used.
+ * da_create
+ *
+ * create a new instance of a dynamic array with an initial size of
+ * some number of entries. if 0, a default value from da.c is used.
  */
 
 dacb *
@@ -55,8 +57,11 @@ da_create(
 );
 
 /*
- * free resources for of the dynamic array that are under control of
- * this library: the dacb and the buffer holding entry pointers.
+ *
+ * da_destroy
+ *
+ * overwrite and release all dynamically allocated memory for a
+ * da.
  */
 
 void
@@ -65,7 +70,9 @@ da_destroy(
 );
 
 /*
- * return the pointer in the array at position n.
+ * da_get
+ *
+ * return the contents of array position n.
  */
 
 void *
@@ -75,9 +82,9 @@ da_get(
 );
 
 /*
- * put a reference to the data you want to store in the array at
- * position n. if n is greater than the current maximum number of
- * entries, the buffer is doubled in size until n fits.
+ * da_put
+ *
+ * insert or overwrite the contents of array position n.
  */
 
 void
@@ -87,15 +94,18 @@ da_put(
 	void *put);
 
 /*
- * how many entries does the array hold if entries 0 .. n were added.
- * the answer should be n+1.
+ * da_count
+ *
+ * how many entries (null or otherwise) does the array hold. this
+ * will be one more than the highest 'n' pased on a da_get.
  */
 
 int
-da_length(
+da_count(
 	dacb *da
 );
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
+/* da.h ends here */

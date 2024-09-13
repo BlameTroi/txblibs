@@ -35,9 +35,14 @@
  * transparent definition, it's opaque in md5.h.
  */
 
-#define MD5_TAG "__MD_5___"
+#define MD5_TAG "__MD5___"
+#define MD5_TAG_LEN 8
+#define ASSERT_MD5(p, m) assert((p) && memcmp((p), MD5_TAG, MD5_TAG_LEN) == 0 && (m))
+#define ASSERT_MD5_OR_NULL(p) assert((p) == NULL || memcmp((p), MD5_TAG, MD5_TAG_LEN) == 0)
+
+
 struct md5_context {
-	char tag[8];          /* eye catcher */
+	char tag[MD5_TAG_LEN];          /* eye catcher */
 	uint64_t size;        /* size of input in bytes */
 	uint32_t buffer[4];   /* current accumulation of hash */
 	uint8_t input[64];    /* input to be used in the next step */
@@ -192,9 +197,7 @@ void
 md5_release_context(
 	md5_context *ctx
 ) {
-	assert(ctx &&
-		memcmp(ctx->tag, MD5_TAG, sizeof(ctx->tag)) == 0 &&
-		"error invalid md5 context");
+	ASSERT_MD5(ctx, "invalid md5 context");
 	memset(ctx, 253, sizeof(md5_context));
 	free(ctx);
 }
@@ -207,9 +210,7 @@ void
 md5_initialize(
 	md5_context *ctx
 ) {
-	assert(ctx &&
-		memcmp(ctx->tag, MD5_TAG, sizeof(ctx->tag)) == 0 &&
-		"error invalid md5 context");
+	ASSERT_MD5(ctx, "invalid md5 context");
 	ctx->size = (uint64_t)0;
 	ctx->buffer[0] = (uint32_t)A;
 	ctx->buffer[1] = (uint32_t)B;
@@ -231,9 +232,7 @@ md5_update(
 	uint8_t *input_buffer,
 	size_t input_len
 ) {
-	assert(ctx &&
-		memcmp(ctx->tag, MD5_TAG, sizeof(ctx->tag)) == 0 &&
-		"error invalid md5 context");
+	ASSERT_MD5(ctx, "invalid md5 context");
 	uint32_t input[16];
 	unsigned int offset = ctx->size % 64;
 	ctx->size += (uint64_t)input_len;
@@ -279,9 +278,7 @@ void
 md5_finalize(
 	md5_context *ctx
 ) {
-	assert(ctx &&
-		memcmp(ctx->tag, MD5_TAG, sizeof(ctx->tag)) == 0 &&
-		"error invalid md5 context");
+	ASSERT_MD5(ctx, "invalid md5 context");
 	uint32_t input[16];
 	unsigned int offset = ctx->size % 64;
 	unsigned int padding_length = offset < 56 ? 56 - offset : (56 + 64) - offset;
@@ -379,8 +376,6 @@ md5_get_digest(
 	md5_context *ctx,
 	uint8_t *result
 ) {
-	assert(ctx &&
-		memcmp(ctx->tag, MD5_TAG, sizeof(ctx->tag)) == 0 &&
-		"error invalid md5 context");
+	ASSERT_MD5(ctx, "invalid md5 context");
 	memcpy(result, ctx->digest, 16);
 }

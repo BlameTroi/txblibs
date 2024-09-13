@@ -24,8 +24,12 @@
  */
 
 #define RSCB_TAG "__RSCB__"
+#define RSCB_TAG_LEN 8
+#define ASSERT_RSCB(p, m) assert((p) && memcmp((p), RSCB_TAG, RSCB_TAG_LEN) == 0 && (m))
+#define ASSERT_RSCB_OR_NULL(p) assert((p) == NULL || memcmp((p), RSCB_TAG, RSCB_TAG_LEN) == 0)
+
 struct rscb {
-	char tag[8];
+	char tag[RSCB_TAG_LEN];
 	char *str;
 	size_t len;
 	size_t pos;
@@ -84,7 +88,7 @@ rscb *
 rs_clone(
 	rscb *original
 ) {
-	assert(original && memcmp(original->tag, RSCB_TAG, sizeof(original->tag)) == 0);
+	ASSERT_RSCB(original, "invalid RSCB");
 	rscb *rs = malloc(sizeof(rscb));
 	assert(rs);
 	memset(rs, 0, sizeof(rscb));
@@ -105,7 +109,7 @@ void
 rs_destroy_string(
 	rscb *rs
 ) {
-	assert(rs && memcmp(rs->tag, RSCB_TAG, sizeof(rs->tag)) == 0);
+	ASSERT_RSCB(rs, "invalid RSCB");
 	memset(rs->str, 253, rs->len);
 	free(rs->str);
 	memset(rs, 253, sizeof(rscb));
@@ -123,7 +127,7 @@ bool
 rs_at_end(
 	rscb *rs
 ) {
-	assert(rs && memcmp(rs->tag, RSCB_TAG, sizeof(rs->tag)) == 0);
+	ASSERT_RSCB(rs, "invalid RSCB");
 	return rs->eos;
 }
 
@@ -137,7 +141,7 @@ int
 rs_peekc(
 	rscb *rs
 ) {
-	assert(rs && memcmp(rs->tag, RSCB_TAG, sizeof(rs->tag)) == 0);
+	ASSERT_RSCB(rs, "invalid RSCB");
 	if (rs->eos)
 		return EOF;
 	return rs->str[rs->pos] ? rs->str[rs->pos] : EOF;
@@ -151,7 +155,7 @@ size_t
 rs_position(
 	rscb *rs
 ) {
-	assert(rs && memcmp(rs->tag, RSCB_TAG, sizeof(rs->tag)) == 0);
+	ASSERT_RSCB(rs, "invalid RSCB");
 	return rs->pos;
 }
 
@@ -164,7 +168,7 @@ size_t
 rs_length(
 	rscb *rs
 ) {
-	assert(rs && memcmp(rs->tag, RSCB_TAG, sizeof(rs->tag)) == 0);
+	ASSERT_RSCB(rs, "invalid RSCB");
 	return (rs->len - 1);
 }
 
@@ -177,7 +181,7 @@ size_t
 rs_remaining(
 	rscb *rs
 ) {
-	assert(rs && memcmp(rs->tag, RSCB_TAG, sizeof(rs->tag)) == 0);
+	ASSERT_RSCB(rs, "invalid RSCB");
 	return (rs->len - 1) - rs->pos;
 }
 
@@ -189,7 +193,7 @@ void
 rs_rewind(
 	rscb *rs
 ) {
-	assert(rs && memcmp(rs->tag, RSCB_TAG, sizeof(rs->tag)) == 0);
+	ASSERT_RSCB(rs, "invalid RSCB");
 	rs->pos = 0;
 	rs->eos = false;
 }
@@ -203,7 +207,7 @@ rs_seek(
 	rscb *rs,
 	size_t n
 ) {
-	assert(rs && memcmp(rs->tag, RSCB_TAG, sizeof(rs->tag)) == 0);
+	ASSERT_RSCB(rs, "invalid RSCB");
 	assert(NULL); /* not implemented */
 };
 
@@ -216,7 +220,7 @@ int
 rs_getc(
 	rscb *rs
 ) {
-	assert(rs && memcmp(rs->tag, RSCB_TAG, sizeof(rs->tag)) == 0);
+	ASSERT_RSCB(rs, "invalid RSCB");
 	if (rs->eos)
 		return EOF;
 	int next = rs->str[rs->pos];
@@ -236,7 +240,7 @@ void
 rs_ungetc(
 	rscb *rs
 ) {
-	assert(rs && memcmp(rs->tag, RSCB_TAG, sizeof(rs->tag)) == 0);
+	ASSERT_RSCB(rs, "invalid RSCB");
 	if (rs->pos > 0) {
 		rs->pos -= 1;
 		rs->eos = false;
@@ -251,8 +255,9 @@ bool
 rs_skip(
 	rscb *rs,
 	long n) {
-	assert(rs && memcmp(rs->tag, RSCB_TAG, sizeof(rs->tag)) == 0);
-	assert(n >= 0); /* reading backward not implemented */
+	ASSERT_RSCB(rs, "invalid RSCB");
+	assert(n >= 0 &&
+		"backward read not implemented"); /* reading backward not implemented */
 	/* n == 0 is a nop but we'll allow it */
 	int c = rs_getc(rs);
 	n -= 1;
@@ -277,7 +282,7 @@ rs_gets(
 	char *buffer,
 	int buflen
 ) {
-	assert(rs && memcmp(rs->tag, RSCB_TAG, sizeof(rs->tag)) == 0);
+	ASSERT_RSCB(rs, "invalid RSCB");
 	/* return null for bad arguments or when at eof */
 	if (rs->eos || buflen < 2 || buffer == NULL)
 		return NULL;
