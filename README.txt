@@ -339,11 +339,9 @@ Functions:
 TXBDL.H
 =======
 
-This library provides a doubly linked list that may be optionally be
-ordered. The client code presents payloads of for items in the list as
-void pointers. If the list is ordered, a comparator function that
-follows the strcmp/memcmp conventions must be provided. If the payload
-is stored in allocated memory, a free function must be provided.
+This library provides a doubly linked list suitable that can be used
+a queueue or a stack. The client code presents data for the list as
+void * pointers.
 
 Depends on:
 
@@ -353,19 +351,50 @@ Functions:
 
 | Function            | Description                                  |
 |---------------------+----------------------------------------------|
-| dl_create_by_id     | create a new doubly linked list.             |
-| dl_create_by_key    |                                              |
+| dl_create           | create a new doubly linked list.             |
 | dl_destroy          | if empty, release any allocated memory for   |
 |                     | the list.                                    |
 | dl_empty            | is the list empty?                           |
 | dl_count            | how many items are on the list?              |
+| dl_reset            | bulk delete all entries on the list.         |
 | dl_insert           | add a new item to the list.                  |
 | dl_delete           | remove an item from the list.                |
 | dl_udpate           | update an item on the list.                  |
-| dl_get              | get a specific item from the list.           |
 | dl_get_first, _last | get the first or last item on the list.      |
-| dl_get_next,        | read forward or backward through the list    |
+| dl_get_next,        | read forward or backward through the list.   |
 | _previous           |                                              |
+| dl_get_error        | get a brief description of last error.       | 
+
+
+TXBKL.H
+=======
+
+This library provides a keyed doubly linked list suitable that can be
+as a key:value store. The client code presents keys and data for the
+list as void * pointers.
+
+Depends on:
+
+assert.h, stdbool.h, stdlib.h, 
+
+Functions:
+
+| Function            | Description                                  |
+|---------------------+----------------------------------------------|
+| kl_create           | create a new doubly linked list.             |
+| kl_destroy          | if empty, release any allocated memory for   |
+|                     | the list.                                    |
+| kl_empty            | is the list empty?                           |
+| kl_count            | how many items are on the list?              |
+| kl_reset            | bulk delete all entries on the list.         |
+| kl_insert           | add a new item to the list.                  |
+| kl_delete           | remove an item from the list.                |
+| kl_udpate           | update an item on the list.                  |
+| kl_get              | get a specific item by key from the list.    |
+| kl_get_first, _last | get the first or last item on the list.      |
+| kl_get_next,        | read forward or backward through the list.   |
+| _previous           |                                              |
+| kl_get_error        | get a brief description of last error.       | 
 
 
 TXBPAT.H

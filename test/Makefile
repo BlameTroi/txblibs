@@ -28,6 +28,9 @@ da.o: ../inc/da.h ../src/da.c
 dl.o: ../inc/dl.h ../src/dl.c
 	$(CC) $(CFLAGS) -c ../src/dl.c
 
+kl.o: ../inc/kl.h ../src/kl.c
+	$(CC) $(CFLAGS) -c ../src/kl.c
+
 fs.o: ../inc/fs.h ../src/fs.c
 	$(CC) $(CFLAGS) -c ../src/fs.c
 
@@ -85,8 +88,14 @@ unitda: unitda.o misc.o da.o rand.o
 unitdl.o: unitdl.c
 	$(CC) $(CFLAGS) -c unitdl.c
 
+unitkl.o: unitkl.c
+	$(CC) $(CFLAGS) -c unitkl.c
+
 unitdl: unitdl.o dl.o misc.o abort.o str.o rand.o
 	$(CC) $(CFLAGS) -o unitdl unitdl.o dl.o misc.o abort.o str.o rand.o
+
+unitkl: unitkl.o kl.o misc.o abort.o str.o rand.o
+	$(CC) $(CFLAGS) -o unitkl unitkl.o kl.o misc.o abort.o str.o rand.o
 
 unitfs.o: unitfs.c
 	$(CC) $(CFLAGS) -c unitfs.c
