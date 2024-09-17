@@ -26,7 +26,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "txbabort.h"
 #include "../inc/dl.h"
 
 /*
@@ -217,7 +216,7 @@ atomic_insert(
 
 	/* if we fall out of the link chase loop, something is
 	 * wrong with the chain, abort. */
-	abort_if(true,
+	assert(NULL &&
 		"invalid list chain detected in dl_add");
 	return false;
 }
@@ -645,7 +644,7 @@ dl_count(
 	dl->odometer += 1;
 	int res = atomic_count(dl);
 	int chk = dl->count;
-	abort_if(chk != res,
+	assert(chk == res &&
 		"error calculated DLCB entry count does not match running count");
 	if (dl->threaded)
 		pthread_mutex_unlock(&dl->mutex);

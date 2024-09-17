@@ -112,7 +112,7 @@ md5_allocate_context(
 );
 
 void
-md5_release_release(
+md5_release_context(
 	md5_context *ctx
 );
 

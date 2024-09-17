@@ -299,7 +299,6 @@ dl_get_previous(
 #include <stdlib.h>
 #include <string.h>
 
-#include "txbabort.h"
 
 /*
  * a node of the doubly linked list. keying for ordering can use
@@ -307,18 +306,9 @@ dl_get_previous(
  * keys must be unique within a list.
  */
 
-#define DLCB_TAG "__DLCB__"
-#define DLCB_TAG_LEN 8
-#define ASSERT_DLCB(p, m) assert((p) && memcmp((p), DLCB_TAG, DLCB_TAG_LEN) == 0 && (m))
-#define ASSERT_DLCB_OR_NULL(p) assert((p) == NULL || memcmp((p), DLCB_TAG, DLCB_TAG_LEN) == 0)
-
-#define DLNODE_TAG "__DLNO__"
-#define DLNODE_TAG_LEN 8
-#define ASSERT_DLNODE(p, m) assert((p) && memcmp((p), DLNODE_TAG, DLNODE_TAG_LEN) == 0 && (m))
-#define ASSERT_DLNODE_OR_NULL(p) assert((p) == NULL || memcmp((p), DLNODE_TAG, DLNODE_TAG_LEN) == 0)
-
+#define DLNODE_TAG "--DLNO--"
 typedef struct dlnode {
-	char tag[DLNODE_TAG_LEN];
+	char tag[8];
 	dlcb *dlcb;
 	struct dlnode *fwd;
 	struct dlnode *bwd;
@@ -326,8 +316,9 @@ typedef struct dlnode {
 	void *payload;
 } dlnode;
 
+#define DLCB_TAG "--DLCB--"
 struct dlcb {
-	char tag[DLCB_TAG_LEN];                   /* eye catcher */
+	char tag[8];                   /* eye catcher */
 
 	dlnode *head;                  /* head and tail node pointers */
 	dlnode *tail;
@@ -497,7 +488,7 @@ atomic_insert(
 
 	/* if we fall out of the link chase loop, something is
 	 * wrong with the chain, abort. */
-	abort_if(true,
+	assert(NULL &&
 		"invalid list chain detected in dl_add");
 	return false;
 }
@@ -878,7 +869,9 @@ bool
 dl_destroy(
 	dlcb *dl
 ) {
-	ASSERT_DLCB(dl, "invalid DLCB");
+	assert(dl &&
+		memcmp(dl->tag, DLCB_TAG, sizeof(dl->tag)) == 0 &&
+		"invalid DLCB");
 	if (dl_empty(dl)) {
 		if (dl->threaded) {
 			while (EBUSY == pthread_mutex_destroy(&dl->mutex))
@@ -899,7 +892,9 @@ bool
 dl_empty(
 	dlcb *dl
 ) {
-	ASSERT_DLCB(dl, "invalid DLCB");
+	assert(dl &&
+		memcmp(dl->tag, DLCB_TAG, sizeof(dl->tag)) == 0 &&
+		"invalid DLCB");
 	if (dl->threaded)
 		pthread_mutex_lock(&dl->mutex);
 	dl->odometer += 1;
@@ -913,13 +908,15 @@ int
 dl_count(
 	dlcb *dl
 ) {
-	ASSERT_DLCB(dl, "invalid DLCB");
+	assert(dl &&
+		memcmp(dl->tag, DLCB_TAG, sizeof(dl->tag)) == 0 &&
+		"invalid DLCB");
 	if (dl->threaded)
 		pthread_mutex_lock(&dl->mutex);
 	dl->odometer += 1;
 	int res = atomic_count(dl);
 	int chk = dl->count;
-	abort_if(chk != res,
+	assert(chk == res &&
 		"error calculated DLCB entry count does not match running count");
 	if (dl->threaded)
 		pthread_mutex_unlock(&dl->mutex);
@@ -930,7 +927,9 @@ int
 dl_delete_all(
 	dlcb *dl
 ) {
-	ASSERT_DLCB(dl, "invalid DLCB");
+	assert(dl &&
+		memcmp(dl->tag, DLCB_TAG, sizeof(dl->tag)) == 0 &&
+		"invalid DLCB");
 	if (dl->threaded)
 		pthread_mutex_lock(&dl->mutex);
 	dl->odometer += 1;
@@ -947,7 +946,9 @@ dl_insert(
 	long id,
 	void *payload
 ) {
-	ASSERT_DLCB(dl, "invalid DLCB");
+	assert(dl &&
+		memcmp(dl->tag, DLCB_TAG, sizeof(dl->tag)) == 0 &&
+		"invalid DLCB");
 	if (dl->threaded)
 		pthread_mutex_lock(&dl->mutex);
 	dl->odometer += 1;
@@ -965,7 +966,9 @@ dl_delete(
 	long id,
 	void *payload
 ) {
-	ASSERT_DLCB(dl, "invalid DLCB");
+	assert(dl &&
+		memcmp(dl->tag, DLCB_TAG, sizeof(dl->tag)) == 0 &&
+		"invalid DLCB");
 	if (dl->threaded)
 		pthread_mutex_lock(&dl->mutex);
 	dl->odometer += 1;
@@ -983,7 +986,9 @@ dl_update(
 	long id,
 	void *payload
 ) {
-	ASSERT_DLCB(dl, "invalid DLCB");
+	assert(dl &&
+		memcmp(dl->tag, DLCB_TAG, sizeof(dl->tag)) == 0 &&
+		"invalid DLCB");
 	if (dl->threaded)
 		pthread_mutex_lock(&dl->mutex);
 	dl->odometer += 1;
@@ -999,7 +1004,9 @@ dl_get(
 	long *id,
 	void *(*payload)
 ) {
-	ASSERT_DLCB(dl, "invalid DLCB");
+	assert(dl &&
+		memcmp(dl->tag, DLCB_TAG, sizeof(dl->tag)) == 0 &&
+		"invalid DLCB");
 	if (dl->threaded)
 		pthread_mutex_lock(&dl->mutex);
 	dl->odometer += 1;
@@ -1015,7 +1022,9 @@ dl_get_first(
 	long *id,
 	void *(*payload)
 ) {
-	ASSERT_DLCB(dl, "invalid DLCB");
+	assert(dl &&
+		memcmp(dl->tag, DLCB_TAG, sizeof(dl->tag)) == 0 &&
+		"invalid DLCB");
 	if (dl->threaded)
 		pthread_mutex_lock(&dl->mutex);
 	dl->odometer += 1;
@@ -1031,7 +1040,9 @@ dl_get_last(
 	long *id,
 	void *(*payload)
 ) {
-	ASSERT_DLCB(dl, "invalid DLCB");
+	assert(dl &&
+		memcmp(dl->tag, DLCB_TAG, sizeof(dl->tag)) == 0 &&
+		"invalid DLCB");
 	if (dl->threaded)
 		pthread_mutex_lock(&dl->mutex);
 	dl->odometer += 1;
@@ -1047,7 +1058,9 @@ dl_get_next(
 	long *id,
 	void *(*payload)
 ) {
-	ASSERT_DLCB(dl, "invalid DLCB");
+	assert(dl &&
+		memcmp(dl->tag, DLCB_TAG, sizeof(dl->tag)) == 0 &&
+		"invalid DLCB");
 	if (dl->threaded)
 		pthread_mutex_lock(&dl->mutex);
 	dl->odometer += 1;
@@ -1063,7 +1076,9 @@ dl_get_previous(
 	long *id,
 	void *(*payload)
 ) {
-	ASSERT_DLCB(dl, "invalid DLCB");
+	assert(dl &&
+		memcmp(dl->tag, DLCB_TAG, sizeof(dl->tag)) == 0 &&
+		"invalid DLCB");
 	if (dl->threaded)
 		pthread_mutex_lock(&dl->mutex);
 	dl->odometer += 1;

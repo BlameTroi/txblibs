@@ -145,6 +145,7 @@ fs_destroy(
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
+/* fs.h ends here */
 /* *** end pub *** */
 
 #endif /* TXBFS_SINGLE_HEADER */

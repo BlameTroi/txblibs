@@ -10,7 +10,7 @@ CFLAGS=-fsanitize=address -Wall -g3 -O0 -std=c99
 # LDFLAGS=-lm
 LDFLAGS=
 
-all: testlibs unitda unitdl unitfs unitkv unitmd5 unitpat unitpq unitqu unitrs unitsb unittest
+all: testlibs unitda unitdl unitfs unitkl unitkv unitmd5 unitpat unitpq unitqu unitrs unitsb unittest
 
 clean:
 	rm -rf *.o *.dSYM/ testlibs unitda unitdl unitfs unitkv unitmd5 unitpat unitpq unitqu unitrs unitsb unittest
@@ -18,9 +18,6 @@ clean:
 #####################################################
 # these are the libs not as single file headers yet #
 #####################################################
-
-abort.o: ../inc/abort.h ../src/abort.c
-	$(CC) $(CFLAGS) -c ../src/abort.c
 
 da.o: ../inc/da.h ../src/da.c
 	$(CC) $(CFLAGS) -c ../src/da.c
@@ -88,20 +85,20 @@ unitda: unitda.o misc.o da.o rand.o
 unitdl.o: unitdl.c
 	$(CC) $(CFLAGS) -c unitdl.c
 
-unitkl.o: unitkl.c
-	$(CC) $(CFLAGS) -c unitkl.c
-
-unitdl: unitdl.o dl.o misc.o abort.o str.o rand.o
-	$(CC) $(CFLAGS) -o unitdl unitdl.o dl.o misc.o abort.o str.o rand.o
-
-unitkl: unitkl.o kl.o misc.o abort.o str.o rand.o
-	$(CC) $(CFLAGS) -o unitkl unitkl.o kl.o misc.o abort.o str.o rand.o
+unitdl: unitdl.o dl.o misc.o str.o rand.o
+	$(CC) $(CFLAGS) -o unitdl unitdl.o dl.o misc.o str.o rand.o
 
 unitfs.o: unitfs.c
 	$(CC) $(CFLAGS) -c unitfs.c
 
 unitfs: unitfs.o fs.o
 	$(CC) $(CFLAGS) -o unitfs unitfs.o fs.o $(LDFLAGS)
+
+unitkl.o: unitkl.c
+	$(CC) $(CFLAGS) -c unitkl.c
+
+unitkl: unitkl.o kl.o misc.o str.o rand.o
+	$(CC) $(CFLAGS) -o unitkl unitkl.o kl.o misc.o str.o rand.o
 
 unitkv.o: unitkv.c
 	$(CC) $(CFLAGS) -c unitkv.c
@@ -118,8 +115,8 @@ unitmd5: unitmd5.o md5.o
 unitpat.o: unitpat.c
 	$(CC) $(CFLAGS) -c unitpat.c
 
-unitpat: unitpat.o abort.o misc.o pat.o str.o
-	$(CC) $(CFLAGS) -o unitpat unitpat.o abort.o misc.o pat.o str.o $(LDFLAGS)
+unitpat: unitpat.o misc.o pat.o str.o
+	$(CC) $(CFLAGS) -o unitpat unitpat.o misc.o pat.o str.o $(LDFLAGS)
 
 unitpq.o: unitpq.c
 	$(CC) $(CFLAGS) -c unitpq.c
