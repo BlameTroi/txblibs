@@ -10,6 +10,7 @@
  * to copy, modify, publish, and distribute this file as you see fit.
  */
 
+#undef NDEBUG
 #include <assert.h>
 #include <errno.h>
 #include <pthread.h>

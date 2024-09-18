@@ -1,4 +1,4 @@
-/* misc.c -- blametroi's common utility functions -- */
+/* rand.c -- blametroi's common utility functions -- */
 
 /*
  * frequently used random number related functions. these are not meant
@@ -15,7 +15,6 @@
 
 #include <stdbool.h>
 #include <stdlib.h>
-#include <string.h>
 
 #include "../inc/rand.h"
 

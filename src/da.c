@@ -11,6 +11,7 @@
  * to copy, modify, publish, and distribute this file as you see fit.
  */
 
+#undef NDEBUG
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -18,9 +19,9 @@
 #include "../inc/da.h"
 
 /*
- * the trasnparent definition of the dacb. the default size
- * for number of elements is arbitrary and could be changed.
- * the array storage grows by doubling the current size.
+ * the trasnparent definition of the dacb. the default size for number
+ * of elements is arbitrary and could be changed. the array storage
+ * grows by doubling the current size.
  */
 
 #define DACB_TAG "__DACB__"
@@ -43,6 +44,8 @@ struct dacb {
  * create a new instance of a dynamic array. the lone argument is the
  * number of entries in the initial allocation. if more are needed,
  * the allocation doubles.
+ *
+ * returns the da instance.
  */
 
 dacb *
@@ -63,9 +66,7 @@ da_create(
 /*
  * da_destroy
  *
- * destroy an instance of a dynamic array by releasing resources that
- * were directly allocated by da_create and da_put: the dacb itself
- * and the current entries buffer.
+ * overwrite and release all dynamically allocated memory for a da.
  */
 
 void
@@ -82,8 +83,14 @@ da_destroy(
 /*
  * da_get
  *
- * returns the entry at n, but will fail if n is greater than the
- * maximum entry stored by a da_put.
+ * return the contents of array index n which will be NULL if nothing
+ * has been put at that index.
+ *
+ * fails via an assert if n greater than the highest index of a da_put.
+ *
+ * takes the da instance and an integer index.
+ *
+ * returns the item as a void *.
  */
 
 void *

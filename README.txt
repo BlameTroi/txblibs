@@ -186,6 +186,15 @@ freeing of their own data. Function calls to create (allocate) and
 destroy (free) an instance of a data structure are provided where
 needed. The client is responsible for everything else.
 
+Instances are opaque struct typedefs and returned to the client as
+typed pointers, but think of them as handles. Any control block that
+the client code uses has a character tag used as a quick sanity check,
+verifying that the correct instance type has been passed. If there is
+an error, the code fails via an assert.
+
+Memory for instance data is cleared when allocated and overwritten
+with 0xfd (253) bytes before it is freed.
+
 
 Client Data
 -----------
@@ -214,13 +223,30 @@ process of removing it.
 Error Handling and Reporting
 ----------------------------
 
-Error checking is generally limited. Obvious fatal errors such as NULL
-or invalid control block pointers will fail with an assert. Diagnostic
-messages may be printed on stderr.
+Negative results (non errors) tend to return NULL or FALSE. Obviously
+fatal errors such as NULL or invalid control block pointers will fail
+with an assert. Diagnostic messages may be printed on stderr.
 
-Where appropriate a library provides a _get_error(instance) which returns
-a brief description of the last non-fatal error.
+Each library header that uses the assert macro will undefine NDEBUG if
+it is defined to ensure that assert generates as expected. If you want
+to compile your code with NDEBUG be sure to define it after the
+includes for these libraries.
 
+Libraries defining NDEBUG:
+
+ txbfs.h
+ txbkv.h
+ txbmd5.h
+ txbdl.h
+ txbrs.h
+ txbda.h
+ txbkl.h
+ txbpat.h
+ txbsb.h
+ txbpq.h
+
+Where appropriate a library provides an xx_get_error(instance) which
+returns a brief description of the last non-fatal error.
 
 			 ====================
 			 Library Descriptions

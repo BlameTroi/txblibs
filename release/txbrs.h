@@ -243,6 +243,7 @@ rs_gets(
  * to copy, modify, publish, and distribute this file as you see fit.
  */
 
+#undef NDEBUG
 #include <assert.h>
 #include <stdbool.h>
 #include <string.h>

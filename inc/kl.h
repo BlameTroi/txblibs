@@ -20,7 +20,6 @@
  * to copy, modify, publish, and distribute this file as you see fit.
  */
 
-#include <pthread.h>
 #include <stdbool.h>
 
 #ifdef __cplusplus
@@ -34,10 +33,10 @@ typedef struct klcb klcb;
  *
  * create an instance of a keyed linked list.
  *
- * takes a function pointer to a comparator for keys with an
- * interface similar to the memcmp function.
+ *     in: function pointer to a comparator for keys with an
+ *         interface similar to the memcmp function.
  *
- * returns a klcb, the keyed linked list instance.
+ * return: the new kl instance.
  */
 
 klcb *
@@ -46,13 +45,28 @@ kl_create(
 );
 
 /*
+ * kl_clone
+ *
+ * create a copy of a kl instance.
+ *
+ *     in: the kl instance to copy.
+ *
+ * return: the copy lk instance.
+ */
+
+klcb *
+kl_clone(
+	klcb *kl
+);
+
+/*
  * kl_destroy
  *
  * destroy an instance of a keyed linked list if it is empty.
  *
- * takes the keyed list instance as input.
+ *     in: the kl instance.
  *
- * returns true if destruction successful, false otherwise.
+ * return: true if successful, false if kl was not empty.
  */
 
 bool
@@ -65,7 +79,9 @@ kl_destroy(
  *
  * get status of last command if there was an error.
  *
- * returns a char * or NULL.
+ *     in: the kl instance.
+ *
+ * return: constant string with a brief message or NULL.
  *
  */
 
@@ -77,11 +93,11 @@ kl_get_error(
 /*
  * kl_count
  *
- * how many entries are on the list?
+ * how many items are on the list?
  *
- * takes the keyed list instance as input.
+ *     in: the kl instance.
  *
- * returns an int.
+ * return: int number of items on the list.
  */
 
 int
@@ -94,9 +110,9 @@ kl_count(
  *
  * is the list empty?
  *
- * takes the keyed list instance as input.
+ *     in: the kl instance.
  *
- * returns a bool.
+ * return: bool.
  */
 
 bool
@@ -107,11 +123,11 @@ kl_empty(
 /*
  * kl_reset
  *
- * reset the keyed link list, deleting all entries.
+ * reset the keyed link list, deleting all items.
  *
- * takes the keyed list instance as input.
+ *     in: the kl instance.
  *
- * returns an int, the number of entries that were on the list.
+ * return: int number of items deleted.
  */
 
 int
@@ -124,15 +140,13 @@ kl_reset(
  *
  * insert an item with a particular key and value into the list.
  *
- * takes as input:
+ *     in: the kl instance.
  *
- * the instance of this list.
+ *     in: pointer to the key as a void *.
  *
- * the address of the key, as a void *.
+ *     in: pointer to the value as a void *.
  *
- * the address of the value, as a void *.
- *
- * returns a bool, true if the insert succeeds, false if it failed.
+ * return: bool was the insert successful?
  */
 
 bool
@@ -145,21 +159,19 @@ kl_insert(
 /*
  * kl_get
  *
- * get an entry with a particular key on the list.
+ * get an item with a particular key from the list.
  *
  * if the key is found in the list, return the associated value and
  * mark the list as positioned at that key. if not, clear list
  * positioning and return NULL.
  *
- * takes as input:
+ *     in: the kl instance.
  *
- * the instance of this list.
+ *     in: pointer to the address of the key.
  *
- * the address of the address of the key, as a void *.
+ * in/out: pointer to the address to store the value as a void *.
  *
- * the address of the address of the value, as a void *.
- *
- * returns a bool.
+ * return: bool was the key found.
  */
 
 bool
@@ -174,15 +186,13 @@ kl_get(
  *
  * get the first entry on the list.
  *
- * takes as input:
+ *     in: the kl instance.
  *
- * the instance of this list.
+ * in/out: pointer to the address to store the key.
  *
- * the address of the address of the key, as a void *.
+ * in/out: pointer to the address to store the value.
  *
- * the address of the address of the value, as a void *.
- *
- * returns a bool.
+ * return: bool was there a first item.
  */
 
 bool
@@ -197,15 +207,13 @@ kl_get_first(
  *
  * get the last entry on the list.
  *
- * takes as input:
+ *     in: the kl instance.
  *
- * the instance of this list.
+ * in/out: pointer to the address to store the key.
  *
- * the address of the address of the key, as a void *.
+ * in/out: pointer to the address to store the value.
  *
- * the address of the address of the value, as a void *.
- *
- * returns a bool.
+ * return: bool was there a last item?
  */
 
 bool
@@ -220,15 +228,13 @@ kl_get_last(
  *
  * get the entry following the last entry read by one of the kl_get functions.
  *
- * takes as input:
+ *     in: the kl instance.
  *
- * the instance of this list.
+ * in/out: pointer to the address to store the key.
  *
- * the address of the address of the key, as a void *.
+ * in/out: pointer to the address to store the value.
  *
- * the address of the address of the value, as a void *.
- *
- * returns a bool.
+ * return: bool was there a next item?
  */
 
 bool
@@ -243,15 +249,13 @@ kl_get_next(
  *
  * get the entry before the last entry read by one of the kl_get functions.
  *
- * takes as input:
+ *     in: the kl instance.
  *
- * the instance of this list.
+ * in/out: pointer to the address to store the key.
  *
- * the address of the address of the key, as a void *.
+ * in/out: pointer to the address to store the value.
  *
- * the address of the address of the value, as a void *.
- *
- * returns a bool.
+ * return: bool was there a previous item?
  */
 
 bool
@@ -266,22 +270,20 @@ kl_get_previous(
  *
  * update an entry with a particular key and value on the list. the
  * entry key must match the key of the last entry retrieved via one of
- * the kl_get functions. the key may not be changed, but the value is
- * updated.
+ * the kl_get functions. the key may not be changed, but the value can
+ * be.
  *
- * note: as items are stored in memory, if you do not change the
- *       address of the value (ie, you updated its contents in place)
- *       there is no need to use kl_update.
+ * as items are stored in memory, if you do not change the address of
+ * the value (ie, you updated its contents in place) there is no need
+ * to use kl_update.
  *
- * takes as input:
+ *     in: the kl instance.
  *
- * the instance of this list.
+ *     in: pointer to the key.
  *
- * the address of the key, as a void *.
+ *     in: pointer to the value.
  *
- * the address of the value, as a void *.
- *
- * returns a bool, true if the update succeeds, false if it failed.
+ * return: did the update succeed.
  */
 
 bool
@@ -298,13 +300,13 @@ kl_update(
  * must match the key of the last entry retrieved via one of the
  * kl_get functions.
  *
- * takes as input:
+ *     in: the kl instance.
  *
- * the instance of this list.
+ * in/out: pointer to the key.
  *
- * the address of the key, as a void *.
+ * in/out: pointer to the value.
  *
- * returns a bool, true if the delete succeeds, false if it failed.
+ * return: did the delete succeed.
  */
 
 bool

@@ -396,6 +396,16 @@ MU_TEST(test_get_next) {
 	destroy_populated_key_long(kl);
 }
 
+MU_TEST(test_clone) {
+	klcb *kl = create_populated_key_string();
+	klcb *clone = kl_clone(kl);
+	mu_shouldnt(kl_empty(clone));
+	mu_should(kl_count(kl) == kl_count(clone));
+	destroy_populated_key_long(kl);
+	/* this is a shallow copy so this won't work */
+	destroy_populated_key_long(clone);
+}
+
 MU_TEST(test_update) {
 	klcb *kl = create_populated_key_string();
 	void *key = NULL;
@@ -434,6 +444,8 @@ MU_TEST_SUITE(test_suite) {
 	MU_RUN_TEST(test_get_next);
 	MU_RUN_TEST(test_update);
 	MU_RUN_TEST(test_delete);
+	MU_RUN_TEST(test_clone);
+
 	return;
 
 }

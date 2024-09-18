@@ -23,6 +23,7 @@
  * control structures.
  */
 
+#undef NDEBUG
 #include <assert.h>
 #include <stdint.h>
 #include <stdio.h>

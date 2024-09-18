@@ -20,11 +20,13 @@ extern "C" {
 /*
  * the da is a dynmically sized array. to deal with various datatypes
  * ranging from standard types to structures the da holds void *
- * pointers. storage management of elements stored in the da is
- * the responsibility of the client. freeing the da by da_destroy
- * only removes the dacb and supporting structures.
+ * pointers. storage management of elements stored in the da is the
+ * responsibility of the client. freeing the da by da_destroy only
+ * removes the dacb and supporting structures.
  *
- * initially all elements of the da are NULL. gaps are allowed. so,
+ * the da grows by doubling its current allocation.
+ *
+ * initially all elements of the da are NULL. gaps are allowed. so
  * after:
  *
  * dacb *da = da_create(10);
@@ -47,8 +49,11 @@ typedef struct dacb dacb;
 /*
  * da_create
  *
- * create a new instance of a dynamic array with an initial size of
- * some number of entries. if 0, a default value from da.c is used.
+ * create a new instance of a dynamic array. the lone argument is the
+ * number of entries in the initial allocation. if more are needed,
+ * the allocation doubles.
+ *
+ * returns the da instance.
  */
 
 dacb *
@@ -57,11 +62,9 @@ da_create(
 );
 
 /*
- *
  * da_destroy
  *
- * overwrite and release all dynamically allocated memory for a
- * da.
+ * overwrite and release all dynamically allocated memory for a da.
  */
 
 void
@@ -72,7 +75,14 @@ da_destroy(
 /*
  * da_get
  *
- * return the contents of array position n.
+ * return the contents of array index n which will be NULL if nothing
+ * has been put at that index.
+ *
+ * fails via an assert if n greater than the highest index of a da_put.
+ *
+ * takes the da instance and an integer index.
+ *
+ * returns the item as a void *.
  */
 
 void *
@@ -84,7 +94,10 @@ da_get(
 /*
  * da_put
  *
- * insert or overwrite the contents of array position n.
+ * insert or overwrite the contents of array index n.
+ *
+ * takes the da instance, integer index, and the item to insert as a
+ * void *.
  */
 
 void
@@ -96,8 +109,10 @@ da_put(
 /*
  * da_count
  *
- * how many entries (null or otherwise) does the array hold. this
- * will be one more than the highest 'n' pased on a da_get.
+ * how many entries (null or otherwise) does the array hold. this will
+ * be one more than the highest 'n' passed to da_put.
+ *
+ * takes the da instance and returns an int count.
  */
 
 int

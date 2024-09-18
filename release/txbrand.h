@@ -120,7 +120,7 @@ shuffle(
 #ifdef TXBRAND_IMPLEMENTATION
 #undef TXBRAND_IMPLEMENTATION
 /* *** begin priv *** */
-/* misc.c -- blametroi's common utility functions -- */
+/* rand.c -- blametroi's common utility functions -- */
 
 /*
  * frequently used random number related functions. these are not meant
@@ -137,7 +137,6 @@ shuffle(
 
 #include <stdbool.h>
 #include <stdlib.h>
-#include <string.h>
 
 
 

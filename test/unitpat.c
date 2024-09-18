@@ -10,7 +10,6 @@
 #include "minunit.h"
 
 #include "../inc/str.h"
-#include "../inc/abort.h"
 #include "../inc/misc.h"
 #include "../inc/pat.h"
 
@@ -60,7 +59,6 @@ void
 test_teardown(void) {
 	debug_off(NULL);
 }
-
 
 /*
  * test the compilation of literals, runs of one or more characters.

@@ -337,6 +337,7 @@ glob_match(
  * and so on.
  */
 
+#undef NDEBUG
 #include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
