@@ -14,7 +14,7 @@
 /*
  * a match string expression is compiled into pattern buffer. the
  * buffer is a one dimensional array of unsigned integers. a pattern
- * item occupies at least one entry in the array. the item code is
+ * item occupies at least one slot of the array. the item code is
  * symbolically identified by the macros PAT_???.
  *
  * the first item in the array is always PAT_BEG, and the last is

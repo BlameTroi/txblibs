@@ -33,19 +33,21 @@
 
 struct dacb {
 	char tag[DACB_TAG_LEN];     /* eye catcher & verification */
-	int length;                 /* last used (via put) entry */
-	int size;                   /* size of data in number of entries */
-	void **data;                /* pointer to the entry pointers */
+	int length;                 /* last used (via put) item */
+	int size;                   /* size of data in number of items */
+	void **data;                /* pointer to the item pointers */
 };
 
 /*
  * da_create
  *
  * create a new instance of a dynamic array. the lone argument is the
- * number of entries in the initial allocation. if more are needed,
+ * number of items in the initial allocation. if more are needed,
  * the allocation doubles.
  *
- * returns the da instance.
+ *     in: initial size of 0 for a default value.
+ *
+ * return: the da instance.
  */
 
 dacb *
@@ -67,6 +69,10 @@ da_create(
  * da_destroy
  *
  * overwrite and release all dynamically allocated memory for a da.
+ *
+ *     in: the da instance.
+ *
+ * return: nothing
  */
 
 void
@@ -88,9 +94,11 @@ da_destroy(
  *
  * fails via an assert if n greater than the highest index of a da_put.
  *
- * takes the da instance and an integer index.
+ *     in: the da instance.
  *
- * returns the item as a void *.
+ *     in: integer index of item.
+ *
+ * return: the item as a void *, NULL if never put.
  */
 
 void *
@@ -107,9 +115,17 @@ da_get(
 /*
  * da_put
  *
- * store an entry in the array. if the location is outside the current
- * buffer, repeatedly double the buffer size until it can hold the
- * location.
+ * insert or overwrite the contents of array index n. if the location
+ * is outside the current buffer, repeatedly double the buffer size
+ * until it can hold the location.
+ *
+ *     in: the da instance.
+ *
+ *     in: integer index of item.
+ *
+ *     in: address of item as a void *.
+ *
+ * return: nothing.
  */
 
 void
@@ -137,9 +153,13 @@ da_put(
 /*
  * da_count
  *
- * report the number of elements in the array if all 0 .. n were
- * added. i hate zero based indices, but they are the norm so +1
- * here.
+ * how many items (null or otherwise) does the array hold. this will
+ * be one more than the highest 'n' passed to da_put.
+ *
+ *     in: the da instance.
+ *
+ * return: integer number of possible items, one more than the
+ *         highest 'n' passed to da_put.
  */
 
 int

@@ -23,18 +23,18 @@
 /*
  * transparent control block definitions.
  */
-#define PQENTRY_TAG "__PQEN__"
-#define PQENTRY_TAG_LEN 8
-#define ASSERT_PQENTRY(p, m) assert((p) && memcmp((p), PQENTRY_TAG, PQENTRY_TAG_LEN) == 0 && (m))
-#define ASSERT_PQENTRY_OR_NULL(p) assert((p) == NULL || memcmp((p), PQENTRY_TAG, PQENTRY_TAG_LEN) == 0)
+#define PQITEM_TAG "__PQEN__"
+#define PQITEM_TAG_LEN 8
+#define ASSERT_PQITEM(p, m) assert((p) && memcmp((p), PQITEM_TAG, PQITEM_TAG_LEN) == 0 && (m))
+#define ASSERT_PQITEM_OR_NULL(p) assert((p) == NULL || memcmp((p), PQITEM_TAG, PQITEM_TAG_LEN) == 0)
 
-typedef struct pqentry {
-	char tag[PQENTRY_TAG_LEN];
+typedef struct pqitem {
+	char tag[PQITEM_TAG_LEN];
 	long priority;
-	struct pqentry *bwd;
-	struct pqentry *fwd;
+	struct pqitem *bwd;
+	struct pqitem *fwd;
 	void *payload;
-} pqentry;
+} pqitem;
 
 #define PQCB_TAG "__PQCB__"
 #define PQCB_TAG_LEN 8
@@ -43,8 +43,8 @@ typedef struct pqentry {
 
 struct pqcb {
 	char tag[8];
-	pqentry *first;
-	pqentry *last;
+	pqitem *first;
+	pqitem *last;
 	bool threaded;
 	pthread_mutex_t mutex;
 };
@@ -100,7 +100,7 @@ struct pqcb {
  */
 
 /*
- * are there entries in the queue?
+ * are there items in the queue?
  */
 
 static
@@ -125,7 +125,7 @@ pq_empty(
 }
 
 /*
- * how many entries are in the queue?
+ * how many items are in the queue?
  */
 
 static
@@ -134,7 +134,7 @@ prim_pq_count(
 	pqcb *pq
 ) {
 	int i = 0;
-	pqentry *qe = pq->first;
+	pqitem *qe = pq->first;
 	while (qe) {
 		i += 1;
 		qe = qe->fwd;
@@ -156,18 +156,18 @@ pq_count(
 }
 
 /*
- * create a new queue entry.
+ * create a new queue item.
  */
 
 static
-pqentry *
-pq_new_entry(
+pqitem *
+pq_new_item(
 	long priority,
 	void *payload
 ) {
-	pqentry *qe = malloc(sizeof(*qe));
+	pqitem *qe = malloc(sizeof(*qe));
 	memset(qe, 0, sizeof(*qe));
-	memcpy(qe->tag, PQENTRY_TAG, sizeof(qe->tag));
+	memcpy(qe->tag, PQITEM_TAG, sizeof(qe->tag));
 	qe->priority = priority;
 	qe->payload = payload;
 	qe->fwd = NULL;
@@ -176,7 +176,7 @@ pq_new_entry(
 }
 
 /*
- * add an entry into the queue with the specified priority.
+ * add an item into the queue with the specified priority.
  */
 
 static
@@ -186,7 +186,7 @@ prim_pq_put(
 	long priority,
 	void *payload
 ) {
-	pqentry *qe = pq_new_entry(priority, payload);
+	pqitem *qe = pq_new_item(priority, payload);
 
 	/* empty is easy.  */
 	if (prim_pq_empty(pq)) {
@@ -211,7 +211,7 @@ prim_pq_put(
 	}
 
 	/* find an insertion point. */
-	pqentry *p = pq->first;
+	pqitem *p = pq->first;
 	while (p) {
 		if (p->priority < qe->priority) {
 			p = p->fwd;
@@ -253,7 +253,7 @@ prim_pq_get(
 ) {
 	if (prim_pq_empty(pq))
 		return NULL;
-	pqentry *qe = pq->last;
+	pqitem *qe = pq->last;
 	void *payload = qe->payload;
 	pq->last = qe->bwd;
 	free(qe);

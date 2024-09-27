@@ -4,7 +4,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
 
 #include "minunit.h"
 
@@ -13,7 +12,7 @@
 #include "../inc/rand.h"
 
 #include "../inc/da.h"
-
+
 /*
  * minunit setup and teardown.
  */
@@ -67,7 +66,7 @@ MU_TEST(test_da) {
 	mu_should(sum == 0);
 	da_destroy(da);
 }
-
+
 /*
  * here we define the whole test suite. sadly there's no runtime
  * introspection. there is probably an opportunity for an elisp helper

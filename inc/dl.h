@@ -3,15 +3,6 @@
 /*
  * a header only implementation of a doubly linked list.
  *
- * the list is kept in order by a key, which can be either an
- * identifying long integer, or by some unique value in the payload
- * that each list node carries.
- *
- * each list will have a control block containing the approriate
- * counters, links, configuration information, and when function
- * pointers for routines to compare payload key values and to
- * dynamically free payload storage when a node is freed.
- *
  * released to the public domain by Troy Brumley blametroi@gmail.com
  *
  * this software is dual-licensed to the public domain and under the
@@ -19,71 +10,73 @@
  * to copy, modify, publish, and distribute this file as you see fit.
  */
 
-#include <pthread.h>
 #include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-
+
 /*
- * double list control block holding chain pointers and other control
- * information. if a payload is carried, function pointers to free the
- * payload and also perform comparisons for ordering are put here. an
- * id field is provided for ordering and is set from an odometer
- * value.
+ * dlcb
  *
- * all functions other than list creation take as their first argument
- * a pointer to an instance of this control block.
+ * an opaque definition of an instance of the linked list.
  */
 
 typedef struct dlcb dlcb;
-
+
 /*
- * forward declarations for all functions.
+ * dlnode
  *
- * i hope that argument names are sufficiently wordy to aid in
- * understanding. more complete comment blocks are included with
- * the implementations.
+ * client code should consider everything but the payload pointer as
+ * read only. the whole node is returned from many functions and is
+ * expected to be passed on a subsequent function call that assumes
+ * the position within the list.
  *
- * error checking and handling is limited. if things look bad,
- * execution is halted via an assert(). this is only done in cases
- * where continued execution is unwise, as in the list control block
- * is not initialized, or it appears that the link chain is broken.
+ * payload will typically be a pointer to some client managed data.
+ * if the data is malloced, it is the clients responsibility to free
+ * it. if the data to store will fit in a void *, the client may
+ * store it directly.
+ *
+ * the dlnode is the position of the item in the list. functions that
+ * return a dlnode also mark the current position in the dlcb and
+ * when a function receives a dlnode it checks it against the
+ * position stored in the dlcb. if they differ, it is an error.
  */
-
+
+typedef struct dlnode dlnode;
+
+#define DLNODE_TAG_LEN 8
+#define DLNODE_TAG "_DLNODE_"
+
+struct dlnode {
+	char tag[DLNODE_TAG_LEN];  /* read only */
+	dlcb *owner;               /* read only */
+	dlnode *next;              /* read only */
+	dlnode *previous;          /* read only */
+	void *payload;             /* pointer to item to store or the item if it will fit in a void */
+};
+
 /*
- * create a new doubly linked list instance. nodes in the list are
- * uniquely identified by either an id field (a positive long integer)
- * or by some part of the payload that can be compared with other
- * payloads using a helper function.
+ * dl_create
  *
- * if a payload key is used, the id argument can be any value and is
- * ignored. internally it is set to an odometer value.
+ * create an instance of a keyed linked list.
  *
- * if an id is used, it must be a long greater than zero. when
- * inserting a node, an id of zero indicates that an id should be
- * assigned automatically.
- *
- * if successful a doubly linked list control block (dlcb) pointer
- * is returned.
+ * return: the new dl instance.
  */
 
 dlcb *
-dl_create_by_id(
-	bool threaded,
-	void (*free_payload)(void *)
+dl_create(
+	void
 );
 
-dlcb *
-dl_create_by_key(
-	bool threaded,
-	int (*compare_payload_key)(void *, void *),
-	void (*free_payload)(void *));
-
 /*
- * destroy a doubly linked list if it is empty, releasing all
- * allocated memory blocks
+ * dl_destroy
+ *
+ * destroy an instance of a keyed linked list if it is empty.
+ *
+ *     in: the dl instance.
+ *
+ * return: true if successful, false if the dl was not empty.
  */
 
 bool
@@ -92,7 +85,29 @@ dl_destroy(
 );
 
 /*
- * return the number of nodes in the list.
+ * dl_get_error
+ *
+ * get status of last command if there was an error.
+ *
+ *     in: the dl instance.
+ *
+ * return: constant string with a brief message or NULL.
+ */
+
+const char *
+dl_get_error(
+	dlcb *dl
+);
+
+/*
+ * dl_count
+ *
+ * how many items are on the list? does not change the current
+ * positioned item in the list.
+ *
+ *     in: the dl instance.
+ *
+ * return: int number of items on the list.
  */
 
 int
@@ -101,7 +116,14 @@ dl_count(
 );
 
 /*
- * is the list empty?
+ * dl_empty
+ *
+ * is the list empty? does not change the current positioned item in
+ * the list.
+ *
+ *     in: the dl instance.
+ *
+ * return: bool.
  */
 
 bool
@@ -110,107 +132,218 @@ dl_empty(
 );
 
 /*
- * delete all the nodes on the list, freeing allocated memory.
+ * dl_reset
+ *
+ * reset the keyed link list, deleting all items. does not free payload
+ * storage.
+ *
+ *     in: the dl instance.
+ *
+ * return: int number of items deleted.
  */
 
 int
-dl_delete_all(
+dl_reset(
 	dlcb *dl
 );
-
+
 /*
- * updating the list or its items. these functions return true on success or
- * false on failure.
+ * dl_insert_first
  *
- * dl_insert fails if there is already a node on the list with the id
- * or payload key.
+ * insert a new item at the head of the list. the dl is positioned
+ * at this new item.
  *
- * dl_delete fails if there is no node on the list with the id or payload key.
+ *     in: the dl instance.
  *
- * dl_update fails if there is no node on the list with the id or payload key.
+ *     in: the client data must fit in in a void *, typically
+ *         a pointer to the client data.
+ *
+ * return: the dl node.
  */
 
-bool
-dl_insert(
+dlnode *
+dl_insert_first(
 	dlcb *dl,
-	long id,
 	void *payload
 );
+
+/*
+ * dl_insert_last
+ *
+ * insert a new item at the tail of the list. the dl is positioned
+ * at this new item.
+ *
+ *     in: the dl instance.
+ *
+ *     in: the client data must fit in in a void *, typically
+ *         a pointer to the client data.
+ *
+ * return: the dl node.
+ */
+
+dlnode *
+dl_insert_last(
+	dlcb *dl,
+	void *payload
+);
+
+/*
+ * dl_insert_before
+ *
+ * insert a new item immediately before the current item. the
+ * dl is positioned at this new item.
+ *
+ *     in: the dl instance.
+ *
+ *     in: the dl node of the current position in the dl.
+ *
+ *     in: the client data must fit in in a void *, typically
+ *         a pointer to the client data.
+ *
+ * return: the dl node.
+ */
+
+dlnode *
+dl_insert_before(
+	dlcb *dl,
+	dlnode *node,
+	void *payload
+);
+
+/*
+ * dl_insert_after
+ *
+ * insert a new item immediately after the current item. the
+ * dl is positioned at this new item.
+ *
+ *     in: the dl instance.
+ *
+ *     in: the dl node of the current position in the dl.
+ *
+ *     in: the client data must fit in in a void *, typically
+ *         a pointer to the client data.
+ *
+ * return: the dl node.
+ */
+
+dlnode *
+dl_insert_after(
+	dlcb *dl,
+	dlnode *node,
+	void *payload
+);
+
+/*
+ * dl_get_first
+ *
+ * get the first item in the list and set the position.
+ *
+ *     in: the dl instance.
+ *
+ * return: dl node of that item.
+ */
+
+dlnode *
+dl_get_first(
+	dlcb *dl
+);
+
+/*
+ * dl_get_last
+ *
+ * get the last item in the list and set the position.
+ *
+ *     in: the dl instance.
+ *
+ * return: the dl node of that item.
+ */
+
+dlnode *
+dl_get_last(
+	dlcb *dl
+);
+
+/*
+ * dl_get_next
+ *
+ * get item after the current positioned item, updating
+ * the position in the list.
+ *
+ *     in: the dl instance.
+ *
+ *     in: the dl node of the positioned item.
+ *
+ * return: the dl node of the next item or NULL.
+ */
+
+dlnode *
+dl_get_next(
+	dlcb *dl,
+	dlnode *dn
+);
+
+/*
+ * dl_get_previous
+ *
+ * get the item before the current positioned item, updating
+ * the position in the list.
+ *
+ *     in: the dl instance.
+ *
+ *     in: the dl node of the positioned item.
+ *
+ * return: the dl node of the previous item or NULL.
+ */
+
+dlnode *
+dl_get_previous(
+	dlcb *dl,
+	dlnode *dn
+);
+
+/*
+ * dl_delete
+ *
+ * remove the currently positioned item from the list. clears
+ * the list position.
+ *
+ *     in: the dl instance.
+ *
+ *     in: the dl node of the positioned item.
+ *
+ * return: boolean true if deleted, false on error.
+ */
 
 bool
 dl_delete(
 	dlcb *dl,
-	long id,
-	void *payload
+	dlnode *dn
 );
 
-bool
-dl_update(
-	dlcb *dl,
-	long id,
-	void *payload
-);
-
 /*
- * get a node (by key, first, or last), or a preceeding or trailing
- * node, from the list.
+ * dl_update
  *
- * dl_get fails if there is no node on the list with the id or
- * payload key. dl_get_first and dl_get_last fail if the list is
- * empty.
+ * update an item's value in the list. the list should be positioned
+ * on the node to update. the dl position is unchanged.
  *
- * if dl_get succeeds, position state is stored in the dlcb and
- * dl_get_next and dl_get_previous can be used to move forward or
- * backward through the list.
+ * as items are stored in memory, if you do not change the address of
+ * the value (ie, you updated its contents in place) there is no need
+ * to use dl_update.
  *
- * dl_get_next and dl_get_previous fail if there are no more next
- * or previous nodes.
+ *     in: the dl instance.
  *
- * for dl_get, the id and payload arguments are in-out. you must
- * provide the correct keying information, and if a node was found
- * the id and payload pointers are updated.
+ *     in: the dl node to be updated
  *
- * for dl_get_next and dl_get_previous ignore these values when
- * called but update them on successful return.
+ *     in: the new payload, typically a void * pointer to a value.
  *
- * there is no locking mechanism, but calling dl_insert, dl_delete,
- * or dl_delete_all will clear position state and a subsequent
- * dl_get_next or dl_get_previous return false.
+ * return: the dl node of the updated item.
  */
 
-bool
-dl_get(
+dlnode *
+dl_update(
 	dlcb *dl,
-	long *id,
-	void *(*payload)
-);
-
-bool
-dl_get_first(
-	dlcb *dl,
-	long *id,
-	void *(*payload)
-);
-
-bool
-dl_get_last(
-	dlcb *dl,
-	long *id,
-	void *(*payload)
-);
-
-bool
-dl_get_next(
-	dlcb *dl,
-	long *id,
-	void *(*payload)
-);
-
-bool
-dl_get_previous(
-	dlcb *dl,
-	long *id,
-	void *(*payload)
+	dlnode *dn,
+	void *payload
 );
 
 #ifdef __cplusplus

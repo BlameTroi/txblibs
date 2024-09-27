@@ -114,7 +114,7 @@ kl_clone(
 	klcb *new_kl = kl_create(old_kl->compare_keys);
 	if (kl_empty(old_kl))
 		return new_kl;
-	/* copy entries */
+	/* copy items */
 	void *key = NULL;
 	void *value = NULL;
 	if (!kl_get_first(old_kl, &key, &value))
@@ -243,7 +243,7 @@ kl_reset(
 		"kl_reset mismatch between deleted and count");
 	kl->count = 0;
 	return deleted;
-};
+}
 
 /*
  * kl_insert
@@ -266,7 +266,7 @@ kl_insert(
 	void *value
 ) {
 	ASSERT_KLCB(kl, "invalid KLCB");
-	/* build new list entry */
+	/* build new list item */
 	klnode *new = NULL;
 	new = malloc(sizeof(*new));
 	memset(new, 0, sizeof(*new));
@@ -386,7 +386,7 @@ kl_get(
 /*
  * kl_get_first
  *
- * get the first entry on the list.
+ * get the first item on the list.
  *
  *     in: the kl instance.
  *
@@ -420,7 +420,7 @@ kl_get_first(
 /*
  * kl_get_last
  *
- * get the last entry on the list.
+ * get the last item on the list.
  *
  *     in: the kl instance.
  *
@@ -454,7 +454,7 @@ kl_get_last(
 /*
  * kl_get_next
  *
- * get the entry following the last entry read by one of the kl_get functions.
+ * get the item following the last item read by one of the kl_get functions.
  *
  *     in: the kl instance.
  *
@@ -489,7 +489,7 @@ kl_get_next(
 /*
  * kl_get_previous
  *
- * get the entry before the last entry read by one of the kl_get functions.
+ * get the item before the last item read by one of the kl_get functions.
  *
  *     in: the kl instance.
  *
@@ -524,8 +524,8 @@ kl_get_previous(
 /*
  * kl_update
  *
- * update an entry with a particular key and value on the list. the
- * entry key must match the key of the last entry retrieved via one of
+ * update an item with a particular key and value on the list. the
+ * item key must match the key of the last item retrieved via one of
  * the kl_get functions. the key may not be changed, but the value can
  * be.
  *
@@ -563,8 +563,8 @@ kl_update(
 /*
  * kl_delete
  *
- * delete an entry with a particular key on the list. the entry key
- * must match the key of the last entry retrieved via one of the
+ * delete an item with a particular key on the list. the item key
+ * must match the key of the last item retrieved via one of the
  * kl_get functions.
  *
  *     in: the kl instance.

@@ -22,16 +22,16 @@
  * transparent control block definitions.
  */
 
-#define QUENTRY_TAG "__QUEN__"
-#define QUENTRY_TAG_LEN 8
-#define ASSERT_QUENTRY(p, m) assert((p) && memcmp((p), QUENTRY_TAG, QUENTRY_TAG_LEN) == 0 && (m))
-#define ASSERT_QUENTRY_OR_NULL(p) assert((p) == NULL || memcmp((p), QUENTRY_TAG, QUENTRY_TAG_LEN) == 0)
+#define QUITEM_TAG "__QUIT__"
+#define QUITEM_TAG_LEN 8
+#define ASSERT_QUITEM(p, m) assert((p) && memcmp((p), QUITEM_TAG, QUITEM_TAG_LEN) == 0 && (m))
+#define ASSERT_QUITEM_OR_NULL(p) assert((p) == NULL || memcmp((p), QUITEM_TAG, QUITEM_TAG_LEN) == 0)
 
-typedef struct quentry {
-	char tag[QUENTRY_TAG_LEN];
-	struct quentry *next;
+typedef struct quitem {
+	char tag[QUITEM_TAG_LEN];
+	struct quitem *next;
 	void *payload;
-} quentry;
+} quitem;
 
 #define QUCB_TAG "__QUCB__"
 #define QUCB_TAG_LEN 8
@@ -40,8 +40,8 @@ typedef struct quentry {
 
 struct qucb {
 	char tag[QUCB_TAG_LEN];
-	quentry *first;
-	quentry *last;
+	quitem *first;
+	quitem *last;
 };
 
 
@@ -83,7 +83,7 @@ struct qucb {
  */
 
 /*
- * are there entries in the queue?
+ * are there items in the queue?
  */
 
 bool
@@ -95,7 +95,7 @@ qu_empty(
 }
 
 /*
- * how many entries are in the queue?
+ * how many items are in the queue?
  */
 
 int
@@ -110,7 +110,7 @@ qu_count(
 		return 1;
 
 	int i = 0;
-	quentry *qe = qu->first;
+	quitem *qe = qu->first;
 	while (qe) {
 		i += 1;
 		qe = qe->next;
@@ -119,24 +119,24 @@ qu_count(
 }
 
 /*
- * create a new queue entry.
+ * create a new queue item.
  */
 
 static
-quentry *
-qu_new_entry(
+quitem *
+qu_new_item(
 	void *payload
 ) {
-	quentry *qe = malloc(sizeof(*qe));
+	quitem *qe = malloc(sizeof(*qe));
 	memset(qe, 0, sizeof(*qe));
-	memcpy(qe->tag, QUENTRY_TAG, sizeof(qe->tag));
+	memcpy(qe->tag, QUITEM_TAG, sizeof(qe->tag));
 	qe->payload = payload;
 	qe->next = NULL;
 	return qe;
 }
 
 /*
- * add an entry into the queue.
+ * add an item into the queue.
  */
 
 void
@@ -145,7 +145,7 @@ qu_enqueue(
 	void *payload
 ) {
 	ASSERT_QUCB(qu, "invalid QUCB");
-	quentry *new_qe = qu_new_entry(payload);
+	quitem *new_qe = qu_new_item(payload);
 	if (qu->first == NULL) {
 		qu->first = new_qe;
 		qu->last = new_qe;
@@ -167,7 +167,7 @@ qu_dequeue(
 	ASSERT_QUCB(qu, "invalid QUCB");
 	if (qu->first == NULL)
 		return NULL;
-	quentry *qe = qu->first;
+	quitem *qe = qu->first;
 	qu->first = qe->next;
 	void *res = qe->payload;
 	free(qe);

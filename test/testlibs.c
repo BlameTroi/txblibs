@@ -47,7 +47,7 @@ permute(const int n) {
 /***main function***/
 
 int
-main() {
+main(int argc, char **argv) {
 
 	printf("permuting 8\n");
 	permute(8);

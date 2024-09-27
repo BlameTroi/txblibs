@@ -67,10 +67,11 @@ destroy_populated_key_long(klcb *kl) {
 	void *key;
 	void *value;
 	while (kl_get_first(kl, &key, &value)) {
-		if (kl_delete(kl, key))
-			continue;
-		printf("\nerror on delete during teardown %s\n", kl_get_error(kl));
-		break;
+		if (!kl_delete(kl, key)) {
+			printf("\nerror on delete during teardown %s\n", kl_get_error(kl));
+			break;
+		}
+		free(value);
 	}
 	kl_reset(kl); /* in case of error above */
 	kl_destroy(kl);
@@ -95,10 +96,12 @@ destroy_populated_key_string(klcb *kl) {
 	void *key;
 	void *value;
 	while (kl_get_first(kl, &key, &value)) {
-		if (kl_delete(kl, key))
-			continue;
-		printf("\nerror on delete during teardown %s\n", kl_get_error(kl));
-		break;
+		if (!kl_delete(kl, key)) {
+			printf("\nerror on delete during teardown %s\n", kl_get_error(kl));
+			break;
+		}
+		free(key);
+		free(value);
 	}
 	kl_reset(kl); /* in case of error above */
 	kl_destroy(kl);
@@ -135,7 +138,7 @@ MU_TEST(test_insert_multiple) {
 	mu_should(kl_reset(kl) == 2);
 	mu_should(kl_empty(kl));
 	mu_should(kl_count(kl) == 0);
-	/* it takes more than two entries to mess with linking. */
+	/* it takes more than two items to mess with linking. */
 	mu_should(kl_insert(kl, (void *)1L, "first"));
 	mu_should(kl_insert(kl, (void *)4L, "fourth, added second"));
 	mu_should(kl_insert(kl, (void *)2L, "second, added third"));
@@ -153,14 +156,14 @@ MU_TEST(test_insert_multiple) {
 	   ordering, we'll do some get next stuff here but the
 	   real tests those functions are elsewhere. */
 	kl = kl_create(fn_compare_key_string);
-	/* add two unique entries, then remove them. */
+	/* add two unique items, then remove them. */
 	mu_should(kl_insert(kl, "1", "first"));
 	mu_should(kl_insert(kl, "2", "second"));
 	mu_should(kl_count(kl) == 2);
 	mu_should(kl_reset(kl) == 2);
 	mu_should(kl_empty(kl));
 	mu_should(kl_count(kl) == 0);
-	/* it takes more than two entries to mess with linking. */
+	/* it takes more than two items to mess with linking. */
 	mu_should(kl_insert(kl, "1", "first, added first"));
 	mu_should(kl_insert(kl, "4", "fourth, added second"));
 	mu_should(kl_insert(kl, "2", "second, added third"));
@@ -396,14 +399,20 @@ MU_TEST(test_get_next) {
 	destroy_populated_key_long(kl);
 }
 
-MU_TEST(test_clone) {
-	klcb *kl = create_populated_key_string();
+MU_TEST(test_clone
+) {
+	klcb *kl = create_populated_key_long();
 	klcb *clone = kl_clone(kl);
 	mu_shouldnt(kl_empty(clone));
 	mu_should(kl_count(kl) == kl_count(clone));
 	destroy_populated_key_long(kl);
-	/* this is a shallow copy so this won't work */
-	destroy_populated_key_long(clone);
+	/* kl_clone has to be a shallow copy since kl knows nothing
+	 * about the actual keys and values. destroy_populated_key*
+	 * frees keys and values as items are deleted, so
+	 * destroy_populated_key* on the clone will abort when
+	 * attempting to do a duplicate free. */
+	kl_reset(clone);
+	kl_destroy(clone);
 }
 
 MU_TEST(test_update) {

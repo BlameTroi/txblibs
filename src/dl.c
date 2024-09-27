@@ -3,816 +3,609 @@
 /*
  * a header only implementation of a doubly linked list.
  *
- * the list is kept in order by a key, which can be either an
- * identifying long integer, or by some unique value in the payload
- * that each list node carries.
- *
- * each list will have a control block containing the approriate
- * counters, links, configuration information, and function pointers
- * for routines to compare payload key values and to dynamically free
- * payload storage when a node is freed.
- *
  * released to the public domain by Troy Brumley blametroi@gmail.com
  *
  * this software is dual-licensed to the public domain and under the
  * following license: you are granted a perpetual, irrevocable license
  * to copy, modify, publish, and distribute this file as you see fit.
  */
-
+
 #undef NDEBUG
 #include <assert.h>
-#include <errno.h>
-#include <pthread.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "../inc/dl.h"
-
+
 /*
- * a node of the doubly linked list. keying for ordering can use
- * either the id or results from the compare_payload function. node
- * keys must be unique within a list.
+ * dlcb.
+ *
+ * a transparent definition of an instance of the linked list. client
+ * code isn't expected to see these fields.
  */
 
-#define DLNODE_TAG "--DLNO--"
-typedef struct dlnode {
-	char tag[8];
-	dlcb *dlcb;
-	struct dlnode *fwd;
-	struct dlnode *bwd;
-	long id;
-	void *payload;
-} dlnode;
+#define DLCB_TAG      "__DLCB__"
+#define DLCB_TAG_LEN  8
 
-#define DLCB_TAG "--DLCB--"
+#define ASSERT_DLCB(p, m) assert((p) && memcmp((p), DLCB_TAG, DLCB_TAG_LEN) == 0 && (m))
+#define ASSERT_DLCB_OR_NULL(p) assert((p) == NULL || memcmp((p), DLCB_TAG, DLCB_TAG_LEN) == 0)
+
 struct dlcb {
-	char tag[8];                   /* eye catcher */
-
-	dlnode *head;                  /* head and tail node pointers */
-	dlnode *tail;
-
-	dlnode *work;                  /* preallocated node storage, not yet used but
-                                   * a potential optimization. */
-	dlnode *position;              /* the last node accessed. this is needed by
-                                   * get_next and get_previous. operations that
-                                   * invalidate the position should set this to
-                                   * NULL. */
-
-	void (*payload_free)(void
-		*);  /* if a payload needs to be freed, function pointer here */
-	int (*payload_compare)(void *,
-		void *);  /* key compare for ordering, a la strcmp */
-
-	bool use_id;                   /* use the id field for ordering and finding */
-	bool dynamic_payload;          /* the payload should be freed when the node is freed */
-	bool threaded;                 /* protect operations with a mutex */
-
-	long odometer;                 /* just a counter of calls to the api */
-	long count;                    /* how many items are on the list? */
-
-	pthread_mutex_t mutex;         /* if threaded, block other threads when calling
-                                   * atomic code */
+	char tag[8];
+	dlnode *first;
+	dlnode *last;
+	dlnode *position;
+	int count;
+	const char *error;
 };
 
-
 /*
- * functions prefixed by dl_ are the api for the doubly linked list.
- *
- * functions prefixed by atomic_ are viewed as atomic by this library
- * and can't be logically interrupted by other calls. if threading is
- * enabled, they are run under a mutex lock.
- *
- */
-
-/*
- * compare the id or key of a (potential) new entry to an existing entry
- * on the list.
- *
- * superficially the return looks like that of the various xxxcmp functions,
- * but specific values have meaning, not just negative, zero, or positive.
- *
- * +/-1 for greater than or less than, and +2 for a compare against a null
- * entry.
+ * dlcb.error will reference one of these in certain conditions,
+ * otherwise NULL.
  */
 
-#define ID_KEY_LT   -1
-#define ID_KEY_EQ    0
-#define ID_KEY_GT   +1
-#define ID_KEY_NULL +2
+static const char *error_list_empty       = "list empty";
+static const char *error_next_at_tail     = "get next reached tail of list";
+static const char *error_previous_at_head = "get previous reached head of list";
+static const char *error_not_positioned   = "get next/prev not positioned";
+static const char *error_bad_dlnode       = "malformed dlnode";
 
-static
-int
-atomic_compare_id_or_key(
-	dlcb *dl,
-	long id,
-	void *payload,
-	dlnode *existing
-) {
-	assert((id || payload) &&
-		"error missing id or key");
-
-	if (existing == NULL ||
-		(dl->use_id && existing->id < 1) ||
-		(!dl->use_id && existing->payload == NULL))
-		return ID_KEY_NULL;
-
-	long r = 0;
-	if (dl->use_id)
-		r = id - existing->id;
-
-	else
-		r = dl->payload_compare(payload, existing->payload);
-
-	if (r == 0)
-		return ID_KEY_EQ;
-	if (r < 0)
-		return ID_KEY_LT;
-	return ID_KEY_GT;
-}
-
 /*
- * insert a new node into the list.
+ * dlnode.
+ *
+ * client code should consider everything but the payload pointer as
+ * read only. the whole node is returned from many functions and is
+ * expected to be passed on a subsequent function call that assumes
+ * the position within the list.
+ *
+ * payload will typically be a pointer to some client managed data.
+ * if the data is malloced, it is the clients responsibility to free
+ * it.
  */
 
-static
-bool
-atomic_insert(
-	dlcb *dl,
-	long id,
-	void *payload
-) {
-	/* build new list entry */
-	dlnode *new = NULL;
-	new = malloc(sizeof(dlnode));
-	memset(new, 0, sizeof(dlnode));
-	memcpy(new->tag, DLNODE_TAG, sizeof(new->tag));
-	new->dlcb = dl;
-	new->payload = payload;
-	if (dl->use_id)
-		new->id = id;
+#define ASSERT_DLNODE(p, d, m) assert((p) && memcmp((p), DLNODE_TAG, DLNODE_TAG_LEN) == 0 && \
+        (p)->owner == d && m)
 
-	else
-		new->id = dl->odometer;
-
-	/* if the list is empty, easy peasy */
-	if (dl->head == NULL) {
-		dl->head = new;
-		dl->tail = new;
-		return true;
-	}
-
-	/* work the ends of the list first */
-	int rf = atomic_compare_id_or_key(dl, new->id, new->payload, dl->head);
-	int rl = atomic_compare_id_or_key(dl, new->id, new->payload, dl->tail);
-
-	/* can't have duplicate id/key */
-	if (rf == ID_KEY_EQ || rl == ID_KEY_EQ) {
-		memset(new, 254, sizeof(dlnode));
-		free(new);
-		return false;
-	}
-
-	/* insert at head or tail if that's the position */
-	if (rf == ID_KEY_LT) {
-		new->fwd = dl->head;
-		dl->head = new;
-		new->fwd->bwd = new;
-		return true;
-	}
-	if (rl == ID_KEY_GT) {
-		new->bwd = dl->tail;
-		dl->tail = new;
-		new->bwd->fwd = new;
-		return true;
-	}
-
-	/* chase the link chain and insert where appropriate */
-
-	dlnode *curr = dl->head->fwd;
-
-	while (curr) {
-		int r = atomic_compare_id_or_key(dl, new->id, new->payload, curr);
-
-		/* duplicate key, discard */
-		if (r == ID_KEY_EQ) {
-			memset(new, 254, sizeof(dlnode));
-			free(new);
-			return false;
-		}
-
-		/* found insertion point yet? */
-		if (r == ID_KEY_GT) {
-			curr = curr->fwd;
-			continue;
-		}
-
-		/* insert in front of current */
-		new->bwd = curr->bwd;
-		new->fwd = curr;
-		new->bwd->fwd = new;
-		curr->bwd = new;
-		return true;
-	}
-
-	/* if we fall out of the link chase loop, something is
-	 * wrong with the chain, abort. */
-	assert(NULL &&
-		"invalid list chain detected in dl_add");
-	return false;
-}
-
 /*
- * create a doubly linked list control block, there are mutiple api
- * functions that call this function with some default argument
- * values, hopefully simplifying list creation for clients.
+ * dl_create
+ *
+ * create an instance of a keyed linked list.
+ *
+ *     in: function pointer to a comparator for keys with an
+ *         interface similar to the memcmp function.
+ *
+ * return: the new dl instance.
  */
 
-static
 dlcb *
-atomic_create(
-	bool threaded,
-	bool use_id,
-	void (*payload_free)(void *),
-	int (*payload_compare)(void *, void *)
+dl_create(
+	void
 ) {
 	dlcb *dl = malloc(sizeof(*dl));
 	assert(dl &&
 		"could not allocate DLCB");
 	memset(dl, 0, sizeof(*dl));
-
-	/* the basics */
 	memcpy(dl->tag, DLCB_TAG, sizeof(dl->tag));
-	dl->odometer = 0;
 	dl->count = 0;
-	dl->work = NULL;
 	dl->position = NULL;
-	dl->head = NULL;
-	dl->tail = NULL;
-
-	/* threading */
-	dl->threaded = threaded;
-	if (threaded) {
-		assert(pthread_mutex_init(&dl->mutex, NULL) == 0 &&
-			"error initializing mutx for DLCB");
-	}
-
-	/* is the payload dynamic? */
-	dl->dynamic_payload = payload_free != NULL;
-	dl->payload_free = payload_free;
-
-	/* if a comparator is provided, use it for ordering, otherwise
-	 * use the odometer as an id. */
-
-	dl->use_id = payload_compare == NULL;
-	dl->payload_compare = payload_compare;
-
+	dl->first = NULL;
+	dl->last = NULL;
 	return dl;
 }
-
-/*
- * report on the list. is it empty? how many nodes does it hold?
- */
-
-static
-bool
-atomic_empty(
-	dlcb *dl
-) {
-	return dl->head == NULL;
-}
 
 /*
- * returns the count of the items on the link list by chasing the
- * link chain.
- */
-
-static
-int
-atomic_count(
-	dlcb *list
-) {
-	int n = 0;
-	dlnode *curr = list->head;
-	while (curr) {
-		n += 1;
-		curr = curr->fwd;
-	}
-	return n;
-}
-
-/*
- * remove and free all of the items linked on the list. this is
- * equivalent to repeatedly calling delete on each item in the list.
- */
-
-static
-int
-atomic_delete_all(
-	dlcb *dl
-) {
-	dlnode *curr = dl->head;
-	dlnode *next = NULL;
-	int deleted = 0;
-	while (curr) {
-		if (dl->dynamic_payload)
-			dl->payload_free(curr->payload);
-		next = curr->fwd;
-		memset(curr, 254, sizeof(dlnode));
-		free(curr);
-		deleted += 1;
-		curr = next;
-	}
-	dl->head = NULL;
-	dl->tail = NULL;
-	dl->count = 0;
-	return deleted;
-}
-
-bool
-atomic_get(
-	dlcb *dl,
-	long *id,
-	void *(*payload)
-) {
-	dl->position = NULL;
-	if (dl->head == NULL)
-		return false;
-
-	/* we need an id or key in payload */
-	if (*id < 1 && dl->use_id)
-		return false;
-	if (*payload == NULL && !dl->use_id)
-		return false;
-
-	/* search */
-	dlnode *curr = dl->head;
-	while (curr) {
-		int r = atomic_compare_id_or_key(dl, *id, *payload, curr);
-		if (r == ID_KEY_GT) {
-			curr = curr->fwd;
-			continue;
-		} else if (r == ID_KEY_EQ) {
-			dl->position = curr;
-			*id = curr->id;
-			*payload = curr->payload;
-			return true;
-		}
-		break;
-	}
-	return false;
-}
-
-bool
-atomic_get_next(
-	dlcb *dl,
-	long *id,
-	void *(*payload)
-) {
-	if (dl->head == NULL)
-		return false;
-	/* we need an id or key in payload */
-	if (*id < 1 && dl->use_id)
-		return false;
-	if (*payload == NULL && !dl->use_id)
-		return false;
-
-	/* we must have a prior position and it must equal our argument key */
-	if (dl->position == 0 ||
-		atomic_compare_id_or_key(dl, *id, *payload, dl->position) != ID_KEY_EQ)
-		return false;
-
-	/* move to next node and set this as the current position in the dl.
-	 * if the node exists, update the caller's id and payload. */
-	dlnode *curr = dl->position->fwd;
-	dl->position = curr;
-	if (curr) {
-		*id = curr->id;
-		*payload = curr->payload;
-	}
-	return curr != NULL;
-}
-
-bool
-atomic_get_previous(
-	dlcb *dl,
-	long *id,
-	void *(*payload)
-) {
-	if (dl->head == NULL)
-		return false;
-	/* we need an id or key in payload */
-	if (*id < 1 && dl->use_id)
-		return false;
-	if (*payload == NULL && !dl->use_id)
-		return false;
-
-	/* we must have a prior position and it must equal our argument key */
-	if (dl->position == 0 ||
-		atomic_compare_id_or_key(dl, *id, *payload, dl->position) != ID_KEY_EQ)
-		return false;
-
-	/* move to prior node and set this as the current position in the dl.
-	 * if the node exists, update the caller's id and payload. */
-	dlnode *curr = dl->position->bwd;
-	dl->position = curr;
-	if (curr) {
-		*id = curr->id;
-		*payload = curr->payload;
-	}
-	return curr != NULL;
-}
-
-bool
-atomic_get_first(
-	dlcb *dl,
-	long *id,
-	void *(*payload)
-) {
-	dl->position = NULL;
-	if (dl->head == NULL)
-		return false;
-	dl->position = dl->head;
-	*id = dl->head->id;
-	*payload = dl->head->payload;
-	return true;
-}
-
-bool
-atomic_get_last(
-	dlcb *dl,
-	long *id,
-	void *(*payload)
-) {
-	dl->position = NULL;
-	if (dl->tail == NULL)
-		return false;
-	dl->position = dl->tail;
-	*id = dl->tail->id;
-	*payload = dl->tail->payload;
-	return true;
-}
-
-static
-bool
-atomic_delete(
-	dlcb *dl,
-	long id,
-	void *payload
-) {
-
-	/* find where this item is in the list. */
-
-	dlnode *curr = dl->head;
-	int r = 0;
-
-	/* TODO optimization by checking last in dlcb */
-
-	while (curr) {
-
-		r = atomic_compare_id_or_key(dl, id, payload, curr);
-		if (r == ID_KEY_GT) {
-			curr = curr->fwd;
-			continue;
-		} else if (r == ID_KEY_LT)
-			return false;
-
-		/* deletes clear position */
-		dl->position = NULL;
-
-		if (curr->fwd == NULL && curr->bwd == NULL) {
-
-			/* this is the only item */
-			dl->head = NULL;
-			dl->tail = NULL;
-
-		} else if (curr->bwd == NULL) {
-
-			/* this is the head */
-			dl->head = curr->fwd;
-			curr->fwd->bwd = NULL;
-
-		} else if (curr->fwd == NULL) {
-
-			/* is this the tail? */
-			dl->tail = curr->bwd;
-			curr->bwd->fwd = NULL;
-
-		} else {
-
-			/* somewhere in the middle */
-			curr->bwd->fwd = curr->fwd;
-			curr->fwd->bwd = curr->bwd;
-		}
-
-		memset(curr, 254, sizeof(dlnode));
-		free(curr);
-		return true;
-	}
-
-	/* it's not there */
-	return false;
-}
-
-static
-bool
-atomic_update(
-	dlcb *dl,
-	long id,
-	void *payload
-) {
-
-	/* find where this item is in the list. */
-
-	dlnode *curr = dl->head;
-	int r = 0;
-
-	/* TODO optimization by checking last in dlcb */
-
-	while (curr) {
-
-		r = atomic_compare_id_or_key(dl, id, payload, curr);
-		if (r == ID_KEY_GT) {
-			curr = curr->fwd;
-			continue;
-		} else if (r == ID_KEY_LT)
-			return false;
-
-		/* updates clear position */
-		dl->position = NULL;
-
-		/* free the old payload. while we know the new payload will have an
-		 * equal key, if the key is only part of the payload we allow it
-		 * to be updated along witht he rest of the payload. the id can
-		 * not be updated at this point. */
-
-		if (dl->dynamic_payload)
-			dl->payload_free(curr->payload);
-
-		curr->payload = payload;
-
-		return true;
-	}
-
-	/* it's not there */
-	return false;
-}
-
-/*
- * wrapper functions to default arguments when creating a new linked
- * list depending on keying choice.
- */
-
-dlcb *
-dl_create_by_id(
-	bool threaded,
-	void (*free_payload)(void *)
-) {
-	return atomic_create(
-		threaded,
-		true,
-		free_payload,
-		NULL
-		);
-}
-
-dlcb *
-dl_create_by_key(
-	bool threaded,
-	int (*compare_payload_key)(void *, void *),
-	void (*free_payload)(void *)
-) {
-	return atomic_create(
-		threaded,
-		false,
-		free_payload,
-		compare_payload_key
-		);
-}
-
-/*
- * if the list is empty, release its storage.
+ * dl_destroy
+ *
+ * destroy an instance of a keyed linked list if it is empty.
+ *
+ *     in: the dl instance.
+ *
+ * return: true if successful, false if dl was not empty.
  */
 
 bool
 dl_destroy(
 	dlcb *dl
 ) {
-	assert(dl &&
-		memcmp(dl->tag, DLCB_TAG, sizeof(dl->tag)) == 0 &&
-		"invalid DLCB");
+	ASSERT_DLCB(dl, "invalid DLCB");
 	if (dl_empty(dl)) {
-		if (dl->threaded) {
-			while (EBUSY == pthread_mutex_destroy(&dl->mutex))
-				;
-		}
-		if (dl->work) {
-			memset(dl->work, 254, sizeof(dlnode));
-			free(dl->work);
-		}
-		memset(dl, 254, sizeof(dlcb));
+		memset(dl, 253, sizeof(*dl));
 		free(dl);
 		return true;
 	}
 	return false;
 }
-
-bool
-dl_empty(
+
+/*
+ * dl_get_error
+ *
+ * get status of last command if there was an error.
+ *
+ *     in: the dl instance.
+ *
+ * return: constant string with a brief message or NULL.
+ *
+ */
+
+const char *
+dl_get_error(
 	dlcb *dl
 ) {
-	assert(dl &&
-		memcmp(dl->tag, DLCB_TAG, sizeof(dl->tag)) == 0 &&
-		"invalid DLCB");
-	if (dl->threaded)
-		pthread_mutex_lock(&dl->mutex);
-	dl->odometer += 1;
-	bool res = atomic_empty(dl);
-	if (dl->threaded)
-		pthread_mutex_unlock(&dl->mutex);
-	return res;
+	ASSERT_DLCB(dl, "invalid DLCB");
+	return dl->error;
 }
-
+
+/*
+ * dl_count
+ *
+ * how many items are on the list?
+ *
+ *     in: the dl instance.
+ *
+ * return: int number of items on the list.
+ */
+
 int
 dl_count(
 	dlcb *dl
 ) {
-	assert(dl &&
-		memcmp(dl->tag, DLCB_TAG, sizeof(dl->tag)) == 0 &&
-		"invalid DLCB");
-	if (dl->threaded)
-		pthread_mutex_lock(&dl->mutex);
-	dl->odometer += 1;
-	int res = atomic_count(dl);
-	int chk = dl->count;
-	assert(chk == res &&
-		"error calculated DLCB entry count does not match running count");
-	if (dl->threaded)
-		pthread_mutex_unlock(&dl->mutex);
-	return res;
+	ASSERT_DLCB(dl, "invalid DLCB");
+	dl->error = NULL;
+	int n = 0;
+	dlnode *dn = dl->first;
+	while (dn) {
+		n += 1;
+		dn = dn->next;
+	}
+	assert(n == dl->count &&
+		"dl_count error in node count");
+	return dl->count;
 }
-
-int
-dl_delete_all(
+
+/*
+ * dl_empty
+ *
+ * is the list empty?
+ *
+ *     in: the dl instance.
+ *
+ * return: bool.
+ */
+
+bool
+dl_empty(
 	dlcb *dl
 ) {
-	assert(dl &&
-		memcmp(dl->tag, DLCB_TAG, sizeof(dl->tag)) == 0 &&
-		"invalid DLCB");
-	if (dl->threaded)
-		pthread_mutex_lock(&dl->mutex);
-	dl->odometer += 1;
-	int res = atomic_delete_all(dl);
-	dl->count = 0;
-	if (dl->threaded)
-		pthread_mutex_unlock(&dl->mutex);
-	return res;
+	ASSERT_DLCB(dl, "invalid DLCB");
+	dl->error = NULL;
+	return dl->first == NULL;
 }
-
-bool
-dl_insert(
+
+/*
+ * dl_reset
+ *
+ * reset the keyed link list, deleting all items. does not free payload
+ * storage.
+ *
+ *     in: the dl instance.
+ *
+ * return: int number of items deleted.
+ */
+
+int
+dl_reset(
+	dlcb *dl
+) {
+	ASSERT_DLCB(dl, "invalid DLCB");
+	dl->error = NULL;
+	dlnode *dn = dl->first;
+	dlnode *next = NULL;
+	int deleted = 0;
+	while (dn) {
+		next = dn->next;
+		memset(dn, 253, sizeof(*dn));
+		free(dn);
+		deleted += 1;
+		dn = next;
+	}
+	dl->first = NULL;
+	dl->last = NULL;
+	dl->position = NULL;
+	dl->error = NULL;
+	assert(dl->count == deleted &&
+		"dl_reset mismatch between deleted and count");
+	dl->count = 0;
+	return deleted;
+}
+
+/*
+ * dl_create_node.
+ *
+ * allocate and initialize a node that can be linked
+ * into a dl.
+ *
+ *     in: the dl instance.
+ *
+ * return: the new node.
+ */
+
+static
+dlnode *
+dl_create_node(
 	dlcb *dl,
-	long id,
 	void *payload
 ) {
-	assert(dl &&
-		memcmp(dl->tag, DLCB_TAG, sizeof(dl->tag)) == 0 &&
-		"invalid DLCB");
-	if (dl->threaded)
-		pthread_mutex_lock(&dl->mutex);
-	dl->odometer += 1;
-	bool res = atomic_insert(dl, id, payload);
-	if (res)
-		dl->count += 1;
-	if (dl->threaded)
-		pthread_mutex_unlock(&dl->mutex);
-	return res;
+	ASSERT_DLCB(dl, "invalid DLCB");
+	dlnode *dn = malloc(sizeof(*dn));
+	assert(dn &&
+		"could not allocate DLNODE");
+	memset(dn, 0, sizeof(*dn));
+	memcpy(dn->tag, DLNODE_TAG, sizeof(dl->tag));
+	dn->owner = dl;
+	dn->payload = payload;
+	return dn;
 }
-
+
+/*
+ * dl_insert_first.
+ *
+ * insert a new item at the head of the list.
+ *
+ *     in: the dl instance.
+ *
+ *     in: the client data must fit in in a void *, typically
+ *         a pointer to the client data.
+ *
+ * return: the dl node.
+ */
+
+dlnode *
+dl_insert_first(
+	dlcb *dl,
+	void *payload
+) {
+	ASSERT_DLCB(dl, "invalid DLCB");
+	dl->error = NULL;
+	dlnode *new_dn = dl_create_node(dl, payload);
+	if (!dl->first) {
+		dl->first = new_dn;
+		dl->last = new_dn;
+	} else {
+		new_dn->next = dl->first;
+		dl->first->previous = new_dn;
+		dl->position = new_dn;
+		dl->first = new_dn;
+	}
+	dl->position = dl->first;
+	dl->count += 1;
+	return dl->position;
+}
+
+/*
+ * dl_insert_last.
+ *
+ * insert a new item at the tail of the list.
+ *
+ *     in: the dl instance.
+ *
+ *     in: the client data must fit in in a void *, typically
+ *         a pointer to the client data.
+ *
+ * return: the dl node.
+ */
+
+dlnode *
+dl_insert_last(
+	dlcb *dl,
+	void *payload
+) {
+	ASSERT_DLCB(dl, "invalid DLCB");
+	dl->error = NULL;
+	dlnode *new_dn = dl_create_node(dl, payload);
+	if (!dl->first) {
+		dl->first = new_dn;
+		dl->last = new_dn;
+	} else {
+		new_dn->previous = dl->last;
+		dl->last->next = new_dn;
+		dl->position = new_dn;
+		dl->last = new_dn;
+	}
+	dl->position = dl->last;
+	dl->count += 1;
+	return dl->position;
+}
+
+/*
+ * dl_insert_before.
+ *
+ * insert a new item immediately before the current item.
+ *
+ *     in: the dl instance.
+ *
+ *     in: the dl node of the current position in the dl.
+ *
+ *     in: the client data must fit in in a void *, typically
+ *         a pointer to the client data.
+ *
+ * return: the dl node.
+ */
+
+dlnode *
+dl_insert_before(
+	dlcb *dl,
+	dlnode *dn,
+	void *payload
+) {
+	ASSERT_DLCB(dl, "invalid DLCB");
+	ASSERT_DLNODE(dn, dl, "invalid DLNODE");
+
+	dl->error = NULL;
+
+	if (dl->position != dn) {
+		dl->error = error_bad_dlnode;
+		dl->position = NULL;
+		return NULL;
+	}
+
+	dlnode *new_dn = dl_create_node(dl, payload);
+
+	new_dn->previous = dn->previous;
+	new_dn->next = dn;
+
+	dn->previous = new_dn;
+	if (dl->first == dn)
+		dl->first = new_dn;
+	else
+		new_dn->previous->next = new_dn;
+
+	dl->count += 1;
+	dl->position = new_dn;
+	return new_dn;
+}
+
+/*
+ * dl_insert_after.
+ *
+ * insert a new item immediately after the current item.
+ *
+ *     in: the dl instance.
+ *
+ *     in: the dl node of the current position in the dl.
+ *
+ *     in: the client data must fit in in a void *, typically
+ *         a pointer to the client data.
+ *
+ * return: the dl node.
+ */
+
+dlnode *
+dl_insert_after(
+	dlcb *dl,
+	dlnode *dn,
+	void *payload
+) {
+	ASSERT_DLCB(dl, "invalid DLCB");
+	ASSERT_DLNODE(dn, dl, "invalid DLNODE");
+
+	dl->error = NULL;
+
+	if (dl->position != dn) {
+		dl->error = error_bad_dlnode;
+		dl->position = NULL;
+		return NULL;
+	}
+
+	dlnode *new_dn = dl_create_node(dl, payload);
+
+	new_dn->next = dn->next;
+	new_dn->previous = dn;
+
+	dn->next = new_dn;
+	if (dl->last == dn) {
+		dl->last = new_dn;
+	} else {
+		new_dn->next->previous = new_dn;
+	}
+
+	dl->count += 1;
+	dl->position = new_dn;
+	return new_dn;
+
+}
+
+/*
+ * dl_get_first
+ *
+ * get the first item in the list.
+ *
+ *     in: the dl instance.
+ *
+ * return: dl node of that item.
+ */
+
+dlnode *
+dl_get_first(
+	dlcb *dl
+) {
+	ASSERT_DLCB(dl, "invalid DLCB");
+	dl->position = dl->first;
+	dl->error = NULL;
+	if (!dl->position)
+		dl->error = error_list_empty;
+	return dl->position;
+}
+
+/*
+ * dl_get_last
+ *
+ * get the last item in the list.
+ *
+ *     in: the dl instance.
+ *
+ * return: the dl node of that item.
+ */
+
+dlnode *
+dl_get_last(
+	dlcb *dl
+) {
+	ASSERT_DLCB(dl, "invalid DLCB");
+	dl->position = dl->last;
+	dl->error = NULL;
+	if (!dl->position)
+		dl->error = error_list_empty;
+	return dl->position;
+}
+
+/*
+ * dl_get_next
+ *
+ * get item after the current positioned item.
+ *
+ *     in: the dl instance.
+ *
+ *     in: the dl node of the positioned item.
+ *
+ * return: the dl node of the next item or NULL.
+ */
+
+dlnode *
+dl_get_next(
+	dlcb *dl,
+	dlnode *dn
+) {
+	ASSERT_DLCB(dl, "invalid DLCB");
+	ASSERT_DLNODE(dn, dl, "invalid DLNODE");
+	dl->error = NULL;
+	if (dn == NULL || dl->position == NULL || dn != dl->position) {
+		dl->error = error_not_positioned;
+		dl->position = NULL;
+		return NULL;
+	}
+	dl->position = dl->position->next;
+	if (!dl->position)
+		dl->error = error_next_at_tail;
+	return dl->position;
+}
+
+/*
+ * dl_get_previous
+ *
+ * get the item before the current positioned item.
+ *
+ *     in: the dl instance.
+ *
+ *     in: the dl node of the positioned item.
+ *
+ * return: the dl node of the previous item or NULL.
+ */
+
+dlnode *
+dl_get_previous(
+	dlcb *dl,
+	dlnode *dn
+) {
+	ASSERT_DLCB(dl, "invalid DLCB");
+	ASSERT_DLNODE(dn, dl, "invalid DLNODE");
+	dl->error = NULL;
+	if (dn == NULL || dl->position == NULL || dn != dl->position) {
+		dl->error = error_not_positioned;
+		dl->position = NULL;
+		return NULL;
+	}
+	dl->position = dl->position->previous;
+	if (!dl->position)
+		dl->error = error_previous_at_head;
+	return dl->position;
+}
+
+/*
+ * dl_delete.
+ *
+ * remove the currently positioned item from the list.
+ *
+ *     in: the dl instance.
+ *
+ *     in: the dl node of the positioned item.
+ *
+ * return: boolean true if deleted, false on error.
+ */
+
 bool
 dl_delete(
 	dlcb *dl,
-	long id,
-	void *payload
+	dlnode *dn
 ) {
-	assert(dl &&
-		memcmp(dl->tag, DLCB_TAG, sizeof(dl->tag)) == 0 &&
-		"invalid DLCB");
-	if (dl->threaded)
-		pthread_mutex_lock(&dl->mutex);
-	dl->odometer += 1;
-	int res = atomic_delete(dl, id, payload);
-	if (res)
-		dl->count -= 1;
-	if (dl->threaded)
-		pthread_mutex_unlock(&dl->mutex);
-	return res;
+	ASSERT_DLCB(dl, "invalid DLCB");
+	ASSERT_DLNODE(dn, dl, "invalid DLNODE");
+	dl->error = NULL;
+	if (dl->position == NULL || dn != dl->position) {
+		dl->position = NULL;
+		dl->error = error_bad_dlnode;
+		return false;
+	}
+	/* deletes clear position */
+	dl->position = NULL;
+	if (dn->next == NULL && dn->previous == NULL) {
+		/* this is the only item */
+		dl->first = NULL;
+		dl->last = NULL;
+	} else if (dn->previous == NULL) {
+		/* this is the head */
+		dl->first = dn->next;
+		((dlnode *)dn->next)->previous = NULL;
+	} else if (dn->next == NULL) {
+		/* is this the tail? */
+		dl->last = dn->previous;
+		((dlnode *)dn->previous)->next = NULL;
+	} else {
+		/* somewhere in the middle */
+		((dlnode *)dn->previous)->next = dn->next;
+		((dlnode *)dn->next)->previous = dn->previous;
+	}
+	memset(dn, 253, sizeof(*dn));
+	free(dn);
+	dl->count -= 1;
+	return true;
 }
-
-bool
+
+/*
+ * dl_update.
+ *
+ * update an item's value in the list. the list should be positioned
+ * on the node to update.
+ *
+ * as items are stored in memory, if you do not change the address of
+ * the value (ie, you updated its contents in place) there is no need
+ * to use dl_update.
+ *
+ *     in: the dl instance.
+ *
+ *     in: the dl node to be updated
+ *
+ *     in: the new payload, typically a void * pointer to a value.
+ *
+ * return: the dl node of the updated item.
+ */
+
+dlnode *
 dl_update(
 	dlcb *dl,
-	long id,
+	dlnode *dn,
 	void *payload
 ) {
-	assert(dl &&
-		memcmp(dl->tag, DLCB_TAG, sizeof(dl->tag)) == 0 &&
-		"invalid DLCB");
-	if (dl->threaded)
-		pthread_mutex_lock(&dl->mutex);
-	dl->odometer += 1;
-	int res = atomic_update(dl, id, payload);
-	if (dl->threaded)
-		pthread_mutex_unlock(&dl->mutex);
-	return res;
-}
-
-bool
-dl_get(
-	dlcb *dl,
-	long *id,
-	void *(*payload)
-) {
-	assert(dl &&
-		memcmp(dl->tag, DLCB_TAG, sizeof(dl->tag)) == 0 &&
-		"invalid DLCB");
-	if (dl->threaded)
-		pthread_mutex_lock(&dl->mutex);
-	dl->odometer += 1;
-	bool res = atomic_get(dl, id, payload);
-	if (dl->threaded)
-		pthread_mutex_unlock(&dl->mutex);
-	return res;
+	ASSERT_DLCB(dl, "invalid DLCB");
+	ASSERT_DLNODE(dn, dl, "invalid DLNODE");
+	dl->error = NULL;
+	if (dn == NULL || dl->position == NULL || dn != dl->position) {
+		dl->error = error_not_positioned;
+		dl->position = NULL;
+	} else {
+		dl->position->payload = payload;
+	}
+	return dl->position;
 }
 
-bool
-dl_get_first(
-	dlcb *dl,
-	long *id,
-	void *(*payload)
-) {
-	assert(dl &&
-		memcmp(dl->tag, DLCB_TAG, sizeof(dl->tag)) == 0 &&
-		"invalid DLCB");
-	if (dl->threaded)
-		pthread_mutex_lock(&dl->mutex);
-	dl->odometer += 1;
-	bool res = atomic_get_first(dl, id, payload);
-	if (dl->threaded)
-		pthread_mutex_unlock(&dl->mutex);
-	return res;
-}
-
-bool
-dl_get_last(
-	dlcb *dl,
-	long *id,
-	void *(*payload)
-) {
-	assert(dl &&
-		memcmp(dl->tag, DLCB_TAG, sizeof(dl->tag)) == 0 &&
-		"invalid DLCB");
-	if (dl->threaded)
-		pthread_mutex_lock(&dl->mutex);
-	dl->odometer += 1;
-	bool res = atomic_get_last(dl, id, payload);
-	if (dl->threaded)
-		pthread_mutex_unlock(&dl->mutex);
-	return res;
-}
-
-bool
-dl_get_next(
-	dlcb *dl,
-	long *id,
-	void *(*payload)
-) {
-	assert(dl &&
-		memcmp(dl->tag, DLCB_TAG, sizeof(dl->tag)) == 0 &&
-		"invalid DLCB");
-	if (dl->threaded)
-		pthread_mutex_lock(&dl->mutex);
-	dl->odometer += 1;
-	bool res = atomic_get_next(dl, id, payload);
-	if (dl->threaded)
-		pthread_mutex_unlock(&dl->mutex);
-	return res;
-}
-
-bool
-dl_get_previous(
-	dlcb *dl,
-	long *id,
-	void *(*payload)
-) {
-	assert(dl &&
-		memcmp(dl->tag, DLCB_TAG, sizeof(dl->tag)) == 0 &&
-		"invalid DLCB");
-	if (dl->threaded)
-		pthread_mutex_lock(&dl->mutex);
-	dl->odometer += 1;
-	bool res = atomic_get_previous(dl, id, payload);
-	if (dl->threaded)
-		pthread_mutex_unlock(&dl->mutex);
-	return res;
-}
+/* dl.c ends here */

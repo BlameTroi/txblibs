@@ -50,10 +50,12 @@ typedef struct dacb dacb;
  * da_create
  *
  * create a new instance of a dynamic array. the lone argument is the
- * number of entries in the initial allocation. if more are needed,
+ * number of items in the initial allocation. if more are needed,
  * the allocation doubles.
  *
- * returns the da instance.
+ *     in: initial size of 0 for a default value.
+ *
+ * return: the da instance.
  */
 
 dacb *
@@ -65,6 +67,10 @@ da_create(
  * da_destroy
  *
  * overwrite and release all dynamically allocated memory for a da.
+ *
+ *     in: the da instance.
+ *
+ * return: nothing
  */
 
 void
@@ -80,9 +86,11 @@ da_destroy(
  *
  * fails via an assert if n greater than the highest index of a da_put.
  *
- * takes the da instance and an integer index.
+ *     in: the da instance.
  *
- * returns the item as a void *.
+ *     in: integer index of item.
+ *
+ * return: the item as a void *, NULL if never put.
  */
 
 void *
@@ -96,8 +104,13 @@ da_get(
  *
  * insert or overwrite the contents of array index n.
  *
- * takes the da instance, integer index, and the item to insert as a
- * void *.
+ *     in: the da instance.
+ *
+ *     in: integer index of item.
+ *
+ *     in: address of item as a void *.
+ *
+ * return: nothing.
  */
 
 void
@@ -109,10 +122,13 @@ da_put(
 /*
  * da_count
  *
- * how many entries (null or otherwise) does the array hold. this will
+ * how many items (null or otherwise) does the array hold. this will
  * be one more than the highest 'n' passed to da_put.
  *
- * takes the da instance and returns an int count.
+ *     in: the da instance.
+ *
+ * return: integer number of possible items, one more than the
+ *         highest 'n' passed to da_put.
  */
 
 int

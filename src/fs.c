@@ -33,7 +33,7 @@ struct fscb {
 };
 
 /*
- * create a new empty stack instance large enough to hold 'limit' entries.
+ * create a new empty stack instance large enough to hold 'limit' items.
  */
 
 fscb *
@@ -49,7 +49,7 @@ fs_create(
 }
 
 /*
- * push a new entry on the stack.
+ * push a new item on the stack.
  */
 
 void
@@ -64,7 +64,7 @@ fs_push(
 }
 
 /*
- * pop an entry from the stack.
+ * pop an item from the stack.
  */
 
 void *
@@ -79,7 +79,7 @@ fs_pop(
 }
 
 /*
- * get the top entry from the stack without removing it.
+ * get the top item from the stack without removing it.
  */
 
 void *

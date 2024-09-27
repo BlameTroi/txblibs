@@ -27,9 +27,9 @@
  * internally, a copy of `str` is made with dup_string and then is marked
  * by strtok.
  *
- * returns an array of string pointers. the first entry is a pointer
- * to the copy the original string, and subsequent entries up until a
- * NULL entry are the substrings within that copy.
+ * returns an array of string pointers. the first item is a pointer
+ * to the copy the original string, and subsequent items up until a
+ * NULL item are the substrings within that copy.
  *
  * the caller is responsible for releasing the copy of `str` and the
  * pointer array.
@@ -86,7 +86,7 @@ split_string(
 	   allocation of the token list isn't a concern.
 
 	   a single word with no separators requires two slots, and we
-	   allocate space an ending NULL entry and a pointer to the copy
+	   allocate space an ending NULL item and a pointer to the copy
 	   of the original string. */
 
 	int maxTokens = 2 + 1 + 1;

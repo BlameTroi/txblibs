@@ -1,7 +1,8 @@
 /*  unittest.c -- units for my header libraries -- troy brumley */
 
 /* released to the public domain, troy brumley, may 2024 */
-
+
+#undef NDEBUG
 #include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -14,149 +15,87 @@
 #include "../inc/dl.h"
 #include "../inc/str.h"
 #include "../inc/rand.h"
-
+
 /*
- *
  * tests for  txbdl -- doubly linked list
- *
- */
-
-/*
- * change the following to control if using pthread calls
  */
 
-#define USE_THREADING true
-
 /*
- * for testing the payload is a string, so payload compare is just a
- * wrapper around strcmp.
- */
-
-int
-payload_compare(void *s1, void *s2) {
-	return strcmp(s1, s2);
-}
-
-int
-payload_compare_char4(void *s1, void *s2) {
-	assert(strlen(s1) > 3 &&
-		strlen(s2) > 3);
-	return strncmp(s1, s2, 4);
-}
-
-int
-payload_compare_long(void *i, void *j) {
-	long r = (long)i - (long)j;
-	if (r < 0)
-		return -1;
-	if (r == 0)
-		return 0;
-	return +1;
-}
-
-/*
- * for testing free any single block of allocated memory.
- */
-
-void
-payload_free(void *p) {
-	free(p);
-}
-
-/*
- * minunit setup and teardown of listd infratstructure.
+ * minunit setup and teardown.
  */
 
 #define RAND_SEED 6803
 
+static dlcb * test_dl = NULL;
+
+/*
+ * test_setup.
+ *
+ * after seeding rand(), create a list for testing. list payload items
+ * are malloced strings "9999 bogus", where the digits run from 10 to
+ * 990 by 10s to get 99 items.
+ *
+ * note that the payloads are malloced via dup_string after the
+ * snprintf. the buffer is on the local stack. even if the payload
+ * could be accessed reliably from later code, they would all point to
+ * single buffer with whatever is in memory at that point.
+ *
+ * payloads are references, remember this.
+ */
+
+static
 void
 test_setup(void) {
 
-	/* let's use a different seed than 1, but not time() because i want
-	   repeatable tests. */
+	/* reproducible results if doing something 'random' */
 	set_random_generator(RAND_DEFAULT);
 	seed_random_generator(RAND_SEED);
 
-}
-
-void
-test_teardown(void) {
-}
-
-/*
- * utility functions to create and destroy lists for testing. just a list of
- * 100 items to work with, ids or keys run from 10 to 1000 by 10s.
- */
-
-dlcb *
-create_populated_id_list(void) {
+	/* load up a list with 100 items */
 	char buffer[100];
-	memset(buffer, 0, 100 * sizeof(char));
-
-	dlcb *dl = dl_create_by_id(
-		USE_THREADING,
-		payload_free
-		);
-	assert(dl &&
+	memset(buffer, 0, 100);
+	test_dl = dl_create();
+	assert(test_dl &&
 		"error creating test data linked list");
-
 	for (int i = 10; i < 1000; i += 10) {
 		snprintf(buffer, 99, "%04d bogus", i);
-		dl_insert(dl, i, dup_string(buffer));
+		dl_insert_last(test_dl, dup_string(buffer));
 	}
-
-	return dl;
 }
 
-void
-destroy_populated_id_list(dlcb *dl) {
-	dl_delete_all(dl);
-	dl_destroy(dl);
-	dl = NULL;
-}
-
-dlcb *
-create_populated_key_list(
-	int(*optional_payload_compare)(void *, void *)
-) {
-
-	char buffer[100];
-	memset(buffer, 0, 100 * sizeof(char));
-
-	if (optional_payload_compare == NULL)
-		optional_payload_compare = payload_compare;
-	dlcb *dl = dl_create_by_key(
-		USE_THREADING,
-		optional_payload_compare,
-		payload_free
-		);
-	assert(dl &&
-		"error creating test data linked list");
-
-	for (int i = 10; i < 1000; i += 10) {
-		snprintf(buffer, 99, "%04d i'm a key", i);
-		dl_insert(dl, i, dup_string(buffer));
-	}
-
-	return dl;
-}
-
-void
-destroy_populated_key_list(dlcb *dl) {
-	dl_delete_all(dl);
-	dl_destroy(dl);
-	dl = NULL;
-}
-
 /*
- * the doubly linked list tests for identity keyed lists.
+ * test_teardown.
+ *
+ * delete and free payloads of any items still on the list after a
+ * test has run.
+ *
+ * with sanatize-address on, if you drop a payload as the address of a
+ * literal, the free will fail.
  */
 
-MU_TEST(test_dl_id_create) {
-	dlcb *dl = dl_create_by_id(
-		USE_THREADING,
-		NULL
-		);
+static
+void
+test_teardown(void) {
+	if (!test_dl)
+		return;
+	dlnode *dn = NULL;
+	while (dn = dl_get_first(test_dl), dn) {
+		free(dn->payload);
+		dl_delete(test_dl, dn);
+	}
+	dl_destroy(test_dl);
+	test_dl = NULL;
+}
+
+/*
+ * test_create.
+ *
+ * create a new list instance and confirm that it arrives in the
+ * proper starting state.
+ */
+
+MU_TEST(test_create) {
+	dlcb *dl = dl_create();
 	mu_should(dl);
 	mu_should(dl_empty(dl));
 	mu_should(dl_count(dl) == 0);
@@ -164,686 +103,648 @@ MU_TEST(test_dl_id_create) {
 }
 
 /*
- * test adding a single entry to an identity list.
+ * test_insert_ends.
+ *
+ * test adding a single item in an empty list using first and last
+ * positions. like a queue or stack would.
+ *
+ * note that this doesn't leak payload storage since the payloads are
+ * constants.
  */
 
-MU_TEST(test_dl_id_add) {
-	dlcb *dl = dl_create_by_id(
-		USE_THREADING,
-		NULL
-		);
-	mu_should(dl_insert(dl, 1, "1234"));
-	mu_shouldnt(dl_empty(dl));
-	mu_should(dl_count(dl) == 1);
-	mu_should(dl_delete_all(dl) == 1);
-	mu_should(dl_empty(dl));
-	mu_should(dl_count(dl) == 0);
-	dl_destroy(dl);
-}
+MU_TEST(test_insert_ends) {
 
-/*
- * add multiples in various orders.
- */
+	/* insert these strings last if index is even (0, 2, ...) or
+	 * first if index is odd (1, 3, ...). checking the order is
+	 * a way to validate that the data made it into the list and
+	 * that the links were updated correctly in each direction. */
 
-MU_TEST(test_dl_id_add_multiple) {
-	dlcb *dl = dl_create_by_id(
-		USE_THREADING,
-		NULL
-		);
-	/* add two unique entries, then remove them. */
-	mu_should(dl_insert(dl, 1, "first"));
-	mu_should(dl_insert(dl, 2, "second"));
-	mu_should(dl_count(dl) == 2);
-	mu_should(dl_delete_all(dl) == 2);
-	mu_should(dl_empty(dl));
-	mu_should(dl_count(dl) == 0);
+	char *items[] = { "1", "2", "3", "4", "5", "6", "7", NULL };
+	char ordering[] = { '6', '4', '2', '1', '3', '5', '7', '\0' };
 
-	/* it takes more than two entries to mess with linking. */
-	mu_should(dl_insert(dl, 1, "first"));
-	mu_should(dl_insert(dl, 4, "fourth, added second"));
-	mu_should(dl_insert(dl, 2, "second, added third"));
-	mu_should(dl_insert(dl, 3, "third, added fourth"));
-	mu_should(dl_count(dl) == 4);
+	dlcb *dl = dl_create();
+	dlnode *dn = NULL;
+	int i = 0;
 
-	/* now insert at front and then at back, knowing the ordering as we did above. */
-	mu_should(dl_insert(dl, 0, "zeroeth, added fifth"));
-	mu_should(dl_insert(dl, 5, "sixth, added sixth"));
-
-	/* we'll confirm ordering in another set of tests. */
-	mu_should(dl_count(dl) == 6);
-
-	/* and now empty the list and we're done. */
-	mu_should(dl_delete_all(dl) == 6);
-	dl_destroy(dl);
-}
-
-MU_TEST(test_dl_id_add_duplicate) {
-	dlcb *dl = dl_create_by_id(
-		USE_THREADING,
-		NULL
-		);
-	for (int i = 1; i < 10; i++)
-		dl_insert(dl, i, NULL);
-	mu_should(dl_count(dl) == 9);
-	mu_should(dl_insert(dl, 20, NULL));           /* +1 */
-	mu_shouldnt(dl_insert(dl, 5, NULL));          /* -- */
-	mu_shouldnt(dl_insert(dl, 1, NULL));          /* -- */
-	mu_should(dl_insert(dl, 19, NULL));           /* +1 */
-	mu_shouldnt(dl_insert(dl, 19, NULL));         /* -- */
-	mu_should(dl_delete_all(dl) == 11);
-	dl_destroy(dl);
-}
-
-/*
- * create a list of randomly keyed entries. there should
- * be duplicates and we'll check counts.
- */
-
-MU_TEST(test_dl_id_add_random) {
-	dlcb *dl = dl_create_by_id(
-		USE_THREADING,
-		payload_free
-		);
-	int generated = 0;
-	int added = 0;
-	int duplicated = 0;
-	for (int i = 0; i < 10000; i++) {
-		int *p = malloc(sizeof(int));
-		*p = random_between(1, 5000);
-		generated += 1;
-		if (dl_insert(dl, *p, p))
-			added += 1;
-
+	/* add the test items alternating from add last to add first */
+	i = 0;
+	while (items[i]) {
+		if (is_even(i))
+			mu_should(dl_insert_last(dl, items[i]));
 		else
-			duplicated += 1;
+			mu_should(dl_insert_first(dl, items[i]));
+		i += 1;
+		mu_should(dl_count(dl) == i);
 	}
-	mu_should(generated == added + duplicated);
-	mu_should(dl_count(dl) == added);
-	dl_delete_all(dl);
+
+	/* the expected ordering forward is 6421357 */
+	i = 0;
+	while (ordering[i]) {
+		dn = dl_get_first(dl);
+		mu_should(((char *)dn->payload)[0] == ordering[i]);
+		dl_delete(dl, dn);
+		i += 1;
+	}
+
+	mu_should(dl_count(dl) == 0);
+	mu_should(dl_empty(dl));
+
+	/* the expected ordering forward is 6421357 but we're going to
+	 * check reading backwards through the list. re-add the items
+	 * to the list as above. */
+
+	i = 0;
+	while (items[i]) {
+		if (is_even(i))
+			mu_should(dl_insert_last(dl, items[i]));
+		else
+			mu_should(dl_insert_first(dl, items[i]));
+		i += 1;
+		mu_should(dl_count(dl) == i);
+	}
+
+	/* the expected ordering forward is 6421357
+	 * but we're going to check backwards. */
+
+	/* find end of ordering check */
+	i = 0;
+	while (ordering[i])
+		i += 1;
+
+	/* recheck from the last node and backing through the
+	 * ordering array. */
+	while (i > 0) {
+		i -= 1;
+		dn = dl_get_last(dl);
+		mu_should(((char *)dn->payload)[0] == ordering[i]);
+		dl_delete(dl, dn);
+	}
+
+	mu_should(dl_count(dl) == 0);
+	mu_should(dl_empty(dl));
+
+	/* all good */
+
 	dl_destroy(dl);
 }
 
 /*
+ * test_insert_after.
+ *
+ * check that links are updated correctly when inserting after the
+ * first and last items in the list. then insert some items in the
+ * middle of the list and verify that they are correctly linked.
+ */
+
+MU_TEST(test_insert_after) {
+	dlcb *dl = NULL;
+	dlnode *dn = NULL;
+	void *payload = NULL;
+
+	/* in an empty list do the inserts work as expected? after the
+	 * inserts, traverse the list from first to last and then last
+	 * to first, checking that the payloads are as expected.
+	 *
+	 * this pattern of validation will repeat throughout these
+	 * unit tests. */
+
+	/* insert after head of single item list */
+	dl = dl_create();
+	payload = dup_string("first");
+	dn = dl_insert_first(dl, payload);
+	mu_should(dn);
+	dn = dl_get_first(dl);
+	payload = dup_string("inserted after first");
+	dn = dl_insert_after(dl, dn, payload);
+	mu_should(dn);
+	mu_should(dl_count(dl) == 2);
+
+	/* order should be first, inserted after first */
+	dn = dl_get_first(dl);
+	mu_should(equal_string(dn->payload, "first"));
+	dn = dl_get_next(dl, dn);
+	mu_should(equal_string(dn->payload, "inserted after first"));
+
+	/* while we're at it, check that an error is reported when we
+	 * reach the end of the list. */
+	dn = dl_get_next(dl, dn);
+	mu_shouldnt(dn);
+	mu_should(dl_get_error(dl));
+
+	/* check from the tail */
+	dn = dl_get_last(dl);
+	mu_should(equal_string(dn->payload, "inserted after first"));
+	dn = dl_get_previous(dl, dn);
+	mu_should(equal_string(dn->payload, "first"));
+
+	/* again, should get an error trying to read past head */
+	dn = dl_get_previous(dl, dn);
+	mu_shouldnt(dn);
+	mu_should(dl_get_error(dl));
+
+	/* clean up before switching to the preloaded list */
+	while (dn = dl_get_first(dl), dn) {
+		free(dn->payload);
+		dl_delete(dl, dn);
+	}
+	dl_destroy(dl);
+
+	/* insert after the head of the list */
+	dl = test_dl;
+	dn = dl_get_first(dl);
+	payload = dup_string("inserted after first");
+	dn = dl_insert_after(dl, dn, payload);
+	mu_should(dn);
+
+	/* first three should be 10, new, 20 */
+	dn = dl_get_first(dl);
+	mu_should(equal_string("0010 bogus", dn->payload));
+	dn = dl_get_next(dl, dn);
+	mu_should(equal_string("inserted after first", dn->payload));
+	dn = dl_get_next(dl, dn);
+	mu_should(equal_string("0020 bogus", dn->payload));
+
+	/* and now after the end */
+	dn = dl_get_last(dl);
+	payload = dup_string("inserted after last");
+	dn = dl_insert_after(dl, dn, payload);
+	mu_should(dn);
+
+	/* last three should be new, 990, 980 */
+	dn = dl_get_last(dl);
+	mu_should(equal_string("inserted after last", dn->payload));
+	dn = dl_get_previous(dl, dn);
+	mu_should(equal_string("0990 bogus", dn->payload));
+	dn = dl_get_previous(dl, dn);
+	mu_should(equal_string("0980 bogus", dn->payload));
+
+	/* now read forward to end, end should be detected. */
+	dn = dl_get_next(dl, dn);
+	mu_should(equal_string("0990 bogus", dn->payload));
+	dn = dl_get_next(dl, dn);
+	mu_should(equal_string("inserted after last", dn->payload));
+	dn = dl_get_next(dl, dn);
+	mu_shouldnt(dn);
+	mu_should(dl_get_error(dl));
+
+	/* count should be 99 + 2 = 101 */
+	mu_should(dl_count(dl) == 99 + 2);
+
+	/* find 0500 in the list */
+	dn = dl_get_first(dl);
+	while (dn) {
+		if (equal_string("0500 bogus", dn->payload))
+			break;
+		dn = dl_get_next(dl, dn);
+	}
+	mu_should(dn);
+
+	/* insert after */
+	payload = dup_string("inserted after 0500");
+	dn = dl_insert_after(dl, dn, payload);
+
+	/* find it forward */
+	dn = dl_get_first(dl);
+	while (dn) {
+		if (equal_string("0500 bogus", dn->payload))
+			break;
+		dn = dl_get_next(dl, dn);
+	}
+	mu_should(dn);
+
+	dn = dl_get_next(dl, dn);
+	mu_should(equal_string("inserted after 0500", dn->payload));
+
+	/* and now find it backward */
+	dn = dl_get_last(dl);
+	while (dn) {
+		if (equal_string("inserted after 0500", dn->payload))
+			break;
+		dn = dl_get_previous(dl, dn);
+	}
+	mu_should(dn);
+
+	dn = dl_get_previous(dl, dn);
+	mu_should(equal_string("0500 bogus", dn->payload));
+
+	/* lastly check the count */
+	mu_should(dl_count(dl) == 99 + 2 + 1);
+}
+
+/*
+ * test_insert_before.
+ *
+ * check that links are updated correctly when inserting before the
+ * first and last items in the list. then insert some items in the
+ * middle of the list and verify that they are correctly linked.
+ *
+ * these tests parallel test_insert_after.
+ */
+
+MU_TEST(test_insert_before) {
+	dlcb *dl = NULL;
+	dlnode *dn = NULL;
+	void *payload = NULL;
+
+	/* in an empty list do the inserts work as expected? after the
+	 * inserts, traverse the list from first to last and then last
+	 * to first, checking that the payloads are as expected.
+	 *
+	 * this pattern of validation will repeat throughout these
+	 * unit tests. */
+
+	/* insert after head of single item list */
+	dl = dl_create();
+	payload = dup_string("first");
+	dn = dl_insert_first(dl, payload);
+	mu_should(dn);
+	dn = dl_get_first(dl);
+	payload = dup_string("inserted before first");
+	dn = dl_insert_before(dl, dn, payload);
+	mu_should(dn);
+	mu_should(dl_count(dl) == 2);
+
+	/* order should be new, first */
+	dn = dl_get_first(dl);
+	mu_should(equal_string(dn->payload, "inserted before first"));
+	dn = dl_get_next(dl, dn);
+	mu_should(equal_string(dn->payload, "first"));
+
+	/* while we're at it, check that an error is reported when we
+	 * reach the end of the list. */
+	dn = dl_get_next(dl, dn);
+	mu_shouldnt(dn);
+	mu_should(dl_get_error(dl));
+
+	/* check from the tail */
+	dn = dl_get_last(dl);
+	mu_should(equal_string(dn->payload, "first"));
+	dn = dl_get_previous(dl, dn);
+	mu_should(equal_string(dn->payload, "inserted before first"));
+
+	/* again, should get an error trying to read past head */
+	dn = dl_get_previous(dl, dn);
+	mu_shouldnt(dn);
+	mu_should(dl_get_error(dl));
+
+	/* clean up before switching to the preloaded list */
+	while (dn = dl_get_first(dl), dn) {
+		free(dn->payload);
+		dl_delete(dl, dn);
+	}
+	dl_destroy(dl);
+
+	/* insert after the head of the list */
+	dl = test_dl;
+	dn = dl_get_first(dl);
+	payload = dup_string("inserted before first");
+	dn = dl_insert_before(dl, dn, payload);
+	mu_should(dn);
+
+	/* first three should be new, 10, 20 */
+	dn = dl_get_first(dl);
+	mu_should(equal_string("inserted before first", dn->payload));
+	dn = dl_get_next(dl, dn);
+	mu_should(equal_string("0010 bogus", dn->payload));
+	dn = dl_get_next(dl, dn);
+	mu_should(equal_string("0020 bogus", dn->payload));
+
+	/* and now after the end */
+	dn = dl_get_last(dl);
+	payload = dup_string("inserted before last");
+	dn = dl_insert_before(dl, dn, payload);
+	mu_should(dn);
+
+	/* last three should be 980, new, 990 */
+	dn = dl_get_last(dl);
+	mu_should(equal_string("0990 bogus", dn->payload));
+	dn = dl_get_previous(dl, dn);
+	mu_should(equal_string("inserted before last", dn->payload));
+	dn = dl_get_previous(dl, dn);
+	mu_should(equal_string("0980 bogus", dn->payload));
+
+	/* now read forward to end, end should be detected. */
+	dn = dl_get_next(dl, dn);
+	mu_should(equal_string("inserted before last", dn->payload));
+	dn = dl_get_next(dl, dn);
+	mu_should(equal_string("0990 bogus", dn->payload));
+	dn = dl_get_next(dl, dn);
+	mu_shouldnt(dn);
+	mu_should(dl_get_error(dl));
+
+	/* count should be 99 + 2 = 101 */
+	mu_should(dl_count(dl) == 99 + 2);
+
+	/* find 0500 in the list */
+	dn = dl_get_first(dl);
+	while (dn) {
+		if (equal_string("0500 bogus", dn->payload))
+			break;
+		dn = dl_get_next(dl, dn);
+	}
+	mu_should(dn);
+
+	/* insert before */
+	payload = dup_string("inserted before 0500");
+	dn = dl_insert_before(dl, dn, payload);
+
+	/* quick check count */
+	mu_should(dl_count(dl) == 99 + 2 + 1);
+
+	/* find it forward */
+	dn = dl_get_first(dl);
+	while (dn) {
+		if (equal_string("0500 bogus", dn->payload))
+			break;
+		dn = dl_get_next(dl, dn);
+	}
+	mu_should(dn);
+
+	dn = dl_get_previous(dl, dn);
+	mu_should(equal_string("inserted before 0500", dn->payload));
+
+	/* and now find it backward */
+	dn = dl_get_last(dl);
+	while (dn) {
+		if (equal_string("inserted before 0500", dn->payload))
+			break;
+		dn = dl_get_previous(dl, dn);
+	}
+	mu_should(dn);
+
+	dn = dl_get_next(dl, dn);
+	mu_should(equal_string("0500 bogus", dn->payload));
+
+	/* lastly check the count */
+	mu_should(dl_count(dl) == 99 + 2 + 1);
+}
+
+/*
+ * test_insert_many.
+ *
+ * add a few items off the ends of the list and then confirm that they
+ * are where they should be.
+ */
+
+MU_TEST(test_insert_many) {
+	dlcb *dl = test_dl;
+	int start_nodes = dl_count(dl);
+	int added_nodes = 0;
+	/* from the front, add an item after every 0x2x value. */
+	dlnode *dn = dl_get_first(dl);
+	mu_should(dn && dn->payload);
+	mu_should(equal_string(dn->payload, "0010 bogus"));
+	while (dn = dl_get_next(dl, dn), dn) {
+		char *payload = dn->payload;
+		if (payload[2] != '2')
+			continue;
+		char *read_to = dup_string(payload);
+		read_to[3] = '5';
+		dn = dl_insert_after(dl, dn, read_to);
+		mu_should(dn && dn->payload == read_to);
+		added_nodes += 1;
+	}
+	/* now verify chaining reading forward. */
+	int found_nodes = 0;
+	dn = dl_get_first(dl);
+	found_nodes += 1;
+	while (dn = dl_get_next(dl, dn), dn) {
+		found_nodes += 1;
+	}
+	mu_should(found_nodes == start_nodes + added_nodes);
+	/* and backward. */
+	found_nodes = 0;
+	dn = dl_get_last(dl);
+	found_nodes += 1;
+	while (dn = dl_get_previous(dl, dn), dn)
+		found_nodes += 1;
+	mu_should(found_nodes == start_nodes + added_nodes);
+	/* now take it the other way */
+	start_nodes = dl_count(dl);
+	added_nodes = 0;
+	dn = dl_get_first(dl);
+	mu_should(dn && dn->payload);
+	mu_should(equal_string(dn->payload, "0010 bogus"));
+	while (dn = dl_get_next(dl, dn), dn) {
+		char *payload = dn->payload;
+		if (payload[2] != '4')
+			continue;
+		char *read_to = dup_string(payload);
+		read_to[2] = read_to[2] - 1;
+		read_to[3] = read_to[3] + 5;
+		dn = dl_insert_before(dl, dn, read_to);
+		mu_should(dn && dn->payload == read_to);
+		added_nodes += 1;
+		/* reposition to the node that triggered the insert before */
+		/* DOH! */
+		dn = dl_get_next(dl, dn);
+	}
+	/* now verify chaining reading forward. */
+	found_nodes = 0;
+	dn = dl_get_first(dl);
+	found_nodes += 1;
+	while (dn = dl_get_next(dl, dn), dn) {
+		found_nodes += 1;
+	}
+	mu_should(found_nodes == start_nodes + added_nodes);
+	/* and backward. */
+	found_nodes = 0;
+	dn = dl_get_last(dl);
+	found_nodes += 1;
+	while (dn = dl_get_previous(dl, dn), dn)
+		found_nodes += 1;
+	mu_should(found_nodes == start_nodes + added_nodes);
+}
+
+/*
+ * test_get_first.
+ *
  * get the first item on the list.
  */
 
-MU_TEST(test_dl_id_get_first) {
-	dlcb *dl = create_populated_id_list();
-	long id;
-	void *payload;
-	mu_should(dl_get_first(dl, &id, &payload));
-	mu_should(id == 10);
-	mu_should(strcmp(payload, "0010 bogus") == 0);
-	destroy_populated_id_list(dl);
+MU_TEST(test_get_first) {
+	dlcb *dl = test_dl;
+	dlnode *dn = dl_get_first(dl);
+	mu_should(dn && dn->payload);
+	mu_should(equal_string(dn->payload, "0010 bogus"));
 }
 
 /*
- * and the last.
+ * test_get_list.
+ *
+ * get the last item on the list.
  */
 
-MU_TEST(test_dl_id_get_last) {
-	dlcb *dl = create_populated_id_list();
-	long id;
-	void *payload;
-	mu_should(dl_get_last(dl, &id, &payload));
-	mu_should(id == 990);
-	mu_should(strcmp(payload, "0990 bogus") == 0);
-	destroy_populated_id_list(dl);
+MU_TEST(test_get_last) {
+	dlcb *dl = test_dl;
+	dlnode *dn = dl_get_last(dl);
+	mu_should(dn && dn->payload);
+	mu_should(equal_string(dn->payload, "0990 bogus"));
 }
 
 /*
- * get by specific id keys.
+ * test_get_next.
+ *
+ * read forward from a specific item. also make sure that dl_get_next
+ * properly handles end of list.
  */
 
-MU_TEST(test_dl_id_get) {
-	dlcb *dl = create_populated_id_list();
-
-	long id;
-	void *payload;
-
-	/* first in list */
-	id = 10;
-	mu_should(dl_get(dl, &id, &payload));
-	mu_should(id == 10);
-	mu_should(strcmp(payload, "0010 bogus") == 0);
+MU_TEST(test_get_next) {
+	dlcb *dl = test_dl;
 
 	/* somewhere in the list */
-	id = 100;
-	mu_should(dl_get(dl, &id, &payload));
-	mu_should(id == 100);
-	mu_should(strcmp(payload, "0100 bogus") == 0);
-
-	/* does not exist */
-	id = 5;
-	mu_shouldnt(dl_get(dl, &id, &payload));
-	id = 11;
-	mu_shouldnt(dl_get(dl, &id, &payload));
-	id = 602;
-	mu_shouldnt(dl_get(dl, &id, &payload));
-	id = 989;
-	mu_shouldnt(dl_get(dl, &id, &payload));
-	id = 10000;
-	mu_shouldnt(dl_get(dl, &id, &payload));
-
-	/* last in list */
-	id = 990;
-	mu_should(dl_get(dl, &id, &payload));
-	mu_should(id == 990);
-	mu_should(strcmp(payload, "0990 bogus") == 0);
-
-	destroy_populated_id_list(dl);
-}
-
-/*
- * read backward from a specific item.
- */
-
-MU_TEST(test_dl_id_get_previous) {
-	dlcb *dl = create_populated_id_list();
-	long id;
-	void *payload;
-
-	/* somewhere in the list */
-	id = 500;
-	mu_should(dl_get(dl, &id, &payload));
-	mu_should(id == 500);
-	mu_should(strcmp(payload, "0500 bogus") == 0);
-
-	/* read backwards a couple of times */
-	mu_should(dl_get_previous(dl, &id, &payload));
-	mu_should(id == 490);
-	mu_should(dl_get_previous(dl, &id, &payload));
-	mu_should(id == 480);
-	mu_should(strcmp(payload, "0480 bogus") == 0);
-
-	/* head of list */
-	mu_should(dl_get_first(dl, &id, &payload));
-	mu_should(id == 10);
-	mu_shouldnt(dl_get_previous(dl, &id, &payload));
-
-	/* but list access isn't broken */
-	id = 370;
-	mu_should(dl_get(dl, &id, &payload));
-	mu_should(id == 370);
-	mu_should(strcmp(payload, "0370 bogus") == 0);
-
-	/* can't move from a failed get */
-	id = 512;
-	mu_shouldnt(dl_get(dl, &id, &payload));
-	mu_shouldnt(dl_get_previous(dl, &id, &payload));
-
-	destroy_populated_id_list(dl);
-}
-
-/*
- * and now read forward from a specific item.
- */
-
-MU_TEST(test_dl_id_get_next) {
-	dlcb *dl = create_populated_id_list();
-	long id;
-	void *payload;
-
-	/* somewhere in the list */
-	id = 500;
-	mu_should(dl_get(dl, &id, &payload));
-	mu_should(id == 500);
-	mu_should(strcmp(payload, "0500 bogus") == 0);
+	dlnode *dn = dl_get_first(dl);
+	mu_should(dn);
+	while (!equal_string(dn->payload, "0500 bogus"))
+		dn = dl_get_next(dl, dn);
 
 	/* read forwards a couple of times */
-	mu_should(dl_get_next(dl, &id, &payload));
-	mu_should(id == 510);
-	mu_should(dl_get_next(dl, &id, &payload));
-	mu_should(id == 520);
-	mu_should(strcmp(payload, "0520 bogus") == 0);
+	dn = dl_get_next(dl, dn);
+	dn = dl_get_next(dl, dn);
+	mu_should(equal_string(dn->payload, "0520 bogus"));
 
 	/* end of list */
-	mu_should(dl_get_last(dl, &id, &payload));
-	mu_should(id == 990);
-	mu_shouldnt(dl_get_next(dl, &id, &payload));
-
-	/* but list access isn't broken */
-	id = 370;
-	mu_should(dl_get(dl, &id, &payload));
-	mu_should(id == 370);
-	mu_should(strcmp(payload, "0370 bogus") == 0);
-
-	/* can't move from a failed get */
-	id = 512;
-	mu_shouldnt(dl_get(dl, &id, &payload));
-	mu_shouldnt(dl_get_next(dl, &id, &payload));
-
-	destroy_populated_id_list(dl);
+	dn = dl_get_last(dl);
+	mu_should(dn);
+	mu_should(equal_string(dn->payload, "0990 bogus"));
+	dn = dl_get_next(dl, dn);
+	mu_shouldnt(dn);
 }
 
 /*
- * delete items.
+ * test_get_previous.
+ *
+ * read backward from a specific item. also make sure that
+ * dl_get_previous properly handles start of list.
  */
 
-MU_TEST(test_dl_id_delete) {
-	dlcb *dl = create_populated_id_list();
-	long id;
-	void *payload;
+MU_TEST(test_get_previous) {
+	dlcb *dl = NULL;
+	dlnode *dn = NULL;
 
-	mu_should(dl_count(dl) == 99);
+	/* can't read previous from first, no wrap */
+	dl = test_dl;
+	dn = dl_get_first(dl);
+	mu_should(dn && equal_string(dn->payload, "0010 bogus"));
+	dn = dl_get_previous(dl, dn);
 
-	/* position to head */
-	dl_get_first(dl, &id, &payload);
-	mu_should(id == 10);
-	mu_should(strcmp(payload, "0010 bogus") == 0);
-
-	/* delete 10, alternating from that starting position */
-	int deleted = 0;
-	bool toggle = true;
-	while (deleted < 10) {
-		if (toggle) {
-			mu_should(dl_delete(dl, id, payload));
-			deleted += 1;
-		}
-		id += 10;
-		toggle = !toggle;
-	}
-
-	/* we should now have 89 rows, 20, 40, 60, 80 ... */
-	mu_should(dl_count(dl) == 89);
-	dl_get_first(dl, &id, &payload);
-	mu_should(id == 20);
-	mu_should(dl_get_next(dl, &id, &payload));
-	mu_should(id == 40);
-	mu_should(strcmp(payload, "0040 bogus") == 0);
-
-	/* delete a couple more rows */
-	id = 500;
-	mu_should(dl_get(dl, &id, &payload));
-	mu_should(id == 500);
-	mu_should(strcmp(payload, "0500 bogus") == 0);
-	mu_should(dl_delete(dl, id, payload));
-	id = 600;
-	mu_should(dl_get(dl, &id, &payload));
-	mu_should(id == 600);
-	mu_should(strcmp(payload, "0600 bogus") == 0);
-	mu_should(dl_delete(dl, id, payload));
-
-	/* and so 490 and 510 are there, but 500 is not ... */
-	id = 490;
-	mu_should(dl_get(dl, &id, &payload));
-	id = 500;
-	mu_shouldnt(dl_get(dl, &id, &payload));
-	id = 510;
-	mu_should(dl_get(dl, &id, &payload));
-
-	/* and check this way */
-	id = 490;
-	mu_should(dl_get(dl, &id, &payload));
-	mu_should(dl_get_next(dl, &id, &payload));
-	mu_should(id == 510);
-
-	destroy_populated_id_list(dl);
-}
-
-/*
- * update items. as the payload is dynamic, once it added to the
- * list a delete or update will call the payload_free function.
- */
-
-MU_TEST(test_dl_id_update) {
-	dlcb *dl = create_populated_id_list();
-
-	long id;
-	void *payload;
-
-	mu_should(dl_count(dl) == 99);
-
-	/* position to head */
-	dl_get_first(dl, &id, &payload);
-	mu_should(id == 10);
-	mu_should(strcmp(payload, "0010 bogus") == 0);
-
-	/* change data of 510 */
-	id = 510;
-	payload = NULL;
-	mu_should(dl_get(dl, &id, &payload));
-	mu_should(id == 510);
-	mu_should(strcmp(payload, "0510 bogus") == 0);
-
-	payload = dup_string("0510 not bogus");
-	mu_should(dl_update(dl, id, payload));
-
-	id = 200;
-	payload = NULL;
-	mu_should(dl_get(dl, &id, &payload));
-	mu_should(id == 200);
-	mu_should(strcmp(payload, "0200 bogus") == 0);
-
-	id = 510;
-	payload = NULL;
-	mu_should(dl_get(dl, &id, &payload));
-	mu_should(id == 510);
-	mu_should(strcmp(payload, "0510 not bogus") == 0);
-
-	destroy_populated_id_list(dl);
-}
-
-/*
- * these are copy and paste and edited versions of the id tests
- * for a payload key list. same basic tests, just a few detals
- * need tweaking.
- */
-
-MU_TEST(test_dl_key_create) {
-	dlcb *dl = dl_create_by_key(
-		USE_THREADING,
-		payload_compare,
-		payload_free
-		);
-	mu_should(dl);
-	mu_should(dl_empty(dl));
-	mu_should(dl_count(dl) == 0);
-	mu_should(dl_destroy(dl));
-}
-
-MU_TEST(test_dl_key_add) {
-	dlcb *dl = dl_create_by_key(
-		USE_THREADING,
-		payload_compare,
-		NULL
-		);
-	mu_should(dl);
-	mu_should(dl);
-	mu_should(dl_insert(dl, 1, "1234"));
-	mu_shouldnt(dl_empty(dl));
-	mu_should(dl_count(dl) == 1);
-	mu_should(dl_delete_all(dl) == 1);
-	mu_should(dl_empty(dl));
-	mu_should(dl_count(dl) == 0);
-	mu_should(dl_destroy(dl));
-}
-
-MU_TEST(test_dl_key_add_random) {
-	dlcb *dl = dl_create_by_key(
-		USE_THREADING,
-		payload_compare_long,
-		payload_free
-		);
-	int generated = 0;
-	int added = 0;
-	int duplicated = 0;
-	for (long i = 0; i < 10000; i++) {
-		long *p = malloc(sizeof(long));
-		*p = random_between(1, 5000);
-		generated += 1;
-		if (dl_insert(dl, *p, p))
-			added += 1;
-
-		else
-			duplicated += 1;
-	}
-	mu_should(generated == added + duplicated);
-	mu_should(dl_count(dl) == added);
-	dl_delete_all(dl);
-	dl_destroy(dl);
-}
-
-MU_TEST(test_dl_key_add_multiple) {
-	dlcb *dl = dl_create_by_id(
-		USE_THREADING,
-		NULL
-		);
-
-	/* add two unique entries, then remove them. */
-	mu_should(dl_insert(dl, 1, "first"));
-	mu_should(dl_insert(dl, 2, "second"));
-	mu_should(dl_count(dl) == 2);
-	mu_should(dl_delete_all(dl) == 2);
-	mu_should(dl_empty(dl));
-	mu_should(dl_count(dl) == 0);
-
-	/* it takes more than two entries to mess with linking. */
-	mu_should(dl_insert(dl, 1, "first"));
-	mu_should(dl_insert(dl, 4, "fourth, added second"));
-	mu_should(dl_insert(dl, 2, "second, added third"));
-	mu_should(dl_insert(dl, 3, "third, added fourth"));
-	mu_should(dl_count(dl) == 4);
-
-	/* now insert at front and then at back, knowing the ordering as we did above. */
-	mu_should(dl_insert(dl, 0, "zeroeth, added fifth"));
-	mu_should(dl_insert(dl, 5, "sixth, added sixth"));
-
-	/* we'll confirm ordering in another set of tests. */
-	mu_should(dl_count(dl) == 6);
-
-	/* and now empty the list and we're done. */
-	mu_should(dl_delete_all(dl) == 6);
-	dl_destroy(dl);
-}
-
-MU_TEST(test_dl_key_add_duplicate) {
-	dlcb *dl = dl_create_by_key(USE_THREADING, payload_compare_long, NULL);
-	for (int i = 1; i < 10; i++)
-		dl_insert(dl, i, (void *)(long)i);
-	mu_should(dl_count(dl) == 9);
-	mu_should(dl_insert(dl, 20, (void *)(long)20));           /* +1 */
-	mu_shouldnt(dl_insert(dl, 5, (void *)(long)5));           /* -- */
-	mu_shouldnt(dl_insert(dl, 1, (void *)(long)1));           /* -- */
-	mu_should(dl_insert(dl, 19, (void *)(long)19));           /* +1 */
-	mu_shouldnt(dl_insert(dl, 19, (void *)(long)19));         /* -- */
-	mu_should(dl_delete_all(dl) == 11);
-	dl_destroy(dl);
-}
-
-MU_TEST(test_dl_key_get_first) {
-	dlcb *dl = create_populated_key_list(NULL);
-	long id;
-	void *payload;
-	mu_should(dl_get_first(dl, &id, &payload));
-	mu_should(strcmp(payload, "0010 i'm a key") == 0);
-	destroy_populated_key_list(dl);
-}
-
-MU_TEST(test_dl_key_get_last) {
-	dlcb *dl = create_populated_key_list(NULL);
-	long id;
-	void *payload;
-
-	mu_should(dl_get_last(dl, &id, &payload));
-	mu_should(strcmp(payload, "0990 i'm a key") == 0);
-
-	destroy_populated_key_list(dl);
-}
-
-MU_TEST(test_dl_key_get) {
-	dlcb *dl = create_populated_key_list(NULL);
-	long id;
-	void *payload = NULL;
-
-	mu_shouldnt(dl_get(dl, &id, &payload));
-	payload = "0010 i'm a key";
-	mu_should(dl_get(dl, &id, &payload));
-	mu_should(strcmp(payload, "0010 i'm a key") == 0);
-
-	/* somewhere in the list */
-	payload = "0100 i'm a key";
-	mu_should(dl_get(dl, &id, &payload));
-	mu_should(strcmp(payload, "0100 i'm a key") == 0);
-
-	/* does not exist */
-	payload = "0005 blah";
-	mu_shouldnt(dl_get(dl, &id, &payload));
-	payload = "0011 meh";
-	mu_shouldnt(dl_get(dl, &id, &payload));
-	payload = "0602 there's a man on that page";
-	mu_shouldnt(dl_get(dl, &id, &payload));
-	payload = "0989";
-	mu_shouldnt(dl_get(dl, &id, &payload));
-	payload = "10000 miles";
-	mu_shouldnt(dl_get(dl, &id, &payload));
-
-	/* last in list */
-	payload = "0990 i'm a key";
-	mu_should(dl_get(dl, &id, &payload));
-	mu_should(strcmp(payload, "0990 i'm a key") == 0);
-
-	destroy_populated_key_list(dl);
-}
-
-MU_TEST(test_dl_key_get_previous) {
-	dlcb *dl = create_populated_key_list(NULL);
-
-	long id;
-	void *payload;
-
-	/* somewhere in the list */
-	payload = "0500 i'm a key";
-	mu_should(dl_get(dl, &id, &payload));
-	mu_should(strncmp(payload, "0500", 4) == 0);
-
-	/* read backwards a couple of times */
-	mu_should(dl_get_previous(dl, &id, &payload));
-	mu_should(strncmp(payload, "0490", 4) == 0);
-	mu_should(dl_get_previous(dl, &id, &payload));
-	mu_should(strncmp(payload, "0480", 4) == 0);
-
-	/* head of list */
-	mu_should(dl_get_first(dl, &id, &payload));
-	mu_should(strncmp(payload, "0010", 4) == 0);
-	mu_shouldnt(dl_get_previous(dl, &id, &payload));
-
-	/* but list access isn't broken */
-	payload = "0370 i'm a key";
-	mu_should(dl_get(dl, &id, &payload));
-	mu_should(strncmp(payload, "0370", 4) == 0);
-
-	/* can't move from a failed get */
-	payload = "0512 i don't exist";
-	mu_shouldnt(dl_get(dl, &id, &payload));
-	mu_shouldnt(dl_get_previous(dl, &id, &payload));
-
-	destroy_populated_key_list(dl);
-}
-
-MU_TEST(test_dl_key_get_next) {
-	dlcb *dl = create_populated_key_list(NULL);
-	long id;
-	void *payload;
-	/* somewhere in the list */
-	payload = "0500 i'm a key";
-	mu_should(dl_get(dl, &id, &payload));
-	mu_should(strncmp(payload, "0500", 4) == 0);
+	/* but can read previous from last */
+	dn = dl_get_last(dl);
+	mu_should(dn && equal_string(dn->payload, "0990 bogus"));
+	while (!equal_string(dn->payload, "0500 bogus"))
+		dn = dl_get_previous(dl, dn);
 
 	/* read forwards a couple of times */
-	mu_should(dl_get_next(dl, &id, &payload));
-	mu_should(strncmp(payload, "0510", 4) == 0);
-	mu_should(dl_get_next(dl, &id, &payload));
-	mu_should(strncmp(payload, "0520", 4) == 0);
-
-	/* end of list */
-	mu_should(dl_get_last(dl, &id, &payload));
-	mu_should(strncmp(payload, "0990", 4) == 0);
-	mu_shouldnt(dl_get_next(dl, &id, &payload));
-
-
-	/* but list access isn't broken */
-	payload = "0370 i'm a key";
-	mu_should(dl_get(dl, &id, &payload));
-	mu_should(strncmp(payload, "0370", 4) == 0);
-
-	/* can't move from a failed get */
-	payload = "0512 i don't exist";
-	mu_shouldnt(dl_get(dl, &id, &payload));
-	mu_shouldnt(dl_get_next(dl, &id, &payload));
-
-	destroy_populated_key_list(dl);
+	dn = dl_get_previous(dl, dn);
+	dn = dl_get_previous(dl, dn);
+	mu_should(equal_string(dn->payload, "0480 bogus"));
 }
 
-MU_TEST(test_dl_key_delete) {
-	dlcb *dl = create_populated_key_list(NULL);
+/*
+ * test_delete.
+ *
+ * as link maintenance is part of the delete process, we need to
+ * delete from the ends and in the middle of the list.
+ */
 
-	long id;
-	void *payload;
+MU_TEST(test_delete) {
+	dlcb *dl = NULL;
+	dlnode *dn = NULL;
 
-	mu_should(dl_count(dl) == 99);
+	/* test deleting from the head */
+	dl = test_dl;
+	dn = dl_get_first(dl);
+	mu_should(dn && equal_string(dn->payload, "0010 bogus"));
+	free(dn->payload);
+	mu_should(dl_delete(dl, dn));
+	dn = dl_get_first(dl);
+	mu_should(dn && equal_string(dn->payload, "0020 bogus"));
+	mu_should(dl_count(dl) == 98);
 
-	/* position to head */
-	dl_get_first(dl, &id, &payload);
-	mu_should(strncmp(payload, "0010", 4) == 0);
+	/* and now from the tail */
+	dn = dl_get_last(dl);
+	mu_should(dn && equal_string(dn->payload, "0990 bogus"));
+	free(dn->payload);
+	mu_should(dl_delete(dl, dn));
+	dn = dl_get_last(dl);
+	mu_should(dl_count(dl) == 97);
 
-	/* delete 10, alternating from that starting position */
-	int deleted = 0;
-	bool toggle = true;
-	char buffer[256];
-	memset(buffer, 0, 256);
-	int i = 10;
-	while (deleted < 10) {
-		if (toggle) {
-			snprintf(buffer, 255, "%04d i'm a key", i);
-			payload = &buffer;
-			mu_should(dl_delete(dl, id, payload));
-			deleted += 1;
-		}
-		i += 10;
-		toggle = !toggle;
-	}
+	/* now somewhere in the middle */
+	while (!equal_string(dn->payload, "0600 bogus"))
+		dn = dl_get_previous(dl, dn);
 
-	/* we should now have 89 rows, 10, 30, 40, 60 ... */
-	mu_should(dl_count(dl) == 89);
-	dl_get_first(dl, &id, &payload);
-	mu_should(strncmp(payload, "0020", 4) == 0);
-	mu_should(dl_get_next(dl, &id, &payload));
-	mu_should(strncmp(payload, "0040", 4) == 0);
+	free(dn->payload);
+	mu_should(dl_delete(dl, dn));
+	mu_should(dl_count(dl) == 96);
 
-	/* delete a couple more rows */
-	payload = "0500 i'm a key";
-	mu_should(dl_get(dl, &id, &payload));
-	mu_should(strncmp(payload, "0500", 4) == 0);
-	mu_should(dl_delete(dl, id, payload));
-	payload = "0600 i'm a key";
-	mu_should(dl_get(dl, &id, &payload));
-	mu_should(strncmp(payload, "0600", 4) == 0);
-	mu_should(dl_delete(dl, id, payload));
+	/* while i know dl_count chases all the links and does a
+	   crosscheck against a global count, we'll do some
+	   chasing of links here too. */
 
-	/* and so 490 and 510 are there, but 500 is not ... */
-	payload = "0490 i'm a key";
-	mu_should(dl_get(dl, &id, &payload));
-	payload = "0500 i'm a key";
-	mu_shouldnt(dl_get(dl, &id, &payload));
-	payload = "0510 i'm a key";
-	mu_should(dl_get(dl, &id, &payload));
+	/* read past the deleted node from both ends. */
+	dn = dl_get_first(dl);
+	mu_should(dn && equal_string(dn->payload, "0020 bogus"));
+	while (dn = dl_get_next(dl, dn), dn)
+		if (equal_string(dn->payload, "0600 bogus"))
+			mu_shouldnt(true);
 
-	destroy_populated_key_list(dl);
+	dn = dl_get_last(dl);
+	mu_should(dn && equal_string(dn->payload, "0980 bogus"));
+	while (dn = dl_get_previous(dl, dn), dn)
+		if (equal_string(dn->payload, "0600 bogus"))
+			mu_shouldnt(true);
 }
 
-MU_TEST(test_dl_key_update) {
-	dlcb *dl = create_populated_key_list(payload_compare_char4);
+/*
+ * test_update.
+ *
+ * the update function is only needed if you wish to change the
+ * contents of the payload field. as no link maintenance is
+ * done, there's not a lot to test here.
+ */
 
-	long id;
-	void *payload;
+MU_TEST(test_update) {
+	dlcb *dl = NULL;
+	dlnode *dn = NULL;
+	void *old_payload = NULL;
+	void *new_payload = NULL;
 
-	mu_should(dl_count(dl) == 99);
-
-	/* position to head */
-	dl_get_first(dl, &id, &payload);
-	mu_should(strncmp(payload, "0010", 4) == 0);
-
-	/* change data of 510 */
-	payload = "0510";
-	mu_should(dl_get(dl, &id, &payload));
-	mu_should(strcmp(payload, "0510 i'm a key") == 0);
-
-	payload = dup_string("0510 not bogus");
-	mu_should(dl_update(dl, id, payload));
-
-	payload = "0200";
-	mu_should(dl_get(dl, &id, &payload));
-	mu_should(strcmp(payload, "0200 i'm a key") == 0);
-
-	payload = "0510";
-	mu_should(dl_get(dl, &id, &payload));
-	mu_should(strcmp(payload, "0510 not bogus") == 0);
-
-	destroy_populated_key_list(dl);
+	/* test updating end items */
+	dl = test_dl;
+	dn = dl_get_first(dl);
+	mu_should(dn && equal_string(dn->payload, "0010 bogus"));
+	old_payload = dn->payload;
+	new_payload = dup_string("0010 not bogus");
+	mu_should(dl_update(dl, dn, new_payload));
+	free(old_payload);
+	dn = dl_get_next(dl, dn);
+	dn = dl_get_next(dl, dn);
+	mu_should(dn && equal_string(dn->payload, "0030 bogus"));
+	dn = dl_get_first(dl);
+	mu_shouldnt(dn && equal_string(dn->payload, "0010 bogus"));
+	mu_should(dn && equal_string(dn->payload, "0010 not bogus"));
 }
 
-
+/*
+ * test that an error is set when positioning is lost due to
+ * client sequencing error.
+ */
+
+MU_TEST(test_bad_position) {
+	dlcb *dl = test_dl;
+	dlnode *first = dl_get_first(dl);
+	dlnode *last = dl_get_last(dl);
+	void *payload = "this should fail";
+	/* list is positioned on last, so try to update with the first node */
+	dlnode *result = dl_update(dl, first, payload);
+	mu_should(dl_get_error(dl));
+	mu_shouldnt(result);
+	/* position is lost, so moving relative to the current position
+	 * should error. */
+	result = dl_get_previous(dl, last);
+	mu_should(dl_get_error(dl));
+	mu_shouldnt(result);
+}
 
 /*
  * here we define the whole test suite. sadly there's no runtime
@@ -861,39 +762,19 @@ MU_TEST_SUITE(test_suite) {
 
 	/* run your tests here */
 
-	printf("\n\ndoubly linked list tests -- id key\n\n");
-
-	MU_RUN_TEST(test_dl_id_create);
-	MU_RUN_TEST(test_dl_id_add);
-	MU_RUN_TEST(test_dl_id_add_multiple);
-	MU_RUN_TEST(test_dl_id_add_duplicate);
-	MU_RUN_TEST(test_dl_id_add_random);
-	MU_RUN_TEST(test_dl_id_get_first);
-	MU_RUN_TEST(test_dl_id_get_last);
-	MU_RUN_TEST(test_dl_id_get);
-	MU_RUN_TEST(test_dl_id_get_previous);
-	MU_RUN_TEST(test_dl_id_get_next);
-	MU_RUN_TEST(test_dl_id_delete);
-	MU_RUN_TEST(test_dl_id_update);
-
-
-	printf("\n\ndoubly linked list tests -- payload key\n\n");
-	MU_RUN_TEST(test_dl_key_create);
-	MU_RUN_TEST(test_dl_key_add);
-	MU_RUN_TEST(test_dl_key_add_multiple);
-	MU_RUN_TEST(test_dl_key_add_duplicate);
-	MU_RUN_TEST(test_dl_key_add_random);
-	MU_RUN_TEST(test_dl_key_get_first);
-	MU_RUN_TEST(test_dl_key_get_last);
-	MU_RUN_TEST(test_dl_key_get);
-	MU_RUN_TEST(test_dl_key_get_previous);
-	MU_RUN_TEST(test_dl_key_get_next);
-	MU_RUN_TEST(test_dl_key_delete);
-	MU_RUN_TEST(test_dl_key_update);
-
-
+	MU_RUN_TEST(test_create);
+	MU_RUN_TEST(test_insert_ends);
+	MU_RUN_TEST(test_insert_after);
+	MU_RUN_TEST(test_insert_before);
+	MU_RUN_TEST(test_insert_many);
+	MU_RUN_TEST(test_get_first);
+	MU_RUN_TEST(test_get_last);
+	MU_RUN_TEST(test_get_next);
+	MU_RUN_TEST(test_get_previous);
+	MU_RUN_TEST(test_delete);
+	MU_RUN_TEST(test_update);
+	MU_RUN_TEST(test_bad_position);
 }
-
 
 /*
  * master control:
