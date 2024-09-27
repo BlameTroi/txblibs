@@ -49,7 +49,7 @@ sb: inc/sb.h src/sb.c
 	buildhdr --macro TXBSB --intro LICENSE --pub inc/sb.h --priv src/sb.c >release/txbsb.h
 
 st: inc/st.h src/st.c
-	buildhdr --macro TXBSB --intro LICENSE --pub inc/st.h --priv src/st.c >release/txbst.h
+	buildhdr --macro TXBST --intro LICENSE --pub inc/st.h --priv src/st.c >release/txbst.h
 
 str: inc/str.h src/str.c
 	buildhdr --macro TXBSTR --intro LICENSE --pub inc/str.h --priv src/str.c >release/txbstr.h

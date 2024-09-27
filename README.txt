@@ -55,8 +55,7 @@ A simple structure:
 ├── inc                      [headers for building libraries]
 │   ├── da.h
 │   ├── dl.h
-│   ├── fs.h
-│   ├── dkv.h
+│   ├── kv.h
 │   ├── md5.h
 │   ├── misc.h
 │   ├── pat.h
@@ -65,12 +64,12 @@ A simple structure:
 │   ├── rand.h
 │   ├── rs.h
 │   ├── sb.h
+│   ├── st.h
 │   └── str.h
 ├── Makefile
 ├── release                  [release build of libraries]
 │   ├── txbda.h
 │   ├── txbdl.h
-│   ├── txbfs.h
 │   ├── txbkl.h
 │   ├── txbkv.h
 │   ├── txbmd5.h
@@ -81,11 +80,11 @@ A simple structure:
 │   ├── txbrand.h
 │   ├── txbrs.h
 │   ├── txbsb.h
+│   ├── txbst.h
 │   └── txbstr.h
 ├── src                      [source for building libraries]
 │   ├── da.c
 │   ├── dl.c
-│   ├── fs.c
 │   ├── kl.c
 │   ├── kv.c
 │   ├── md5.c
@@ -96,13 +95,13 @@ A simple structure:
 │   ├── rand.c
 │   ├── rs.c
 │   ├── sb.c
+│   ├── st.c
 │   └── str.c
 └── test                     [source for testing]
     ├── Makefile
     ├── testlibs.c
     ├── unitda.c
     ├── unitdl.c
-    ├── unitfs.c
     ├── unitkl.c
     ├── unitkv.c
     ├── unitmd5.c
@@ -111,6 +110,7 @@ A simple structure:
     ├── unitrand.c
     ├── unitrs.c
     ├── unitsb.c
+    ├── unitst.c
     └── unittest.c
 
 
@@ -135,7 +135,6 @@ These are the headers:
 |------------+-------------------------------------------------------|
 | txbda.h    | dynamic array                                         |
 | txbdl.h    | doubly linked list                                    |
-| txbfs.h    | a fixed length stack                                  |
 | txbkl.h    | keyed doubly linked list                              |
 | txbkv.h    | key:value store that can have various backing         |
 | txbmd5.h   | md-5 hash (credit to Bryce Wilson)                    |
@@ -145,7 +144,8 @@ These are the headers:
 | txbpq.h    | simple priority queue                                 |
 | txbrand.h  | random number suppport                                |
 | txbrs.h    | string read stream                                    |
-| txbsb.h    | strinb builder                                        |
+| txbsb.h    | string builder                                        |
+| txbst.h    | a simple stack                                        |
 | txbstr.h   | split/tokenize strings, dup_string, others            |
 
 Some of these reference each other. You may need to include and define
@@ -234,7 +234,6 @@ includes for these libraries.
 
 Libraries defining NDEBUG:
 
- txbfs.h
  txbkv.h
  txbmd5.h
  txbdl.h
@@ -243,6 +242,7 @@ Libraries defining NDEBUG:
  txbkl.h
  txbpat.h
  txbsb.h
+ txbst.h
  txbpq.h
 
 Where appropriate a library provides an xx_get_error(instance) which
@@ -289,24 +289,22 @@ iteration.
 | dl_get_error        | get a brief description of last error.       | 
 
 
-TXBFS.H
+TXBST.H
 -------
 
-A fixed array based stack.
+A simple stack. This is actually a thin API over txbdl.h.
 
 | Function          | Description                                    |
 |-------------------+------------------------------------------------|
-| fs_create         | create a new stack of some maximum depth       |
-| fs_destroy        | release stack                                  |
-| fs_push           | push an item (pointer) on top of the stack     |
-| fs_pop            | remove and return the top item (pointer) from  |
+| st_create         | create a new stack                             |
+| st_destroy        | release stack                                  |
+| st_push           | push an item (pointer) on top of the stack     |
+| st_pop            | remove and return the top item (pointer) from  |
 |                   | the stack.                                     |
-| fs_peek           | return the top item (pointer) from the stack   |
+| st_peek           | return the top item (pointer) from the stack   |
 |                   | but do not remove it.                          |
-| fs_empty          | predicates for checking stack state            |
-| fs_full           |                                                |
-| fs_depth          | returns number of items on the stack.          |
-| fs_free           | returns space available on the stack.          |
+| st_empty          | predicates for checking stack state            |
+| st_depth          | returns number of items on the stack.          |
 
 
 TXBKL.H
@@ -598,5 +596,4 @@ pat:
 
 sb:
 --
-
 - non contiguous buffers.

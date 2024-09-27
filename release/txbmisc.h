@@ -429,10 +429,10 @@ fn_cmp_int_dsc(const void *a, const void *b) {
 
 
 /*
- * returns an array of long integers with at least enough entries to
- * hold the factors of n and a trailing NULL entry. the caller is
- * responsible for freeing the array when it is no longer needed.
- * returns NULL if n < 1.
+ * returns an array of long integers big enought to at least hold the
+ * factors of n and a trailing NULL. the caller is responsible for
+ * freeing the array when it is no longer needed. returns NULL if n <
+ * 1.
  */
 
 long *
@@ -442,11 +442,11 @@ factors_of(
 	if (n < 1)
 		return NULL;
 
-	/* allocate space for a dynamically sized array of longs. starting
-	 * size is 64 entries, of which the last entry is reserved for
-	 * a trailing NULL value. grows by doubling, but that should be
-	 * rarely needed. there are 64 factors of 999,999 and 49 of
-	 * 1,000,000. */
+	/* allocate space for a dynamically sized array of longs.
+	 * starting size is 64 items, of which the last is reserved
+	 * for a trailing NULL value. grows by doubling, but that
+	 * should be rarely needed. there are 64 factors of 999,999
+	 * and 49 of 1,000,000. */
 	int lim = 64;
 	long *factors = calloc(lim, sizeof(*factors));
 	int f = 0;
@@ -460,7 +460,7 @@ factors_of(
 			f += 1;
 
 			/* if we're approaching the end of the allocation,
-			 * we know we need at least one more entry so
+			 * we know we need at least one more item so
 			 * grow the array. */
 			if (f + 2 >= lim) {
 				long *grow = calloc(lim * 2, sizeof(*factors));

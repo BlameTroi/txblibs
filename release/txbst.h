@@ -1,6 +1,6 @@
 /*
  * single file header generated via:
- * buildhdr --macro TXBSB --intro LICENSE --pub inc/st.h --priv src/st.c 
+ * buildhdr --macro TXBST --intro LICENSE --pub inc/st.h --priv src/st.c 
  */
 /* *** begin intro ***
 This software is available under 2 licenses -- choose whichever you prefer.
@@ -43,8 +43,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
    *** end intro ***
  */
 
-#ifndef TXBSB_SINGLE_HEADER
-#define TXBSB_SINGLE_HEADER
+#ifndef TXBST_SINGLE_HEADER
+#define TXBST_SINGLE_HEADER
 /* *** begin pub *** */
 /* st.h -- blametroi's fixed size stack -- */
 
@@ -184,10 +184,10 @@ st_destroy(
 /* st.h ends here */
 /* *** end pub *** */
 
-#endif /* TXBSB_SINGLE_HEADER */
+#endif /* TXBST_SINGLE_HEADER */
 
-#ifdef TXBSB_IMPLEMENTATION
-#undef TXBSB_IMPLEMENTATION
+#ifdef TXBST_IMPLEMENTATION
+#undef TXBST_IMPLEMENTATION
 /* *** begin priv *** */
 /* st.c -- blametroi's simple stack -- */
 
@@ -321,4 +321,4 @@ st_destroy(
 /* st.c ends here */
 /* *** end priv *** */
 
-#endif /* TXBSB_IMPLEMENTATION */
+#endif /* TXBST_IMPLEMENTATION */

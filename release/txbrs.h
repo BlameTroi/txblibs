@@ -442,7 +442,7 @@ rs_seek(
 ) {
 	ASSERT_RSCB(rs, "invalid RSCB");
 	assert(NULL); /* not implemented */
-};
+}
 
 /*
  * get the next character from the stream and advance its position. returns

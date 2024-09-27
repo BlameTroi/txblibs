@@ -62,7 +62,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 /*
  * a match string expression is compiled into pattern buffer. the
  * buffer is a one dimensional array of unsigned integers. a pattern
- * item occupies at least one entry in the array. the item code is
+ * item occupies at least one slot of the array. the item code is
  * symbolically identified by the macros PAT_???.
  *
  * the first item in the array is always PAT_BEG, and the last is
@@ -300,7 +300,7 @@ glob_match(
 /*
  * a match string expression is compiled into pattern buffer. the
  * buffer is a one dimensional array of unsigned integers. a pattern
- * item occupies at least one entry in the array. the item code is
+ * item occupies at least one item in the array. the item code is
  * symbolically identified by the macros PAT_???.
  *
  * the first item in the array is always PAT_BEG, and the last is
@@ -584,7 +584,7 @@ debug_off(
 
 /*
  * a copy of the original pattern source string is carried in the
- * pat_beg entry at the start of the compiled pattern buffer.
+ * pat_beg item at the start of the compiled pattern buffer.
  */
 
 const char *
@@ -783,7 +783,7 @@ expand_range(
  * as characters are consumed from the match string and placed in the
  * compiled pattern, the current positions within each are updated.
  *
- * as an aid to compilation, the position of the last entry is stored
+ * as an aid to compilation, the position of the last item is stored
  * in the next available position. this is set to zero when the
  * pattern buffer is marked complete.
  */
@@ -851,7 +851,7 @@ add_pattern_item(
 	} else if (item == PAT_LIT) {
 
 		/* an optimizatino would be to combine literals into a single
-		 * entry or string for comparison, but the use of quantifiers
+		 * item or string for comparison, but the use of quantifiers
 		 * (repetition counts) made that more trouble than it was worth.
 		 * literals still carry a length field but only one character is
 		 * stored per literal at this time. */
@@ -897,7 +897,7 @@ reorganize_pattern_buffer(
 	cpat *res = NULL;
 
 	/* the size of the optimized pattern buffer will be large enough to
-	 * hold all existing entries. any end of class markers are deleted
+	 * hold all existing items. any end of class markers are deleted
 	 * since they are an aid to compilation and have no bearing on
 	 * match processing. i don't try for an exact fit, but there is
 	 * much less padding than in the first pass. */
@@ -1014,7 +1014,7 @@ reorganize_pattern_buffer(
  * the initial allocation is three slots per each character in the
  * match string (actual length or sixteen characters, whichever is
  * more) plus three additional slots for begin and end of pattern
- * markers and a terminal nil entry.
+ * markers and a terminal nil item.
  *
  * once the raw search string has been compiled, the pattern buffer
  * is reorganized and resized to better fit the actual pattern.
@@ -1118,7 +1118,7 @@ compile_pattern(
 		}
 
 		/* outside of a grouping, each character is evaluated. several
-		 * meta characters are available and entries for each are added
+		 * meta characters are available and items for each are added
 		 * via add_pattern_item. if the character has no special
 		 * meaning, it is a literal. */
 
@@ -1426,7 +1426,7 @@ convert_glob(
 /*
  * match_this_item is called by match_from and match_from_r to
  * determine if the string at the current position matches with the
- * current pattern buffer entry.
+ * current pattern buffer item.
  *
  * if it does, advance the string position to consume the portion
  * matched.
@@ -1585,8 +1585,8 @@ match_this_item(
 		return false;
 	}
 
-	/* we either don't understand the pattern buffer entry, or we've been
-	 * called with an entry that shouldn't reach here (eg, quantifiers such
+	/* we either don't understand the pattern buffer item, or we've been
+	 * called with an item that shouldn't reach here (eg, quantifiers such
 	 * as * are handled in match_from). report and abort. */
 
 	/* TODO abort needs to handle argument replacement */
@@ -1664,7 +1664,7 @@ match_from(
 
 				/* recursively check the rest of the string against
 				 * the rest of the pattern. if we get a match, it will
-				 * satisfy the entire match from our earlier entry so
+				 * satisfy the entire match from our earlier item so
 				 * we can return.
 				 *
 				 * with each failed attempt, regurgitate a character
@@ -1711,7 +1711,7 @@ match_from(
 				 *
 				 * recursively check the rest of the string against the
 				 * rest of the pattern. if we get a match, it will satisfy
-				 * the entire match from our earlier entry so we can
+				 * the entire match from our earlier item so we can
 				 * return.
 				 *
 				 * if the match failed, back off the match and try
@@ -1752,7 +1752,7 @@ match_from(
 
 				/* recursively check the rest of the string against
 				 * the rest of the pattern. if we get a match, it will
-				 * satisfy the entire match from our earlier entry so
+				 * satisfy the entire match from our earlier item so
 				 * we can return.
 				 *
 				 * with each failed attempt, regurgitate a character
