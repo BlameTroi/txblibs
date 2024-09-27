@@ -60,8 +60,8 @@ struct qucb {
  * all functions except qu_create take a qucb*, the queue control
  * block.
  *
- * the data to manage in the queue is a void*, a pointer to the data
- * or if it will fit in a void*, the data itself.
+ * the data to manage in the queue is a void *, a pointer to the data
+ * or if it will fit in a void *, the data itself.
  *
  * the order of retrieval of items is first in first out.
  *
@@ -83,7 +83,13 @@ struct qucb {
  */
 
 /*
+ * qu_empty
+ *
  * are there items in the queue?
+ *
+ *     in: the qu instance
+ *
+ * return: boolean, true if empty
  */
 
 bool
@@ -95,7 +101,13 @@ qu_empty(
 }
 
 /*
+ * qu_count
+ *
  * how many items are in the queue?
+ *
+ *     in: the qu instance.
+ *
+ * return: int, number of items.
  */
 
 int
@@ -119,7 +131,13 @@ qu_count(
 }
 
 /*
- * create a new queue item.
+ * qu_new_item
+ *
+ * package the client payload for enry in queue.
+ *
+ *     in: void * client payload
+ *
+ * return: the new quitem
  */
 
 static
@@ -136,7 +154,15 @@ qu_new_item(
 }
 
 /*
- * add an item into the queue.
+ * qu_enqueue
+ *
+ * add an item to the queue.
+ *
+ *     in: the qu instance
+ *
+ *     in: void * client payload
+ *
+ * return: nothing.
  */
 
 void
@@ -157,7 +183,13 @@ qu_enqueue(
 }
 
 /*
- * remove and return the first item from the queue.
+ * qu_dequeue
+ *
+ * remove and return the first (oldest) item on the queue.
+ *
+ *     in: the qu instance
+ *
+ * return: void * client payload or NULL if queue is empty.
  */
 
 void *
@@ -175,7 +207,14 @@ qu_dequeue(
 }
 
 /*
- * return the first item from the queue but do not remove it.
+ * qu_peek
+ *
+ * return the first (oldet) item on the queue but leave
+ * it on the queue.
+ *
+ *     in: the qu instance
+ *
+ * return: void * client payload or NULL if queue is empty.
  */
 
 void *
@@ -189,7 +228,13 @@ qu_peek(
 }
 
 /*
+ * qu_create
+ *
  * create a new queue.
+ *
+ *     in: nothing
+ *
+ * return: the new qu instance.
  */
 
 qucb *
@@ -206,7 +251,13 @@ qu_create(
 }
 
 /*
+ * qu_destroy
+ *
  * free the queue control block if the queue is empty.
+ *
+ *     in: the qu instance
+ *
+ * return: boolean, true if successful, false if queue is not empty
  */
 
 bool
@@ -221,3 +272,5 @@ qu_destroy(
 	}
 	return false;
 }
+
+/* qu.c ends here */

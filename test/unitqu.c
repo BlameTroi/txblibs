@@ -4,7 +4,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
 
 #include "minunit.h"
 
@@ -15,23 +14,23 @@
  * minunit setup and teardown.
  */
 
-#define RAND_SEED 6803
-
-/* each test will have id and payload lists available to work with. */
-
+static
 void
 test_setup(void) {
-
-	/* let's use a different seed than 1, but not time() because i want
-	   repeatable tests. */
-	srand(RAND_SEED);
 }
 
+static
 void
 test_teardown(void) {
-
 }
 
+/*
+ * test_qu
+ *
+ * a fifo queue is pretty simple, so just one test running through the
+ * functions.
+ */
+
 MU_TEST(test_qu) {
 	qucb *qu = NULL;
 
@@ -66,8 +65,8 @@ MU_TEST(test_qu) {
 
 MU_TEST_SUITE(test_suite) {
 
-	/* always have a setup and teardown, even if they */
-	/* do nothing. */
+	/* always have a setup and teardown, even if they
+	 * do nothing. */
 
 	MU_SUITE_CONFIGURE(&test_setup, &test_teardown);
 
@@ -75,7 +74,6 @@ MU_TEST_SUITE(test_suite) {
 
 	MU_RUN_TEST(test_qu);
 }
-
 
 /*
  * master control:
@@ -87,3 +85,4 @@ main(int argc, char *argv[]) {
 	MU_REPORT();
 	return MU_EXIT_CODE;
 }
+/* unitqu.c ends here */

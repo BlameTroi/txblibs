@@ -23,7 +23,13 @@ extern "C" {
 typedef struct qucb qucb;
 
 /*
- * is the queue empty?
+ * qu_empty
+ *
+ * are there items in the queue?
+ *
+ *     in: the qu instance
+ *
+ * return: boolean, true if empty
  */
 
 bool
@@ -32,7 +38,15 @@ qu_empty(
 );
 
 /*
- * add an item to the end of the queue.
+ * qu_enqueue
+ *
+ * add an item to the queue.
+ *
+ *     in: the qu instance
+ *
+ *     in: void * client payload
+ *
+ * return: nothing.
  */
 
 void
@@ -42,7 +56,13 @@ qu_enqueue(
 );
 
 /*
- * remove an item from the front of the queue.
+ * qu_dequeue
+ *
+ * remove and return the first (oldest) item on the queue.
+ *
+ *     in: the qu instance
+ *
+ * return: void * client payload or NULL if queue is empty.
  */
 
 void *
@@ -51,7 +71,14 @@ qu_dequeue(
 );
 
 /*
- * return the item from the front of the queue without removing it.
+ * qu_peek
+ *
+ * return the first (oldet) item on the queue but leave
+ * it on the queue.
+ *
+ *     in: the qu instance
+ *
+ * return: void * client payload or NULL if queue is empty.
  */
 
 void *
@@ -60,7 +87,13 @@ qu_peek(
 );
 
 /*
- * create a new queue instance.
+ * qu_create
+ *
+ * create a new queue.
+ *
+ *     in: nothing
+ *
+ * return: the new qu instance.
  */
 
 qucb *
@@ -69,7 +102,13 @@ qu_create(
 );
 
 /*
- * if the queue is empty, release its resources.
+ * qu_destroy
+ *
+ * free the queue control block if the queue is empty.
+ *
+ *     in: the qu instance
+ *
+ * return: boolean, true if successful, false if queue is not empty
  */
 
 bool
@@ -78,7 +117,13 @@ qu_destroy(
 );
 
 /*
- * how many items are on the queue?
+ * qu_count
+ *
+ * how many items are in the queue?
+ *
+ *     in: the qu instance.
+ *
+ * return: int, number of items.
  */
 
 int
@@ -89,3 +134,4 @@ qu_count(
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
+/* qu.h ends here */
