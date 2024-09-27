@@ -10,10 +10,10 @@ CFLAGS=-fsanitize=address -Wall -g3 -O0 -std=c18 --pedantic-errors
 # LDFLAGS=-lm
 LDFLAGS=
 
-all: testlibs unitda unitdl unitfs unitkl unitkv unitmd5 unitpat unitpq unitqu unitrs unitsb unittest
+all: testlibs unitda unitdl unitkl unitkv unitmd5 unitpat unitpq unitqu unitrs unitsb unitst unittest
 
 clean:
-	rm -rf *.o *.dSYM/ testlibs unitda unitdl unitfs unitkv unitmd5 unitpat unitpq unitqu unitrs unitsb unittest
+	rm -rf *.o *.dSYM/ testlibs unitda unitdl unitkv unitmd5 unitpat unitpq unitqu unitrs unitsb unitst unittest
 
 #####################################################
 # these are the libs not as single file headers yet #
@@ -61,6 +61,9 @@ rs.o: ../inc/rs.h ../src/rs.c ../inc/str.h
 sb.o: ../inc/sb.h ../src/sb.c ../inc/str.h
 	$(CC) $(CFLAGS) -c ../src/sb.c
 
+st.o: ../inc/st.h ../src/st.c ../inc/dl.h
+	$(CC) $(CFLAGS) -c ../src/st.c
+
 str.o: ../inc/str.h ../src/str.c
 	$(CC) $(CFLAGS) -c ../src/str.c
 
@@ -87,12 +90,6 @@ unitdl.o: unitdl.c
 
 unitdl: unitdl.o dl.o misc.o str.o rand.o
 	$(CC) $(CFLAGS) -o unitdl unitdl.o dl.o misc.o str.o rand.o
-
-unitfs.o: unitfs.c
-	$(CC) $(CFLAGS) -c unitfs.c
-
-unitfs: unitfs.o fs.o
-	$(CC) $(CFLAGS) -o unitfs unitfs.o fs.o $(LDFLAGS)
 
 unitkl.o: unitkl.c
 	$(CC) $(CFLAGS) -c unitkl.c
@@ -147,6 +144,12 @@ unitsb.o: unitsb.c
 
 unitsb: unitsb.o str.o sb.o
 	$(CC) $(CFLAGS) -o unitsb unitsb.o sb.o str.o $(LDFLAGS)
+
+unitst.o: unitst.c
+	$(CC) $(CFLAGS) -c unitst.c
+
+unitst: unitst.o st.o dl.o rand.o
+	$(CC) $(CFLAGS) -o unitst unitst.o st.o dl.o rand.o $(LDFLAGS)
 
 unittest.o: unittest.c
 	$(CC) $(CFLAGS) -c unittest.c

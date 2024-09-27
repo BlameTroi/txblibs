@@ -7,8 +7,6 @@
 
 #include "minunit.h"
 
-#include "../inc/misc.h"
-
 #include "../inc/rand.h"
 
 #include "../inc/da.h"
@@ -18,8 +16,6 @@
  */
 
 #define RAND_SEED 6803
-
-/* each test will have id and payload lists available to work with. */
 
 void
 test_setup(void) {
@@ -32,16 +28,23 @@ test_setup(void) {
 
 void
 test_teardown(void) {
-
 }
-
+
+/*
+ * test_da
+ *
+ * the dynamic array is very simple, so only one test function
+ * is needed. the small size on create ensures that the array
+ * will grow as items are added to it. i didn't bother to clean
+ * up the dangling int references as this ends quickly.
+ */
+
 MU_TEST(test_da) {
 	dacb *da = NULL;
 
 	da = da_create(10);
 
-	mu_should(da);
-	mu_should(da_count(da) == 0);
+	mu_should(da && da_count(da) == 0);
 
 	int *leak = NULL;
 	int sum = 0;
@@ -50,20 +53,19 @@ MU_TEST(test_da) {
 		*leak = random_between(100, 900);
 		sum += *leak;
 		da_put(da, i, leak);
-		printf("%d %d\n", i, *leak);
 		leak = NULL;
 	}
-	printf("%d\n", sum);
 
 	for (int i = 0; i < 1000; i++) {
 		int *n = NULL;
 		n = da_get(da, i);
-		printf("%d %d\n", i, *n);
 		sum -= *n;
 		n = NULL;
 	}
-	printf("%d\n", sum);
+
 	mu_should(sum == 0);
+	mu_should(da_count(da) == 1000);
+
 	da_destroy(da);
 }
 

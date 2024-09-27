@@ -4,7 +4,7 @@
 
 .PHONY: clean all
 
-all: da dl fs kl kv md5 misc pat pmute pq rand rs sb str
+all: da dl kl kv md5 misc pat pmute pq rand rs sb st str
 
 clean:
 	rm release/txb*.h
@@ -14,9 +14,6 @@ da: inc/da.h src/da.c
 
 dl: inc/dl.h src/dl.c
 	buildhdr --macro TXBDL --intro LICENSE --pub inc/dl.h --priv src/dl.c >release/txbdl.h
-
-fs: inc/fs.h src/fs.c
-	buildhdr --macro TXBFS --intro LICENSE --pub inc/fs.h --priv src/fs.c >release/txbfs.h
 
 kl: inc/kl.h src/kl.c
 	buildhdr --macro TXBKL --intro LICENSE --pub inc/kl.h --priv src/kv.c >release/txbkl.h
@@ -50,6 +47,9 @@ rs: inc/rs.h src/rs.c
 
 sb: inc/sb.h src/sb.c
 	buildhdr --macro TXBSB --intro LICENSE --pub inc/sb.h --priv src/sb.c >release/txbsb.h
+
+st: inc/st.h src/st.c
+	buildhdr --macro TXBSB --intro LICENSE --pub inc/st.h --priv src/st.c >release/txbst.h
 
 str: inc/str.h src/str.c
 	buildhdr --macro TXBSTR --intro LICENSE --pub inc/str.h --priv src/str.c >release/txbstr.h

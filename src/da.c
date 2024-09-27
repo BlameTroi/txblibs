@@ -1,8 +1,9 @@
 /* da.c -- blametroi's dynamic array library */
 
 /*
- * a header only implementation of a very basic and somewhat leaky
- * dynamic array.
+ * a header only implementation of a very basic dynammic array. the
+ * array stores 'payloads', void * sized items that are typically
+ * pointers to dynamically allocated memory.
  *
  * released to the public domain by Troy Brumley blametroi@gmail.com
  *
@@ -82,7 +83,7 @@ da_destroy(
 	ASSERT_DACB(da, "invalid DACB");
 	memset(da->data, 0, da->size *sizeof(void *));
 	free(da->data);
-	memset(da, 0, sizeof(dacb));
+	memset(da, 253, sizeof(dacb));
 	free(da);
 }
 
@@ -138,9 +139,10 @@ da_put(
 	assert(put);
 	while (n >= da->size) {
 		void **old = da->data;
-		da->data = malloc(2 * da->size *sizeof(void *));
-		memcpy(da->data, old, da->size *sizeof(void *));
-		memset(old, 0, da->size *sizeof(void *));
+		da->data = malloc(2 * da->size * sizeof(void *));
+		memset(da->data, 0, 2 * da->size * sizeof(void *));
+		memcpy(da->data, old, da->size * sizeof(void *));
+		memset(old, 253, da->size *sizeof(void *));
 		free(old);
 		da->size = 2 * da->size;
 	}
