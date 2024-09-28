@@ -32,8 +32,6 @@ extern "C" {
 
 typedef struct kvcb kvcb;
 
-typedef struct kvit kvit;
-
 kvcb *
 kv_create(
 	int (*key_compare)(void *, void *)
@@ -45,7 +43,7 @@ kv_destroy(
 );
 
 void *
-kv_get(
+kv_insert(
 	kvcb *kv,
 	void *key
 );

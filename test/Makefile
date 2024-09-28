@@ -13,7 +13,7 @@ LDFLAGS=
 all: testlibs unitda unitdl unitkl unitkv unitmd5 unitpat unitpq unitqu unitrs unitsb unitst unittest
 
 clean:
-	rm -rf *.o *.dSYM/ testlibs unitda unitdl unitkv unitmd5 unitpat unitpq unitqu unitrs unitsb unitst unittest
+	rm -rf *.o *.dSYM/ testlibs unitda unitdl unitkl unitkv unitmd5 unitpat unitpq unitqu unitrs unitsb unitst unittest
 
 #####################################################
 # these are the libs not as single file headers yet #
@@ -27,9 +27,6 @@ dl.o: ../inc/dl.h ../src/dl.c
 
 kl.o: ../inc/kl.h ../src/kl.c
 	$(CC) $(CFLAGS) -c ../src/kl.c
-
-fs.o: ../inc/fs.h ../src/fs.c
-	$(CC) $(CFLAGS) -c ../src/fs.c
 
 kv.o: ../inc/kv.h ../src/kv.c
 	$(CC) $(CFLAGS) -c ../src/kv.c

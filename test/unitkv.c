@@ -5,7 +5,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
 
 #include "minunit.h"
 
@@ -121,15 +120,15 @@ MU_TEST(test_put) {
 	kvcb *kv = load_ints(10, 5);
 	mu_should(kv_count(kv) == 10);
 	mu_should(kv_exists(kv, &k));
-	int *pv = kv_get(kv, &k);
+	int *pv = kv_insert(kv, &k);
 	mu_should(*pv);
 	mu_should(*pv == 5);
 	kv_put(kv, &k, &v);
 	k = 2;
-	pv = kv_get(kv, &k);
+	pv = kv_insert(kv, &k);
 	mu_should(*pv == 2);
 	k = 1073;
-	pv = kv_get(kv, &k);
+	pv = kv_insert(kv, &k);
 	mu_shouldnt(pv);
 	kv_destroy(kv);
 }

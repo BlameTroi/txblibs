@@ -394,7 +394,6 @@ kl_delete(
 
 #include "../inc/kv.h"
 
-
 /*
  * the transparent key value control block.
  */
@@ -420,26 +419,8 @@ struct kvcb {
 	int pairs_size;             /* how many can we store */
 	int pairs_increment;        /* if we can increase buffer, by how much */
 	int num_pairs;              /* how many are stored */
-	kvpair *pairs;                /* where they are */
+	kvpair *pairs;              /* where they are */
 };
-
-
-/*
- * overhead for the backing store for key value pairs.
- */
-
-#define KVIT_TAG "__KVIT__"
-#define KVIT_TAG_LEN 8
-#define ASSERT_KVIT(p) assert((p) && memcmp((p), KVIT_TAG, KVCB_TAG_LEN) == 0 && (m))
-#define ASSERT_KVIT_OR_NULL(p) assert((p) == NULL || memcmp((p), KVIT_TAG, KVIT_TAG_LEN) == 0)
-
-struct kvit {
-	char tag[KVIT_TAG_LEN];     /* eye catcher */
-	void *amov;                 /* overhead for the backing access method */
-	void *key;                  /* whatever the key is */
-	void *value;                /* whatever the payload is */
-};
-
 
 /*
  * kv_create
@@ -449,7 +430,9 @@ struct kvit {
  * requires a function pointer to a function that will compare the
  * keys in the store via the < =0 > convention.
  *
- * returns a pointer to the instance as a kvcb.
+ *     in: key comparison function pointer, as in qsort.
+ *
+ * return: the new kv instance
  */
 
 kvcb *
@@ -471,7 +454,6 @@ kv_create(
 	return kv;
 }
 
-
 /*
  * kv_destroy
  *
@@ -480,7 +462,9 @@ kv_create(
  * overwrites and then releases all key:value store related storage.
  * actual key and value storage is the responsibility of the client.
  *
- * return NULL.
+ *     in: the kv instance
+ *
+ * return: NULL
  */
 
 kvcb *
@@ -497,17 +481,20 @@ kv_destroy(
 	return NULL;
 }
 
-
 /*
  * am_find_key
  *
  * find a matching key in the key:value store.
  *
- * returns the address of the key:value pair or NULL.
+ *     in: the kv instance
+ *
+ *     in: the key
+ *
+ * return: key:value pair or NULL
  */
 
 static
-void *
+kvpair *
 am_find_key(
 	kvcb *kv,
 	void *key
@@ -518,12 +505,17 @@ am_find_key(
 	return NULL;
 }
 
-
 /*
  * am_delete_key
  *
  * delete the key:value pair for a specific key. fails via an assert
  * if the key is not in the store.
+ *
+ *     in: the kv instance
+ *
+ *     in: the key
+ *
+ * return: nothing
  */
 
 static
@@ -549,7 +541,6 @@ am_delete_key(
 	assert(NULL && "error in am_delete_key, could not find key");
 }
 
-
 /*
  * am_new_pair
  *
@@ -559,12 +550,22 @@ am_delete_key(
  * if the store is full and growth is allowed, a new store is
  * allocated.
  *
- * returns a pointer to the new pair.
+ *     in: the kv instance
+ *
+ *     in: the key
+ *
+ *     in: the value
+ *
+ * return: the newly created kvpair
  */
 
 static
 kvpair *
-am_new_pair(kvcb *kv, void *key, void *value) {
+am_new_pair(
+	kvcb *kv,
+	void *key,
+	void *value
+) {
 	if (kv->num_pairs >= kv->pairs_size) {
 		assert(kv->pairs_increment && "can not grow key:value store");
 		int new_size = kv->pairs_size + kv->pairs_increment;
@@ -584,16 +585,20 @@ am_new_pair(kvcb *kv, void *key, void *value) {
 }
 
 /*
- * kv_get
+ * kv_insert
  *
  * if the key exists in the key:value store, return the pointer
  * to the value.
  *
- * returns NULL if the key is not found.
+ *     in: the kv instance
+ *
+ *     in: the key
+ *
+ * return: the value from the key:value pair or NULL if not found
  */
 
 void *
-kv_get(
+kv_insert(
 	kvcb *kv,
 	void *key
 ) {
@@ -603,7 +608,6 @@ kv_get(
 	return p ? p->value : p;
 }
 
-
 /*
  * kv_put
  *
@@ -612,7 +616,13 @@ kv_get(
  * if the key exists in the store, its value is overwritten. if the
  * key does not exist in the store, a new key:value pair is created.
  *
- * returns the value passed.
+ *     in: the kv instance
+ *
+ *     in: the key
+ *
+ *     in: the value
+ *
+ * return: the value passed as input
  */
 
 void *
@@ -632,14 +642,17 @@ kv_put(
 	return value;
 }
 
-
 /*
  * kv_delete
  *
  * given a key, if it exists in the key:value store, delete its pair
  * in the store.
  *
- * returns true if the key was found, false if not.
+ *     in: the kv instance
+ *
+ *     in: the key
+ *
+ * return: boolean true if key found and pair deleted
  */
 
 bool
@@ -655,11 +668,16 @@ kv_delete(
 	return p != NULL;
 }
 
-
 /*
  * kv_exists
  *
  * does a key exist in the key:value store.
+ *
+ *     in: the kv instance
+ *
+ *     in: the key
+ *
+ * return: boolean true if key found
  */
 
 bool
@@ -673,11 +691,14 @@ kv_exists(
 	return p != NULL;
 }
 
-
 /*
  * kv_empty
  *
- * is the key:value store empty.
+ * is the key:value store empty?
+ *
+ *     in: the kv instance
+ *
+ * return: boolean true if empty
  */
 
 bool
@@ -688,11 +709,14 @@ kv_empty(
 	return kv->num_pairs == 0;
 }
 
-
 /*
  * kv_count
  *
  * how many pairs are in the key:value store.
+ *
+ *     in: the kv instance
+ *
+ * return: int number of pairs
  */
 
 int
@@ -703,11 +727,14 @@ kv_count(
 	return kv->num_pairs;
 }
 
-
 /*
  * kv_keys
  *
  * returns a null terminated array of keys from the store.
+ *
+ *     in: the kv instance
+ *
+ * return: null terminated array of void *
  */
 
 void *
@@ -725,11 +752,14 @@ kv_keys(
 	return keys;
 }
 
-
 /*
  * kv_values
  *
  * returns a null terminated array of values from the store.
+ *
+ *     in: the kv instance
+ *
+ * return: null terminated array of void *
  */
 
 void *
