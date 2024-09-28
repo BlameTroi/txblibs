@@ -348,7 +348,7 @@ kl_insert(
  *
  *     in: the kl instance.
  *
- *     in: pointer to the address of the key.
+ * in/out: pointer to the address of the key.
  *
  * in/out: pointer to the address to store the value as a void *.
  *
@@ -372,6 +372,7 @@ kl_get(
 		int rc = kl->compare_keys(*key, curr->key);
 		if (rc == 0) {
 			kl->position = curr;
+			*key = curr->key;
 			*value = curr->value;
 			return true;
 		}

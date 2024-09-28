@@ -15,6 +15,13 @@
 #include "../inc/str.h"
 #include "../inc/rand.h"
 
+/*
+ * fn_compare_key for strings and longs
+ *
+ * these follow the same api as cmpst, as expected by
+ * qsort.
+ */
+
 static int
 fn_compare_key_string(void *s1, void *s2) {
 	return strcmp(s1, s2);
@@ -26,7 +33,7 @@ fn_compare_key_long(void *i, void *j) {
 }
 
 /*
- * minunit setup and teardown of listd infratstructure.
+ * minunit setup and teardown.
  */
 
 #define RAND_SEED 6803
@@ -42,10 +49,10 @@ test_setup(void) {
 static void
 test_teardown(void) {
 }
-
+
 /*
  * utility functions to create and destroy lists for testing. just a list of
- * 100 items to work with, ids or keys run from 10 to 1000 by 10s.
+ * 100 items to work with, keys run from 10 to 990 by 10s.
  */
 
 static klcb *
@@ -85,7 +92,7 @@ create_populated_key_string(void) {
 	assert(kl &&
 		"error creating test data linked list");
 	for (int i = 10; i < 1000; i += 10) {
-		snprintf(buffer, 99, "%06d i'm a key", i);
+		snprintf(buffer, 99, "%06d", i);
 		kl_insert(kl, dup_string(buffer), dup_string(buffer));
 	}
 	return kl;
@@ -106,6 +113,12 @@ destroy_populated_key_string(klcb *kl) {
 	kl_reset(kl); /* in case of error above */
 	kl_destroy(kl);
 }
+
+/*
+ * test_create
+ *
+ * an empty kl.
+ */
 
 MU_TEST(test_create) {
 	klcb *kl = kl_create(fn_compare_key_string);
@@ -115,18 +128,32 @@ MU_TEST(test_create) {
 	mu_should(kl_destroy(kl));
 }
 
+/*
+ * test_insert_single
+ *
+ * insert one item into the kl.
+ */
+
 MU_TEST(test_insert_single) {
 	klcb *kl = kl_create(fn_compare_key_string);
 	mu_should(kl_insert(kl, "abcd", "1234"));
 	mu_shouldnt(kl_empty(kl));
 	mu_should(kl_count(kl) == 1);
-	/* note: following doesn't leak because the refs are on the
-	 * stack and go out of scope when the function ends */
+	/* note: following doesn't leak because the refs to
+	 * constants. */
 	mu_should(kl_reset(kl) == 1);
 	mu_should(kl_empty(kl));
 	mu_should(kl_count(kl) == 0);
 	kl_destroy(kl);
 }
+
+/*
+ * tet_insert_multiple
+ *
+ * insert several items into a list that uses longs as keys. the
+ * items are added out of key sequence order but they should be
+ * correctly stored in order.
+ */
 
 MU_TEST(test_insert_multiple) {
 	klcb *kl = NULL;
@@ -191,6 +218,13 @@ MU_TEST(test_insert_multiple) {
 	kl_destroy(kl);
 }
 
+/*
+ * test_insert_duplicate
+ *
+ * build a list keyed 1->9 and then try to insert new
+ * items with unique and duplicate keys.
+ */
+
 MU_TEST(test_insert_duplicate) {
 	klcb *kl = kl_create(fn_compare_key_long);
 	for (long i = 1; i < 10; i++)
@@ -204,6 +238,14 @@ MU_TEST(test_insert_duplicate) {
 	mu_should(kl_reset(kl) == 11);
 	kl_destroy(kl);
 }
+
+/*
+ * test_insert_random
+ *
+ * insert up to 10,000 random numbers into the list. this
+ * is a bit like throwing spaghetti against the wall but
+ * it works well enough.
+ */
 
 MU_TEST(test_insert_random) {
 	klcb *kl = kl_create(fn_compare_key_long);
@@ -227,7 +269,9 @@ MU_TEST(test_insert_random) {
 }
 
 /*
- * get the first item on the list.
+ * test_get_first
+ *
+ * get the first item, the one with the smallest key, on the list.
  */
 
 MU_TEST(test_get_first) {
@@ -246,7 +290,9 @@ MU_TEST(test_get_first) {
 }
 
 /*
- * and the last.
+ * test_get_last
+ *
+ * get the last item, the one with the largest key, on the list.
  */
 
 MU_TEST(test_get_last) {
@@ -263,6 +309,12 @@ MU_TEST(test_get_last) {
 	mu_shouldnt(msg);
 	destroy_populated_key_long(kl);
 }
+
+/*
+ * test_get_specific
+ *
+ * get items by known keys at various points in the list.
+ */
 
 MU_TEST(test_get_specific) {
 	printf("\n");
@@ -306,7 +358,10 @@ MU_TEST(test_get_specific) {
 }
 
 /*
- * read backward from a specific item.
+ * test_get_previous
+ *
+ * read backward from various locations. make sure reading backward
+ * from the head of the list reports that the end was reached.
  */
 
 MU_TEST(test_get_previous) {
@@ -354,6 +409,13 @@ MU_TEST(test_get_previous) {
 	destroy_populated_key_long(kl);
 }
 
+/*
+ * test_get_next
+ *
+ * read forward from various locations. make sure reading forward
+ * from the tail of the list reports that the end was reached.
+ */
+
 MU_TEST(test_get_next) {
 	printf("\n");
 	klcb *kl = create_populated_key_long();
@@ -399,6 +461,12 @@ MU_TEST(test_get_next) {
 	destroy_populated_key_long(kl);
 }
 
+/*
+ * test_clone
+ *
+ * create a shallow copy of a list, possibly useful for iteration.
+ */
+
 MU_TEST(test_clone
 ) {
 	klcb *kl = create_populated_key_long();
@@ -415,21 +483,135 @@ MU_TEST(test_clone
 	kl_destroy(clone);
 }
 
+/*
+ * test_update
+ *
+ * read and modify items in a list.
+ */
+
 MU_TEST(test_update) {
+	klcb *kl = create_populated_key_long();
+	void *key = NULL;
+	void *value = NULL;
+	char *keep = NULL;
+	char *hand = NULL;
+
+	/* update head of list */
+	mu_should(kl_get_first(kl, &key, &value));
+	mu_should((long)key == 10L);
+	keep = dup_string(value);
+	hand = value;
+	value = dup_string("i used to be 10");
+	mu_should(kl_update(kl, key, value));
+	free(hand);
+	free(keep);
+
+	/* move off the head and the return */
+	mu_should(kl_get_last(kl, &key, &value));
+	mu_should((long)key == 990L);
+	mu_should(kl_get_first(kl, &key, &value));
+	mu_should((long)key == 10L);
+	mu_should(equal_string("i used to be 10", value));
+
+	/* update tail of list */
+	mu_should(kl_get_last(kl, &key, &value));
+	mu_should((long)key == 990L);
+	keep = dup_string(value);
+	hand = value;
+	value = dup_string("i used to be 990");
+	mu_should(kl_update(kl, key, value));
+	free(hand);
+	free(keep);
+
+	/* move off the tail and the return */
+	mu_should(kl_get_first(kl, &key, &value));
+	mu_should((long)key == 10L);
+	mu_should(kl_get_last(kl, &key, &value));
+	mu_should((long)key == 990L);
+	mu_should(equal_string("i used to be 990", value));
+
+	/* this should scan all the links forward */
+	mu_should(kl_count(kl) == 99);
+
+	/* in the middle of the list */
+	key = (void *)500L;;
+	mu_should(kl_get(kl, &key, &value));
+	mu_should((long)key == 500L);
+	keep = dup_string(value);
+	hand = value;
+	value = dup_string("i used to be 500");
+	mu_should(kl_update(kl, key, value));
+	free(hand);
+	free(keep);
+
+	/* move off this node and the return */
+	key = (void *)750L;
+	mu_should(kl_get(kl, &key, &value));
+	mu_should((long)key == 750L);
+	key = (void *)500L;
+	mu_should(kl_get(kl, &key, &value));
+	mu_should((long)key == 500L);
+	mu_should(equal_string("i used to be 500", value));
+
+	/* this should scan all the links forward */
+	mu_should(kl_count(kl) == 99);
+
+	destroy_populated_key_long(kl);
+}
+
+/*
+ * test_delete
+ *
+ * delete items at the ends and in the middle of the list.
+ */
+
+MU_TEST(test_delete) {
 	klcb *kl = create_populated_key_string();
 	void *key = NULL;
 	void *value = NULL;
-	const char *msg = NULL;
 
+	/* delete somewhere in the middle */
+	key = "000500";
+	mu_should(kl_get(kl, &key, &value));
+	mu_should(equal_string("000500", key));
+	mu_should(kl_delete(kl, key));
+	free(value);
+	free(key);
+	mu_should(kl_count(kl) == 98);
+	key = "000500";
+	mu_shouldnt(kl_get(kl, &key, &value));
+	mu_should(kl_get_error(kl));
 
+	/* delete head */
+	mu_should(kl_get_first(kl, &key, &value));
+	mu_should(equal_string("000010", key));
+	mu_should(kl_delete(kl, key));
+	free(value);
+	free(key);
+	mu_should(kl_get_first(kl, &key, &value));
+	mu_should(equal_string("000020", key));
+	mu_should(kl_count(kl) == 97);
+	key = "000010";
+	mu_shouldnt(kl_get(kl, &key, &value));
+	mu_should(kl_get_error(kl));
 
+	/* delete tail */
+	mu_should(kl_get_last(kl, &key, &value));
+	mu_should(equal_string("000990", key));
+	mu_should(kl_delete(kl, key));
+	free(value);
+	free(key);
+	mu_should(kl_get_last(kl, &key, &value));
+	mu_should(equal_string("000980", key));
+	mu_should(kl_count(kl) == 96);
+	key = "000990";
+	mu_shouldnt(kl_get(kl, &key, &value));
+	mu_should(kl_get_error(kl));
 
+	/* and done */
 	destroy_populated_key_string(kl);
 }
-
-MU_TEST(test_delete) {
-}
-
+
 /*
  * here we define the whole test suite. sadly there's no runtime
  * introspection. there is probably an opportunity for an elisp helper
@@ -451,14 +633,13 @@ MU_TEST_SUITE(test_suite) {
 	MU_RUN_TEST(test_get_specific);
 	MU_RUN_TEST(test_get_previous);
 	MU_RUN_TEST(test_get_next);
+	MU_RUN_TEST(test_clone);
 	MU_RUN_TEST(test_update);
 	MU_RUN_TEST(test_delete);
-	MU_RUN_TEST(test_clone);
 
-	return;
+	return; /* move me to skip working tests */
 
 }
-
 
 /*
  * master control:
