@@ -19,7 +19,7 @@ extern "C" {
 /*
  * dlcb
  *
- * an opaque definition of an instance of the linked list.
+ * an opaque definition of an instance of the doubly linked list.
  */
 
 typedef struct dlcb dlcb;
@@ -29,10 +29,10 @@ typedef struct dlcb dlcb;
  *
  * client code should consider everything but the payload pointer as
  * read only. the whole node is returned from many functions and is
- * expected to be passed on a subsequent function call that assumes
- * the position within the list.
+ * expected to be passed on a subsequent function call to check the
+ * position within the list.
  *
- * payload will typically be a pointer to some client managed data.
+ * a payload is expected to be a pointer to some client managed data.
  * if the data is malloced, it is the clients responsibility to free
  * it. if the data to store will fit in a void *, the client may
  * store it directly.
@@ -59,9 +59,11 @@ struct dlnode {
 /*
  * dl_create
  *
- * create an instance of a keyed linked list.
+ * create an instance of a doubly linked list.
  *
- * return: the new dl instance.
+ *     in: nothing
+ *
+ * return: the new dl instance
  */
 
 dlcb *
@@ -72,11 +74,11 @@ dl_create(
 /*
  * dl_destroy
  *
- * destroy an instance of a keyed linked list if it is empty.
+ * destroy a dl instance if it is empty.
  *
- *     in: the dl instance.
+ *     in: the dl instance
  *
- * return: true if successful, false if the dl was not empty.
+ * return: true if successful, false if the dl was not empty
  */
 
 bool
@@ -89,9 +91,9 @@ dl_destroy(
  *
  * get status of last command if there was an error.
  *
- *     in: the dl instance.
+ *     in: the dl instance
  *
- * return: constant string with a brief message or NULL.
+ * return: constant string with a brief message or NULL
  */
 
 const char *
@@ -102,12 +104,12 @@ dl_get_error(
 /*
  * dl_count
  *
- * how many items are on the list? does not change the current
- * positioned item in the list.
+ * how many items are on the list? the current list position
+ * is not changed.
  *
- *     in: the dl instance.
+ *     in: the dl instance
  *
- * return: int number of items on the list.
+ * return: int number of items on the list
  */
 
 int
@@ -118,12 +120,11 @@ dl_count(
 /*
  * dl_empty
  *
- * is the list empty? does not change the current positioned item in
- * the list.
+ * is the list empty? the current list position is not changed.
  *
- *     in: the dl instance.
+ *     in: the dl instance
  *
- * return: bool.
+ * return: bool
  */
 
 bool
@@ -134,12 +135,11 @@ dl_empty(
 /*
  * dl_reset
  *
- * reset the keyed link list, deleting all items. does not free payload
- * storage.
+ * reset the list, deleting all items. does not free payload storage.
  *
- *     in: the dl instance.
+ *     in: the dl instance
  *
- * return: int number of items deleted.
+ * return: int number of items deleted
  */
 
 int
@@ -150,13 +150,13 @@ dl_reset(
 /*
  * dl_insert_first
  *
- * insert a new item at the head of the list. the dl is positioned
- * at this new item.
+ * insert a new item at the head of the list. this new item becomes
+ * the current position in the list.
  *
- *     in: the dl instance.
+ *     in: the dl instance
  *
  *     in: the client data must fit in in a void *, typically
- *         a pointer to the client data.
+ *         a pointer to the client data
  *
  * return: the dl node.
  */
@@ -170,13 +170,13 @@ dl_insert_first(
 /*
  * dl_insert_last
  *
- * insert a new item at the tail of the list. the dl is positioned
- * at this new item.
+ * insert a new item at the tail of the list. this new item becomes
+ * the current position in the list.
  *
- *     in: the dl instance.
+ *     in: the dl instance
  *
  *     in: the client data must fit in in a void *, typically
- *         a pointer to the client data.
+ *         a pointer to the client data
  *
  * return: the dl node.
  */
@@ -190,17 +190,17 @@ dl_insert_last(
 /*
  * dl_insert_before
  *
- * insert a new item immediately before the current item. the
- * dl is positioned at this new item.
+ * insert a new item immediately before the currently positioned item.
+ * this new item becomes the current position in the list.
  *
- *     in: the dl instance.
+ *     in: the dl instance
  *
- *     in: the dl node of the current position in the dl.
+ *     in: the dl node of the current position in the dl
  *
  *     in: the client data must fit in in a void *, typically
- *         a pointer to the client data.
+ *         a pointer to the client data
  *
- * return: the dl node.
+ * return: the dl node
  */
 
 dlnode *
@@ -213,17 +213,17 @@ dl_insert_before(
 /*
  * dl_insert_after
  *
- * insert a new item immediately after the current item. the
- * dl is positioned at this new item.
+ * insert a new item immediately after the currently positioned item.
+ * this new item becomes the current position in the list.
  *
- *     in: the dl instance.
+ *     in: the dl instance
  *
- *     in: the dl node of the current position in the dl.
+ *     in: the dl node of the current position in the dl
  *
  *     in: the client data must fit in in a void *, typically
- *         a pointer to the client data.
+ *         a pointer to the client data
  *
- * return: the dl node.
+ * return: the dl node
  */
 
 dlnode *
@@ -238,9 +238,9 @@ dl_insert_after(
  *
  * get the first item in the list and set the position.
  *
- *     in: the dl instance.
+ *     in: the dl instance
  *
- * return: dl node of that item.
+ * return: dl node of that item
  */
 
 dlnode *
@@ -253,9 +253,9 @@ dl_get_first(
  *
  * get the last item in the list and set the position.
  *
- *     in: the dl instance.
+ *     in: the dl instance
  *
- * return: the dl node of that item.
+ * return: the dl node of that item or NULL
  */
 
 dlnode *
@@ -266,14 +266,14 @@ dl_get_last(
 /*
  * dl_get_next
  *
- * get item after the current positioned item, updating
- * the position in the list.
+ * get item after the current positioned item, advancing
+ * the position to this item.
  *
- *     in: the dl instance.
+ *     in: the dl instance
  *
- *     in: the dl node of the positioned item.
+ *     in: the dl node of the positioned item
  *
- * return: the dl node of the next item or NULL.
+ * return: the dl node of the next item or NULL
  */
 
 dlnode *
@@ -285,14 +285,14 @@ dl_get_next(
 /*
  * dl_get_previous
  *
- * get the item before the current positioned item, updating
- * the position in the list.
+ * get the item before the current positioned item, advancing
+ * the position to this item.
  *
- *     in: the dl instance.
+ *     in: the dl instance
  *
- *     in: the dl node of the positioned item.
+ *     in: the dl node of the positioned item
  *
- * return: the dl node of the previous item or NULL.
+ * return: the dl node of the previous item or NULL
  */
 
 dlnode *
@@ -304,14 +304,14 @@ dl_get_previous(
 /*
  * dl_delete
  *
- * remove the currently positioned item from the list. clears
+ * remove the currently positioned item from the list.  clears
  * the list position.
  *
- *     in: the dl instance.
+ *     in: the dl instance
  *
- *     in: the dl node of the positioned item.
+ *     in: the dl node of the positioned item
  *
- * return: boolean true if deleted, false on error.
+ * return: boolean true if deleted, false on error
  */
 
 bool
@@ -324,19 +324,19 @@ dl_delete(
  * dl_update
  *
  * update an item's value in the list. the list should be positioned
- * on the node to update. the dl position is unchanged.
+ * on the node to update. and the position is not changed.
  *
  * as items are stored in memory, if you do not change the address of
  * the value (ie, you updated its contents in place) there is no need
  * to use dl_update.
  *
- *     in: the dl instance.
+ *     in: the dl instance
  *
  *     in: the dl node to be updated
  *
- *     in: the new payload, typically a void * pointer to a value.
+ *     in: the new payload, typically a void * pointer to a value
  *
- * return: the dl node of the updated item.
+ * return: the dl node of the updated item
  */
 
 dlnode *
