@@ -11,9 +11,32 @@
  * to copy, modify, publish, and distribute this file as you see fit.
  */
 
-
 #include "../inc/pmute.h"
-
+
+/*
+ * permute_next
+ *
+ *     in: length of array to permute
+ *
+ * in/out: array of ints to permute
+ *
+ * return the next possible permutation of the n unique integers in
+ * the array ints. to get all possible iterations, start with the
+ * elements of ints in ascending order. the array is updated on each
+ * call and the function returns 0 when no more permutations are
+ * possible.
+ *
+ * sample code:
+ *
+ * int n = 5;
+ * int ints[n];
+ * for (int i = 0; i < n; i++)
+ *    ints[i] = i;
+ * print_current(n, ints);
+ * while (permute_next(n, ints))
+ *    print_current(&iter, n, ints);
+ *
+ */
 
 /*
  * permute the 'n' unique integers in 'ints' on successive calls until
@@ -82,3 +105,4 @@ permute_next(
 	/* no more permutations available */
 	return 0;
 }
+/* pmute.c ends here */

@@ -16,7 +16,11 @@ extern "C" {
 #endif /* __cplusplus */
 
 /*
- * permute_next(int n, int *ints)
+ * permute_next
+ *
+ *     in: length of array to permute
+ *
+ * in/out: array of ints to permute
  *
  * return the next possible permutation of the n unique integers in
  * the array ints. to get all possible iterations, start with the
@@ -45,3 +49,4 @@ permute_next(
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
+/* pmute.h ends here */

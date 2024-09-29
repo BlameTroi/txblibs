@@ -10,10 +10,10 @@ CFLAGS=-fsanitize=address -Wall -g3 -O0 -std=c18 --pedantic-errors
 # LDFLAGS=-lm
 LDFLAGS=
 
-all: testlibs unitda unitdl unitkl unitkv unitmd5 unitpat unitpq unitqu unitrs unitsb unitst unittest
+all: unitda unitdl unitkl unitkv unitmd5 unitmute unitpat unitpq unitqu unitrs unitsb unitst unittest
 
 clean:
-	rm -rf *.o *.dSYM/ testlibs unitda unitdl unitkl unitkv unitmd5 unitpat unitpq unitqu unitrs unitsb unitst unittest
+	rm -rf *.o *.dSYM/ unitda unitdl unitkl unitkv unitmd5 unitmute unitpat unitpq unitqu unitrs unitsb unitst unittest
 
 #####################################################
 # these are the libs not as single file headers yet #
@@ -70,12 +70,6 @@ str.o: ../inc/str.h ../src/str.c
 # but not all are done with minunit.                    #
 #########################################################
 
-testlibs.o: testlibs.c
-	$(CC) $(CFLAGS) -c testlibs.c
-
-testlibs: testlibs.o misc.o str.o pmute.o
-	$(CC) $(CFLAGS) -o testlibs testlibs.o misc.o pmute.o str.o
-
 unitda.o: unitda.c
 	$(CC) $(CFLAGS) -c unitda.c
 
@@ -105,6 +99,12 @@ unitmd5.o: unitmd5.c
 
 unitmd5: unitmd5.o md5.o
 	$(CC) $(CFLAGS) -o unitmd5 unitmd5.o md5.o
+
+unitmute.o: unitmute.c
+	$(CC) $(CFLAGS) -c unitmute.c
+
+unitmute: unitmute.o pmute.o
+	$(CC) $(CFLAGS) -o unitmute unitmute.o pmute.o $(LDFLAGS)
 
 unitpat.o: unitpat.c
 	$(CC) $(CFLAGS) -c unitpat.c
