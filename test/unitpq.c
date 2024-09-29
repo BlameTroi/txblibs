@@ -10,12 +10,10 @@
 
 #include "minunit.h"
 
-
 #include "../inc/misc.h"
+#include "../inc/rand.h"
 
 #include "../inc/pq.h"
-
-#include "../inc/rand.h"
 
 /*
  * minunit setup and teardown of listd infratstructure.

@@ -2,7 +2,6 @@
 
 /* test the header only library packaging. */
 
-
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -41,8 +40,6 @@ permute(const int n) {
 	free(ints);
 
 }
-
-
 
 /***main function***/
 

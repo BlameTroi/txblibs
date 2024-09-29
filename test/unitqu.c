@@ -8,6 +8,7 @@
 #include "minunit.h"
 
 #include "../inc/str.h"
+
 #include "../inc/qu.h"
 
 /*

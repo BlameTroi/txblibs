@@ -3,13 +3,12 @@
 /* released to the public domain, troy brumley, may 2024 */
 
 
-#include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
 
 #include "minunit.h"
 
 #include "../inc/str.h"
+
 #include "../inc/sb.h"
 
 /*
