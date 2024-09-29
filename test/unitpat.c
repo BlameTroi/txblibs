@@ -52,12 +52,10 @@ char *filenames[] = {
 
 void
 test_setup(void) {
-	debug_off(NULL);
 }
 
 void
 test_teardown(void) {
-	debug_off(NULL);
 }
 
 /*
@@ -81,14 +79,13 @@ MU_TEST(test_compile_literals) {
 	mu_should(validate_compiled_pattern(pat, val));
 	free((void *)pat);
 
-	debug_off(NULL);
 	pat = compile_pattern("ab");
 	val = (int[]) {
 		PAT_LIT, 1, 'a', PAT_LIT, 1, 'b', -1
 	};
 	mu_should(validate_compiled_pattern(pat, val));
 	free((void *)pat);
-	debug_off(NULL);
+
 	pat = compile_pattern("simple");
 	val = (int[]) {
 		PAT_LIT, 1, 's',
@@ -250,14 +247,14 @@ MU_TEST(test_compile_metas) {
 
 	pat = compile_pattern("[asdf]");
 	val = (int[]) {
-		PAT_CCLASS, 4, 'a', 's', 'd', 'f',  -1
+		PAT_CCLASS, 4, 'a', 's', 'd', 'f', -1
 	};
 	mu_should(validate_compiled_pattern(pat, val));
 	free((void *)pat);
 
 	pat = compile_pattern("[^asdf]");
 	val = (int[]) {
-		PAT_NOT_CCLASS, 4, 'a', 's', 'd', 'f',  -1
+		PAT_NOT_CCLASS, 4, 'a', 's', 'd', 'f', -1
 	};
 	free((void *)pat);
 
@@ -268,7 +265,7 @@ MU_TEST(test_compile_metas) {
 	pat = compile_pattern("[^^?$.#(){}\\\\<>]");
 	val = (int[]) {
 		PAT_NOT_CCLASS, 12, '^', '?', '$', '.',  '#', '(', ')', '{', '}', '\\', '<',
-		'>',  -1
+		'>', -1
 	};
 	mu_should(validate_compiled_pattern(pat, val));
 	free((void *)pat);
@@ -277,14 +274,14 @@ MU_TEST(test_compile_metas) {
 
 	pat = compile_pattern("[a\\]]");
 	val = (int[]) {
-		PAT_CCLASS, 2, 'a', ']',  -1
+		PAT_CCLASS, 2, 'a', ']', -1
 	};
 	mu_should(validate_compiled_pattern(pat, val));
 	free((void *)pat);
 
 	pat = compile_pattern("[\\]]");
 	val = (int[]) {
-		PAT_CCLASS, 1, ']',  -1
+		PAT_CCLASS, 1, ']', -1
 	};
 	mu_should(validate_compiled_pattern(pat, val));
 	free((void *)pat);
@@ -356,7 +353,7 @@ MU_TEST(test_compile_ranges) {
 
 	pat = compile_pattern("[abc-fghi-jk]");
 	val = (int[]) {
-		PAT_CCLASS, 11, 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k',  -1
+		PAT_CCLASS, 11, 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', -1
 	};
 	mu_should(validate_compiled_pattern(pat, val));
 	free((void *)pat);
@@ -365,7 +362,7 @@ MU_TEST(test_compile_ranges) {
 
 	pat = compile_pattern("[^abc-b]");
 	val = (int[]) {
-		PAT_NOT_CCLASS, 4, 'a', 'b', 'c', 'b',  -1
+		PAT_NOT_CCLASS, 4, 'a', 'b', 'c', 'b', -1
 	};
 	mu_should(validate_compiled_pattern(pat, val));
 	free((void *)pat);
@@ -450,8 +447,6 @@ MU_TEST(test_compile_quantifiers) {
 	};
 	mu_should(validate_compiled_pattern(pat, val));
 	free((void *)pat);
-
-	debug_off(NULL);
 
 	pat = compile_pattern("a+bc");
 	val = (int[]) {
@@ -635,7 +630,6 @@ MU_TEST(test_match_quantifiers) {
 	mu_should(match("asdfgh", pat));
 	mu_should(match("asdgh", pat));
 	free((void *)pat);
-
 }
 
 /*
@@ -868,8 +862,6 @@ MU_TEST(test_match_classes) {
 MU_TEST(test_convert_globs) {
 	const char *str = NULL;
 
-	debug_on("glob convert");
-
 	/* glob searches don't return hidden files by default in unix like systems */
 	str = convert_glob("*.*");
 	mu_should(strcmp(str, "^.*\\..*$") == 0);
@@ -878,15 +870,11 @@ MU_TEST(test_convert_globs) {
 	str = convert_glob("dir/file.ext");
 	mu_should(strcmp(str, "^dir/file\\.ext$") == 0);
 	free((void *)str);
-
-	debug_off(NULL);
 }
 
 MU_TEST(test_match_globs) {
 	const char *str = NULL;
 	const cpat *pat = NULL;
-
-	debug_on("glob match");
 
 	str = convert_glob("*.*");
 	pat = compile_pattern(str);
@@ -914,20 +902,6 @@ MU_TEST(test_match_globs) {
 	 * as if it is correct. */
 	mu_should(glob_match(".asdf.txt", pat));
 
-	debug_off(NULL);
-}
-
-
-
-/*
- * pull in stuff you want to breakpoint debug.
- */
-
-MU_TEST(test_breakpoint) {
-	const cpat *pat = NULL;
-	pat = compile_pattern("asdf?gh");
-	/* put whatever you want to breakpoint here */
-	free((void *)pat);
 }
 
 /*
@@ -970,11 +944,8 @@ MU_TEST_SUITE(test_suite) {
 	MU_RUN_TEST(test_convert_globs);
 	MU_RUN_TEST(test_match_globs);
 
-	/* breakpointing */
-	MU_RUN_TEST(test_breakpoint);
-
 }
-
+
 /*
  * master control:
  */
@@ -985,3 +956,4 @@ main(int argc, char *argv[]) {
 	MU_REPORT();
 	return MU_EXIT_CODE;
 }
+/* unitpat.c ends here */

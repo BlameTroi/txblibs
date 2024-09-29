@@ -14,7 +14,7 @@
  * following license: you are granted a perpetual, irrevocable license
  * to copy, modify, publish, and distribute this file as you see fit.
  */
-
+
 /*
  * B. Wilson's original header comment:
  *
@@ -22,7 +22,7 @@
  * and modified slightly to be functionally identical but condensed into
  * control structures.
  */
-
+
 #undef NDEBUG
 #include <assert.h>
 #include <stdint.h>
@@ -41,7 +41,6 @@
 #define ASSERT_MD5(p, m) assert((p) && memcmp((p), MD5_TAG, MD5_TAG_LEN) == 0 && (m))
 #define ASSERT_MD5_OR_NULL(p) assert((p) == NULL || memcmp((p), MD5_TAG, MD5_TAG_LEN) == 0)
 
-
 struct md5_context {
 	char tag[MD5_TAG_LEN];          /* eye catcher */
 	uint64_t size;        /* size of input in bytes */
@@ -49,7 +48,7 @@ struct md5_context {
 	uint8_t input[64];    /* input to be used in the next step */
 	uint8_t digest[16];   /* result of algorithm */
 };
-
+
 /*
  * constants defined by the md5 algorithm
  */
@@ -113,7 +112,7 @@ static uint8_t PADDING[] = {
 #define G(X, Y, Z) ((X & Z) | (Y & ~Z))
 #define H(X, Y, Z) (X ^ Y ^ Z)
 #define I(X, Y, Z) (Y ^ (X | ~Z))
-
+
 /*
  * rotates a 32-bit word left by n bits
  */
@@ -128,7 +127,7 @@ rotate_left(
 ) {
 	return (x << n) | (x >> (32 - n));
 }
-
+
 /*
  * step on 512 bits of input with the main md5 algorithm.
  */
@@ -179,7 +178,7 @@ md5_step(
 	buffer[2] += CC;
 	buffer[3] += DD;
 }
-
+
 /*
  * allocate and free, opaquely.
  */
@@ -202,7 +201,7 @@ md5_release_context(
 	memset(ctx, 253, sizeof(md5_context));
 	free(ctx);
 }
-
+
 /*
  * (re)initialize a context
  */
@@ -218,7 +217,7 @@ md5_initialize(
 	ctx->buffer[2] = (uint32_t)C;
 	ctx->buffer[3] = (uint32_t)D;
 }
-
+
 /*
  * add some amount of input to the context
  *
@@ -268,7 +267,7 @@ md5_update(
 		}
 	}
 }
-
+
 /*
  * pad the current input to get to 448 bytes, append the size in bits
  * to the very end, and save the result of the final iteration into
@@ -314,7 +313,7 @@ md5_finalize(
 		ctx->digest[(i * 4) + 3] = (uint8_t)((ctx->buffer[i] & 0xFF000000) >> 24);
 	}
 }
-
+
 /*
  * functions that run the algorithm on the provided input and put the
  * digest into result. result should be able to store 16 bytes.
@@ -366,7 +365,7 @@ md5_file(
 	memcpy(result, ctx->digest, 16);
 	md5_release_context(ctx);
 }
-
+
 /*
  * provides access to the result of initialize/update.../finalize for
  * someone not using the md5_file, md5_string, or md5_bytes functions.
@@ -380,3 +379,5 @@ md5_get_digest(
 	ASSERT_MD5(ctx, "invalid md5 context");
 	memcpy(result, ctx->digest, 16);
 }
+
+/* md5.c ends here */

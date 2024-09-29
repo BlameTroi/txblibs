@@ -2,7 +2,6 @@
 
 /* released to the public domain, troy brumley, may 2024 */
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -17,24 +16,20 @@
 
 #define RAND_SEED 6803
 
-/* each test will have id and payload lists available to work with. */
-
+static
 void
 test_setup(void) {
-
 	/* let's use a different seed than 1, but not time() because i want
 	   repeatable tests. */
 	srand(RAND_SEED);
 }
 
-
-/* after each test, release the items and lists properly. */
-
+static
 void
 test_teardown(void) {
-
 }
 
+static
 void
 print_hash(
 	uint8_t *p
@@ -46,7 +41,7 @@ print_hash(
 
 /*
  * i'm just testing to make sure things are wired together and working
- * as expected. a common problem clss in advent of code uses md5 hash
+ * as expected. a common problem class in advent of code uses md5 hash
  * to find candidate passwords by hashing a string with an odometering
  * value and at every hash result that begins with some number of
  * zeros, the first non-zero hex digit is used for additional work in
@@ -55,19 +50,24 @@ print_hash(
  */
 
 MU_TEST(test_test) {
-	/* printf("\n"); */
-	char *str1 = "abc3231929";
 	uint8_t result[16];
+
+	printf("\n");
+	char *str1 = "abc3231929";
 	md5_string(str1, result);
-	/* print_hash(result); */
+	print_hash(result);
 	mu_should((result[2] & 0x0f) == 1);
+
+	printf("\n");
 	char *str2 = "abc5017308";
 	md5_string(str2, result);
-	/* print_hash(result); */
+	print_hash(result);
 	mu_should((result[2] & 0x0f) == 8);
+
+	printf("\n");
 	char *str3 = "abc5278568";
 	md5_string(str3, result);
-	/* print_hash(result); */
+	print_hash(result);
 	mu_should((result[2] & 0x0f) == 0x0f);
 }
 
@@ -90,7 +90,6 @@ MU_TEST_SUITE(test_suite) {
 	MU_RUN_TEST(test_test);
 
 }
-
 
 /*
  * master control:

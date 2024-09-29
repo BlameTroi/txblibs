@@ -223,8 +223,16 @@ displayable_match_code(
  * miscellaneous predicates and helpers.
  */
 
+/*
+ * is_quantifier
+ *
+ * is the current pattern buffer item a quantifier?
+ *
+ *     in: a cpat item
+ *
+ * return: boolean
+ */
 static
-inline
 bool
 is_quantifier(
 	cpat p
@@ -236,8 +244,16 @@ is_quantifier(
 }
 
 /*
+ * pattern_length
+ *
  * get position of next piece of the pattern, or the length of the
  * current piece of the pattern.
+ *
+ *     in: a cpat array
+ *
+ *     in: int index of the pattern in the array
+ *
+ * return: int length of the current pattern in the cpat buffer
  */
 
 static
@@ -263,6 +279,19 @@ pattern_length(
 	return pl;
 }
 
+/*
+ * next_pattern
+ *
+ * return the index of the next pattern in the cpat array.
+ * current position + length(current positioned item)
+ *
+ *     in: a cpat array
+ *
+ *     in: int the index of the current pattern
+ *
+ * return: int index of next pattern
+ */
+
 static
 int
 next_pattern(
@@ -273,33 +302,16 @@ next_pattern(
 }
 
 /*
- * use the debug_on and debug_off functions to toggle display of
- * compiled patterns and other logging as needed.
- */
-
-static bool debugging = false;
-
-void
-debug_on(
-	char *msg
-) {
-	if (msg)
-		printf(">>>debug_on: %s\n", msg);
-	debugging = true;
-}
-
-void
-debug_off(
-	char *msg
-) {
-	if (msg)
-		printf("<<<debug_off: %s\n", msg);
-	debugging = false;
-}
-
-/*
+ * pattern_source
+ *
+ * retrieve a copy of the source of the compiled pattern.
+ *
  * a copy of the original pattern source string is carried in the
  * pat_beg item at the start of the compiled pattern buffer.
+ *
+ *     in: a compiled pattern
+ *
+ * return: a copy of the original pattern
  */
 
 const char *
@@ -310,11 +322,16 @@ pattern_source(
 		return "not a valid pattern";
 	return (char *)(pat+2);
 }
-
+
 /*
+ * decompile_pattern
+ *
  * decompile the pattern buffer, which might be different than the
- * stored pattern source. you should release the result string when
- * you are done with it.
+ * stored pattern source. this is helpful for debugging.
+ *
+ *     in: a compiled pattern
+ *
+ * return: string
  */
 
 char *
@@ -325,11 +342,19 @@ decompile_pattern(
 		return dup_string("not a valid pattern");
 	return dup_string("decompile_pattern not implemented");
 }
-
+
 /*
+ * print_compiled_pattern
+ *
  * print out the compiled pattern in what is hopefully a clear and
  * readable format, one that is less terse than the raw pattern source
  * string.
+ *
+ * this is printed on stdout.
+ *
+ *     in: a compiled pattern
+ *
+ * return: nothing
  */
 
 void
@@ -395,11 +420,23 @@ print_compiled_pattern(
 }
 
 /*
+ * validate_compiled_pattern
+ *
  * validate_compiled_pattern provides a way to compare a pattern
  * against an expected value.
  *
  * a compiled pattern is an array of unsigned ints and it is compared
  * against an array of signed ints with -1 as an ending sentinel.
+ *
+ *     in: a compiled pattern
+ *
+ *     in: an array of ints, terminated by -1, with the
+ *         expected compiled pattern
+ *
+ * return: bool true or false
+ *
+ * this function is externally visible but it is not declared
+ * in pat.h
  */
 
 bool
@@ -412,25 +449,26 @@ validate_compiled_pattern(
 
 	/* begin and end are assumed */
 	pat += next_pattern(pat, 0);
-	for (int i = 0; val[i]!= -1; i++) {
-		if (pat[i] != (cpat)val[i]) {
-			if (debugging) {
-				printf("\ndifference at position %d\n     got: (%3d) '%s'\nexpected: (%3d) '%s'\n",
-					i+1,
-					val[i], displayable_match_code((cpat)val[i]),
-					(int)pat[i], displayable_match_code(pat[i]));
-			}
+	for (int i = 0; val[i]!= -1; i++)
+		if (pat[i] != (cpat)val[i])
 			return false;
-		}
-	}
+
 	return true;
 }
 
 /*
- * expand_range creates a new copy of the pattern string with any embedded ranges in
- * character classes.
+ * expand_range
+ *
+ * create a new copy of the pattern string with any embedded ranges in
+ * character classes expanded.
+ *
+ * so [0..9] becomes [0123456789].
  *
  * TODO this isn't very robust.
+ *
+ *     in: string original pattern
+ *
+ * return: string pattern with ranges expanded
  */
 
 static
@@ -479,8 +517,26 @@ expand_range(
 }
 
 /*
- * add_pattern_item is called by compile_pattern to build the encoded
+ * add_pattern_item
+ *
+ * called by compile_pattern to build the encoded
  * pattern buffer from a pattern match string.
+ *
+ *     in: a compiled pattern from the search string
+ *
+ * in/out: int current position in pattern
+ *
+ *     in: int maximum position in pattern
+ *
+ *     in: int pattern match code
+ *
+ *     in: string pattern being compiled
+ *
+ * in/out: int current position pattern string
+ *
+ * return: no return value but the position in pat
+ *         and position in string arguments are
+ *         updated as the string is consumed.
  *
  * the encoded pattern is an array of slots (unsigned ints in the
  * current implementation). each character (meta or literal) in the
@@ -503,7 +559,8 @@ expand_range(
  * pattern buffer is marked complete.
  */
 
-static void
+static
+void
 add_pattern_item(
 	cpat *pat,                 /* a compiled pattern from the search string */
 	int *pos,                  /* in-out arg: current position in pat */
@@ -595,11 +652,17 @@ add_pattern_item(
 }
 
 /*
+ * reorganize_pattern_buffer
+ *
  * reorganize the pattern buffer. this is done to put quantifiers
  * ahead of the item they refer to which simplifies the match
  * functions. pattern compilation helpers such as grouping end markers
  * are deleted, and the buffer allocation is a better fit than the
  * over allocated buffer for part one of compilation.
+ *
+ *     in: a compiled pattern
+ *
+ * return: a new compiled pattern
  */
 
 static
@@ -700,6 +763,15 @@ reorganize_pattern_buffer(
 }
 
 /*
+ * compile_pattern
+ *
+ * given a null terminated match string, return a compiled pattern
+ * buffer.
+ *
+ *     in: string
+ *
+ * return: a compiled pattern
+ *
  * compile_pattern takes a match string and creates an encoded pattern
  * for use by match.
  *
@@ -741,9 +813,6 @@ compile_pattern(
 	const char *raw
 ) {
 
-	if (debugging)
-		printf("\n\n>>>compile_pattern(\"%s\")>>>\n", raw);
-
 	/* do preprocessing for ranges and any other tweaks to the
 	 * pattern search string. this local copy may be modified
 	 * to deal with escaped characters. */
@@ -754,10 +823,10 @@ compile_pattern(
 	 * for 0xdead as eye catcher. */
 
 	int max_pat = 3 * max(strlen(str), 16) + 3;
-	cpat *pat = malloc(max_pat *sizeof(cpat));
+	cpat *pat = malloc(max_pat * sizeof(cpat));
 	assert(pat &&
 		"could not allocate pattern buffer");
-	memset(pat, 0xde, max_pat *sizeof(cpat));
+	memset(pat, 0xde, max_pat * sizeof(cpat));
 
 	/* the current position within the string (ps) and pattern buffer
 	 * (pp). these are updated mostly within add_pattern_item, but
@@ -1020,11 +1089,6 @@ compile_pattern(
 	free(pat);
 	pat = temp;
 
-	if (debugging) {
-		print_compiled_pattern(pat);
-		printf("<<<compile_pattern<<<\n");
-	}
-
 	/* str is a local copy of the raw input and must be freed here. */
 	free(str);
 
@@ -1032,10 +1096,14 @@ compile_pattern(
 }
 
 /*
- * convert a dos like file globbing string to a proper search string.
+ * convert_glob
  *
- * this string can be passed to compile_pattern for later match
- * processing.
+ * converts a DOS like glob pattern for filenames into a match string
+ * that can then be compiled to a pattern.
+ *
+ *     in: string, a glob pattern
+ *
+ * return: string, the glob as a regex
  *
  * periods are half assed anchors given their use as filename
  * separators in dos, but they aren't in unix like systems. i'm
@@ -1052,24 +1120,22 @@ convert_glob(
 ) {
 
 	/* no input should return a match almost anything */
-	if (glob == NULL || strlen(glob) == 0) {
-		if (debugging)
-			printf("+++convert_glob(null) => \"^[^.]*$");
-		return dup_string("^[^.]*$");
-	}
 
-	if (debugging)
-		printf("\n>>>convert_glob(\"%s\")\n", glob);
+	if (glob == NULL || strlen(glob) == 0)
+		return dup_string("^[^.]*$");
 
 	/* pattern buffer is 32 or twice the size of the incoming
 	 * glob string */
+
 	int str_max = max(32, strlen(glob) * 2);
 	int pg = 0;
 	int ps = 0;
 	char *str = malloc(str_max);
 	str[ps] = '^';
 	ps += 1;
+
 	/* TODO decision point here based on leading . in glob */
+
 	while (glob[pg]) {
 
 		/* if buffer down to 25%, increase by 16 characters */
@@ -1133,20 +1199,30 @@ convert_glob(
 	/* close the pattern and return */
 	str[ps] = '$';
 	str[ps+1] = '\0';
-	if (debugging)
-		printf("<<<convert_glob(\"%s\") => \"%s\"\n", glob, str);
+
 	return str;
 }
 
 /*
- * match_this_item is called by match_from and match_from_r to
- * determine if the string at the current position matches with the
- * current pattern buffer item.
+ * match_this_item
+ * is the string at the current position a match for the current
+ * pattern buffer item?
  *
  * if it does, advance the string position to consume the portion
  * matched.
+ *
+ *     in: the entire string to match against
+ *
+ * in/out: int current position in the match string
+ *
+ *     in: direct pointer to the current pattern item in
+ *         the compiled pattern
+ *
+ * return: bool did this match, also updates the position
+ *         in the string to consume the matched portion
  */
 
+static
 bool
 match_this_item(
 	const char *str,             /* entire string to match */
@@ -1304,7 +1380,6 @@ match_this_item(
 	 * called with an item that shouldn't reach here (eg, quantifiers such
 	 * as * are handled in match_from). report and abort. */
 
-	/* TODO abort needs to handle argument replacement */
 	char *em = calloc(256, sizeof(char));
 	snprintf(em, 256, "unknown pattern type code in match_this: %d %s",
 		*p, displayable_match_code(*p));
@@ -1314,9 +1389,21 @@ match_this_item(
 }
 
 /*
- * match_from is called either by match to check a full string against
- * a pattern, or recursively to match a substring against the
- * remaining pattern when dealing with quantifiers (* ? + {n,m}).
+ * match_from
+ *
+ *     in: string to match
+ *
+ *     in: int position within string
+ *
+ *     in: a compiled pattern
+ *
+ *     in: int position within compiled pattern
+ *
+ * return: int position of match, or -1 if there is no match
+ *
+ * check a full string against a pattern, or recursively to match a
+ * substring against the remaining pattern when dealing with
+ * quantifiers (* ? + {n,m}).
  *
  * it returns the character index in str where the pattern is found.
  * if there is no match, -1 is returned.
@@ -1327,6 +1414,7 @@ match_this_item(
  * for the recursion?
  */
 
+static
 int
 match_from(
 	const char *str,           /* the entire string to match */
@@ -1337,10 +1425,6 @@ match_from(
 	bool done = false;
 	int res = from;
 	int ps = from;
-
-	if (debugging)
-		printf(">>>match_from(\"%s\", %d, \"%s\", %d)\n", str, from,
-			pattern_source(pat), pp);
 
 	/* skip beginning of pattern */
 	if (pat[pp] == PAT_BEG)
@@ -1519,13 +1603,21 @@ match_from(
 		}
 	}
 
-	if (debugging)
-		printf("<<<match_from(\"%s\", %d, \"%s\", %d) => %d\n", str, from,
-			pattern_source(pat), pp, res);
 	return res;
 }
 
 /*
+ * match
+ *
+ * match a string, generally assumed to be a line of text, against a
+ * compiled pattern.
+ *
+ *     in: the string to match against
+ *
+ *     in: the compiled pattern
+ *
+ * return: boolean true if a match was found
+ *
  * match takes a string and a compiled pattern and returns true if the
  * pattern is found at least once in the string. the match is
  * attempted repeatedly until the string is exhaused or a match is
@@ -1543,20 +1635,27 @@ match(
 	assert(str && pat &&
 		"match called with illegal missing arguments");
 
-	if (debugging)
-		printf("\n\n>>>match(\"%s\", \"%s\")\n", str, pattern_source(pat));
 	while (str[ps] && pm == -1) {
 		pm = match_from(str, ps, pat, 0);
 		ps += 1;
 	}
 
-	if (debugging)
-		printf("<<<match(\"%s\", \"%s\") => %s\n", str, pattern_source(pat),
-			pm != -1 ? "true" : "false");
 	return pm != -1;
 }
 
 /*
+ * glob_match
+ *
+ * match a string, generally assumed to be a file name, against a
+ * compiled pattern, while honoring some globbing restrictions for
+ * path separators and hidden files.
+ *
+ *     in: the string to match against
+ *
+ *     in: the compiled pattern
+ *
+ * return: boolean true if a match was found
+ *
  * glob_match takes a string and a compiled pattern and returns true
  * if the pattern matches the string within the rules for globbing.
  * you should use convert_glob to produce a regular expression style
@@ -1579,9 +1678,6 @@ glob_match(
 	assert(str && pat &&
 		"glob_match called with illegal missing arguments");
 
-	if (debugging)
-		printf("\n\n>>>glob_match(\"%s\", \"%s\")\n", str, pattern_source(pat));
-
 	/* boy this is ugly */
 	if (str[0] == '.') {
 		int pp = 0;
@@ -1599,8 +1695,7 @@ glob_match(
 	} else
 		pm = match_from(str, ps, pat, 0);
 
-	if (debugging)
-		printf("<<<glob_match(\"%s\", \"%s\") => %s\n", str, pattern_source(pat),
-			pm == 0 ? "true" : "false");
 	return pm == 0;
 }
+
+/* pat.c ends here */

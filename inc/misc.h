@@ -28,21 +28,24 @@ long *
 factors_of(long n);
 
 /*
- * various min/max functions.
+ * various min/max functions. the typed functions are wrapped by
+ * generic macros. the macros only type check the first argument to
+ * determine which function to call. it's the client's responsibility
+ * to ensure that the arguments compatible.
  */
 
-int i_max(int, int);
-int i_min(int, int);
-long l_max(long, long);
-long l_min(long, long);
-unsigned int ui_max(unsigned int, unsigned int);
-unsigned int ui_min(unsigned int, unsigned int);
-unsigned long ul_max(unsigned long, unsigned long);
-unsigned long ul_min(unsigned long, unsigned long);
-float f_max(float, float);
-float f_min(float, float);
-double d_max(double, double);
-double d_min(double, double);
+int             i_max(int, int);
+int             i_min(int, int);
+long            l_max(long, long);
+long            l_min(long, long);
+unsigned int    ui_max(unsigned int, unsigned int);
+unsigned int    ui_min(unsigned int, unsigned int);
+unsigned long   ul_max(unsigned long, unsigned long);
+unsigned long   ul_min(unsigned long, unsigned long);
+float           f_max(float, float);
+float           f_min(float, float);
+double          d_max(double, double);
+double          d_min(double, double);
 
 #define max(X, Y) _Generic((X), \
 	double: d_max, \
@@ -174,3 +177,4 @@ hex_unpack(
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
+/* misc.h ends here */

@@ -21,18 +21,19 @@
 #include <string.h>
 
 #include "../inc/misc.h"
-
+
 /*
  * as a general rule, i prefer to not use macros to express an algorithm. macros
  * are for plumbing.
  *
- * seeing as generic types are available in c18, and have been since c11,
- * here's one macro use case i can get behind.
- *
- * the lack of plain min and max bugs me. so here i wrap them by various types.
+ * seeing as generic types are available in c18, and have been since
+ * c11, there's one macro use case i can get behind: the lack of plain
+ * min and max bugs me. so here i wrap them by various types.
  *
  * the macro only checks the type of the first argument to determine which
  * alternative to use. it's up to you to use compatible types.
+ *
+ * the actual #define is in the public declarations file, misc.h.
  */
 
 int
@@ -94,7 +95,7 @@ double
 d_min(double x, double y) {
 	return x < y ? x : y;
 }
-
+
 /*
  * quick bit test for even or odd.
  */
@@ -108,7 +109,7 @@ bool
 is_odd(long n) {
 	return (n & 1);
 }
-
+
 /*
  * quick character classifications, by us-ascii programmer centric
  * rules.
@@ -169,7 +170,7 @@ is_bracketing(char c) {
 		c == ')' ||
 		c == ']';
 }
-
+
 /*
  * brian kernighan's algorithm for counting set bits in a variable.
  */
@@ -183,7 +184,7 @@ one_bits_in(unsigned long n) {
 	}
 	return count;
 }
-
+
 /*
  * sum the integers 1 to n.
  */
@@ -192,7 +193,7 @@ int
 sum_one_to(int n) {
 	return (n * (n + 1)) / 2;
 }
-
+
 /*
  * comparators for functions such as qsort.
  */
@@ -206,7 +207,7 @@ int
 fn_cmp_int_dsc(const void *a, const void *b) {
 	return *(int *)b - *(int *)a;
 }
-
+
 /*
  * returns an array of long integers big enought to at least hold the
  * factors of n and a trailing NULL. the caller is responsible for
@@ -255,7 +256,7 @@ factors_of(
 	factors[f] = n;
 	return factors;
 }
-
+
 /*
  * convert run of bytes to displayable hex digits (unpack hex) or a
  * string of hex digits to bytes (pack hex).
@@ -331,3 +332,5 @@ hex_unpack(
 	}
 	return chr;
 }
+
+/* misc.c ends here */
