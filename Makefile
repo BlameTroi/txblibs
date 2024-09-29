@@ -16,7 +16,7 @@ dl: inc/dl.h src/dl.c
 	buildhdr --macro TXBDL --intro LICENSE --pub inc/dl.h --priv src/dl.c >release/txbdl.h
 
 kl: inc/kl.h src/kl.c
-	buildhdr --macro TXBKL --intro LICENSE --pub inc/kl.h --priv src/kv.c >release/txbkl.h
+	buildhdr --macro TXBKL --intro LICENSE --pub inc/kl.h --priv src/kl.c >release/txbkl.h
 
 kv: inc/kv.h src/kv.c
 	buildhdr --macro TXBKV --intro LICENSE --pub inc/kv.h --priv src/kv.c >release/txbkv.h

@@ -31,20 +31,38 @@ factors_of(long n);
  * various min/max functions.
  */
 
-int max(int, int);
-int min(int, int);
-int imax(int, int);
-int imin(int, int);
-long lmax(long, long);
-long lmin(long, long);
-unsigned int umax(unsigned int, unsigned int);
-unsigned int umin(unsigned int, unsigned int);
-unsigned int uimax(unsigned int, unsigned int);
-unsigned int uimin(unsigned int, unsigned int);
-unsigned long ulmax(unsigned long, unsigned long);
-unsigned long ulmin(unsigned long, unsigned long);
-double dmax(double, double);
-double dmin(double, double);
+int i_max(int, int);
+int i_min(int, int);
+long l_max(long, long);
+long l_min(long, long);
+unsigned int ui_max(unsigned int, unsigned int);
+unsigned int ui_min(unsigned int, unsigned int);
+unsigned long ul_max(unsigned long, unsigned long);
+unsigned long ul_min(unsigned long, unsigned long);
+float f_max(float, float);
+float f_min(float, float);
+double d_max(double, double);
+double d_min(double, double);
+
+#define max(X, Y) _Generic((X), \
+	double: d_max, \
+	float: f_max, \
+	int: i_max, \
+	long: l_max, \
+	unsigned int: ui_max, \
+	unsigned long: ul_max, \
+	default: i_max \
+	)(X, Y)
+
+#define min(X, Y) _Generic((X), \
+	double: d_min, \
+	float: f_min, \
+	int: i_min, \
+	long: l_min, \
+	unsigned int: ui_min, \
+	unsigned long: ul_min, \
+	default: i_min \
+	)(X, Y)
 
 /*
  * common predicates.

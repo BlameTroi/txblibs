@@ -11,7 +11,7 @@
  * following license: you are granted a perpetual, irrevocable license
  * to copy, modify, publish, and distribute this file as you see fit.
  */
-
+
 #undef NDEBUG
 #include <assert.h>
 #include <stdlib.h>
@@ -38,7 +38,7 @@ struct dacb {
 	int size;                   /* size of data in number of items */
 	void **data;                /* pointer to the item pointers */
 };
-
+
 /*
  * da_create
  *
@@ -65,7 +65,7 @@ da_create(
 	memset(da->data, 0, da->size *sizeof(void *));
 	return da;
 }
-
+
 /*
  * da_destroy
  *
@@ -86,7 +86,7 @@ da_destroy(
 	memset(da, 253, sizeof(dacb));
 	free(da);
 }
-
+
 /*
  * da_get
  *
@@ -112,7 +112,7 @@ da_get(
 	void *res = da->data[n];
 	return res;
 }
-
+
 /*
  * da_put
  *
@@ -150,8 +150,7 @@ da_put(
 	if (n > da->length)
 		da->length = n;
 }
-
-
+
 /*
  * da_count
  *
@@ -171,5 +170,5 @@ da_count(
 	ASSERT_DACB(da, "invalid DACB");
 	return da->length + 1;
 }
-
+
 /* da.c ends here */

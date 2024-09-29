@@ -25,81 +25,73 @@
 /*
  * as a general rule, i prefer to not use macros to express an algorithm. macros
  * are for plumbing.
- */
-
-/*
- * none of the macro solutions to not having min or max available
- * appeal to me, so instead here are inlinable definitions for various
- * common types.
+ *
+ * seeing as generic types are available in c18, and have been since c11,
+ * here's one macro use case i can get behind.
+ *
+ * the lack of plain min and max bugs me. so here i wrap them by various types.
+ *
+ * the macro only checks the type of the first argument to determine which
+ * alternative to use. it's up to you to use compatible types.
  */
 
 int
-max(int x, int y) {
+i_max(int x, int y) {
 	return x > y ? x : y;
 }
 
 int
-min(int x, int y) {
-	return x < y ? x : y;
-}
-
-int
-imax(int x, int y) {
-	return x > y ? x : y;
-}
-
-int
-imin(int x, int y) {
+i_min(int x, int y) {
 	return x < y ? x : y;
 }
 
 long
-lmax(long x, long y) {
+l_max(long x, long y) {
 	return x > y ? x : y;
 }
 
 long
-lmin(long x, long y) {
+l_min(long x, long y) {
 	return x < y ? x : y;
 }
 
 unsigned int
-umax(unsigned int x, unsigned int y) {
+ui_max(unsigned int x, unsigned int y) {
 	return x > y ? x : y;
 }
 
 unsigned int
-umin(unsigned int x, unsigned int y) {
-	return x < y ? x : y;
-}
-
-unsigned int
-uimax(unsigned int x, unsigned int y) {
-	return x > y ? x : y;
-}
-
-unsigned int
-uimin(unsigned int x, unsigned int y) {
+ui_min(unsigned int x, unsigned int y) {
 	return x < y ? x : y;
 }
 
 unsigned long
-ulmax(unsigned long x, unsigned long y) {
+ul_max(unsigned long x, unsigned long y) {
 	return x > y ? x : y;
 }
 
 unsigned long
-ulmin(unsigned long x, unsigned long y) {
+ul_min(unsigned long x, unsigned long y) {
 	return x < y ? x : y;
 }
 
-double
-dmax(double x, double y) {
+float
+f_max(float x, float y) {
+	return x > y ? x : y;
+}
+
+float
+f_min(float x, float y) {
 	return x > y ? x : y;
 }
 
 double
-dmin(double x, double y) {
+d_max(double x, double y) {
+	return x > y ? x : y;
+}
+
+double
+d_min(double x, double y) {
 	return x < y ? x : y;
 }
 
@@ -214,7 +206,6 @@ int
 fn_cmp_int_dsc(const void *a, const void *b) {
 	return *(int *)b - *(int *)a;
 }
-
 
 /*
  * returns an array of long integers big enought to at least hold the
