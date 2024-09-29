@@ -29,24 +29,83 @@
 extern "C" {
 #endif /* __cplusplus */
 
+/*
+ * the opaque key value control block.
+ */
 
 typedef struct kvcb kvcb;
+
+/*
+ * kv_create
+ *
+ * creates an instance of the key:value store.
+ *
+ * requires a function pointer to a function that will compare the
+ * keys in the store via the < =0 > convention.
+ *
+ *     in: key comparison function pointer, as in qsort.
+ *
+ * return: the new kv instance
+ */
 
 kvcb *
 kv_create(
 	int (*key_compare)(void *, void *)
 );
 
+/*
+ * kv_destroy
+ *
+ * destroy an instance of the key:value pair store.
+ *
+ * overwrites and then releases all key:value store related storage.
+ * actual key and value storage is the responsibility of the client.
+ *
+ *     in: the kv instance
+ *
+ * return: NULL
+ */
+
 kvcb *
 kv_destroy(
 	kvcb *kv
 );
+
+/*
+ * kv_insert
+ *
+ * if the key exists in the key:value store, return the pointer
+ * to the value.
+ *
+ *     in: the kv instance
+ *
+ *     in: the key
+ *
+ * return: the value from the key:value pair or NULL if not found
+ */
 
 void *
 kv_insert(
 	kvcb *kv,
 	void *key
 );
+
+/*
+ * kv_put
+ *
+ * given pointers to a key value, store them in the key:value store.
+ *
+ * if the key exists in the store, its value is overwritten. if the
+ * key does not exist in the store, a new key:value pair is created.
+ *
+ *     in: the kv instance
+ *
+ *     in: the key
+ *
+ *     in: the value
+ *
+ * return: the value passed as input
+ */
 
 void *
 kv_put(
@@ -61,26 +120,78 @@ kv_delete(
 	void *key
 );
 
+/*
+ * kv_exists
+ *
+ * does a key exist in the key:value store.
+ *
+ *     in: the kv instance
+ *
+ *     in: the key
+ *
+ * return: boolean true if key found
+ */
+
 bool
 kv_exists(
 	kvcb *kv,
 	void *key
 );
 
+/*
+ * kv_empty
+ *
+ * is the key:value store empty?
+ *
+ *     in: the kv instance
+ *
+ * return: boolean true if empty
+ */
+
 bool
 kv_empty(
 	kvcb *kv
 );
+
+/*
+ * kv_count
+ *
+ * how many pairs are in the key:value store.
+ *
+ *     in: the kv instance
+ *
+ * return: int number of pairs
+ */
 
 int
 kv_count(
 	kvcb *kv
 );
 
+/*
+ * kv_keys
+ *
+ * returns a null terminated array of keys from the store.
+ *
+ *     in: the kv instance
+ *
+ * return: null terminated array of void *
+ */
+
 void *
 kv_keys(
 	kvcb *kv
 );
+
+/*
+ * kv_values
+ *
+ * returns a null terminated array of values from the store.
+ *
+ *     in: the kv instance
+ *
+ * return: null terminated array of void *
+ */
 
 void *
 kv_values(

@@ -1,7 +1,20 @@
 /* kv.c -- blametroi's key:value store library */
 
 /*
- * a header only implementation of a very basic key:value store.
+ * a header only implementation of a key:value store. it's not
+ * really a hash table or dictionary, but eventually its backing
+ * store might be either.
+ *
+ * problems in the advent of code series present opportunities
+ * to use various abstract data types and i've been using aoc as
+ * a prompt to implement my own versions. i finally saw a need
+ * for a better key:value system and started to implement a binary
+ * search tree, but the particular problem would tend to load the
+ * tree in an unbalancing manner. i really didn't want to do a
+ * more complex implementation at that time.
+ *
+ * i finally settled on creating a 'good enough' access api that
+ * could have any backing hidden behind it.
  *
  * released to the public domain by Troy Brumley blametroi@gmail.com
  *
@@ -17,7 +30,7 @@
 #include <string.h>
 
 #include "../inc/kv.h"
-
+
 /*
  * the transparent key value control block.
  */
@@ -45,7 +58,7 @@ struct kvcb {
 	int num_pairs;              /* how many are stored */
 	kvpair *pairs;              /* where they are */
 };
-
+
 /*
  * kv_create
  *
@@ -77,7 +90,7 @@ kv_create(
 	kv->num_pairs = 0;
 	return kv;
 }
-
+
 /*
  * kv_destroy
  *
@@ -104,7 +117,7 @@ kv_destroy(
 	free(kv);
 	return NULL;
 }
-
+
 /*
  * am_find_key
  *
@@ -128,7 +141,7 @@ am_find_key(
 			return &kv->pairs[i];
 	return NULL;
 }
-
+
 /*
  * am_delete_key
  *
@@ -164,7 +177,7 @@ am_delete_key(
 		}
 	assert(NULL && "error in am_delete_key, could not find key");
 }
-
+
 /*
  * am_new_pair
  *
@@ -207,7 +220,7 @@ am_new_pair(
 	kv->num_pairs += 1;
 	return p;
 }
-
+
 /*
  * kv_insert
  *
@@ -231,7 +244,7 @@ kv_insert(
 	kvpair *p = am_find_key(kv, key);
 	return p ? p->value : p;
 }
-
+
 /*
  * kv_put
  *
@@ -265,7 +278,7 @@ kv_put(
 		p = am_new_pair(kv, key, value);
 	return value;
 }
-
+
 /*
  * kv_delete
  *
@@ -291,7 +304,7 @@ kv_delete(
 		am_delete_key(kv, key);
 	return p != NULL;
 }
-
+
 /*
  * kv_exists
  *
@@ -314,7 +327,7 @@ kv_exists(
 	kvpair *p = am_find_key(kv, key);
 	return p != NULL;
 }
-
+
 /*
  * kv_empty
  *
@@ -332,7 +345,7 @@ kv_empty(
 	ASSERT_KVCB(kv, "invalid KVCB");
 	return kv->num_pairs == 0;
 }
-
+
 /*
  * kv_count
  *
@@ -350,7 +363,7 @@ kv_count(
 	ASSERT_KVCB(kv, "invalid KVCB");
 	return kv->num_pairs;
 }
-
+
 /*
  * kv_keys
  *
@@ -375,7 +388,7 @@ kv_keys(
 	}
 	return keys;
 }
-
+
 /*
  * kv_values
  *
@@ -400,5 +413,5 @@ kv_values(
 	}
 	return values;
 }
-
+
 /* kv.c ends here */
