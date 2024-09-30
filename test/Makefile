@@ -115,8 +115,8 @@ unitpat: unitpat.o misc.o pat.o str.o
 unitpq.o: unitpq.c
 	$(CC) $(CFLAGS) -c unitpq.c
 
-unitpq: unitpq.o pq.o misc.o rand.o
-	$(CC) $(CFLAGS) -o unitpq unitpq.o pq.o misc.o rand.o
+unitpq: unitpq.o pq.o misc.o rand.o str.o
+	$(CC) $(CFLAGS) -o unitpq unitpq.o pq.o misc.o rand.o str.o
 
 unitqu.o: unitqu.c
 	$(CC) $(CFLAGS) -c unitqu.c
