@@ -35,7 +35,7 @@ static dlcb * test_dl = NULL;
  * are malloced strings "9999 bogus", where the digits run from 10 to
  * 990 by 10s to get 99 items.
  *
- * note that the payloads are malloced via dup_string after the
+ * note that the payloads are malloced via strdup after the
  * snprintf. the buffer is on the local stack. even if the payload
  * could be accessed reliably from later code, they would all point to
  * single buffer with whatever is in memory at that point.
@@ -59,7 +59,7 @@ test_setup(void) {
 		"error creating test data linked list");
 	for (int i = 10; i < 1000; i += 10) {
 		snprintf(buffer, 99, "%04d bogus", i);
-		dl_insert_last(test_dl, dup_string(buffer));
+		dl_insert_last(test_dl, strdup(buffer));
 	}
 }
 
@@ -210,11 +210,11 @@ MU_TEST(test_insert_after) {
 
 	/* insert after head of single item list */
 	dl = dl_create();
-	payload = dup_string("first");
+	payload = strdup("first");
 	dn = dl_insert_first(dl, payload);
 	mu_should(dn);
 	dn = dl_get_first(dl);
-	payload = dup_string("inserted after first");
+	payload = strdup("inserted after first");
 	dn = dl_insert_after(dl, dn, payload);
 	mu_should(dn);
 	mu_should(dl_count(dl) == 2);
@@ -252,7 +252,7 @@ MU_TEST(test_insert_after) {
 	/* insert after the head of the list */
 	dl = test_dl;
 	dn = dl_get_first(dl);
-	payload = dup_string("inserted after first");
+	payload = strdup("inserted after first");
 	dn = dl_insert_after(dl, dn, payload);
 	mu_should(dn);
 
@@ -266,7 +266,7 @@ MU_TEST(test_insert_after) {
 
 	/* and now after the end */
 	dn = dl_get_last(dl);
-	payload = dup_string("inserted after last");
+	payload = strdup("inserted after last");
 	dn = dl_insert_after(dl, dn, payload);
 	mu_should(dn);
 
@@ -300,7 +300,7 @@ MU_TEST(test_insert_after) {
 	mu_should(dn);
 
 	/* insert after */
-	payload = dup_string("inserted after 0500");
+	payload = strdup("inserted after 0500");
 	dn = dl_insert_after(dl, dn, payload);
 
 	/* find it forward */
@@ -355,11 +355,11 @@ MU_TEST(test_insert_before) {
 
 	/* insert after head of single item list */
 	dl = dl_create();
-	payload = dup_string("first");
+	payload = strdup("first");
 	dn = dl_insert_first(dl, payload);
 	mu_should(dn);
 	dn = dl_get_first(dl);
-	payload = dup_string("inserted before first");
+	payload = strdup("inserted before first");
 	dn = dl_insert_before(dl, dn, payload);
 	mu_should(dn);
 	mu_should(dl_count(dl) == 2);
@@ -397,7 +397,7 @@ MU_TEST(test_insert_before) {
 	/* insert after the head of the list */
 	dl = test_dl;
 	dn = dl_get_first(dl);
-	payload = dup_string("inserted before first");
+	payload = strdup("inserted before first");
 	dn = dl_insert_before(dl, dn, payload);
 	mu_should(dn);
 
@@ -411,7 +411,7 @@ MU_TEST(test_insert_before) {
 
 	/* and now after the end */
 	dn = dl_get_last(dl);
-	payload = dup_string("inserted before last");
+	payload = strdup("inserted before last");
 	dn = dl_insert_before(dl, dn, payload);
 	mu_should(dn);
 
@@ -445,7 +445,7 @@ MU_TEST(test_insert_before) {
 	mu_should(dn);
 
 	/* insert before */
-	payload = dup_string("inserted before 0500");
+	payload = strdup("inserted before 0500");
 	dn = dl_insert_before(dl, dn, payload);
 
 	/* quick check count */
@@ -498,7 +498,7 @@ MU_TEST(test_insert_many) {
 		char *payload = dn->payload;
 		if (payload[2] != '2')
 			continue;
-		char *read_to = dup_string(payload);
+		char *read_to = strdup(payload);
 		read_to[3] = '5';
 		dn = dl_insert_after(dl, dn, read_to);
 		mu_should(dn && dn->payload == read_to);
@@ -529,7 +529,7 @@ MU_TEST(test_insert_many) {
 		char *payload = dn->payload;
 		if (payload[2] != '4')
 			continue;
-		char *read_to = dup_string(payload);
+		char *read_to = strdup(payload);
 		read_to[2] = read_to[2] - 1;
 		read_to[3] = read_to[3] + 5;
 		dn = dl_insert_before(dl, dn, read_to);
@@ -714,7 +714,7 @@ MU_TEST(test_update) {
 	dn = dl_get_first(dl);
 	mu_should(dn && equal_string(dn->payload, "0010 bogus"));
 	old_payload = dn->payload;
-	new_payload = dup_string("0010 not bogus");
+	new_payload = strdup("0010 not bogus");
 	mu_should(dl_update(dl, dn, new_payload));
 	free(old_payload);
 	dn = dl_get_next(dl, dn);

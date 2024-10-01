@@ -64,7 +64,7 @@ create_populated_key_long(void) {
 		"error creating test data linked list");
 	for (long i = 10; i < 1000; i += 10) {
 		snprintf(buffer, 99, "%06ld bogus", i);
-		kl_insert(kl, (void *)i, dup_string(buffer));
+		kl_insert(kl, (void *)i, strdup(buffer));
 	}
 	return kl;
 }
@@ -93,7 +93,7 @@ create_populated_key_string(void) {
 		"error creating test data linked list");
 	for (int i = 10; i < 1000; i += 10) {
 		snprintf(buffer, 99, "%06d", i);
-		kl_insert(kl, dup_string(buffer), dup_string(buffer));
+		kl_insert(kl, strdup(buffer), strdup(buffer));
 	}
 	return kl;
 }
@@ -499,9 +499,9 @@ MU_TEST(test_update) {
 	/* update head of list */
 	mu_should(kl_get_first(kl, &key, &value));
 	mu_should((long)key == 10L);
-	keep = dup_string(value);
+	keep = strdup(value);
 	hand = value;
-	value = dup_string("i used to be 10");
+	value = strdup("i used to be 10");
 	mu_should(kl_update(kl, key, value));
 	free(hand);
 	free(keep);
@@ -516,9 +516,9 @@ MU_TEST(test_update) {
 	/* update tail of list */
 	mu_should(kl_get_last(kl, &key, &value));
 	mu_should((long)key == 990L);
-	keep = dup_string(value);
+	keep = strdup(value);
 	hand = value;
-	value = dup_string("i used to be 990");
+	value = strdup("i used to be 990");
 	mu_should(kl_update(kl, key, value));
 	free(hand);
 	free(keep);
@@ -537,9 +537,9 @@ MU_TEST(test_update) {
 	key = (void *)500L;;
 	mu_should(kl_get(kl, &key, &value));
 	mu_should((long)key == 500L);
-	keep = dup_string(value);
+	keep = strdup(value);
 	hand = value;
-	value = dup_string("i used to be 500");
+	value = strdup("i used to be 500");
 	mu_should(kl_update(kl, key, value));
 	free(hand);
 	free(keep);

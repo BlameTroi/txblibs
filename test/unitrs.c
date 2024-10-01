@@ -35,7 +35,7 @@ test_teardown(void) {
 
 MU_TEST(test_rs) {
 	const char *testing = "this is a test";
-	char *copy = dup_string(testing);
+	char *copy = strdup(testing);
 	rscb *rs = rs_create_string(copy);
 	free(copy);
 	copy = "changed";

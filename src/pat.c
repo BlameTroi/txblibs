@@ -339,8 +339,8 @@ decompile_pattern(
 	const cpat *pat
 ) {
 	if (pat == NULL || *pat != PAT_BEG)
-		return dup_string("not a valid pattern");
-	return dup_string("decompile_pattern not implemented");
+		return strdup("not a valid pattern");
+	return strdup("decompile_pattern not implemented");
 }
 
 /*
@@ -1122,7 +1122,7 @@ convert_glob(
 	/* no input should return a match almost anything */
 
 	if (glob == NULL || strlen(glob) == 0)
-		return dup_string("^[^.]*$");
+		return strdup("^[^.]*$");
 
 	/* pattern buffer is 32 or twice the size of the incoming
 	 * glob string */

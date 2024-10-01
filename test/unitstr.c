@@ -11,19 +11,10 @@
 
 #include "../inc/str.h"
 
-
 /*
- * this just keeps growing and growing, but i resist splitting it out
- * into separate files just yet.
- *
- * tests for:
- *
- * txbstr -- string and character in string functions
- *
- * txbmisc -- factor
- *            min/max
+ * tests for the string library
  */
-
+
 /*
  * minunit setup and teardown of listd infratstructure.
  */
@@ -36,18 +27,6 @@ void
 test_teardown(void) {
 }
 
-/*
- * begin tests for miscellaneous functions:
- *
- * txbmisc is a catch all of things that don't warrant their own distinct
- * library header.
- */
-
-/*
- * begin tests for string and character functions:
- *
- * these are all in txbstr.
- */
 
 /* test split_string and friends */
 
@@ -57,7 +36,7 @@ MU_TEST(test_split_string) {
 	char *ver[] = {NULL, "this", "is", "a", "test", "string", NULL};
 	long i = 1;
 	while (splits[i]) {
-		mu_assert_string_eq(ver[i], splits[i]);
+		mu_should(equal_string(ver[i], splits[i]));
 		i += 1;
 	}
 	free((void *)splits[0]);
@@ -68,14 +47,14 @@ MU_TEST(test_split_string) {
 	char *ver2[] = {NULL, "and", "now", "for", "something!", "else", NULL};
 	i = 1;
 	while (splits[i]) {
-		mu_assert_string_eq(ver2[i], splits[i]);
+		mu_should(equal_string(ver2[i], splits[i]));
 		i += 1;
 	}
 	free((void *)splits[0]);
 	free(splits);
 }
 
-MU_TEST(test_chars) {
+MU_TEST(test_pos_char) {
 	mu_assert_int_eq(1, pos_char("asdf", 0, 's'));
 	mu_assert_int_eq(-1, pos_char("qwerty", 0, 's'));
 	mu_assert_int_eq(-1, pos_char("asdf", 2, 's'));
@@ -90,6 +69,23 @@ MU_TEST(test_chars) {
 	mu_assert_int_eq(-1, pos_char("zxcvb", -3, 'g'));
 }
 
+MU_TEST(test_count_char) {
+	mu_should(count_char("asdfijkl", 'a') == 1);
+	mu_should(count_char("asdfijkl", 'l') == 1);
+	mu_should(count_char("asdfasdfasdf", 'a') == 3);
+	mu_should(count_char("asdfasdfasdf", 'z') == 0);
+}
+
+MU_TEST(test_compare_string) {
+	char *dup = strdup("hello");
+	mu_should(equal_string("hello", dup));
+	mu_shouldnt(less_than_string("hello", dup));
+	mu_shouldnt(greater_than_string("hello", dup));
+	mu_should(less_than_string("asdf", "f"));
+	mu_shouldnt(equal_string("asdf", "f"));
+	mu_shouldnt(greater_than_string("asdf", "f"));
+}
+
 /*
  * here we define the whole test suite. sadly there's no runtime
  * introspection. there is probably an opportunity for an elisp helper
@@ -108,7 +104,9 @@ MU_TEST_SUITE(test_suite) {
 
 	printf("\n\nstring and character\n\n");
 	MU_RUN_TEST(test_split_string);
-	MU_RUN_TEST(test_chars);
+	MU_RUN_TEST(test_pos_char);
+	MU_RUN_TEST(test_count_char);
+	MU_RUN_TEST(test_compare_string);
 }
 
 /*

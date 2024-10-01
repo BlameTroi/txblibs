@@ -659,9 +659,9 @@ MU_TEST(test_match_literals) {
 	mu_shouldnt(match("what was thi", pat));
 	mu_shouldnt(match("x", pat));
 
-	/* dup_string shows we aren't using a bad pointer elsewhere */
+	/* strdup shows we aren't using a bad pointer elsewhere */
 
-	char *dup = dup_string("this");
+	char *dup = strdup("this");
 	mu_should(match(dup, pat));
 	free(dup);
 	free((void *)pat);

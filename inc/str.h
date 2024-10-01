@@ -20,7 +20,18 @@ extern "C" {
 #include <stdbool.h>
 
 /*
- * split a string at (runs of) separators
+ * split_string
+ *
+ * split a string into substrings at runs of any of the separator
+ * characters. unlike some split implementations, adjacent separators
+ * do not result in empty substrings.
+ *
+ *     in: a string to split
+ *
+ *     in: a string. each character in this string is considered a
+ *         separator
+ *
+ * return: a NULL terminated array of strings
  *
  * strdup is used to make a copy of the string and that string is
  * then written over by strtok to find and mark the splits.
@@ -31,7 +42,7 @@ extern "C" {
  *
  *    `copy | tok1 | tok2 | ... | tokn | NULL`
  *
- * there can have a few extra NULL pointers tacked on the end but you
+ * there can be a few extra NULL pointers tacked on the end but you
  * should not count on their presence. this memory should be released
  * when no longer needed in two steps:
  *
@@ -48,7 +59,13 @@ split_string(
 );
 
 /*
- * free the block returned by split_string
+ * free_split
+ *
+ * free the block returned by split_string.
+ *
+ *     in: the string array returned by split_string
+ *
+ * return: nothing
  */
 
 void
@@ -57,16 +74,15 @@ free_split(
 );
 
 /*
- * strdup is not standard, wtf?
- */
-
-char *
-dup_string(
-	const char *str
-);
-
-/*
- * count how many times a character occurs in a string
+ * count_char
+ *
+ * count how many times a character occurs in a string.
+ *
+ *     in: string
+ *
+ *     in: character
+ *
+ * return: int
  */
 
 int
@@ -76,8 +92,18 @@ count_char(
 );
 
 /*
- * return the position of the next occurance of c in str starting
- * at pos.
+ * pos_char
+ *
+ * returns the position of the next occurance of a character in a
+ * string starting from some position in the string.
+ *
+ *     in: string to scan
+ *
+ *     in: int start scanning from this index
+ *
+ *     in: char to find
+ *
+ * return: index of character found or -1
  */
 
 int
@@ -88,7 +114,16 @@ pos_char(
 );
 
 /*
- * i prefer this to constantly typing strcmp() == 0 ...
+ * equal_string less_than_string greater_than_string
+ *
+ * wrappers for strcmp, i find strcmp <=> 0 to be flow breaking.
+ *
+ *     in: string
+ *
+ *     in: string
+ *
+ * return: bool is the first string equal/less than/greater than
+ * second string
  */
 
 bool
@@ -112,3 +147,4 @@ greater_than_string(
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
+/* str.h endds here */
