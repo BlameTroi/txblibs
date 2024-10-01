@@ -36,7 +36,6 @@ MU_TEST(test_qu) {
 	qucb *qu = NULL;
 
 	qu = qu_create();
-
 	mu_should(qu);
 	mu_should(qu_empty(qu));
 	qu_enqueue(qu, "one");
@@ -53,8 +52,15 @@ MU_TEST(test_qu) {
 	mu_should(equal_string("three", qu_dequeue(qu)));
 	mu_should(qu_count(qu) == 0);
 	mu_shouldnt(qu_dequeue(qu));
-
 	mu_should(qu_destroy(qu));
+
+	qu = qu_create();
+	qu_enqueue(qu, "one");
+	qu_enqueue(qu, "two");
+	mu_shouldnt(qu_destroy(qu));
+	mu_should(qu_reset(qu) == 2);
+	mu_should(qu_destroy(qu));
+
 }
 
 /*

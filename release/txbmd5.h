@@ -191,7 +191,6 @@ md5_get_digest(
 #define ASSERT_MD5(p, m) assert((p) && memcmp((p), MD5_TAG, MD5_TAG_LEN) == 0 && (m))
 #define ASSERT_MD5_OR_NULL(p) assert((p) == NULL || memcmp((p), MD5_TAG, MD5_TAG_LEN) == 0)
 
-
 struct md5_context {
 	char tag[MD5_TAG_LEN];          /* eye catcher */
 	uint64_t size;        /* size of input in bytes */
@@ -530,6 +529,8 @@ md5_get_digest(
 	ASSERT_MD5(ctx, "invalid md5 context");
 	memcpy(result, ctx->digest, 16);
 }
+
+/* md5.c ends here */
 /* *** end priv *** */
 
 #endif /* TXBMD5_IMPLEMENTATION */

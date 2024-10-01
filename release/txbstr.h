@@ -68,7 +68,18 @@ extern "C" {
 #include <stdbool.h>
 
 /*
- * split a string at (runs of) separators
+ * split_string
+ *
+ * split a string into substrings at runs of any of the separator
+ * characters. unlike some split implementations, adjacent separators
+ * do not result in empty substrings.
+ *
+ *     in: a string to split
+ *
+ *     in: a string. each character in this string is considered a
+ *         separator
+ *
+ * return: a NULL terminated array of strings
  *
  * strdup is used to make a copy of the string and that string is
  * then written over by strtok to find and mark the splits.
@@ -79,7 +90,7 @@ extern "C" {
  *
  *    `copy | tok1 | tok2 | ... | tokn | NULL`
  *
- * there can have a few extra NULL pointers tacked on the end but you
+ * there can be a few extra NULL pointers tacked on the end but you
  * should not count on their presence. this memory should be released
  * when no longer needed in two steps:
  *
@@ -96,7 +107,13 @@ split_string(
 );
 
 /*
- * free the block returned by split_string
+ * free_split
+ *
+ * free the block returned by split_string.
+ *
+ *     in: the string array returned by split_string
+ *
+ * return: nothing
  */
 
 void
@@ -105,16 +122,15 @@ free_split(
 );
 
 /*
- * strdup is not standard, wtf?
- */
-
-char *
-dup_string(
-	const char *str
-);
-
-/*
- * count how many times a character occurs in a string
+ * count_char
+ *
+ * count how many times a character occurs in a string.
+ *
+ *     in: string
+ *
+ *     in: character
+ *
+ * return: int
  */
 
 int
@@ -124,8 +140,18 @@ count_char(
 );
 
 /*
- * return the position of the next occurance of c in str starting
- * at pos.
+ * pos_char
+ *
+ * returns the position of the next occurance of a character in a
+ * string starting from some position in the string.
+ *
+ *     in: string to scan
+ *
+ *     in: int start scanning from this index
+ *
+ *     in: char to find
+ *
+ * return: index of character found or -1
  */
 
 int
@@ -136,7 +162,16 @@ pos_char(
 );
 
 /*
- * i prefer this to constantly typing strcmp() == 0 ...
+ * equal_string less_than_string greater_than_string
+ *
+ * wrappers for strcmp, i find strcmp <=> 0 to be flow breaking.
+ *
+ *     in: string
+ *
+ *     in: string
+ *
+ * return: bool is the first string equal/less than/greater than
+ * second string
  */
 
 bool
@@ -160,6 +195,7 @@ greater_than_string(
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
+/* str.h endds here */
 /* *** end pub *** */
 
 #endif /* TXBSTR_SINGLE_HEADER */
@@ -188,19 +224,36 @@ greater_than_string(
 
 
 /*
- * split a string `str` into substrings at any of the characters in
- * `sep`. unlike some split implementations, adjacent separators do
- * not result in empty substrings.
+ * split_string
  *
- * internally, a copy of `str` is made with dup_string and then is marked
- * by strtok.
+ * split a string into substrings at runs of any of the separator
+ * characters. unlike some split implementations, adjacent separators
+ * do not result in empty substrings.
  *
- * returns an array of string pointers. the first item is a pointer
- * to the copy the original string, and subsequent items up until a
- * NULL item are the substrings within that copy.
+ *     in: a string to split
  *
- * the caller is responsible for releasing the copy of `str` and the
- * pointer array.
+ *     in: a string. each character in this string is considered a
+ *         separator
+ *
+ * return: a NULL terminated array of strings
+ *
+ * strdup is used to make a copy of the string and that string is
+ * then written over by strtok to find and mark the splits.
+ *
+ * returns the copy and splits in an array which is big enough to hold
+ * a pointer to the copy, pointers to each split, and a trailing NULL
+ * pointer:
+ *
+ *    `copy | tok1 | tok2 | ... | tokn | NULL`
+ *
+ * there can be a few extra NULL pointers tacked on the end but you
+ * should not count on their presence. this memory should be released
+ * when no longer needed in two steps:
+ *
+ * free(ret[0]);          free the string copy
+ * free(ret);             free the spit pointers
+ *
+ * or better yet, call free_split(ret).
  */
 
 const char **
@@ -227,7 +280,7 @@ split_string(
 	/* empty string, a copy of same */
 	if (strlen(str) == 0) {
 		results = calloc(3, sizeof(char *));
-		results[0] = dup_string(str);
+		results[0] = strdup(str);
 		results[1] = results[0];
 		return results;
 	}
@@ -235,7 +288,7 @@ split_string(
 	/* empty separators, same as empty string */
 	if (sep == NULL || strlen(sep) == 0) {
 		results = calloc(3, sizeof(char *));
-		results[0] = dup_string(str);
+		results[0] = strdup(str);
 		results[1] = results[0];
 		return results;
 	}
@@ -247,7 +300,7 @@ split_string(
 	/* a copy of the whole string, strtok will break into multiple
 	   substrings with NULs. */
 
-	char *cpy = dup_string(str);
+	char *cpy = strdup(str);
 
 	/* how many tokens can we have at a maximum? adjacent separators
 	   count as one separator, but we don't care at this point. over
@@ -299,7 +352,13 @@ split_string(
 }
 
 /*
- * free the block returned by split_string
+ * free_split
+ *
+ * free the block returned by split_string.
+ *
+ *     in: the string array returned by split_string
+ *
+ * return: nothing
  */
 
 void
@@ -311,19 +370,16 @@ free_split(
 }
 
 /*
- * i just learned that strdup is not standard. another silly seeming
- * omission in c.
+ * count_char
+ *
+ * count how many times a character occurs in a string.
+ *
+ *     in: string
+ *
+ *     in: character
+ *
+ * return: int
  */
-
-char *
-dup_string(
-	const char *str
-) {
-	size_t len = strlen(str) + 1;
-	char *dup = malloc(len);
-	strcpy(dup, str);
-	return dup;
-}
 
 int
 count_char(
@@ -338,6 +394,21 @@ count_char(
 	}
 	return n;
 }
+
+/*
+ * pos_char
+ *
+ * returns the position of the next occurance of a character in a
+ * string starting from some position in the string.
+ *
+ *     in: string to scan
+ *
+ *     in: int start scanning from this index
+ *
+ *     in: char to find
+ *
+ * return: index of character found or -1
+ */
 
 int
 pos_char(
@@ -356,7 +427,16 @@ pos_char(
 }
 
 /*
- * ah predicates
+ * equal_string less_than_string greater_than_string
+ *
+ * wrappers for strcmp, i find strcmp <=> 0 to be flow breaking.
+ *
+ *     in: string
+ *
+ *     in: string
+ *
+ * return: bool is the first string equal/less than/greater than
+ * second string
  */
 
 bool

@@ -347,7 +347,6 @@ da_put(
 		da->length = n;
 }
 
-
 /*
  * da_count
  *

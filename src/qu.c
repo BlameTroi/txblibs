@@ -71,12 +71,14 @@ struct qucb {
  *
  * qu_count   -- how many items are in the queue? returns int
  *
- * qu_put     -- add an item to the queue.
+ * qu_enqueue -- add an item to the queue.
  *
- * qu_get     -- remove and return the oldest item in the queue.
+ * qu_dequeue -- remove and return the oldest item in the queue.
  *
  * qu_peek    -- return the oldest item in the queue, but leave
  *               it on the queue.
+ *
+ * qu_reset   -- remove all items from the queue.
  *
  * qu_destroy -- if the queue is empty and not in use, release
  *               the qucb. returns true if successful.
@@ -122,10 +124,10 @@ qu_count(
 		return 1;
 
 	int i = 0;
-	quitem *qe = qu->first;
-	while (qe) {
+	quitem *qi = qu->first;
+	while (qi) {
 		i += 1;
-		qe = qe->next;
+		qi = qi->next;
 	}
 	return i;
 }
@@ -145,12 +147,12 @@ quitem *
 qu_new_item(
 	void *payload
 ) {
-	quitem *qe = malloc(sizeof(*qe));
-	memset(qe, 0, sizeof(*qe));
-	memcpy(qe->tag, QUITEM_TAG, sizeof(qe->tag));
-	qe->payload = payload;
-	qe->next = NULL;
-	return qe;
+	quitem *qi = malloc(sizeof(*qi));
+	memset(qi, 0, sizeof(*qi));
+	memcpy(qi->tag, QUITEM_TAG, sizeof(qi->tag));
+	qi->payload = payload;
+	qi->next = NULL;
+	return qi;
 }
 
 /*
@@ -171,14 +173,14 @@ qu_enqueue(
 	void *payload
 ) {
 	ASSERT_QUCB(qu, "invalid QUCB");
-	quitem *new_qe = qu_new_item(payload);
+	quitem *qi = qu_new_item(payload);
 	if (qu->first == NULL) {
-		qu->first = new_qe;
-		qu->last = new_qe;
+		qu->first = qi;
+		qu->last = qi;
 		return;
 	}
-	qu->last->next = new_qe;
-	qu->last = new_qe;
+	qu->last->next = qi;
+	qu->last = qi;
 	return;
 }
 
@@ -199,10 +201,11 @@ qu_dequeue(
 	ASSERT_QUCB(qu, "invalid QUCB");
 	if (qu->first == NULL)
 		return NULL;
-	quitem *qe = qu->first;
-	qu->first = qe->next;
-	void *res = qe->payload;
-	free(qe);
+	quitem *qi = qu->first;
+	qu->first = qi->next;
+	void *res = qi->payload;
+	memset(qi, 253, sizeof(*qi));
+	free(qi);
 	return res;
 }
 
@@ -251,6 +254,35 @@ qu_create(
 }
 
 /*
+ * qu_reset
+ *
+ * remove all items from the queue.
+ *
+ *     in: the qu instance
+ *
+ * return: int number of items removed
+ */
+
+int
+qu_reset(
+	qucb *qu
+) {
+	ASSERT_QUCB(qu, "invalid QUCB");
+	if (qu->first == NULL)
+		return 0;
+	int i = 0;
+	while (qu->first) {
+		quitem *qi = qu->first;
+		qu->first = qi->next;
+		memset(qi, 253, sizeof(*qi));
+		free(qi);
+		i += 1;
+	}
+	return i;
+}
+
+
+/*
  * qu_destroy
  *
  * free the queue control block if the queue is empty.
@@ -265,12 +297,11 @@ qu_destroy(
 	qucb *qu
 ) {
 	ASSERT_QUCB(qu, "invalid QUCB");
-	if (qu->first == NULL) {
-		memset(qu, 253, sizeof(*qu));
-		free(qu);
-		return true;
-	}
-	return false;
+	if (qu->first != NULL)
+		return false;
+	memset(qu, 253, sizeof(*qu));
+	free(qu);
+	return true;
 }
 
 /* qu.c ends here */

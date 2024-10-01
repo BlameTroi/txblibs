@@ -117,6 +117,21 @@ qu_destroy(
 );
 
 /*
+ * qu_reset
+ *
+ * remove all items from the queue.
+ *
+ *     in: the qu instance
+ *
+ * return: int number of items removed
+ */
+
+int
+qu_reset(
+	qucb *
+);
+
+/*
  * qu_count
  *
  * how many items are in the queue?
