@@ -16,21 +16,12 @@
  * minunit setup and teardown.
  */
 
-#define RAND_SEED 6803
-
-/* each test will have id and payload lists available to work with. */
-
 void
 test_setup(void) {
-
-	/* let's use a different seed than 1, but not time() because i want
-	   repeatable tests. */
-	srand(RAND_SEED);
 }
 
 void
 test_teardown(void) {
-
 }
 
 MU_TEST(test_rs) {
@@ -173,7 +164,7 @@ MU_TEST_SUITE(test_suite) {
 	/* always have a setup and teardown, even if they */
 	/* do nothing. */
 
-	MU_SUITE_CONFIGURE(&test_setup, &test_teardown);
+	MU_SUITE_CONFIGURE(test_setup, test_teardown);
 
 	/* run your tests here */
 
@@ -182,7 +173,6 @@ MU_TEST_SUITE(test_suite) {
 	MU_RUN_TEST(test_clone);
 	MU_RUN_TEST(test_gets);
 }
-
 
 /*
  * master control:
