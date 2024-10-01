@@ -21,7 +21,15 @@ extern "C" {
 #endif /* __cplusplus */
 
 /*
- * return an array of the factors of n.
+ * factors_of
+ *
+ * returns an array of long integers big enought to at least hold the
+ * factors of n and a trailing NULL. the caller is responsible for
+ * freeing the array when it is no longer needed.
+ *
+ *     in: a long integer 'n'
+ *
+ * return: the array as above, or NULL if 'n' < 1
  */
 
 long *
@@ -32,6 +40,8 @@ factors_of(long n);
  * generic macros. the macros only type check the first argument to
  * determine which function to call. it's the client's responsibility
  * to ensure that the arguments compatible.
+ *
+ * use the macros min and max instead of the following functions.
  */
 
 int             i_max(int, int);
@@ -68,22 +78,53 @@ double          d_min(double, double);
 	)(X, Y)
 
 /*
- * common predicates.
+ * is_even & is_odd
+ *
+ *     in: a signed integer that promotes to a long
+ *
+ * return: bool
  */
 
 bool
 is_even(
 	long
 );
+
 bool
 is_odd(
 	long
 );
 
+/*
+ * is_* various character predicates
+ *
+ * quick character classification from the point of view of this
+ * us-ascii based programmer.
+ *
+ *     in: a char
+ *
+ * return: bool
+ *
+ * whether or not a hyphen is a word character (hypen, dash, em-dash)
+ * or a mathematical symbol and other such edge cases are not
+ * accounted for here. these definitions work for 99% of the things i
+ * am likely to do.
+ *
+ * is_digit          0-9
+ * is_word_char      alphabetic and underscore
+ * is_lowercase      a-z
+ * is_uppercase      A-Z
+ * is_whitespace     space, cr, lf, ff, tab
+ * is_control        0x00->0x1f
+ * is_punctuation    .,?!;:
+ * is_bracketing     [](){}
+ */
+
 bool
 is_digit(
 	char
 );
+
 bool
 is_word_char(
 	char
@@ -120,7 +161,13 @@ is_uppercase(
 );
 
 /*
- * how many bits are on in an unsigned long?
+ * one_bits_in
+ *
+ * brian kernighan's algorithm for counting set bits in a variable.
+ *
+ *     in: an unsigned long
+ *
+ * return: int number of bits set.
  */
 
 int
@@ -129,12 +176,18 @@ one_bits_in(
 );
 
 /*
- * sum the integers from 1 to n.
+ * sum_one_to
+ *
+ * sum the integers 1 to n as gauss would.
+ *
+ *     in: an int
+ *
+ * return: 1 + 2 + ... + n
  */
 
-int
+long
 sum_one_to(
-	int n
+	long n
 );
 
 /*
@@ -154,7 +207,26 @@ fn_cmp_int_dsc(
 );
 
 /*
- * pack and unpack hex digits.
+ * hex_pack hex_unpack
+ *
+ * convert run of bytes to displayable hex digits (unpack hex) or a
+ * string of hex digits to bytes (pack hex).
+ *
+ * returns the address of the first byte of the output buffer so the
+ * function can be used as an argument to printf. returns NULL if any
+ * error in arguments is detected.
+ *
+ * the function arguments parallel each other.
+ *
+ *     in: first byte of output buffer
+ *
+ *     in: maximum length of output buffer
+ *
+ *     in: first byte of input buffer
+ *
+ *     in: maximum length of output buffer
+ *
+ * return: first byte of output buffer
  */
 
 uint8_t *
@@ -172,7 +244,6 @@ hex_unpack(
 	uint8_t *hex,        /* address of first byte to unpack */
 	int hexlen           /* number of bytes to unpack */
 );
-
 
 #ifdef __cplusplus
 }

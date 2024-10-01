@@ -1,7 +1,7 @@
 # test stand alone object versions of the libs
 
 .POSIX:
-.PHONY: clean all run
+.PHONY: clean all
 
 CC=clang
 # CFLAGS=-Wall -g3 -std=c18
@@ -10,10 +10,10 @@ CFLAGS=-fsanitize=address -Wall -g3 -O0 -std=c18 --pedantic-errors
 # LDFLAGS=-lm
 LDFLAGS=
 
-all: unitda unitdl unitkl unitkv unitmd5 unitmute unitpat unitpq unitqu unitrs unitsb unitst unittest
+all: unitda unitdl unitkl unitkv unitmd5 unitmute unitmisc unitpat unitpq unitqu unitrs unitsb unitst unitstr
 
 clean:
-	rm -rf *.o *.dSYM/ unitda unitdl unitkl unitkv unitmd5 unitmute unitpat unitpq unitqu unitrs unitsb unitst unittest
+	rm -rf *.o *.dSYM/ unitda unitdl unitkl unitkv unitmd5 unitmisc unitmute unitpat unitpq unitqu unitrs unitsb unitst unitstr
 
 #####################################################
 # these are the libs not as single file headers yet #
@@ -64,7 +64,6 @@ st.o: ../inc/st.h ../src/st.c ../inc/dl.h
 str.o: ../inc/str.h ../src/str.c
 	$(CC) $(CFLAGS) -c ../src/str.c
 
-
 #########################################################
 # these are the test drivers for the various libs, most #
 # but not all are done with minunit.                    #
@@ -80,13 +79,13 @@ unitdl.o: unitdl.c
 	$(CC) $(CFLAGS) -c unitdl.c
 
 unitdl: unitdl.o dl.o misc.o str.o rand.o
-	$(CC) $(CFLAGS) -o unitdl unitdl.o dl.o misc.o str.o rand.o
+	$(CC) $(CFLAGS) -o unitdl unitdl.o dl.o misc.o str.o rand.o $(LDFLAGS)
 
 unitkl.o: unitkl.c
 	$(CC) $(CFLAGS) -c unitkl.c
 
 unitkl: unitkl.o kl.o misc.o str.o rand.o
-	$(CC) $(CFLAGS) -o unitkl unitkl.o kl.o misc.o str.o rand.o
+	$(CC) $(CFLAGS) -o unitkl unitkl.o kl.o misc.o str.o rand.o $(LDFLAGS)
 
 unitkv.o: unitkv.c
 	$(CC) $(CFLAGS) -c unitkv.c
@@ -98,7 +97,13 @@ unitmd5.o: unitmd5.c
 	$(CC) $(CFLAGS) -c unitmd5.c
 
 unitmd5: unitmd5.o md5.o
-	$(CC) $(CFLAGS) -o unitmd5 unitmd5.o md5.o
+	$(CC) $(CFLAGS) -o unitmd5 unitmd5.o md5.o $(LDFLAGS)
+
+unitmisc.o: unitmisc.c
+	$(CC) $(CFLAGS) -c unitmisc.c
+
+unitmisc: unitmisc.o misc.o
+	$(CC) $(CFLAGS) -o unitmisc unitmisc.o misc.o $(LDFLAGS)
 
 unitmute.o: unitmute.c
 	$(CC) $(CFLAGS) -c unitmute.c
@@ -116,13 +121,13 @@ unitpq.o: unitpq.c
 	$(CC) $(CFLAGS) -c unitpq.c
 
 unitpq: unitpq.o pq.o misc.o rand.o str.o
-	$(CC) $(CFLAGS) -o unitpq unitpq.o pq.o misc.o rand.o str.o
+	$(CC) $(CFLAGS) -o unitpq unitpq.o pq.o misc.o rand.o str.o $(LDFLAGS)
 
 unitqu.o: unitqu.c
 	$(CC) $(CFLAGS) -c unitqu.c
 
 unitqu: unitqu.o qu.o str.o
-	$(CC) $(CFLAGS) -o unitqu unitqu.o qu.o str.o
+	$(CC) $(CFLAGS) -o unitqu unitqu.o qu.o str.o $(LDFLAGS)
 
 unitrand.o: unitrand.c
 	$(CC) $(CFLAGS) -c unitrand.c
@@ -148,8 +153,8 @@ unitst.o: unitst.c
 unitst: unitst.o st.o dl.o rand.o
 	$(CC) $(CFLAGS) -o unitst unitst.o st.o dl.o rand.o $(LDFLAGS)
 
-unittest.o: unittest.c
-	$(CC) $(CFLAGS) -c unittest.c
+unitstr.o: unitstr.c
+	$(CC) $(CFLAGS) -c unitstr.c
 
-unittest: unittest.o misc.o str.o
-	$(CC) $(CFLAGS) -o unittest unittest.o misc.o str.o $(LDFLAGS)
+unitstr: unitstr.o str.o
+	$(CC) $(CFLAGS) -o unitstr unitstr.o str.o $(LDFLAGS)
