@@ -8,14 +8,11 @@
 
 #include "minunit.h"
 
-#include "../inc/rand.h"
 #include "../inc/kv.h"
 
 /*
  * minunit setup and teardown.
  */
-
-#define RAND_SEED 6803
 
 void
 test_setup(void) {

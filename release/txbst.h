@@ -71,10 +71,11 @@ extern "C" {
 typedef struct stcb stcb;
 
 /*
- * st_create
+ * sb_create
  *
- * create a new stack instance. there is no hard limit on the number of
- * items on the stack.the memory allocation is large enough to hold
+ * create a new empty stack instance.
+ *
+ *     in: nothing
  *
  * return: the st instance
  */
@@ -87,13 +88,13 @@ st_create(
 /*
  * st_push
  *
- * place a new item on the top of the stack.
+ * push a new item on the stack.
  *
  *     in: the st instance
  *
  *     in: the item as a void *
  *
- * return: none
+ * return: nothing
  */
 
 void
@@ -101,11 +102,10 @@ st_push(
 	stcb *st,
 	void *item
 );
-
 /*
  * st_pop
  *
- * remove the top item from the stack.
+ * pop an item off the stack.
  *
  *     in: the st instance
  *
@@ -120,8 +120,7 @@ st_pop(
 /*
  * st_peek
  *
- * return the value of the top item on the stack, leaving it
- * on the stack.
+ * get the top item from the stack without removing it.
  *
  *     in: the st instance
  *
@@ -138,9 +137,9 @@ st_peek(
  *
  * is the stack empty?
  *
- *     in: the st instance
+ *    in: the st instance
  *
- * return: boolean
+ * return: bool
  */
 
 bool
@@ -153,9 +152,9 @@ st_empty(
  *
  * how many items are on the stack?
  *
- *     in: the st instance
+ *    in: the st instance
  *
- * return: int number of items
+ * return: int
  */
 
 int
@@ -164,13 +163,28 @@ st_depth(
 );
 
 /*
- * st_destroy
+ * st_reset
  *
- * free stack resources if the stack is empty.
+ * delete all items from the stack.
  *
  *     in: the st instance
  *
- * return: boolean true if successful false if not
+ * return: int number of items deleted
+ */
+
+int
+st_reset(
+	stcb *st
+);
+
+/*
+ * sb_destroy
+ *
+ * if the stack is empty, release its resources.
+ *
+ *     in: the st instance
+ *
+ * return: bool was the st destroyed and freed
  */
 
 bool
@@ -224,7 +238,13 @@ struct stcb {
 };
 
 /*
- * create a new empty stack instance large enough to hold 'limit' items.
+ * sb_create
+ *
+ * create a new empty stack instance.
+ *
+ *     in: nothing
+ *
+ * return: the st instance
  */
 
 stcb *
@@ -239,7 +259,15 @@ st_create(
 }
 
 /*
+ * st_push
+ *
  * push a new item on the stack.
+ *
+ *     in: the st instance
+ *
+ *     in: the item as a void *
+ *
+ * return: nothing
  */
 
 void
@@ -252,7 +280,13 @@ st_push(
 }
 
 /*
- * pop an item from the stack.
+ * st_pop
+ *
+ * pop an item off the stack.
+ *
+ *     in: the st instance
+ *
+ * return: the item as a void *
  */
 
 void *
@@ -268,7 +302,13 @@ st_pop(
 }
 
 /*
+ * st_peek
+ *
  * get the top item from the stack without removing it.
+ *
+ *     in: the st instance
+ *
+ * return: the item as a void *
  */
 
 void *
@@ -283,7 +323,13 @@ st_peek(
 }
 
 /*
- * predicates and status queries.
+ * st_empty
+ *
+ * is the stack empty?
+ *
+ *    in: the st instance
+ *
+ * return: bool
  */
 
 bool
@@ -294,6 +340,16 @@ st_empty(
 	return dl_empty(st->dl);
 }
 
+/*
+ * st_depth
+ *
+ * how many items are on the stack?
+ *
+ *    in: the st instance
+ *
+ * return: int
+ */
+
 int
 st_depth(
 	stcb *st
@@ -303,7 +359,31 @@ st_depth(
 }
 
 /*
+ * st_reset
+ *
+ * delete all items from the stack.
+ *
+ *     in: the st instance
+ *
+ * return: int number of items deleted
+ */
+
+int
+st_reset(
+	stcb *st
+) {
+	ASSERT_STCB(st, "invalid STCB");
+	return dl_reset(st->dl);
+}
+
+/*
+ * sb_destroy
+ *
  * if the stack is empty, release its resources.
+ *
+ *     in: the st instance
+ *
+ * return: bool was the st destroyed and freed
  */
 
 bool

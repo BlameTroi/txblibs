@@ -90,8 +90,8 @@ unitkl: unitkl.o kl.o misc.o str.o rand.o
 unitkv.o: unitkv.c
 	$(CC) $(CFLAGS) -c unitkv.c
 
-unitkv: unitkv.o kv.o rand.o
-	$(CC) $(CFLAGS) -o unitkv unitkv.o kv.o rand.o $(LDFLAGS)
+unitkv: unitkv.o kv.o
+	$(CC) $(CFLAGS) -o unitkv unitkv.o kv.o $(LDFLAGS)
 
 unitmd5.o: unitmd5.c
 	$(CC) $(CFLAGS) -c unitmd5.c
