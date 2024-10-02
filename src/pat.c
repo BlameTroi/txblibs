@@ -57,8 +57,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include "../inc/misc.h"
-#include "../inc/str.h"
+
+#include "txbmisc.h"
+#include "txbstr.h"
 
 #include "../inc/pat.h"
 

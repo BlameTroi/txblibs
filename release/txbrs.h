@@ -174,8 +174,7 @@ rs_position(
 /*
  * rs_length
  *
- * the total length of the string. rs->len includes the NUL byte, so
- * we have to subtract to account for it.
+ * the total length of the string.
  *
  *     in: the rs instance
  *
@@ -554,8 +553,7 @@ rs_position(
 /*
  * rs_length
  *
- * the total length of the string. rs->len includes the NUL byte, so
- * we have to subtract to account for it.
+ * the total length of the string.
  *
  *     in: the rs instance
  *
@@ -567,7 +565,7 @@ rs_length(
 	rscb *rs
 ) {
 	ASSERT_RSCB(rs, "invalid RSCB");
-	return (rs->len - 1);
+	return rs->len;
 }
 
 /*

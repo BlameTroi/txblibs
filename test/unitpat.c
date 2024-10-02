@@ -915,7 +915,7 @@ MU_TEST_SUITE(test_suite) {
 
 	/* always have a setup and teardown, even if they do nothing. */
 
-	MU_SUITE_CONFIGURE(&test_setup, &test_teardown);
+	MU_SUITE_CONFIGURE(test_setup, test_teardown);
 
 	/* test compiling a search pattern string into a pattern buffer.
 	 * these rely on an exposed pattern buffer comparator. */

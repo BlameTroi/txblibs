@@ -621,7 +621,7 @@ MU_TEST(test_delete) {
 
 MU_TEST_SUITE(test_suite) {
 
-	MU_SUITE_CONFIGURE(&test_setup, &test_teardown);
+	MU_SUITE_CONFIGURE(test_setup, test_teardown);
 
 	MU_RUN_TEST(test_create);
 	MU_RUN_TEST(test_insert_single);

@@ -151,6 +151,37 @@ MU_TEST(test_gets) {
 	free(buffer);
 	rs_destroy_string(original);
 }
+
+MU_TEST(test_skip) {
+	rscb *rs = rs_create_string("0123456789abcdefghijklmnopqrstuvwxyz");
+
+	mu_should(rs_length(rs) == 36);
+	mu_should(rs_position(rs) == 0);
+
+	/* advance into the string */
+	for (int i = 0; i < 10; i++) {
+		char c = rs_getc(rs);
+		mu_should(i == c - '0');
+	}
+
+	/* after advance move around some */
+	mu_should(rs_position(rs) == 10);
+	mu_should(rs_skip(rs, -10));
+	mu_should(rs_position(rs) == 0);
+	mu_should(rs_skip(rs, 10));
+	mu_should(rs_position(rs) == 10);
+
+	/* read to confirm position */
+	mu_should(rs_peekc(rs) == 'a');
+
+	/* error cases */
+	mu_shouldnt(rs_skip(rs, -rs_position(rs) - 1));
+	mu_should(rs_position(rs) == 10);
+	mu_shouldnt(rs_skip(rs, rs_length(rs)));
+	mu_should(rs_position(rs) == 10);
+
+	rs_destroy_string(rs);
+}
 
 /*
  * here we define the whole test suite. sadly there's no runtime
@@ -172,6 +203,7 @@ MU_TEST_SUITE(test_suite) {
 	MU_RUN_TEST(test_file);
 	MU_RUN_TEST(test_clone);
 	MU_RUN_TEST(test_gets);
+	MU_RUN_TEST(test_skip);
 }
 
 /*

@@ -88,7 +88,7 @@ MU_TEST_SUITE(test_suite) {
 	/* always have a setup and teardown, even if they */
 	/* do nothing. */
 
-	MU_SUITE_CONFIGURE(&test_setup, &test_teardown);
+	MU_SUITE_CONFIGURE(test_setup, test_teardown);
 
 	/* run your tests here */
 
