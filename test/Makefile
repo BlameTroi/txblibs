@@ -150,8 +150,8 @@ unitsb: unitsb.o str.o sb.o
 unitst.o: unitst.c
 	$(CC) $(CFLAGS) -c unitst.c
 
-unitst: unitst.o st.o dl.o rand.o
-	$(CC) $(CFLAGS) -o unitst unitst.o st.o dl.o rand.o $(LDFLAGS)
+unitst: unitst.o st.o dl.o
+	$(CC) $(CFLAGS) -o unitst unitst.o st.o dl.o $(LDFLAGS)
 
 unitstr.o: unitstr.c
 	$(CC) $(CFLAGS) -c unitstr.c

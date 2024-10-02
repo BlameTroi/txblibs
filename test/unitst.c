@@ -8,21 +8,15 @@
 
 #include "minunit.h"
 
-#include "../inc/rand.h"
-
 #include "../inc/st.h"
 
 /*
  * minunit setup and teardown.
  */
 
-#define RAND_SEED 6803
-
 static
 void
 test_setup(void) {
-	set_random_generator(RAND_DEFAULT);
-	seed_random_generator(RAND_SEED);
 }
 
 static
@@ -56,7 +50,17 @@ MU_TEST(test_st) {
 	mu_should(st_pop(st));
 	mu_should(st_empty(st));
 	mu_should(st_destroy(st));
+	st = NULL;
 
+	st = st_create();
+	mu_should(st && st_empty(st));
+	st_push(st, "a");
+	st_push(st, "b");
+	mu_shouldnt(st_empty(st));
+	mu_shouldnt(st_destroy(st));
+	mu_should(st_reset(st) == 2);
+	mu_should(st_destroy(st));
+	st = NULL;
 }
 
 /*
@@ -71,7 +75,7 @@ MU_TEST_SUITE(test_suite) {
 	/* always have a setup and teardown, even if they */
 	/* do nothing. */
 
-	MU_SUITE_CONFIGURE(&test_setup, &test_teardown);
+	MU_SUITE_CONFIGURE(test_setup, test_teardown);
 
 	/* run your tests here */
 
