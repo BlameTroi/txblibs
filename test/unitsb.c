@@ -30,7 +30,7 @@ test_teardown(void) {
  * basic functionality tests.
  */
 
-MU_TEST(test_sb) {
+MU_TEST(test_basic) {
 	sbcb *sb = sb_create();
 	mu_should(sb);
 	mu_should(sb_length(sb) == 0);
@@ -49,7 +49,7 @@ MU_TEST(test_sb) {
 	temp = sb_to_string(sb);
 	mu_should(temp);
 	mu_should(strlen(temp) == sb_length(sb));
-	mu_should(strcmp(temp, "one two") == 0);
+	mu_should(equal_string(temp, "one two"));
 	free(temp);
 
 	sb_destroy(sb);
@@ -58,7 +58,7 @@ MU_TEST(test_sb) {
 /*
  * the same as test_sb except use the null sink string builder
  */
-MU_TEST(test_sb_null) {
+MU_TEST(test_null) {
 	sbcb *sb = sb_create_null();
 	mu_should(sb);
 	mu_should(sb_length(sb) == 0);
@@ -78,7 +78,7 @@ MU_TEST(test_sb_null) {
 	mu_should(temp);
 	mu_should(strlen(temp) == 0);
 	mu_shouldnt(strlen(temp) == sb_length(sb));
-	mu_shouldnt(strcmp(temp, "one two") == 0);
+	mu_shouldnt(equal_string(temp, "one two"));
 	free(temp);
 
 	sb_destroy(sb);
@@ -88,7 +88,7 @@ MU_TEST(test_sb_null) {
  * small blocksizes and large additions.
  */
 
-MU_TEST(test_sb_abusive) {
+MU_TEST(test_abusive) {
 	sbcb *sb = sb_create_blksize(32);
 	for (int i = 0; i < 100; i++)
 		sb_puts(sb, "four");
@@ -101,6 +101,15 @@ MU_TEST(test_sb_abusive) {
 	mu_should(sb_length(sb) == 100 *
 		strlen("i'm bigger than two blocksizes, yeah"));
 	sb_destroy(sb);
+}
+
+MU_TEST(test_file) {
+	FILE *file = fopen("unitrs.c", "r");
+	sbcb *source = sb_create_file(file);
+	mu_should(source);
+	mu_should(sb_length(source) > 2000); /* just a did we get it check? */
+	fclose(file);
+	sb_destroy(source);
 }
 
 /*
@@ -119,11 +128,11 @@ MU_TEST_SUITE(test_suite) {
 
 	/* run your tests here */
 
-	MU_RUN_TEST(test_sb);
-	MU_RUN_TEST(test_sb_null);
-	MU_RUN_TEST(test_sb_abusive);
+	MU_RUN_TEST(test_basic);
+	MU_RUN_TEST(test_null);
+	MU_RUN_TEST(test_abusive);
+	MU_RUN_TEST(test_file);
 }
-
 
 /*
  * master control:
@@ -135,3 +144,4 @@ main(int argc, char *argv[]) {
 	MU_REPORT();
 	return MU_EXIT_CODE;
 }
+/* unitsb.c ends here */
