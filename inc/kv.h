@@ -54,25 +54,37 @@ kv_create(
 );
 
 /*
+ * kv_reset
+ *
+ * delets all key:value pairs from the store.
+ *
+ *     in: the kv instance
+ *
+ * return: how many pairs were deleted
+ */
+
+int
+kv_reset(
+	kvcb* kv
+);
+
+/*
  * kv_destroy
  *
  * destroy an instance of the key:value pair store.
- *
- * overwrites and then releases all key:value store related storage.
- * actual key and value storage is the responsibility of the client.
  *
  *     in: the kv instance
  *
  * return: NULL
  */
 
-kvcb *
+bool
 kv_destroy(
 	kvcb *kv
 );
 
 /*
- * kv_insert
+ * kv_get
  *
  * if the key exists in the key:value store, return the pointer
  * to the value.
@@ -85,7 +97,7 @@ kv_destroy(
  */
 
 void *
-kv_insert(
+kv_get(
 	kvcb *kv,
 	void *key
 );
@@ -93,7 +105,8 @@ kv_insert(
 /*
  * kv_put
  *
- * given pointers to a key value, store them in the key:value store.
+ * given pointers to a key and associated value, store them in the
+ * key:value store.
  *
  * if the key exists in the store, its value is overwritten. if the
  * key does not exist in the store, a new key:value pair is created.
@@ -114,26 +127,12 @@ kv_put(
 	void *value
 );
 
-bool
-kv_delete(
-	kvcb *kv,
-	void *key
-);
-
 /*
- * kv_exists
  *
- * does a key exist in the key:value store.
- *
- *     in: the kv instance
- *
- *     in: the key
- *
- * return: boolean true if key found
  */
 
 bool
-kv_exists(
+kv_delete(
 	kvcb *kv,
 	void *key
 );

@@ -78,17 +78,43 @@ kv_create(
 ) {
 	assert(key_compare && "missing key compare function pointer for KVCB");
 	kvcb *kv = malloc(sizeof(kvcb));
-	assert(kv && "failed to allocate KVCB");
+	assert(kv &&
+		"failed to allocate KVCB");
 	memset(kv, 0, sizeof(kvcb));
 	memcpy(kv->tag, KVCB_TAG, KVCB_TAG_LEN);
 	kv->pairs_increment = PAIRS_INCREMENT_DEFAULT;
 	kv->pairs_size = PAIRS_SIZE_DEFAULT;
 	kv->pairs = malloc(sizeof(kvpair) * (kv->pairs_size + 1));
-	assert(kv->pairs && "failed to allocate or initialize pair backing for KVCB");
-	memset(kv->pairs, 0, sizeof(void *) * 2 * (kv->pairs_size + 1));
+	assert(kv->pairs &&
+		"failed to allocate or initialize pair backing for KVCB");
+	memset(kv->pairs, 0, sizeof(kvpair) * (kv->pairs_size + 1));
 	kv->key_compare = key_compare;
 	kv->num_pairs = 0;
 	return kv;
+}
+
+/*
+ * kv_reset
+ *
+ * delets all key:value pairs from the store.
+ *
+ *     in: the kv instance
+ *
+ * return: how many pairs were deleted
+ */
+
+int
+kv_reset(
+	kvcb *kv
+) {
+	ASSERT_KVCB(kv, "invalid KVCB");
+
+	if (kv->pairs != NULL)
+		memset(kv->pairs, 0, sizeof(kvpair) * (kv->pairs_size + 1));
+
+	int i = kv->num_pairs;
+	kv->num_pairs = 0;
+	return i;
 }
 
 /*
@@ -104,18 +130,21 @@ kv_create(
  * return: NULL
  */
 
-kvcb *
+bool
 kv_destroy(
 	kvcb *kv
 ) {
 	ASSERT_KVCB(kv, "invalid KVCB");
-	if (kv->pairs != NULL) {
-		memset(kv->pairs, 253, kv->num_pairs * sizeof(kvpair) * 2);
-		free(kv->pairs);
-	}
+	if (kv->num_pairs != 0)
+		return false;
+
+	memset(kv->pairs, 253, sizeof(kvpair) * (kv->pairs_size + 1));
+	free(kv->pairs);
+
 	memset(kv, 253, sizeof(kvcb));
 	free(kv);
-	return NULL;
+
+	return true;
 }
 
 /*
@@ -196,6 +225,8 @@ am_delete_key(
  * return: the newly created kvpair
  */
 
+/* memmove (void *dest, const void *src, size_t len) overlap allowed */
+
 static
 kvpair *
 am_new_pair(
@@ -222,7 +253,7 @@ am_new_pair(
 }
 
 /*
- * kv_insert
+ * kv_get
  *
  * if the key exists in the key:value store, return the pointer
  * to the value.
@@ -235,7 +266,7 @@ am_new_pair(
  */
 
 void *
-kv_insert(
+kv_get(
 	kvcb *kv,
 	void *key
 ) {
@@ -302,29 +333,6 @@ kv_delete(
 	kvpair *p = am_find_key(kv, key);
 	if (p)
 		am_delete_key(kv, key);
-	return p != NULL;
-}
-
-/*
- * kv_exists
- *
- * does a key exist in the key:value store.
- *
- *     in: the kv instance
- *
- *     in: the key
- *
- * return: boolean true if key found
- */
-
-bool
-kv_exists(
-	kvcb *kv,
-	void *key
-) {
-	ASSERT_KVCB(kv, "invalid KVCB");
-	assert(key && "key may not be NULL");
-	kvpair *p = am_find_key(kv, key);
 	return p != NULL;
 }
 
