@@ -37,10 +37,14 @@ typedef struct dlcb dlcb;
  * it. if the data to store will fit in a void *, the client may
  * store it directly.
  *
- * the dlnode is the position of the item in the list. functions that
- * return a dlnode also mark the current position in the dlcb and
- * when a function receives a dlnode it checks it against the
- * position stored in the dlcb. if they differ, it is an error.
+ * the dlid is the synchronization token with the list. functions
+ * return a dlid also mark the current position in the dlcb and when a
+ * function receives a dlid it checks it against the position stored
+ * in the dlid. if they differ, it is an error.
+ *
+ * for functions that return a dlid, if null_dlid is true then there
+ * was an error. if the function should return a payload, the payload
+ * pointer is set to NULL.
  */
 
 typedef unsigned long dlid;
@@ -149,7 +153,7 @@ dl_reset(
  *     in: the client data must fit in in a void *, typically
  *         a pointer to the client data
  *
- * return: the dl node.
+ * return: the dlid
  */
 
 dlid
@@ -169,7 +173,7 @@ dl_insert_first(
  *     in: the client data must fit in in a void *, typically
  *         a pointer to the client data
  *
- * return: the dl node.
+ * return: the dlid
  */
 
 dlid
@@ -186,12 +190,12 @@ dl_insert_last(
  *
  *     in: the dl instance
  *
- *     in: the dl node of the current position in the dl
+ *     in: the dlid of the current position in the dl
  *
  *     in: the client data must fit in in a void *, typically
  *         a pointer to the client data
  *
- * return: the dl node
+ * return: the new dlid
  */
 
 dlid
@@ -209,12 +213,12 @@ dl_insert_before(
  *
  *     in: the dl instance
  *
- *     in: the dl node of the current position in the dl
+ *     in: the dlid of the current position in the dl
  *
  *     in: the client data must fit in in a void *, typically
  *         a pointer to the client data
  *
- * return: the dl node
+ * return: the new dlid
  */
 
 dlid
@@ -231,7 +235,9 @@ dl_insert_after(
  *
  *     in: the dl instance
  *
- * return: dl node of that item
+ *     in: address of *payload
+ *
+ * return: dlid of the first item
  */
 
 dlid
@@ -247,7 +253,9 @@ dl_get_first(
  *
  *     in: the dl instance
  *
- * return: the dl node of that item or NULL
+ *     in: address of *payload
+ *
+ * return: dlid of the last item
  */
 
 dlid
@@ -264,9 +272,11 @@ dl_get_last(
  *
  *     in: the dl instance
  *
- *     in: the dl node of the positioned item
+ *     in: the dlid of the positioned item
  *
- * return: the dl node of the next item or NULL
+ *     in: address of *payload
+ *
+ * return: the dlid or NULL_DLID if no item
  */
 
 dlid
@@ -284,9 +294,11 @@ dl_get_next(
  *
  *     in: the dl instance
  *
- *     in: the dl node of the positioned item
+ *     in: the dlid of the positioned item
  *
- * return: the dl node of the previous item or NULL
+ *     in: address of *payload
+ *
+ * return: the dlid or NULL_DLID if no item
  */
 
 dlid
@@ -304,7 +316,7 @@ dl_get_previous(
  *
  *     in: the dl instance
  *
- *     in: the dl node of the positioned item
+ *     in: the dlid
  *
  * return: boolean true if deleted, false on error
  */
@@ -327,11 +339,11 @@ dl_delete(
  *
  *     in: the dl instance
  *
- *     in: the dl node to be updated
+ *     in: the dlid of the item to update
  *
  *     in: the new payload, typically a void * pointer to a value
  *
- * return: the dl node of the updated item
+ * return: the dlid of the updated item
  */
 
 bool

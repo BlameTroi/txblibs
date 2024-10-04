@@ -33,11 +33,13 @@ test_teardown(void) {
 /* min and max */
 
 MU_TEST(test_min_max) {
-	mu_should(min(3.5, 3.499999) == 3.49999);
 	mu_assert_int_eq(1, min(1, 2));
 	mu_assert_int_eq(1, min(2, 1));
 	mu_assert_int_eq(2, max(1, 2));
 	mu_assert_int_eq(2, max(2, 1));
+	double mx = 3.50;
+	double mn = 3.25;
+	mu_should(min(mx, mn) == mn);
 }
 
 MU_TEST(test_even_odd) {
