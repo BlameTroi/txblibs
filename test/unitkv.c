@@ -5,8 +5,11 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include "minunit.h"
+
+#include "../inc/rand.h"
 
 #include "../inc/kv.h"
 
@@ -16,6 +19,8 @@
 
 void
 test_setup(void) {
+	set_random_generator(RAND_RANDOM);
+	/*      seed_random_generator(6803); */
 }
 
 void
@@ -27,12 +32,12 @@ test_teardown(void) {
  */
 
 int
-fn_key_compare_int(void *a, void *b) {
+fn_key_compare_int(const void *a, const void *b) {
 	return *(int *)a - *(int *)b;
 }
 
 int
-fn_key_compare_string(void *a, void *b) {
+fn_key_compare_string(const void *a, const void *b) {
 	return strcmp(a, b);
 }
 
@@ -148,6 +153,14 @@ MU_TEST(test_create) {
  */
 
 MU_TEST(test_load) {
+	int ia = 1;
+	int ib = 2;
+	char *sa = "1";
+	char *sb = "2";
+	int ca = fn_key_compare_string(sa, sb);
+	int cb = fn_key_compare_int(&ia, &ib);
+	mu_should(ca == cb);
+
 	kvcb *kv = kv_create(fn_key_compare_int);
 
 	int i = 0;
@@ -157,6 +170,11 @@ MU_TEST(test_load) {
 	}
 	mu_shouldnt(kv_empty(kv));
 	mu_should(kv_count(kv) == i);
+
+	int **keys = kv_keys(kv);
+	char **values = kv_values(kv);
+	mu_should(keys);
+	mu_should(values);
 
 	/* do we read back a known loaded row? */
 	int k = 1;
@@ -178,6 +196,16 @@ MU_TEST(test_load) {
 
 MU_TEST(test_put) {
 	kvcb *kv = load_ints();
+
+	/* get a list of all the keys in the store */
+	int **keys = kv_keys(kv);
+	mu_should(keys);
+
+	/* print them and their associated values */
+	printf("\n");
+	for (int i = 0; keys[i]; i++)
+		printf("%d %d\n", *keys[i], *(int *)kv_get(kv, keys[i]));
+	free(keys);
 
 	/* we expect 10 pairs, and keys 4 and 5
 	 * have values of 4 and 5 */
@@ -284,6 +312,151 @@ MU_TEST(test_values) {
 	kv_destroy(kv);
 }
 
+MU_TEST(test_volume_ascending) {
+	kvcb *kv = kv_create(fn_key_compare_int);
+	/* grow a few times */
+	clock_t b = clock();
+	for (int i = 1; i <= 10000; i++) {
+		int *j = malloc(sizeof(int));
+		*j = i;
+		kv_put(kv, j, j);
+	}
+	clock_t e = clock();
+	printf("\ntime ascending %lu\n", b-e);
+	/* add after end (which is 10000) */
+	int *after = malloc(sizeof(int));
+	*after = 10010;
+	kv_put(kv, after, after);
+	/* and in front of */
+	int *before = malloc(sizeof(int));
+	*before = -10;
+	kv_put(kv, before, before);
+	/* between first two and between last two */
+	int *penultimate = malloc(sizeof(int));
+	*penultimate = 10005;
+	kv_put(kv, penultimate, penultimate);
+	mu_should(kv_count(kv) == 10003);
+	int *anteoriginal = malloc(sizeof(int));
+	*anteoriginal = 0;
+	kv_put(kv, anteoriginal, anteoriginal);
+	mu_should(kv_count(kv) == 10004);
+	int **keys = kv_keys(kv);
+	mu_should(*keys[0] == -10);
+	mu_should(*keys[1] == 0);
+	mu_should(*keys[2] == 1);
+	mu_should(*keys[3] == 2);
+	mu_should(*keys[10000] == 9999);
+	mu_should(*keys[10001] == 10000);
+	mu_should(*keys[10002] == 10005);
+	mu_should(*keys[10003] == 10010);
+	kv_delete(kv, after);
+	kv_delete(kv, before);
+	kv_delete(kv, penultimate);
+	kv_delete(kv, anteoriginal);
+	free(keys);
+
+	keys = kv_keys(kv);
+	mu_should(*keys[0] == 1);
+	mu_should(*keys[1] == 2);
+	mu_should(*keys[9998] == 9999);
+	mu_should(*keys[9999] == 10000);
+
+	int i = 0;
+	while (keys[i]) {
+		free(keys[i]);
+		i += 1;
+	}
+	free(keys);
+	mu_should(kv_reset(kv));
+	mu_should(kv_destroy(kv));
+}
+
+MU_TEST(test_volume_descending) {
+	kvcb *kv = kv_create(fn_key_compare_int);
+	/* grow a few times */
+	clock_t b = clock();
+	for (int i = 10000; i >= 1; i--) {
+		int *j = malloc(sizeof(int));
+		*j = i;
+		kv_put(kv, j, j);
+	}
+	clock_t e = clock();
+	printf("\ntime descending %lu\n", b-e);
+	/* add after end (which is 10000) */
+	int *after = malloc(sizeof(int));
+	*after = 10010;
+	kv_put(kv, after, after);
+	/* and in front of */
+	int *before = malloc(sizeof(int));
+	*before = -10;
+	kv_put(kv, before, before);
+	/* between first two and between last two */
+	int *penultimate = malloc(sizeof(int));
+	*penultimate = 10005;
+	kv_put(kv, penultimate, penultimate);
+	mu_should(kv_count(kv) == 10003);
+	int *anteoriginal = malloc(sizeof(int));
+	*anteoriginal = 0;
+	kv_put(kv, anteoriginal, anteoriginal);
+	mu_should(kv_count(kv) == 10004);
+	int **keys = kv_keys(kv);
+	mu_should(*keys[0] == -10);
+	mu_should(*keys[1] == 0);
+	mu_should(*keys[2] == 1);
+	mu_should(*keys[3] == 2);
+	mu_should(*keys[10000] == 9999);
+	mu_should(*keys[10001] == 10000);
+	mu_should(*keys[10002] == 10005);
+	mu_should(*keys[10003] == 10010);
+	int i = 0;
+	while (keys[i]) {
+		free(keys[i]);
+		i += 1;
+	}
+	free(keys);
+	mu_should(10004 == kv_reset(kv));
+	mu_should(kv_destroy(kv));
+}
+
+MU_TEST(test_volume_random) {
+	kvcb *kv = kv_create(fn_key_compare_int);
+	/* grow a few times */
+	clock_t b = clock();
+	int i = 0;
+	while (i < 10000) {
+		int *j = malloc(sizeof(int));
+		*j = random_between(1, 100000);
+		if (!kv_get(kv, j)) {
+			kv_put(kv, j, j);
+			i += 1;
+		}
+	}
+	clock_t e = clock();
+	printf("\ntime random %lu\n", b-e);
+	mu_should(kv_count(kv) == 10000);
+	int **keys = kv_keys(kv);
+	printf("\n");
+	for (int i = 0; i < 10; i++)
+		printf("%d %d\n", i, *keys[i]);
+	printf("\n");
+	for (int i = 5000; i < 5010; i++)
+		printf("%d %d\n", i, *keys[i]);
+	printf("\n");
+	for (int i = 9990; i < 10000; i++)
+		printf("%d %d\n", i, *keys[i]);
+	printf("\n");
+	/* add after end (which is 10000) */
+	i = 0;
+	while (keys[i]) {
+		free(keys[i]);
+		i += 1;
+	}
+	free(keys);
+	mu_should(10000 == kv_reset(kv));
+	mu_should(kv_destroy(kv));
+
+}
+
 MU_TEST(test_string_keys) {
 	kvcb *kv = load_str_keys();
 	mu_should(kv_count(kv) == 6);
@@ -334,6 +507,9 @@ MU_TEST_SUITE(test_suite) {
 	MU_RUN_TEST(test_keys);
 	MU_RUN_TEST(test_values);
 	MU_RUN_TEST(test_string_keys);
+	MU_RUN_TEST(test_volume_ascending);
+	MU_RUN_TEST(test_volume_descending);
+	MU_RUN_TEST(test_volume_random);
 }
 
 /*

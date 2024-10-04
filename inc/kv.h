@@ -50,7 +50,7 @@ typedef struct kvcb kvcb;
 
 kvcb *
 kv_create(
-	int (*key_compare)(void *, void *)
+	int (*key_compare)(const void *, const void *)
 );
 
 /*

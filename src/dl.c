@@ -18,6 +18,8 @@
 
 #include "../inc/dl.h"
 
+typedef struct dlnode dlnode;
+
 /*
  * dlcb.
  *
@@ -36,9 +38,29 @@ struct dlcb {
 	dlnode *first;
 	dlnode *last;
 	dlnode *position;
+	dlid id;
 	int count;
 	const char *error;
 };
+
+/*
+ * next_id
+ *
+ * increment and return id. ids start at 0, so the first one assigned
+ * will be 1. there's no realistic way this will wrap. a dlid of 0
+ * means "null".
+ *
+ *     in: the dl instance
+ *
+ * return: the id
+ */
+
+static
+dlid
+next_id(dlcb *dl) {
+	dl->id += 1;
+	return dl->id;
+}
 
 /*
  * dlcb.error will reference one of these in certain conditions,
@@ -49,7 +71,6 @@ static const char *error_list_empty       = "list empty";
 static const char *error_next_at_tail     = "get next reached tail of list";
 static const char *error_previous_at_head = "get previous reached head of list";
 static const char *error_not_positioned   = "get next/prev not positioned";
-static const char *error_bad_dlnode       = "malformed dlnode";
 
 /*
  * dlnode
@@ -72,6 +93,18 @@ static const char *error_bad_dlnode       = "malformed dlnode";
 
 #define ASSERT_DLNODE(p, d, m) assert((p) && memcmp((p), DLNODE_TAG, DLNODE_TAG_LEN) == 0 && \
 	(p)->owner == d && m)
+
+#define DLNODE_TAG_LEN 8
+#define DLNODE_TAG "_DLNODE_"
+
+struct dlnode {
+	char tag[DLNODE_TAG_LEN];  /* read only */
+	dlid id;                   /* read only */
+	dlcb *owner;               /* read only */
+	dlnode *next;              /* read only */
+	dlnode *previous;          /* read only */
+	void *payload;             /* pointer to item to store or the item if it will fit in a void */
+};
 
 /*
  * dl_create
@@ -93,6 +126,7 @@ dl_create(
 	memset(dl, 0, sizeof(*dl));
 	memcpy(dl->tag, DLCB_TAG, sizeof(dl->tag));
 	dl->count = 0;
+	dl->id = 0;
 	dl->position = NULL;
 	dl->first = NULL;
 	dl->last = NULL;
@@ -129,7 +163,6 @@ dl_destroy(
  *     in: the dl instance
  *
  * return: constant string with a brief message or NULL
- *
  */
 
 const char *
@@ -184,7 +217,7 @@ dl_empty(
 ) {
 	ASSERT_DLCB(dl, "invalid DLCB");
 	dl->error = NULL;
-	return dl->first == NULL;
+	return !dl->first;
 }
 
 /*
@@ -215,8 +248,9 @@ dl_reset(
 	}
 	dl->first = NULL;
 	dl->last = NULL;
-	dl->position = NULL;
 	dl->error = NULL;
+	dl->position = NULL;
+	/* dl->id is intentionally *not* reset */
 	assert(dl->count == deleted &&
 		"dl_reset mismatch between deleted and count");
 	dl->count = 0;
@@ -236,7 +270,7 @@ dl_reset(
 
 static
 dlnode *
-dl_create_node(
+create_dlnode(
 	dlcb *dl,
 	void *payload
 ) {
@@ -248,6 +282,7 @@ dl_create_node(
 	memcpy(dn->tag, DLNODE_TAG, sizeof(dl->tag));
 	dn->owner = dl;
 	dn->payload = payload;
+	dn->id = next_id(dl);
 	return dn;
 }
 
@@ -265,26 +300,25 @@ dl_create_node(
  * return: the dl node.
  */
 
-dlnode *
+dlid
 dl_insert_first(
 	dlcb *dl,
 	void *payload
 ) {
 	ASSERT_DLCB(dl, "invalid DLCB");
 	dl->error = NULL;
-	dlnode *new_dn = dl_create_node(dl, payload);
+	dlnode *new_dn = create_dlnode(dl, payload);
 	if (!dl->first) {
 		dl->first = new_dn;
 		dl->last = new_dn;
 	} else {
 		new_dn->next = dl->first;
 		dl->first->previous = new_dn;
-		dl->position = new_dn;
 		dl->first = new_dn;
 	}
 	dl->position = dl->first;
 	dl->count += 1;
-	return dl->position;
+	return dl->first->id;
 }
 
 /*
@@ -301,26 +335,25 @@ dl_insert_first(
  * return: the dl node.
  */
 
-dlnode *
+dlid
 dl_insert_last(
 	dlcb *dl,
 	void *payload
 ) {
 	ASSERT_DLCB(dl, "invalid DLCB");
 	dl->error = NULL;
-	dlnode *new_dn = dl_create_node(dl, payload);
+	dlnode *new_dn = create_dlnode(dl, payload);
 	if (!dl->first) {
 		dl->first = new_dn;
 		dl->last = new_dn;
 	} else {
 		new_dn->previous = dl->last;
 		dl->last->next = new_dn;
-		dl->position = new_dn;
 		dl->last = new_dn;
 	}
-	dl->position = dl->last;
 	dl->count += 1;
-	return dl->position;
+	dl->position = dl->last;
+	return dl->last->id;
 }
 
 /*
@@ -339,23 +372,23 @@ dl_insert_last(
  * return: the dl node
  */
 
-dlnode *
+dlid
 dl_insert_before(
 	dlcb *dl,
-	dlnode *dn,
+	dlid id,
 	void *payload
 ) {
 	ASSERT_DLCB(dl, "invalid DLCB");
-	ASSERT_DLNODE(dn, dl, "invalid DLNODE");
 
-	if (dl->position != dn) {
-		dl->error = error_bad_dlnode;
+	if (dl->position == NULL || dl->position->id != id) {
+		dl->error = error_not_positioned;
 		dl->position = NULL;
-		return NULL;
+		return NULL_DLID;
 	}
 
+	dlnode *dn = dl->position;
 	dl->error = NULL;
-	dlnode *new_dn = dl_create_node(dl, payload);
+	dlnode *new_dn = create_dlnode(dl, payload);
 
 	/* link new node in front of current */
 	new_dn->previous = dn->previous;
@@ -370,7 +403,7 @@ dl_insert_before(
 
 	dl->count += 1;
 	dl->position = new_dn;
-	return new_dn;
+	return dl->position->id;
 }
 
 /*
@@ -389,23 +422,23 @@ dl_insert_before(
  * return: the dl node
  */
 
-dlnode *
+dlid
 dl_insert_after(
 	dlcb *dl,
-	dlnode *dn,
+	dlid id,
 	void *payload
 ) {
 	ASSERT_DLCB(dl, "invalid DLCB");
-	ASSERT_DLNODE(dn, dl, "invalid DLNODE");
 
-	if (dl->position != dn) {
-		dl->error = error_bad_dlnode;
+	if (dl->position == NULL || dl->position->id != id) {
+		dl->error = error_not_positioned;
 		dl->position = NULL;
-		return NULL;
+		return NULL_DLID;
 	}
 
 	dl->error = NULL;
-	dlnode *new_dn = dl_create_node(dl, payload);
+	dlnode *dn = dl->position;
+	dlnode *new_dn = create_dlnode(dl, payload);
 
 	/* link new node after current */
 	new_dn->next = dn->next;
@@ -421,7 +454,7 @@ dl_insert_after(
 
 	dl->count += 1;
 	dl->position = new_dn;
-	return new_dn;
+	return dl->position->id;
 
 }
 
@@ -435,16 +468,21 @@ dl_insert_after(
  * return: dl node of that item
  */
 
-dlnode *
+dlid
 dl_get_first(
-	dlcb *dl
+	dlcb *dl,
+	void **payload
 ) {
 	ASSERT_DLCB(dl, "invalid DLCB");
 	dl->position = dl->first;
 	dl->error = NULL;
-	if (!dl->position)
+	if (!dl->position) {
 		dl->error = error_list_empty;
-	return dl->position;
+		*payload = NULL;
+		return NULL_DLID;
+	}
+	*payload = dl->position->payload;
+	return dl->position->id;
 }
 
 /*
@@ -457,16 +495,21 @@ dl_get_first(
  * return: the dl node of that item or NULL
  */
 
-dlnode *
+dlid
 dl_get_last(
-	dlcb *dl
+	dlcb *dl,
+	void **payload
 ) {
 	ASSERT_DLCB(dl, "invalid DLCB");
 	dl->position = dl->last;
 	dl->error = NULL;
-	if (!dl->position)
+	if (!dl->position) {
 		dl->error = error_list_empty;
-	return dl->position;
+		*payload = NULL;
+		return NULL_DLID;
+	}
+	*payload = dl->position->payload;
+	return dl->position->id;
 }
 
 /*
@@ -482,23 +525,29 @@ dl_get_last(
  * return: the dl node of the next item or NULL
  */
 
-dlnode *
+dlid
 dl_get_next(
 	dlcb *dl,
-	dlnode *dn
+	dlid id,
+	void **payload
 ) {
 	ASSERT_DLCB(dl, "invalid DLCB");
-	ASSERT_DLNODE(dn, dl, "invalid DLNODE");
+
 	dl->error = NULL;
-	if (dn == NULL || dl->position == NULL || dn != dl->position) {
+	if (dl->position == NULL || id != dl->position->id) {
 		dl->error = error_not_positioned;
 		dl->position = NULL;
-		return NULL;
+		*payload = NULL;
+		return NULL_DLID;
 	}
 	dl->position = dl->position->next;
-	if (!dl->position)
+	if (!dl->position) {
 		dl->error = error_next_at_tail;
-	return dl->position;
+		*payload = NULL;
+		return NULL_DLID;
+	}
+	*payload = dl->position->payload;
+	return dl->position->id;
 }
 
 /*
@@ -514,23 +563,28 @@ dl_get_next(
  * return: the dl node of the previous item or NULL
  */
 
-dlnode *
+dlid
 dl_get_previous(
 	dlcb *dl,
-	dlnode *dn
+	dlid id,
+	void **payload
 ) {
 	ASSERT_DLCB(dl, "invalid DLCB");
-	ASSERT_DLNODE(dn, dl, "invalid DLNODE");
 	dl->error = NULL;
-	if (dn == NULL || dl->position == NULL || dn != dl->position) {
+	if (dl->position == NULL || id != dl->position->id) {
 		dl->error = error_not_positioned;
 		dl->position = NULL;
-		return NULL;
+		*payload = NULL;
+		return NULL_DLID;
 	}
 	dl->position = dl->position->previous;
-	if (!dl->position)
+	if (!dl->position) {
 		dl->error = error_previous_at_head;
-	return dl->position;
+		*payload = NULL;
+		return NULL_DLID;
+	}
+	*payload = dl->position->payload;
+	return dl->position->id;
 }
 
 /*
@@ -549,17 +603,17 @@ dl_get_previous(
 bool
 dl_delete(
 	dlcb *dl,
-	dlnode *dn
+	dlid id
 ) {
 	ASSERT_DLCB(dl, "invalid DLCB");
-	ASSERT_DLNODE(dn, dl, "invalid DLNODE");
-	if (dl->position == NULL || dn != dl->position) {
+	if (dl->position == NULL || id != dl->position->id) {
 		dl->position = NULL;
-		dl->error = error_bad_dlnode;
+		dl->error = error_not_positioned;
 		return false;
 	}
 
 	/* deletes clear position */
+	dlnode *dn = dl->position;
 	dl->error = NULL;
 	dl->position = NULL;
 
@@ -603,22 +657,22 @@ dl_delete(
  * return: the dl node of the updated item
  */
 
-dlnode *
+bool
 dl_update(
 	dlcb *dl,
-	dlnode *dn,
+	dlid id,
 	void *payload
 ) {
 	ASSERT_DLCB(dl, "invalid DLCB");
-	ASSERT_DLNODE(dn, dl, "invalid DLNODE");
 	dl->error = NULL;
-	if (dn == NULL || dl->position == NULL || dn != dl->position) {
+	dlnode *dn = dl->position;
+	if (dn == NULL || id != dl->position->id) {
 		dl->error = error_not_positioned;
 		dl->position = NULL;
-	} else {
-		dl->position->payload = payload;
+		return NULL_DLID;
 	}
-	return dl->position;
+	dl->position->payload = payload;
+	return true;
 }
 
 /* dl.c ends here */

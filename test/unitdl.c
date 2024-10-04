@@ -26,7 +26,7 @@
 
 #define RAND_SEED 6803
 
-static dlcb * test_dl = NULL;
+static dlcb *test_dl = NULL;
 
 /*
  * test_setup.
@@ -78,10 +78,11 @@ void
 test_teardown(void) {
 	if (!test_dl)
 		return;
-	dlnode *dn = NULL;
-	while (dn = dl_get_first(test_dl), dn) {
-		free(dn->payload);
-		dl_delete(test_dl, dn);
+	dlid id = NULL_DLID;
+	void *payload;
+	while (id = dl_get_first(test_dl, &payload), payload) {
+		free(payload);
+		dl_delete(test_dl, id);
 	}
 	dl_destroy(test_dl);
 	test_dl = NULL;
@@ -123,7 +124,7 @@ MU_TEST(test_insert_ends) {
 	char ordering[] = { '6', '4', '2', '1', '3', '5', '7', '\0' };
 
 	dlcb *dl = dl_create();
-	dlnode *dn = NULL;
+	dlid id = NULL_DLID;
 	int i = 0;
 
 	/* add the test items alternating from add last to add first */
@@ -139,10 +140,11 @@ MU_TEST(test_insert_ends) {
 
 	/* the expected ordering forward is 6421357 */
 	i = 0;
+	void *payload;
 	while (ordering[i]) {
-		dn = dl_get_first(dl);
-		mu_should(((char *)dn->payload)[0] == ordering[i]);
-		dl_delete(dl, dn);
+		id = dl_get_first(dl, &payload);
+		mu_should(((char *)payload)[0] == ordering[i]);
+		dl_delete(dl, id);
 		i += 1;
 	}
 
@@ -175,9 +177,9 @@ MU_TEST(test_insert_ends) {
 	 * ordering array. */
 	while (i > 0) {
 		i -= 1;
-		dn = dl_get_last(dl);
-		mu_should(((char *)dn->payload)[0] == ordering[i]);
-		dl_delete(dl, dn);
+		id = dl_get_last(dl, &payload);
+		mu_should(((char *)payload)[0] == ordering[i]);
+		dl_delete(dl, id);
 	}
 
 	mu_should(dl_count(dl) == 0);
@@ -198,7 +200,7 @@ MU_TEST(test_insert_ends) {
 
 MU_TEST(test_insert_after) {
 	dlcb *dl = NULL;
-	dlnode *dn = NULL;
+	dlid id = NULL_DLID;
 	void *payload = NULL;
 
 	/* in an empty list do the inserts work as expected? after the
@@ -211,121 +213,122 @@ MU_TEST(test_insert_after) {
 	/* insert after head of single item list */
 	dl = dl_create();
 	payload = strdup("first");
-	dn = dl_insert_first(dl, payload);
-	mu_should(dn);
-	dn = dl_get_first(dl);
+	id = dl_insert_first(dl, payload);
+	mu_shouldnt(null_dlid(id));
+	id = dl_get_first(dl, &payload);
 	payload = strdup("inserted after first");
-	dn = dl_insert_after(dl, dn, payload);
-	mu_should(dn);
+	id = dl_insert_after(dl, id, payload);
+	mu_shouldnt(null_dlid(id));
 	mu_should(dl_count(dl) == 2);
 
 	/* order should be first, inserted after first */
-	dn = dl_get_first(dl);
-	mu_should(equal_string(dn->payload, "first"));
-	dn = dl_get_next(dl, dn);
-	mu_should(equal_string(dn->payload, "inserted after first"));
+	id = dl_get_first(dl, &payload);
+	mu_should(equal_string(payload, "first"));
+	id = dl_get_next(dl, id, &payload);
+	mu_should(equal_string(payload, "inserted after first"));
 
 	/* while we're at it, check that an error is reported when we
 	 * reach the end of the list. */
-	dn = dl_get_next(dl, dn);
-	mu_shouldnt(dn);
+	id = dl_get_next(dl, id, &payload);
+	mu_should(null_dlid(id));
 	mu_should(dl_get_error(dl));
 
 	/* check from the tail */
-	dn = dl_get_last(dl);
-	mu_should(equal_string(dn->payload, "inserted after first"));
-	dn = dl_get_previous(dl, dn);
-	mu_should(equal_string(dn->payload, "first"));
+	id = dl_get_last(dl, &payload);
+	mu_should(equal_string(payload, "inserted after first"));
+	id = dl_get_previous(dl, id, &payload);
+	mu_should(equal_string(payload, "first"));
 
 	/* again, should get an error trying to read past head */
-	dn = dl_get_previous(dl, dn);
-	mu_shouldnt(dn);
+	id = dl_get_previous(dl, id, &payload);
+	mu_should(null_dlid(id));
 	mu_should(dl_get_error(dl));
 
 	/* clean up before switching to the preloaded list */
-	while (dn = dl_get_first(dl), dn) {
-		free(dn->payload);
-		dl_delete(dl, dn);
+	while (id = dl_get_first(dl, &payload), !null_dlid(id)) {
+		free(payload);
+		dl_delete(dl, id);
 	}
 	dl_destroy(dl);
 
 	/* insert after the head of the list */
 	dl = test_dl;
-	dn = dl_get_first(dl);
+	id = dl_get_first(dl, &payload);
 	payload = strdup("inserted after first");
-	dn = dl_insert_after(dl, dn, payload);
-	mu_should(dn);
+	id = dl_insert_after(dl, id, payload);
+	mu_shouldnt(null_dlid(id));
 
 	/* first three should be 10, new, 20 */
-	dn = dl_get_first(dl);
-	mu_should(equal_string("0010 bogus", dn->payload));
-	dn = dl_get_next(dl, dn);
-	mu_should(equal_string("inserted after first", dn->payload));
-	dn = dl_get_next(dl, dn);
-	mu_should(equal_string("0020 bogus", dn->payload));
+	id = dl_get_first(dl, &payload);
+	mu_should(equal_string("0010 bogus", payload));
+	id = dl_get_next(dl, id, &payload);
+	mu_should(equal_string("inserted after first", payload));
+	id = dl_get_next(dl, id, &payload);
+	mu_should(equal_string("0020 bogus", payload));
 
 	/* and now after the end */
-	dn = dl_get_last(dl);
+	id = dl_get_last(dl, &payload);
 	payload = strdup("inserted after last");
-	dn = dl_insert_after(dl, dn, payload);
-	mu_should(dn);
+	id = dl_insert_after(dl, id, payload);
+	mu_shouldnt(null_dlid(id));
 
 	/* last three should be new, 990, 980 */
-	dn = dl_get_last(dl);
-	mu_should(equal_string("inserted after last", dn->payload));
-	dn = dl_get_previous(dl, dn);
-	mu_should(equal_string("0990 bogus", dn->payload));
-	dn = dl_get_previous(dl, dn);
-	mu_should(equal_string("0980 bogus", dn->payload));
+	id = dl_get_last(dl, &payload);
+	mu_should(equal_string("inserted after last", payload));
+	id = dl_get_previous(dl, id, &payload);
+	mu_should(equal_string("0990 bogus", payload));
+	id = dl_get_previous(dl, id, &payload);
+	mu_should(equal_string("0980 bogus", payload));
 
 	/* now read forward to end, end should be detected. */
-	dn = dl_get_next(dl, dn);
-	mu_should(equal_string("0990 bogus", dn->payload));
-	dn = dl_get_next(dl, dn);
-	mu_should(equal_string("inserted after last", dn->payload));
-	dn = dl_get_next(dl, dn);
-	mu_shouldnt(dn);
+	id = dl_get_next(dl, id, &payload);
+	mu_should(equal_string("0990 bogus", payload));
+	id = dl_get_next(dl, id, &payload);
+	mu_should(equal_string("inserted after last", payload));
+	id = dl_get_next(dl, id, &payload);
+	mu_should(null_dlid(id));
 	mu_should(dl_get_error(dl));
 
 	/* count should be 99 + 2 = 101 */
 	mu_should(dl_count(dl) == 99 + 2);
 
 	/* find 0500 in the list */
-	dn = dl_get_first(dl);
-	while (dn) {
-		if (equal_string("0500 bogus", dn->payload))
+	id = dl_get_first(dl, &payload);
+	while (!null_dlid(id)) {
+		if (equal_string("0500 bogus", payload))
 			break;
-		dn = dl_get_next(dl, dn);
+		id = dl_get_next(dl, id, &payload);
 	}
-	mu_should(dn);
+	mu_shouldnt(null_dlid(id));
+	mu_should(equal_string("0500 bogus", payload));
 
 	/* insert after */
 	payload = strdup("inserted after 0500");
-	dn = dl_insert_after(dl, dn, payload);
+	id = dl_insert_after(dl, id, payload);
 
 	/* find it forward */
-	dn = dl_get_first(dl);
-	while (dn) {
-		if (equal_string("0500 bogus", dn->payload))
+	id = dl_get_first(dl, &payload);
+	while (!null_dlid(id)) {
+		if (equal_string("0500 bogus", payload))
 			break;
-		dn = dl_get_next(dl, dn);
+		id = dl_get_next(dl, id, &payload);
 	}
-	mu_should(dn);
+	mu_shouldnt(null_dlid(id));
 
-	dn = dl_get_next(dl, dn);
-	mu_should(equal_string("inserted after 0500", dn->payload));
+	id = dl_get_next(dl, id, &payload);
+	mu_should(equal_string("inserted after 0500", payload));
 
 	/* and now find it backward */
-	dn = dl_get_last(dl);
-	while (dn) {
-		if (equal_string("inserted after 0500", dn->payload))
+	id = dl_get_last(dl, &payload);
+	while (!null_dlid(id)) {
+		if (equal_string("inserted after 0500", payload))
 			break;
-		dn = dl_get_previous(dl, dn);
+		id = dl_get_previous(dl, id, &payload);
 	}
-	mu_should(dn);
+	mu_shouldnt(null_dlid(id));
 
-	dn = dl_get_previous(dl, dn);
-	mu_should(equal_string("0500 bogus", dn->payload));
+	id = dl_get_previous(dl, id, &payload);
+	mu_should(equal_string("0500 bogus", payload));
 
 	/* lastly check the count */
 	mu_should(dl_count(dl) == 99 + 2 + 1);
@@ -343,7 +346,7 @@ MU_TEST(test_insert_after) {
 
 MU_TEST(test_insert_before) {
 	dlcb *dl = NULL;
-	dlnode *dn = NULL;
+	dlid id = NULL_DLID;
 	void *payload = NULL;
 
 	/* in an empty list do the inserts work as expected? after the
@@ -356,124 +359,124 @@ MU_TEST(test_insert_before) {
 	/* insert after head of single item list */
 	dl = dl_create();
 	payload = strdup("first");
-	dn = dl_insert_first(dl, payload);
-	mu_should(dn);
-	dn = dl_get_first(dl);
+	id = dl_insert_first(dl, payload);
+	mu_shouldnt(null_dlid(id));
+	id = dl_get_first(dl, &payload);
 	payload = strdup("inserted before first");
-	dn = dl_insert_before(dl, dn, payload);
-	mu_should(dn);
+	id = dl_insert_before(dl, id, payload);
+	mu_shouldnt(null_dlid(id));
 	mu_should(dl_count(dl) == 2);
 
 	/* order should be new, first */
-	dn = dl_get_first(dl);
-	mu_should(equal_string(dn->payload, "inserted before first"));
-	dn = dl_get_next(dl, dn);
-	mu_should(equal_string(dn->payload, "first"));
+	id = dl_get_first(dl, &payload);
+	mu_should(equal_string(payload, "inserted before first"));
+	id = dl_get_next(dl, id, &payload);
+	mu_should(equal_string(payload, "first"));
 
 	/* while we're at it, check that an error is reported when we
 	 * reach the end of the list. */
-	dn = dl_get_next(dl, dn);
-	mu_shouldnt(dn);
+	id = dl_get_next(dl, id, &payload);
+	mu_should(null_dlid(id));
 	mu_should(dl_get_error(dl));
 
 	/* check from the tail */
-	dn = dl_get_last(dl);
-	mu_should(equal_string(dn->payload, "first"));
-	dn = dl_get_previous(dl, dn);
-	mu_should(equal_string(dn->payload, "inserted before first"));
+	id = dl_get_last(dl, &payload);
+	mu_should(equal_string(payload, "first"));
+	id = dl_get_previous(dl, id, &payload);
+	mu_should(equal_string(payload, "inserted before first"));
 
 	/* again, should get an error trying to read past head */
-	dn = dl_get_previous(dl, dn);
-	mu_shouldnt(dn);
+	id = dl_get_previous(dl, id, &payload);
+	mu_should(null_dlid(id));
 	mu_should(dl_get_error(dl));
 
 	/* clean up before switching to the preloaded list */
-	while (dn = dl_get_first(dl), dn) {
-		free(dn->payload);
-		dl_delete(dl, dn);
+	while (id = dl_get_first(dl, &payload), id) {
+		free(payload);
+		dl_delete(dl, id);
 	}
 	dl_destroy(dl);
 
 	/* insert after the head of the list */
 	dl = test_dl;
-	dn = dl_get_first(dl);
+	id = dl_get_first(dl, &payload);
 	payload = strdup("inserted before first");
-	dn = dl_insert_before(dl, dn, payload);
-	mu_should(dn);
+	id = dl_insert_before(dl, id, payload);
+	mu_shouldnt(null_dlid(id));
 
 	/* first three should be new, 10, 20 */
-	dn = dl_get_first(dl);
-	mu_should(equal_string("inserted before first", dn->payload));
-	dn = dl_get_next(dl, dn);
-	mu_should(equal_string("0010 bogus", dn->payload));
-	dn = dl_get_next(dl, dn);
-	mu_should(equal_string("0020 bogus", dn->payload));
+	id = dl_get_first(dl, &payload);
+	mu_should(equal_string("inserted before first", payload));
+	id = dl_get_next(dl, id, &payload);
+	mu_should(equal_string("0010 bogus", payload));
+	id = dl_get_next(dl, id, &payload);
+	mu_should(equal_string("0020 bogus", payload));
 
 	/* and now after the end */
-	dn = dl_get_last(dl);
+	id = dl_get_last(dl, &payload);
 	payload = strdup("inserted before last");
-	dn = dl_insert_before(dl, dn, payload);
-	mu_should(dn);
+	id = dl_insert_before(dl, id, payload);
+	mu_shouldnt(null_dlid(id));
 
 	/* last three should be 980, new, 990 */
-	dn = dl_get_last(dl);
-	mu_should(equal_string("0990 bogus", dn->payload));
-	dn = dl_get_previous(dl, dn);
-	mu_should(equal_string("inserted before last", dn->payload));
-	dn = dl_get_previous(dl, dn);
-	mu_should(equal_string("0980 bogus", dn->payload));
+	id = dl_get_last(dl, &payload);
+	mu_should(equal_string("0990 bogus", payload));
+	id = dl_get_previous(dl, id, &payload);
+	mu_should(equal_string("inserted before last", payload));
+	id = dl_get_previous(dl, id, &payload);
+	mu_should(equal_string("0980 bogus", payload));
 
 	/* now read forward to end, end should be detected. */
-	dn = dl_get_next(dl, dn);
-	mu_should(equal_string("inserted before last", dn->payload));
-	dn = dl_get_next(dl, dn);
-	mu_should(equal_string("0990 bogus", dn->payload));
-	dn = dl_get_next(dl, dn);
-	mu_shouldnt(dn);
+	id = dl_get_next(dl, id, &payload);
+	mu_should(equal_string("inserted before last", payload));
+	id = dl_get_next(dl, id, &payload);
+	mu_should(equal_string("0990 bogus", payload));
+	id = dl_get_next(dl, id, &payload);
+	mu_should(null_dlid(id));
 	mu_should(dl_get_error(dl));
 
 	/* count should be 99 + 2 = 101 */
 	mu_should(dl_count(dl) == 99 + 2);
 
 	/* find 0500 in the list */
-	dn = dl_get_first(dl);
-	while (dn) {
-		if (equal_string("0500 bogus", dn->payload))
+	id = dl_get_first(dl, &payload);
+	while (id) {
+		if (equal_string("0500 bogus", payload))
 			break;
-		dn = dl_get_next(dl, dn);
+		id = dl_get_next(dl, id, &payload);
 	}
-	mu_should(dn);
+	mu_shouldnt(null_dlid(id));
 
 	/* insert before */
 	payload = strdup("inserted before 0500");
-	dn = dl_insert_before(dl, dn, payload);
+	id = dl_insert_before(dl, id, payload);
 
 	/* quick check count */
 	mu_should(dl_count(dl) == 99 + 2 + 1);
 
 	/* find it forward */
-	dn = dl_get_first(dl);
-	while (dn) {
-		if (equal_string("0500 bogus", dn->payload))
+	id = dl_get_first(dl, &payload);
+	while (id) {
+		if (equal_string("0500 bogus", payload))
 			break;
-		dn = dl_get_next(dl, dn);
+		id = dl_get_next(dl, id, &payload);
 	}
-	mu_should(dn);
+	mu_shouldnt(null_dlid(id));
 
-	dn = dl_get_previous(dl, dn);
-	mu_should(equal_string("inserted before 0500", dn->payload));
+	id = dl_get_previous(dl, id, &payload);
+	mu_should(equal_string("inserted before 0500", payload));
 
 	/* and now find it backward */
-	dn = dl_get_last(dl);
-	while (dn) {
-		if (equal_string("inserted before 0500", dn->payload))
+	id = dl_get_last(dl, &payload);
+	while (id) {
+		if (equal_string("inserted before 0500", payload))
 			break;
-		dn = dl_get_previous(dl, dn);
+		id = dl_get_previous(dl, id, &payload);
 	}
-	mu_should(dn);
+	mu_shouldnt(null_dlid(id));
 
-	dn = dl_get_next(dl, dn);
-	mu_should(equal_string("0500 bogus", dn->payload));
+	id = dl_get_next(dl, id, &payload);
+	mu_should(equal_string("0500 bogus", payload));
 
 	/* lastly check the count */
 	mu_should(dl_count(dl) == 99 + 2 + 1);
@@ -488,70 +491,74 @@ MU_TEST(test_insert_before) {
 
 MU_TEST(test_insert_many) {
 	dlcb *dl = test_dl;
+	void *payload = NULL;
 	int start_nodes = dl_count(dl);
 	int added_nodes = 0;
+
 	/* from the front, add an item after every 0x2x value. */
-	dlnode *dn = dl_get_first(dl);
-	mu_should(dn && dn->payload);
-	mu_should(equal_string(dn->payload, "0010 bogus"));
-	while (dn = dl_get_next(dl, dn), dn) {
-		char *payload = dn->payload;
-		if (payload[2] != '2')
+	dlid id = dl_get_first(dl, &payload);
+	mu_should(payload && equal_string(payload, "0010 bogus"));
+	while (id = dl_get_next(dl, id, &payload), id) {
+		char *payload_char = payload;
+		if (payload_char[2] != '2')
 			continue;
-		char *read_to = strdup(payload);
+		char *read_to = strdup(payload_char);
 		read_to[3] = '5';
-		dn = dl_insert_after(dl, dn, read_to);
-		mu_should(dn && dn->payload == read_to);
+		id = dl_insert_after(dl, id, read_to);
+		mu_shouldnt(null_dlid(id));
 		added_nodes += 1;
 	}
+
 	/* now verify chaining reading forward. */
 	int found_nodes = 0;
-	dn = dl_get_first(dl);
+	id = dl_get_first(dl, &payload);
 	found_nodes += 1;
-	while (dn = dl_get_next(dl, dn), dn) {
+	while (id = dl_get_next(dl, id, &payload), !null_dlid(id))
 		found_nodes += 1;
-	}
 	mu_should(found_nodes == start_nodes + added_nodes);
+
 	/* and backward. */
 	found_nodes = 0;
-	dn = dl_get_last(dl);
+	id = dl_get_last(dl, &payload);
 	found_nodes += 1;
-	while (dn = dl_get_previous(dl, dn), dn)
+	while (id = dl_get_previous(dl, id, &payload), id)
 		found_nodes += 1;
 	mu_should(found_nodes == start_nodes + added_nodes);
+
 	/* now take it the other way */
 	start_nodes = dl_count(dl);
 	added_nodes = 0;
-	dn = dl_get_first(dl);
-	mu_should(dn && dn->payload);
-	mu_should(equal_string(dn->payload, "0010 bogus"));
-	while (dn = dl_get_next(dl, dn), dn) {
-		char *payload = dn->payload;
-		if (payload[2] != '4')
+	id = dl_get_first(dl, &payload);
+	mu_shouldnt(null_dlid(id));
+	mu_should(equal_string(payload, "0010 bogus"));
+	while (id = dl_get_next(dl, id, &payload), !null_dlid(id)) {
+		char *payload_chars = payload;
+		if (payload_chars[2] != '4')
 			continue;
-		char *read_to = strdup(payload);
+		char *read_to = strdup(payload_chars);
 		read_to[2] = read_to[2] - 1;
 		read_to[3] = read_to[3] + 5;
-		dn = dl_insert_before(dl, dn, read_to);
-		mu_should(dn && dn->payload == read_to);
+		id = dl_insert_before(dl, id, read_to);
+		mu_shouldnt(null_dlid(id));
 		added_nodes += 1;
 		/* reposition to the node that triggered the insert before */
 		/* DOH! */
-		dn = dl_get_next(dl, dn);
+		id = dl_get_next(dl, id, &payload);
 	}
+
 	/* now verify chaining reading forward. */
 	found_nodes = 0;
-	dn = dl_get_first(dl);
+	id = dl_get_first(dl, &payload);
 	found_nodes += 1;
-	while (dn = dl_get_next(dl, dn), dn) {
+	while (id = dl_get_next(dl, id, &payload), !null_dlid(id))
 		found_nodes += 1;
-	}
 	mu_should(found_nodes == start_nodes + added_nodes);
+
 	/* and backward. */
 	found_nodes = 0;
-	dn = dl_get_last(dl);
+	id = dl_get_last(dl, &payload);
 	found_nodes += 1;
-	while (dn = dl_get_previous(dl, dn), dn)
+	while (id = dl_get_previous(dl, id, &payload), !null_dlid(id))
 		found_nodes += 1;
 	mu_should(found_nodes == start_nodes + added_nodes);
 }
@@ -564,22 +571,26 @@ MU_TEST(test_insert_many) {
 
 MU_TEST(test_get_first) {
 	dlcb *dl = test_dl;
-	dlnode *dn = dl_get_first(dl);
-	mu_should(dn && dn->payload);
-	mu_should(equal_string(dn->payload, "0010 bogus"));
+	void *payload = NULL;
+	dlid id = dl_get_first(dl, &payload);
+	mu_shouldnt(null_dlid(id));
+	mu_should(payload);
+	mu_should(equal_string(payload, "0010 bogus"));
 }
 
 /*
- * test_get_list.
+ * test_get_last.
  *
  * get the last item on the list.
  */
 
 MU_TEST(test_get_last) {
 	dlcb *dl = test_dl;
-	dlnode *dn = dl_get_last(dl);
-	mu_should(dn && dn->payload);
-	mu_should(equal_string(dn->payload, "0990 bogus"));
+	void *payload = NULL;
+	dlid id = dl_get_last(dl, &payload);
+	mu_shouldnt(null_dlid(id));
+	mu_should(payload);
+	mu_should(equal_string(payload, "0990 bogus"));
 }
 
 /*
@@ -593,22 +604,24 @@ MU_TEST(test_get_next) {
 	dlcb *dl = test_dl;
 
 	/* somewhere in the list */
-	dlnode *dn = dl_get_first(dl);
-	mu_should(dn);
-	while (!equal_string(dn->payload, "0500 bogus"))
-		dn = dl_get_next(dl, dn);
+	void *payload = NULL;
+	dlid id = dl_get_first(dl, &payload);
+	mu_shouldnt(null_dlid(id));
+	while (!equal_string(payload, "0500 bogus"))
+		id = dl_get_next(dl, id, &payload);
 
 	/* read forwards a couple of times */
-	dn = dl_get_next(dl, dn);
-	dn = dl_get_next(dl, dn);
-	mu_should(equal_string(dn->payload, "0520 bogus"));
+	id = dl_get_next(dl, id, &payload);
+	id = dl_get_next(dl, id, &payload);
+	mu_should(equal_string(payload, "0520 bogus"));
 
 	/* end of list */
-	dn = dl_get_last(dl);
-	mu_should(dn);
-	mu_should(equal_string(dn->payload, "0990 bogus"));
-	dn = dl_get_next(dl, dn);
-	mu_shouldnt(dn);
+	id = dl_get_last(dl, &payload);
+	mu_shouldnt(null_dlid(id));
+	mu_should(equal_string(payload, "0990 bogus"));
+	id = dl_get_next(dl, id, &payload);
+	mu_should(null_dlid(id));
+	mu_should(dl_get_error(dl));
 }
 
 /*
@@ -620,24 +633,29 @@ MU_TEST(test_get_next) {
 
 MU_TEST(test_get_previous) {
 	dlcb *dl = NULL;
-	dlnode *dn = NULL;
+	dlid id = NULL_DLID;
+	void *payload = NULL;
 
 	/* can't read previous from first, no wrap */
 	dl = test_dl;
-	dn = dl_get_first(dl);
-	mu_should(dn && equal_string(dn->payload, "0010 bogus"));
-	dn = dl_get_previous(dl, dn);
+	id = dl_get_first(dl, &payload);
+	mu_shouldnt(null_dlid(id));
+	mu_should(equal_string(payload, "0010 bogus"));
+	id = dl_get_previous(dl, id, &payload);
+	mu_should(null_dlid(id));
+	mu_shouldnt(payload);
+	mu_should(dl_get_error(dl));
 
 	/* but can read previous from last */
-	dn = dl_get_last(dl);
-	mu_should(dn && equal_string(dn->payload, "0990 bogus"));
-	while (!equal_string(dn->payload, "0500 bogus"))
-		dn = dl_get_previous(dl, dn);
+	id = dl_get_last(dl, &payload);
+	mu_should(equal_string(payload, "0990 bogus"));
+	while (!equal_string(payload, "0500 bogus"))
+		id = dl_get_previous(dl, id, &payload);
 
-	/* read forwards a couple of times */
-	dn = dl_get_previous(dl, dn);
-	dn = dl_get_previous(dl, dn);
-	mu_should(equal_string(dn->payload, "0480 bogus"));
+	/* read backwards a couple of times */
+	id = dl_get_previous(dl, id, &payload);
+	id = dl_get_previous(dl, id, &payload);
+	mu_should(equal_string(payload, "0480 bogus"));
 }
 
 /*
@@ -649,32 +667,36 @@ MU_TEST(test_get_previous) {
 
 MU_TEST(test_delete) {
 	dlcb *dl = NULL;
-	dlnode *dn = NULL;
+	dlid id = NULL_DLID;
+	void *payload = NULL;
 
 	/* test deleting from the head */
 	dl = test_dl;
-	dn = dl_get_first(dl);
-	mu_should(dn && equal_string(dn->payload, "0010 bogus"));
-	free(dn->payload);
-	mu_should(dl_delete(dl, dn));
-	dn = dl_get_first(dl);
-	mu_should(dn && equal_string(dn->payload, "0020 bogus"));
+	id = dl_get_first(dl, &payload);
+	mu_shouldnt(null_dlid(id));
+	mu_should(equal_string(payload, "0010 bogus"));
+	free(payload);
+	mu_should(dl_delete(dl, id));
+	id = dl_get_first(dl, &payload);
+	mu_shouldnt(null_dlid(id));
+	mu_should(equal_string(payload, "0020 bogus"));
 	mu_should(dl_count(dl) == 98);
 
 	/* and now from the tail */
-	dn = dl_get_last(dl);
-	mu_should(dn && equal_string(dn->payload, "0990 bogus"));
-	free(dn->payload);
-	mu_should(dl_delete(dl, dn));
-	dn = dl_get_last(dl);
+	id = dl_get_last(dl, &payload);
+	mu_should(equal_string(payload, "0990 bogus"));
+	free(payload);
+	mu_should(dl_delete(dl, id));
+	id = dl_get_last(dl, &payload);
+	mu_should(equal_string(payload, "0980 bogus"));
 	mu_should(dl_count(dl) == 97);
 
 	/* now somewhere in the middle */
-	while (!equal_string(dn->payload, "0600 bogus"))
-		dn = dl_get_previous(dl, dn);
+	while (!equal_string(payload, "0600 bogus"))
+		id = dl_get_previous(dl, id, &payload);
 
-	free(dn->payload);
-	mu_should(dl_delete(dl, dn));
+	free(payload);
+	mu_should(dl_delete(dl, id));
 	mu_should(dl_count(dl) == 96);
 
 	/* while i know dl_count chases all the links and does a
@@ -682,16 +704,16 @@ MU_TEST(test_delete) {
 	   chasing of links here too. */
 
 	/* read past the deleted node from both ends. */
-	dn = dl_get_first(dl);
-	mu_should(dn && equal_string(dn->payload, "0020 bogus"));
-	while (dn = dl_get_next(dl, dn), dn)
-		if (equal_string(dn->payload, "0600 bogus"))
+	id = dl_get_first(dl, &payload);
+	mu_should(equal_string(payload, "0020 bogus"));
+	while (id = dl_get_next(dl, id, &payload), !null_dlid(id))
+		if (equal_string(payload, "0600 bogus"))
 			mu_shouldnt(true);
 
-	dn = dl_get_last(dl);
-	mu_should(dn && equal_string(dn->payload, "0980 bogus"));
-	while (dn = dl_get_previous(dl, dn), dn)
-		if (equal_string(dn->payload, "0600 bogus"))
+	id = dl_get_last(dl, &payload);
+	mu_should(equal_string(payload, "0980 bogus"));
+	while (id = dl_get_previous(dl, id, &payload), !null_dlid(id))
+		if (equal_string(payload, "0600 bogus"))
 			mu_shouldnt(true);
 }
 
@@ -705,24 +727,25 @@ MU_TEST(test_delete) {
 
 MU_TEST(test_update) {
 	dlcb *dl = NULL;
-	dlnode *dn = NULL;
+	dlid id = NULL_DLID;
 	void *old_payload = NULL;
 	void *new_payload = NULL;
 
 	/* test updating end items */
 	dl = test_dl;
-	dn = dl_get_first(dl);
-	mu_should(dn && equal_string(dn->payload, "0010 bogus"));
-	old_payload = dn->payload;
+	id = dl_get_first(dl, &old_payload);
+	mu_should(equal_string(old_payload, "0010 bogus"));
 	new_payload = strdup("0010 not bogus");
-	mu_should(dl_update(dl, dn, new_payload));
+	mu_should(dl_update(dl, id, new_payload));
 	free(old_payload);
-	dn = dl_get_next(dl, dn);
-	dn = dl_get_next(dl, dn);
-	mu_should(dn && equal_string(dn->payload, "0030 bogus"));
-	dn = dl_get_first(dl);
-	mu_shouldnt(dn && equal_string(dn->payload, "0010 bogus"));
-	mu_should(dn && equal_string(dn->payload, "0010 not bogus"));
+	id = dl_get_next(dl, id, &old_payload);
+	id = dl_get_next(dl, id, &old_payload);
+	mu_shouldnt(null_dlid(id));
+	mu_should(equal_string(old_payload, "0030 bogus"));
+	id = dl_get_first(dl, &old_payload);
+	mu_shouldnt(null_dlid(id));
+	mu_shouldnt(equal_string(old_payload, "0010 bogus"));
+	mu_should(equal_string(old_payload, "0010 not bogus"));
 }
 
 /*
@@ -732,16 +755,19 @@ MU_TEST(test_update) {
 
 MU_TEST(test_bad_position) {
 	dlcb *dl = test_dl;
-	dlnode *first = dl_get_first(dl);
-	dlnode *last = dl_get_last(dl);
-	void *payload = "this should fail";
+	void *first_payload = NULL;
+	dlid first_id = dl_get_first(dl, &first_payload);
+	void *last_payload = NULL;
+	dlid last_id = dl_get_last(dl, &last_payload);
+	void *replacement_payload = "this should fail";
 	/* list is positioned on last, so try to update with the first node */
-	dlnode *result = dl_update(dl, first, payload);
+	bool result = dl_update(dl, first_id, replacement_payload);
 	mu_should(dl_get_error(dl));
 	mu_shouldnt(result);
 	/* position is lost, so moving relative to the current position
 	 * should error. */
-	result = dl_get_previous(dl, last);
+	void *previous_payload = NULL;
+	result = dl_get_previous(dl, last_id, &previous_payload);
 	mu_should(dl_get_error(dl));
 	mu_shouldnt(result);
 }

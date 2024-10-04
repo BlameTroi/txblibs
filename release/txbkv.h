@@ -98,7 +98,7 @@ typedef struct kvcb kvcb;
 
 kvcb *
 kv_create(
-	int (*key_compare)(void *, void *)
+	int (*key_compare)(const void *, const void *)
 );
 
 /*
@@ -289,8 +289,37 @@ kv_values(
 
 
 /*
- * the transparent key value control block.
+ * a key:value store contains an ordered array of key:value pairs. the
+ * key:value pairs contain poiters to the key and value for an item in
+ * the key:value store.
+ *
+ * while it is *very* redundant, each kvpair carries a reference to
+ * its owning kvcb. without using extensions for blocks/lambdas, which
+ * are very different between gcc and clang, there's no way to get the
+ * actual key sort function when sorting pairs without a global
+ * variable.
+ *
+ * actually, there may be a way, but i would need to give up the
+ * memcmp/strcmp compatability of the key compare functions. let's do
+ * this for now.
+ *
+ * to work with bsearch(), the first part of the pair must be the
+ * key, or does it?
  */
+
+typedef struct kvpair kvpair;
+struct kvpair {
+	kvcb *owner;
+	void *key;
+	void *value;
+};
+
+/*
+ * the transparent key:value control block definition.
+ */
+
+#define PAIRS_SIZE_DEFAULT 100
+#define PAIRS_INCREMENT_DEFAULT 100
 
 #define KVCB_TAG "__KVCB__"
 #define KVCB_TAG_LEN 8
@@ -298,23 +327,33 @@ kv_values(
 #define ASSERT_KVCB(p, m) assert((p) && memcmp((p), KVCB_TAG, KVCB_TAG_LEN) == 0 && (m))
 #define ASSERT_KVCB_OR_NULL(p) assert((p) == NULL || memcmp((p), KVCB_TAG, KVCB_TAG_LEN) == 0)
 
-#define PAIRS_SIZE_DEFAULT 100
-#define PAIRS_INCREMENT_DEFAULT 100
-
-typedef struct kvpair kvpair;
-struct kvpair {
-	void *key;
-	void *value;
-};
+/*
+ * we need to be able to compare kvpairs and that requires that
+ * we have visibility to the key compare function carried in the
+ * kvcb. kvpairs now carry a pointer to their owning kvcb,
+ * increasing size by 50%.
+ */
 
 struct kvcb {
 	char tag[KVCB_TAG_LEN];     /* eye catcher */
-	int (*key_compare)(void *, void *);
+	int (*key_compare)(const void *, const void *);
 	int pairs_size;             /* how many can we store */
 	int pairs_increment;        /* if we can increase buffer, by how much */
 	int num_pairs;              /* how many are stored */
 	kvpair *pairs;              /* where they are */
 };
+
+/*
+ * the client provides a comparator function to compare two distinct
+ * keys. the fn_kvpair_compare_keys extracts the keys from the kvpair
+ * for the client comparator.
+ */
+
+int
+fn_kvpair_compare_keys(const void *a, const void *b) {
+	return ((kvpair *)a)->owner->key_compare(
+		((kvpair *)a)->key, ((kvpair *)b)->key);
+}
 
 /*
  * kv_create
@@ -331,9 +370,10 @@ struct kvcb {
 
 kvcb *
 kv_create(
-	int (*key_compare)(void *, void *)
+	int (*key_compare)(const void *, const void *)
 ) {
-	assert(key_compare && "missing key compare function pointer for KVCB");
+	assert(key_compare &&
+		"missing key compare function pointer for KVCB");
 	kvcb *kv = malloc(sizeof(kvcb));
 	assert(kv &&
 		"failed to allocate KVCB");
@@ -395,10 +435,10 @@ kv_destroy(
 	if (kv->num_pairs != 0)
 		return false;
 
-	memset(kv->pairs, 253, sizeof(kvpair) * (kv->pairs_size + 1));
+	memset(kv->pairs, 0xfd, sizeof(kvpair) * (kv->pairs_size + 1));
 	free(kv->pairs);
 
-	memset(kv, 253, sizeof(kvcb));
+	memset(kv, 0xfd, sizeof(kvcb));
 	free(kv);
 
 	return true;
@@ -422,14 +462,14 @@ am_find_key(
 	kvcb *kv,
 	void *key
 ) {
-	for (int i = 0; i < kv->num_pairs; i++)
-		if (kv->key_compare(key, kv->pairs[i].key) == 0)
-			return &kv->pairs[i];
-	return NULL;
+	kvpair search_key = (kvpair) { kv, key, NULL };
+	kvpair *p = bsearch(&search_key, kv->pairs, kv->num_pairs, sizeof(kvpair),
+		fn_kvpair_compare_keys);
+	return p;
 }
 
 /*
- * am_delete_key
+ * am_delete_pair
  *
  * delete the key:value pair for a specific key. fails via an assert
  * if the key is not in the store.
@@ -441,34 +481,25 @@ am_find_key(
  * return: nothing
  */
 
+
 static
 void
-am_delete_key(
+am_delete_pair(
 	kvcb *kv,
-	void *key
+	kvpair *p
 ) {
-	for (int i = 0; i < kv->num_pairs; i++)
-		if (kv->key_compare((void *)key, kv->pairs[i].key) == 0) {
-			/* we could swap with an empty slot at the end
-			 * but that limits us to unordered, and that
-			 * won't always be the case. */
-			kv->pairs[i].key = NULL;
-			kv->pairs[i].value = NULL;
-			for (int j = i+1; j < kv->num_pairs; j++) {
-				kv->pairs[i] = kv->pairs[j];
-				i += 1;
-			}
-			kv->num_pairs -= 1;
-			return;
-		}
-	assert(NULL && "error in am_delete_key, could not find key");
+	int ix = p - kv->pairs;
+	memmove(p, p+1, (kv->num_pairs - ix - 1) * sizeof(kvpair));
+	kv->num_pairs -= 1;
+	return;
 }
 
 /*
  * am_new_pair
  *
  * given key and value pointers, create a new key:value pair in the
- * underlying store.
+ * underlying store. when called it should be known that key does
+ * not alrady exist in the store.
  *
  * if the store is full and growth is allowed, a new store is
  * allocated.
@@ -482,8 +513,6 @@ am_delete_key(
  * return: the newly created kvpair
  */
 
-/* memmove (void *dest, const void *src, size_t len) overlap allowed */
-
 static
 kvpair *
 am_new_pair(
@@ -492,21 +521,77 @@ am_new_pair(
 	void *value
 ) {
 	if (kv->num_pairs >= kv->pairs_size) {
-		assert(kv->pairs_increment && "can not grow key:value store");
+
 		int new_size = kv->pairs_size + kv->pairs_increment;
 		kvpair *new_pairs = malloc((new_size + 1) * sizeof(kvpair));
 		memset(new_pairs, 0, (new_size + 1) * sizeof(kvpair));
 		memcpy(new_pairs, kv->pairs, (kv->pairs_size + 1) * sizeof(kvpair));
-		memset(kv->pairs, 253, (kv->pairs_size + 1) * sizeof(kvpair));
+
+		memset(kv->pairs, 0xfd, (kv->pairs_size + 1) * sizeof(kvpair));
 		free(kv->pairs);
+
 		kv->pairs = new_pairs;
 		kv->pairs_size = new_size;
 	}
-	kvpair *p = &kv->pairs[kv->num_pairs];
-	p->key = key;
-	p->value = value;
+
+	/* if pairs are empty, easy peasy */
+	if (kv->num_pairs == 0) {
+		kv->pairs[0] = (kvpair) { kv, key, value };
+		kv->num_pairs += 1;
+		return &kv->pairs[0];
+	}
+
+	/* a few quick checks before resorting to a sort. remember:
+	 * this function is not called if key is already in pairs!
+	 *
+	 * if the new key is outside the current range, append or
+	 * shift and insert depending on which end. as i believe new
+	 * keys could be between existing 0 & 1, or existing n-1 & n,
+	 * deal with those similarly.
+	 *
+	 * stdlib provides mergesort as an alternative to qsort.
+	 * mergesort will perform better than qsort since the existing
+	 * keys are already sorted. */
+
+	/* if new comes after the current last, append */
+	if (kv->key_compare(key, kv->pairs[kv->num_pairs-1].key) > 0) {
+		kv->pairs[kv->num_pairs] = (kvpair) { kv, key, value };
+		kv->num_pairs += 1;
+		return &kv->pairs[kv->num_pairs-1];
+	}
+
+	/* if new comes before the current first, shift */
+	if (kv->key_compare(key, kv->pairs[0].key) < 0) {
+		memmove(&kv->pairs[1], &kv->pairs[0], (kv->num_pairs) * sizeof(kvpair));
+		kv->pairs[0] = (kvpair) { kv, key, value };
+		kv->num_pairs += 1;
+		return &kv->pairs[0];
+	}
+
+	/* if new comes before current last but after current penultimate,
+	 * shift current last and insert */
+	if (kv->key_compare(key, kv->pairs[kv->num_pairs-2].key) > 0) {
+		kv->pairs[kv->num_pairs] = kv->pairs[kv->num_pairs-1];
+		kv->pairs[kv->num_pairs-1] = (kvpair) { kv, key, value };
+		kv->num_pairs += 1;
+		return &kv->pairs[kv->num_pairs-2];
+	}
+
+	/* if new comes after current first but before current second,
+	 * shift and insert */
+	if (kv->key_compare(key, &kv->pairs[0]) < 0) {
+		memmove(&kv->pairs[2], &kv->pairs[1], (kv->num_pairs-1) * sizeof(kvpair));
+		kv->pairs[1] = (kvpair) { kv, key, value };
+		kv->num_pairs += 1;
+		return &kv->pairs[1];
+	}
+
+	/* that's enough cuteness, just append and mergesort. mergesort
+	 * works best on already mostly ordered data. */
+	kv->pairs[kv->num_pairs] = (kvpair) { kv, key, value };
 	kv->num_pairs += 1;
-	return p;
+	mergesort(kv->pairs, kv->num_pairs, sizeof(kvpair), fn_kvpair_compare_keys);
+	return am_find_key(kv, key);
 }
 
 /*
@@ -589,7 +674,7 @@ kv_delete(
 	assert(key && "key may not be NULL");
 	kvpair *p = am_find_key(kv, key);
 	if (p)
-		am_delete_key(kv, key);
+		am_delete_pair(kv, p);
 	return p != NULL;
 }
 

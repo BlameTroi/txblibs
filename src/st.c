@@ -90,11 +90,11 @@ st_pop(
 	stcb *st
 ) {
 	ASSERT_STCB(st, "invalid STCB");
-	dlnode *dn = dl_get_last(st->dl);
-	assert(dn && "stack empty");
-	void *ret = dn->payload;
-	dl_delete(st->dl, dn);
-	return ret;
+	void *payload = NULL;
+	dlid id = dl_get_last(st->dl, &payload);
+	assert(!null_dlid(id) && "stack empty");
+	dl_delete(st->dl, id);
+	return payload;
 }
 
 /*
@@ -112,10 +112,10 @@ st_peek(
 	stcb *st
 ) {
 	ASSERT_STCB(st, "invalid STCB");
-	dlnode *dn = dl_get_last(st->dl);
-	assert(dn && "stack empty");
-	void *ret = dn->payload;
-	return ret;
+	void *payload = NULL;
+	dlid id = dl_get_last(st->dl, &payload);
+	assert(!null_dlid(id) && "stack empty");
+	return payload;
 }
 
 /*

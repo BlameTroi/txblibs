@@ -43,18 +43,9 @@ typedef struct dlcb dlcb;
  * position stored in the dlcb. if they differ, it is an error.
  */
 
-typedef struct dlnode dlnode;
-
-#define DLNODE_TAG_LEN 8
-#define DLNODE_TAG "_DLNODE_"
-
-struct dlnode {
-	char tag[DLNODE_TAG_LEN];  /* read only */
-	dlcb *owner;               /* read only */
-	dlnode *next;              /* read only */
-	dlnode *previous;          /* read only */
-	void *payload;             /* pointer to item to store or the item if it will fit in a void */
-};
+typedef unsigned long dlid;
+#define NULL_DLID 0
+#define null_dlid(a) ((a) == NULL_DLID)
 
 /*
  * dl_create
@@ -161,7 +152,7 @@ dl_reset(
  * return: the dl node.
  */
 
-dlnode *
+dlid
 dl_insert_first(
 	dlcb *dl,
 	void *payload
@@ -181,7 +172,7 @@ dl_insert_first(
  * return: the dl node.
  */
 
-dlnode *
+dlid
 dl_insert_last(
 	dlcb *dl,
 	void *payload
@@ -203,10 +194,10 @@ dl_insert_last(
  * return: the dl node
  */
 
-dlnode *
+dlid
 dl_insert_before(
 	dlcb *dl,
-	dlnode *node,
+	dlid id,
 	void *payload
 );
 
@@ -226,10 +217,10 @@ dl_insert_before(
  * return: the dl node
  */
 
-dlnode *
+dlid
 dl_insert_after(
 	dlcb *dl,
-	dlnode *node,
+	dlid id,
 	void *payload
 );
 
@@ -243,9 +234,10 @@ dl_insert_after(
  * return: dl node of that item
  */
 
-dlnode *
+dlid
 dl_get_first(
-	dlcb *dl
+	dlcb *dl,
+	void **payload
 );
 
 /*
@@ -258,9 +250,10 @@ dl_get_first(
  * return: the dl node of that item or NULL
  */
 
-dlnode *
+dlid
 dl_get_last(
-	dlcb *dl
+	dlcb *dl,
+	void **payload
 );
 
 /*
@@ -276,10 +269,11 @@ dl_get_last(
  * return: the dl node of the next item or NULL
  */
 
-dlnode *
+dlid
 dl_get_next(
 	dlcb *dl,
-	dlnode *dn
+	dlid id,
+	void **payload
 );
 
 /*
@@ -295,10 +289,11 @@ dl_get_next(
  * return: the dl node of the previous item or NULL
  */
 
-dlnode *
+dlid
 dl_get_previous(
 	dlcb *dl,
-	dlnode *dn
+	dlid id,
+	void **payload
 );
 
 /*
@@ -317,7 +312,7 @@ dl_get_previous(
 bool
 dl_delete(
 	dlcb *dl,
-	dlnode *dn
+	dlid id
 );
 
 /*
@@ -339,10 +334,10 @@ dl_delete(
  * return: the dl node of the updated item
  */
 
-dlnode *
+bool
 dl_update(
 	dlcb *dl,
-	dlnode *dn,
+	dlid id,
 	void *payload
 );
 

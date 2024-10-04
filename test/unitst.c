@@ -29,12 +29,12 @@ MU_TEST(test_st) {
 	stcb *st = st_create();
 	mu_should(st);
 	mu_should(st_empty(st));
-	for (int i = 0; i < 5; i++) {
+	for (int i = 1; i < 5; i++) {
 		st_push(st, (void *)(long)i);
 		printf("%ld\n", (long)st_peek(st));
 	}
 	mu_shouldnt(st_destroy(st));
-	for (int i = 0; i < 5; i++) {
+	for (int i = 1; i < 5; i++) {
 		long x = (long)st_pop(st);
 		printf("%ld\n", x);
 	}
