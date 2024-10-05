@@ -1,12 +1,12 @@
 /*
  * single file header generated via:
- * buildhdr --macro TXBPAT --intro LICENSE --pub inc/pat.h --priv src/pat.c
+ * buildhdr --macro TXBPAT --intro LICENSE --pub inc/pat.h --priv src/pat.c 
  */
 /* *** begin intro ***
 This software is available under 2 licenses -- choose whichever you prefer.
 ------------------------------------------------------------------------------
 ALTERNATIVE A - MIT License
-Copyright (c) 2024 Troy Brumley
+Copyright (c) 2024 Troy Brumley 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
 the Software without restriction, including without limitation the rights to
