@@ -904,6 +904,12 @@ MU_TEST(test_match_globs) {
 
 }
 
+MU_TEST(test_bad_include) {
+	const cpat *pat = compile_pattern("^ *#include +[\"]");
+	mu_should(pat);
+}
+
+
 /*
  * here we define the whole test suite. sadly there's no runtime
  * introspection. there is probably an opportunity for an elisp helper
@@ -916,6 +922,8 @@ MU_TEST_SUITE(test_suite) {
 	/* always have a setup and teardown, even if they do nothing. */
 
 	MU_SUITE_CONFIGURE(test_setup, test_teardown);
+
+	MU_RUN_TEST(test_bad_include);
 
 	/* test compiling a search pattern string into a pattern buffer.
 	 * these rely on an exposed pattern buffer comparator. */

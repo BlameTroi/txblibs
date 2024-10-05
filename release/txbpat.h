@@ -1,12 +1,12 @@
 /*
  * single file header generated via:
- * buildhdr --macro TXBPAT --intro LICENSE --pub inc/pat.h --priv src/pat.c 
+ * buildhdr --macro TXBPAT --intro LICENSE --pub inc/pat.h --priv src/pat.c
  */
 /* *** begin intro ***
 This software is available under 2 licenses -- choose whichever you prefer.
 ------------------------------------------------------------------------------
 ALTERNATIVE A - MIT License
-Copyright (c) 2024 Troy Brumley 
+Copyright (c) 2024 Troy Brumley
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
 the Software without restriction, including without limitation the rights to
@@ -663,9 +663,9 @@ is_quantifier(
 	cpat p
 ) {
 	return p == PAT_REP0M ||   /* * */
-		p == PAT_REP1M ||   /* + */
-		p == PAT_REP01 ||   /* ? */
-		p == PAT_REP_COUNT; /* {,} */
+	p == PAT_REP1M ||   /* + */
+	p == PAT_REP01 ||   /* ? */
+	p == PAT_REP_COUNT; /* {,} */
 }
 
 /*
@@ -700,7 +700,7 @@ pattern_length(
 	else
 		pl = 1;
 	assert(pl >= 1 &&
-		"error calculating pattern length");
+			"error calculating pattern length");
 	return pl;
 }
 
@@ -1040,8 +1040,8 @@ add_pattern_item(
 		*from += 1;
 
 	} else if (item == PAT_WS || item == PAT_NOT_WS ||
-		item == PAT_DIG || item == PAT_NOT_DIG ||
-		item == PAT_WC || item == PAT_NOT_WC) {
+	item == PAT_DIG || item == PAT_NOT_DIG ||
+	item == PAT_WC || item == PAT_NOT_WC) {
 		*pos += 1;
 		*from += 2; /* \char */
 
@@ -1247,7 +1247,7 @@ compile_pattern(
 	/* allocate a compiled pattern buffer. initialzed to 0xde
 	 * for 0xdead as eye catcher. */
 
-	int max_pat = 3 * max(strlen(str), 16) + 3;
+	int max_pat = 5 * max(strlen(str), 16) + 3;
 	cpat *pat = malloc(max_pat * sizeof(cpat));
 	assert(pat &&
 		"could not allocate pattern buffer");
@@ -1375,11 +1375,11 @@ compile_pattern(
 			in_class = true;
 			if (str[ps+1] == META_NCCLASS) {
 				assert(str[ps+2] != ']' &&
-					"empty character class found in source string");
+						"empty character class found in source string");
 				class_pattern_code = PAT_NOT_CCLASS;
 			} else {
 				assert(str[ps+1] != ']' &&
-					"empty character class found in source string");
+						"empty character class found in source string");
 				class_pattern_code = PAT_CCLASS;
 			}
 
@@ -1396,7 +1396,7 @@ compile_pattern(
 			 * literal. */
 
 			assert(str[ps+1] != '\0' &&
-				"backslash escape can not be the last character of a search string");
+					"backslash escape can not be the last character of a search string");
 
 			/* character class escapes have their own pattern items. */
 
@@ -1603,7 +1603,7 @@ convert_glob(
 			while (glob[pg] && glob[pg] != ']') {
 				if (glob[pg] == '\\') {
 					assert(glob[pg+1] != '\0' &&
-						"improperly constructed [] in glob string");
+							"improperly constructed [] in glob string");
 					str[ps] = glob[pg];
 					ps += 1;
 					pg += 1;
