@@ -1,0 +1,63 @@
+mkdir -p  /Users/troi/projects/txblibs/build/src  /Users/troi/projects/txblibs/build/unit 2>/dev/null
+echo Building /Users/troi/projects/txblibs/build/src/da.o
+clang -c  -I/Users/troi/projects/txblibs/source/src  -I/Users/troi/projects/txblibs/source/unit -o /Users/troi/projects/txblibs/build/src/da.o /Users/troi/projects/txblibs/source/src/da.c -MMD
+echo Building /Users/troi/projects/txblibs/build/src/dl.o
+clang -c  -I/Users/troi/projects/txblibs/source/src  -I/Users/troi/projects/txblibs/source/unit -o /Users/troi/projects/txblibs/build/src/dl.o /Users/troi/projects/txblibs/source/src/dl.c -MMD
+echo Building /Users/troi/projects/txblibs/build/src/kl.o
+clang -c  -I/Users/troi/projects/txblibs/source/src  -I/Users/troi/projects/txblibs/source/unit -o /Users/troi/projects/txblibs/build/src/kl.o /Users/troi/projects/txblibs/source/src/kl.c -MMD
+echo Building /Users/troi/projects/txblibs/build/src/kv.o
+clang -c  -I/Users/troi/projects/txblibs/source/src  -I/Users/troi/projects/txblibs/source/unit -o /Users/troi/projects/txblibs/build/src/kv.o /Users/troi/projects/txblibs/source/src/kv.c -MMD
+echo Building /Users/troi/projects/txblibs/build/src/md5.o
+clang -c  -I/Users/troi/projects/txblibs/source/src  -I/Users/troi/projects/txblibs/source/unit -o /Users/troi/projects/txblibs/build/src/md5.o /Users/troi/projects/txblibs/source/src/md5.c -MMD
+echo Building /Users/troi/projects/txblibs/build/src/misc.o
+clang -c  -I/Users/troi/projects/txblibs/source/src  -I/Users/troi/projects/txblibs/source/unit -o /Users/troi/projects/txblibs/build/src/misc.o /Users/troi/projects/txblibs/source/src/misc.c -MMD
+echo Building /Users/troi/projects/txblibs/build/src/pat.o
+clang -c  -I/Users/troi/projects/txblibs/source/src  -I/Users/troi/projects/txblibs/source/unit -o /Users/troi/projects/txblibs/build/src/pat.o /Users/troi/projects/txblibs/source/src/pat.c -MMD
+echo Building /Users/troi/projects/txblibs/build/src/pmute.o
+clang -c  -I/Users/troi/projects/txblibs/source/src  -I/Users/troi/projects/txblibs/source/unit -o /Users/troi/projects/txblibs/build/src/pmute.o /Users/troi/projects/txblibs/source/src/pmute.c -MMD
+echo Building /Users/troi/projects/txblibs/build/src/pq.o
+clang -c  -I/Users/troi/projects/txblibs/source/src  -I/Users/troi/projects/txblibs/source/unit -o /Users/troi/projects/txblibs/build/src/pq.o /Users/troi/projects/txblibs/source/src/pq.c -MMD
+echo Building /Users/troi/projects/txblibs/build/src/qu.o
+clang -c  -I/Users/troi/projects/txblibs/source/src  -I/Users/troi/projects/txblibs/source/unit -o /Users/troi/projects/txblibs/build/src/qu.o /Users/troi/projects/txblibs/source/src/qu.c -MMD
+echo Building /Users/troi/projects/txblibs/build/src/rand.o
+clang -c  -I/Users/troi/projects/txblibs/source/src  -I/Users/troi/projects/txblibs/source/unit -o /Users/troi/projects/txblibs/build/src/rand.o /Users/troi/projects/txblibs/source/src/rand.c -MMD
+echo Building /Users/troi/projects/txblibs/build/src/rs.o
+clang -c  -I/Users/troi/projects/txblibs/source/src  -I/Users/troi/projects/txblibs/source/unit -o /Users/troi/projects/txblibs/build/src/rs.o /Users/troi/projects/txblibs/source/src/rs.c -MMD
+echo Building /Users/troi/projects/txblibs/build/src/sb.o
+clang -c  -I/Users/troi/projects/txblibs/source/src  -I/Users/troi/projects/txblibs/source/unit -o /Users/troi/projects/txblibs/build/src/sb.o /Users/troi/projects/txblibs/source/src/sb.c -MMD
+echo Building /Users/troi/projects/txblibs/build/src/st.o
+clang -c  -I/Users/troi/projects/txblibs/source/src  -I/Users/troi/projects/txblibs/source/unit -o /Users/troi/projects/txblibs/build/src/st.o /Users/troi/projects/txblibs/source/src/st.c -MMD
+echo Building /Users/troi/projects/txblibs/build/src/str.o
+clang -c  -I/Users/troi/projects/txblibs/source/src  -I/Users/troi/projects/txblibs/source/unit -o /Users/troi/projects/txblibs/build/src/str.o /Users/troi/projects/txblibs/source/src/str.c -MMD
+echo Building /Users/troi/projects/txblibs/build/unit/unitda.o
+clang -c  -I/Users/troi/projects/txblibs/source/src  -I/Users/troi/projects/txblibs/source/unit -o /Users/troi/projects/txblibs/build/unit/unitda.o /Users/troi/projects/txblibs/source/unit/unitda.c -MMD
+echo Building /Users/troi/projects/txblibs/build/unit/unitdl.o
+clang -c  -I/Users/troi/projects/txblibs/source/src  -I/Users/troi/projects/txblibs/source/unit -o /Users/troi/projects/txblibs/build/unit/unitdl.o /Users/troi/projects/txblibs/source/unit/unitdl.c -MMD
+echo Building /Users/troi/projects/txblibs/build/unit/unitkl.o
+clang -c  -I/Users/troi/projects/txblibs/source/src  -I/Users/troi/projects/txblibs/source/unit -o /Users/troi/projects/txblibs/build/unit/unitkl.o /Users/troi/projects/txblibs/source/unit/unitkl.c -MMD
+echo Building /Users/troi/projects/txblibs/build/unit/unitkv.o
+clang -c  -I/Users/troi/projects/txblibs/source/src  -I/Users/troi/projects/txblibs/source/unit -o /Users/troi/projects/txblibs/build/unit/unitkv.o /Users/troi/projects/txblibs/source/unit/unitkv.c -MMD
+echo Building /Users/troi/projects/txblibs/build/unit/unitmd5.o
+clang -c  -I/Users/troi/projects/txblibs/source/src  -I/Users/troi/projects/txblibs/source/unit -o /Users/troi/projects/txblibs/build/unit/unitmd5.o /Users/troi/projects/txblibs/source/unit/unitmd5.c -MMD
+echo Building /Users/troi/projects/txblibs/build/unit/unitmisc.o
+clang -c  -I/Users/troi/projects/txblibs/source/src  -I/Users/troi/projects/txblibs/source/unit -o /Users/troi/projects/txblibs/build/unit/unitmisc.o /Users/troi/projects/txblibs/source/unit/unitmisc.c -MMD
+echo Building /Users/troi/projects/txblibs/build/unit/unitmute.o
+clang -c  -I/Users/troi/projects/txblibs/source/src  -I/Users/troi/projects/txblibs/source/unit -o /Users/troi/projects/txblibs/build/unit/unitmute.o /Users/troi/projects/txblibs/source/unit/unitmute.c -MMD
+echo Building /Users/troi/projects/txblibs/build/unit/unitpat.o
+clang -c  -I/Users/troi/projects/txblibs/source/src  -I/Users/troi/projects/txblibs/source/unit -o /Users/troi/projects/txblibs/build/unit/unitpat.o /Users/troi/projects/txblibs/source/unit/unitpat.c -MMD
+echo Building /Users/troi/projects/txblibs/build/unit/unitpq.o
+clang -c  -I/Users/troi/projects/txblibs/source/src  -I/Users/troi/projects/txblibs/source/unit -o /Users/troi/projects/txblibs/build/unit/unitpq.o /Users/troi/projects/txblibs/source/unit/unitpq.c -MMD
+echo Building /Users/troi/projects/txblibs/build/unit/unitqu.o
+clang -c  -I/Users/troi/projects/txblibs/source/src  -I/Users/troi/projects/txblibs/source/unit -o /Users/troi/projects/txblibs/build/unit/unitqu.o /Users/troi/projects/txblibs/source/unit/unitqu.c -MMD
+echo Building /Users/troi/projects/txblibs/build/unit/unitrand.o
+clang -c  -I/Users/troi/projects/txblibs/source/src  -I/Users/troi/projects/txblibs/source/unit -o /Users/troi/projects/txblibs/build/unit/unitrand.o /Users/troi/projects/txblibs/source/unit/unitrand.c -MMD
+echo Building /Users/troi/projects/txblibs/build/unit/unitrs.o
+clang -c  -I/Users/troi/projects/txblibs/source/src  -I/Users/troi/projects/txblibs/source/unit -o /Users/troi/projects/txblibs/build/unit/unitrs.o /Users/troi/projects/txblibs/source/unit/unitrs.c -MMD
+echo Building /Users/troi/projects/txblibs/build/unit/unitsb.o
+clang -c  -I/Users/troi/projects/txblibs/source/src  -I/Users/troi/projects/txblibs/source/unit -o /Users/troi/projects/txblibs/build/unit/unitsb.o /Users/troi/projects/txblibs/source/unit/unitsb.c -MMD
+echo Building /Users/troi/projects/txblibs/build/unit/unitst.o
+clang -c  -I/Users/troi/projects/txblibs/source/src  -I/Users/troi/projects/txblibs/source/unit -o /Users/troi/projects/txblibs/build/unit/unitst.o /Users/troi/projects/txblibs/source/unit/unitst.c -MMD
+echo Building /Users/troi/projects/txblibs/build/unit/unitstr.o
+clang -c  -I/Users/troi/projects/txblibs/source/src  -I/Users/troi/projects/txblibs/source/unit -o /Users/troi/projects/txblibs/build/unit/unitstr.o /Users/troi/projects/txblibs/source/unit/unitstr.c -MMD
+echo Linking myApp.exe
+clang /Users/troi/projects/txblibs/build/src/da.o /Users/troi/projects/txblibs/build/src/dl.o /Users/troi/projects/txblibs/build/src/kl.o /Users/troi/projects/txblibs/build/src/kv.o /Users/troi/projects/txblibs/build/src/md5.o /Users/troi/projects/txblibs/build/src/misc.o /Users/troi/projects/txblibs/build/src/pat.o /Users/troi/projects/txblibs/build/src/pmute.o /Users/troi/projects/txblibs/build/src/pq.o /Users/troi/projects/txblibs/build/src/qu.o /Users/troi/projects/txblibs/build/src/rand.o /Users/troi/projects/txblibs/build/src/rs.o /Users/troi/projects/txblibs/build/src/sb.o /Users/troi/projects/txblibs/build/src/st.o /Users/troi/projects/txblibs/build/src/str.o /Users/troi/projects/txblibs/build/unit/unitda.o /Users/troi/projects/txblibs/build/unit/unitdl.o /Users/troi/projects/txblibs/build/unit/unitkl.o /Users/troi/projects/txblibs/build/unit/unitkv.o /Users/troi/projects/txblibs/build/unit/unitmd5.o /Users/troi/projects/txblibs/build/unit/unitmisc.o /Users/troi/projects/txblibs/build/unit/unitmute.o /Users/troi/projects/txblibs/build/unit/unitpat.o /Users/troi/projects/txblibs/build/unit/unitpq.o /Users/troi/projects/txblibs/build/unit/unitqu.o /Users/troi/projects/txblibs/build/unit/unitrand.o /Users/troi/projects/txblibs/build/unit/unitrs.o /Users/troi/projects/txblibs/build/unit/unitsb.o /Users/troi/projects/txblibs/build/unit/unitst.o /Users/troi/projects/txblibs/build/unit/unitstr.o -o myApp.exe
