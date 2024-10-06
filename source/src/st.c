@@ -15,9 +15,9 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "../inc/dl.h"
+#include "dl.h"
 
-#include "../inc/st.h"
+#include "st.h"
 
 /*
  * the st is a stack api laid over a doubly linked list.

@@ -26,7 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../inc/kl.h"
+#include "kl.h"
 
 /*
  * a node of the doubly linked list. the key is used for ordering

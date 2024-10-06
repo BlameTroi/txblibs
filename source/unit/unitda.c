@@ -7,9 +7,9 @@
 
 #include "minunit.h"
 
-#include "../inc/rand.h"
+#include "rand.h"
 
-#include "../inc/da.h"
+#include "da.h"
 
 /*
  * minunit setup and teardown.

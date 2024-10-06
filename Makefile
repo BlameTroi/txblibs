@@ -33,9 +33,11 @@
 # │       └── unitstr.c
 # └── tree.txt
 
-# trying to keep Makefile at projdir level
+.POSIX
 
-PROJDIR := $(realpath $(CURDIR))
+# trying to keep Makefile in sources
+
+PROJDIR := $(realpath $(CURDIR)/..)
 SOURCEDIR := $(PROJDIR)/source
 BUILDDIR := $(PROJDIR)/build
 
@@ -68,8 +70,8 @@ DEPS = $(OBJS:.o=.d)
 
 # my standards for c
 CC = clang
-CFLAGS = -Wall -o 2 -std=c18 --pedantic-errors
-DFLAGS = -fsanitize=address -Wall -g3 -o 0 -std=c18 --pedantic-errors
+# CFLAGS = -Wall -o 2 -std=c18 --pedantic-errors
+CFLAGS = -fsanitize=address -Wall -g3 -o 0 -std=c18 --pedantic-errors
 LDFLAGS =
 # LDFLAGS = -Lm
 

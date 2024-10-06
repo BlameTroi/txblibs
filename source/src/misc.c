@@ -20,7 +20,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../inc/misc.h"
+#include "misc.h"
 
 /*
  * various min/max functions. the typed functions are wrapped by

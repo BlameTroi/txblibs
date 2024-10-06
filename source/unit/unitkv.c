@@ -9,9 +9,9 @@
 
 #include "minunit.h"
 
-#include "../inc/rand.h"
+#include "rand.h"
 
-#include "../inc/kv.h"
+#include "kv.h"
 
 /*
  * minunit setup and teardown.

@@ -16,7 +16,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#include "../inc/rand.h"
+#include "rand.h"
 
 
 /*

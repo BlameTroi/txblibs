@@ -8,9 +8,9 @@
 
 #include "minunit.h"
 
-#include "../inc/str.h"
+#include "str.h"
 
-#include "../inc/rs.h"
+#include "rs.h"
 
 /*
  * minunit setup and teardown.

@@ -16,7 +16,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../inc/dl.h"
+#include "dl.h"
 
 typedef struct dlnode dlnode;
 

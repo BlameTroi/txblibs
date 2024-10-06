@@ -9,7 +9,7 @@
 
 #include "minunit.h"
 
-#include "../inc/misc.h"
+#include "misc.h"
 
 /*
  * minunit setup and teardown of listd infratstructure.

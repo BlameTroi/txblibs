@@ -16,7 +16,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../inc/pq.h"
+#include "pq.h"
 
 /*
  * transparent control block definitions.

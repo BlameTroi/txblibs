@@ -10,10 +10,10 @@
 
 #include "minunit.h"
 
-#include "../inc/misc.h"
-#include "../inc/kl.h"
-#include "../inc/str.h"
-#include "../inc/rand.h"
+#include "misc.h"
+#include "kl.h"
+#include "str.h"
+#include "rand.h"
 
 /*
  * fn_compare_key for strings and longs

@@ -7,11 +7,11 @@
 
 #include "minunit.h"
 
-#include "../inc/misc.h"
-#include "../inc/rand.h"
-#include "../inc/str.h"
+#include "misc.h"
+#include "rand.h"
+#include "str.h"
 
-#include "../inc/pq.h"
+#include "pq.h"
 
 /*
  * minunit setup and teardown of listd infratstructure.
