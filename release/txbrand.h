@@ -1,6 +1,6 @@
 /*
  * single file header generated via:
- * buildhdr --macro TXBRAND --intro LICENSE --pub inc/rand.h --priv src/rand.c 
+ * buildhdr --macro TXBRAND --intro LICENSE --pub ./source/inc/rand.h --priv ./source/src/rand.c 
  */
 /* *** begin intro ***
 This software is available under 2 licenses -- choose whichever you prefer.

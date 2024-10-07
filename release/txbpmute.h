@@ -1,6 +1,6 @@
 /*
  * single file header generated via:
- * buildhdr --macro TXBPMUTE --intro LICENSE --pub inc/pmute.h --priv src/pmute.c 
+ * buildhdr --macro TXBPMUTE --intro LICENSE --pub ./source/inc/pmute.h --priv ./source/src/pmute.c 
  */
 /* *** begin intro ***
 This software is available under 2 licenses -- choose whichever you prefer.

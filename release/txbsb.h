@@ -1,6 +1,6 @@
 /*
  * single file header generated via:
- * buildhdr --macro TXBSB --intro LICENSE --pub inc/sb.h --priv src/sb.c 
+ * buildhdr --macro TXBSB --intro LICENSE --pub ./source/inc/sb.h --priv ./source/src/sb.c 
  */
 /* *** begin intro ***
 This software is available under 2 licenses -- choose whichever you prefer.

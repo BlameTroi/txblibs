@@ -17,7 +17,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "da.h"
+#include "../inc/da.h"
 
 /*
  * the trasnparent definition of the dacb. the default size for number

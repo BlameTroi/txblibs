@@ -18,7 +18,7 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 
-#include "sb.h"
+#include "../inc/sb.h"
 
 /*
  * an instance of a string builder.

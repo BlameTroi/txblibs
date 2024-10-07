@@ -16,7 +16,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "dl.h"
+#include "../inc/dl.h"
 
 typedef struct dlnode dlnode;
 
@@ -194,7 +194,7 @@ dl_count(
 		dn = dn->next;
 	}
 	assert(n == dl->count &&
-		"dl_count error in node count");
+			"dl_count error in node count");
 	return dl->count;
 }
 
@@ -254,7 +254,7 @@ dl_reset(
 	 */
 
 	assert(dl->count == deleted &&
-		"dl_reset mismatch between deleted and count");
+			"dl_reset mismatch between deleted and count");
 	dl->count = 0;
 
 	return deleted;

@@ -61,7 +61,7 @@
 #include "txbmisc.h"
 #include "txbstr.h"
 
-#include "pat.h"
+#include "../inc/pat.h"
 
 /*
  * these functions provide a limited implementation of regular

@@ -17,7 +17,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "str.h"
+#include "../inc/str.h"
 
 /*
  * split_string

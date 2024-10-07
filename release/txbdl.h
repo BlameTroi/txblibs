@@ -1,6 +1,6 @@
 /*
  * single file header generated via:
- * buildhdr --macro TXBDL --intro LICENSE --pub inc/dl.h --priv src/dl.c 
+ * buildhdr --macro TXBDL --intro LICENSE --pub ./source/inc/dl.h --priv ./source/src/dl.c 
  */
 /* *** begin intro ***
 This software is available under 2 licenses -- choose whichever you prefer.
@@ -606,7 +606,7 @@ dl_count(
 		dn = dn->next;
 	}
 	assert(n == dl->count &&
-		"dl_count error in node count");
+			"dl_count error in node count");
 	return dl->count;
 }
 
@@ -666,7 +666,7 @@ dl_reset(
 	 */
 
 	assert(dl->count == deleted &&
-		"dl_reset mismatch between deleted and count");
+			"dl_reset mismatch between deleted and count");
 	dl->count = 0;
 
 	return deleted;

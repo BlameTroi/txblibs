@@ -1,6 +1,6 @@
 /*
  * single file header generated via:
- * buildhdr --macro TXBPQ --intro LICENSE --pub inc/pq.h --priv src/pq.c 
+ * buildhdr --macro TXBPQ --intro LICENSE --pub ./source/inc/pq.h --priv ./source/src/pq.c 
  */
 /* *** begin intro ***
 This software is available under 2 licenses -- choose whichever you prefer.

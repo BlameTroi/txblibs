@@ -1,6 +1,6 @@
 /*
  * single file header generated via:
- * buildhdr --macro TXBPAT --intro LICENSE --pub inc/pat.h --priv src/pat.c 
+ * buildhdr --macro TXBPAT --intro LICENSE --pub ./source/inc/pat.h --priv ./source/src/pat.c 
  */
 /* *** begin intro ***
 This software is available under 2 licenses -- choose whichever you prefer.

@@ -30,7 +30,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "md5.h"
+#include "../inc/md5.h"
 
 /*
  * transparent definition, it's opaque in md5.h.

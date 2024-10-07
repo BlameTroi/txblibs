@@ -26,7 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "kl.h"
+#include "../inc/kl.h"
 
 /*
  * a node of the doubly linked list. the key is used for ordering
@@ -188,7 +188,7 @@ kl_count(
 		curr = curr->fwd;
 	}
 	assert(n == kl->count &&
-		"kl_count error in node count");
+			"kl_count error in node count");
 	return kl->count;
 }
 
@@ -240,7 +240,7 @@ kl_reset(
 	kl->position = NULL;
 	kl->error = NULL;
 	assert(kl->count == deleted &&
-		"kl_reset mismatch between deleted and count");
+			"kl_reset mismatch between deleted and count");
 	kl->count = 0;
 	return deleted;
 }
@@ -552,7 +552,7 @@ kl_update(
 	ASSERT_KLCB(kl, "invalid KLCB");
 	kl->error = NULL;
 	if (kl->position == NULL ||
-		kl->compare_keys(key, kl->position->key) != 0) {
+			kl->compare_keys(key, kl->position->key) != 0) {
 		kl->position = NULL;
 		kl->error = error_bad_update_key;
 		return false;
@@ -585,7 +585,7 @@ kl_delete(
 	ASSERT_KLCB(kl, "invalid KLCB");
 	kl->error = NULL;
 	if (kl->position == NULL ||
-		kl->compare_keys(key, kl->position->key) != 0) {
+			kl->compare_keys(key, kl->position->key) != 0) {
 		kl->position = NULL;
 		kl->error = error_bad_delete_key;
 		return false;

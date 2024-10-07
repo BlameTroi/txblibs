@@ -1,6 +1,6 @@
 /*
  * single file header generated via:
- * buildhdr --macro TXBDA --intro LICENSE --pub inc/da.h --priv src/da.c 
+ * buildhdr --macro TXBDA --intro LICENSE --pub ./source/inc/da.h --priv ./source/src/da.c 
  */
 /* *** begin intro ***
 This software is available under 2 licenses -- choose whichever you prefer.

@@ -11,7 +11,7 @@
  * to copy, modify, publish, and distribute this file as you see fit.
  */
 
-#include "pmute.h"
+#include "../inc/pmute.h"
 
 /*
  * permute_next

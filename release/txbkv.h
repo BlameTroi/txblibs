@@ -1,6 +1,6 @@
 /*
  * single file header generated via:
- * buildhdr --macro TXBKV --intro LICENSE --pub inc/kv.h --priv src/kv.c 
+ * buildhdr --macro TXBKV --intro LICENSE --pub ./source/inc/kv.h --priv ./source/src/kv.c 
  */
 /* *** begin intro ***
 This software is available under 2 licenses -- choose whichever you prefer.

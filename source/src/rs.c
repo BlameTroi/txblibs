@@ -18,7 +18,7 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 
-#include "rs.h"
+#include "../inc/rs.h"
 
 /*
  * an instance of a string read stream.

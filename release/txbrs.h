@@ -1,6 +1,6 @@
 /*
  * single file header generated via:
- * buildhdr --macro TXBRS --intro LICENSE --pub inc/rs.h --priv src/rs.c 
+ * buildhdr --macro TXBRS --intro LICENSE --pub ./source/inc/rs.h --priv ./source/src/rs.c 
  */
 /* *** begin intro ***
 This software is available under 2 licenses -- choose whichever you prefer.

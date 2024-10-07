@@ -1,6 +1,6 @@
 /*
  * single file header generated via:
- * buildhdr --macro TXBMD5 --intro LICENSE --pub inc/md5.h --priv src/md5.c 
+ * buildhdr --macro TXBMD5 --intro LICENSE --pub ./source/inc/md5.h --priv ./source/src/md5.c 
  */
 /* *** begin intro ***
 This software is available under 2 licenses -- choose whichever you prefer.

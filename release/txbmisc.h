@@ -1,6 +1,6 @@
 /*
  * single file header generated via:
- * buildhdr --macro TXBMISC --intro LICENSE --pub inc/misc.h --priv src/misc.c 
+ * buildhdr --macro TXBMISC --intro LICENSE --pub ./source/inc/misc.h --priv ./source/src/misc.c 
  */
 /* *** begin intro ***
 This software is available under 2 licenses -- choose whichever you prefer.
@@ -458,7 +458,7 @@ bool
 is_word_char(char c) {
 	return (c >= 'a' && c <= 'z') ||
 		(c >= 'A' && c <= 'Z') ||
-		c == '_';
+	c == '_';
 }
 
 bool
@@ -474,10 +474,10 @@ is_uppercase(char c) {
 bool
 is_whitespace(char c) {
 	return c == ' ' ||
-		c == '\n' ||
-		c == '\f' ||
-		c == '\r' ||
-		c == '\t';
+	c == '\n' ||
+	c == '\f' ||
+	c == '\r' ||
+	c == '\t';
 }
 
 bool
@@ -488,21 +488,21 @@ is_control(char c) {
 bool
 is_punctuation(char c) {
 	return c == '.' ||
-		c == ',' ||
-		c == '?' ||
-		c == '!' ||
-		c == ';' ||
-		c == ':';
+	c == ',' ||
+	c == '?' ||
+	c == '!' ||
+	c == ';' ||
+	c == ':';
 }
 
 bool
 is_bracketing(char c) {
 	return c == '[' ||
-		c == '(' ||
-		c == '{' ||
-		c == '}' ||
-		c == ')' ||
-		c == ']';
+	c == '(' ||
+	c == '{' ||
+	c == '}' ||
+	c == ')' ||
+	c == ']';
 }
 
 /*

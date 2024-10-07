@@ -1,3 +1,210 @@
+/*
+ * single file header generated via:
+ * buildhdr --macro TXBQU --intro LICENSE --pub ./source/inc/qu.h --priv ./source/src/qu.c 
+ */
+/* *** begin intro ***
+This software is available under 2 licenses -- choose whichever you prefer.
+------------------------------------------------------------------------------
+ALTERNATIVE A - MIT License
+Copyright (c) 2024 Troy Brumley 
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
+so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+------------------------------------------------------------------------------
+ALTERNATIVE B - Public Domain (www.unlicense.org)
+This is free and unencumbered software released into the public domain.
+Anyone is free to copy, modify, publish, use, compile, sell, or distribute this
+software, either in source code form or as a compiled binary, for any purpose,
+commercial or non-commercial, and by any means.
+In jurisdictions that recognize copyright laws, the author or authors of this
+software dedicate any and all copyright interest in the software to the public
+domain. We make this dedication for the benefit of the public at large and to
+the detriment of our heirs and successors. We intend this dedication to be an
+overt act of relinquishment in perpetuity of all present and future rights to
+this software under copyright law.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+   *** end intro ***
+ */
+
+#ifndef TXBQU_SINGLE_HEADER
+#define TXBQU_SINGLE_HEADER
+/* *** begin pub *** */
+/* qu.h -- blametroi's simple queue -- */
+
+/*
+ * a header only implementation of a queue.
+ *
+ * released to the public domain by Troy Brumley blametroi@gmail.com
+ *
+ * this software is dual-licensed to the public domain and under the
+ * following license: you are granted a perpetual, irrevocable license
+ * to copy, modify, publish, and distribute this file as you see fit.
+ */
+
+#include <stdbool.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
+/*
+ * an instance of a queue.
+ */
+
+typedef struct qucb qucb;
+
+/*
+ * qu_empty
+ *
+ * are there items in the queue?
+ *
+ *     in: the qu instance
+ *
+ * return: boolean, true if empty
+ */
+
+bool
+qu_empty(
+	qucb *
+);
+
+/*
+ * qu_enqueue
+ *
+ * add an item to the queue.
+ *
+ *     in: the qu instance
+ *
+ *     in: void * client payload
+ *
+ * return: nothing.
+ */
+
+void
+qu_enqueue(
+	qucb *,
+	void *
+);
+
+/*
+ * qu_dequeue
+ *
+ * remove and return the first (oldest) item on the queue.
+ *
+ *     in: the qu instance
+ *
+ * return: void * client payload or NULL if queue is empty.
+ */
+
+void *
+qu_dequeue(
+	qucb *
+);
+
+/*
+ * qu_peek
+ *
+ * return the first (oldet) item on the queue but leave
+ * it on the queue.
+ *
+ *     in: the qu instance
+ *
+ * return: void * client payload or NULL if queue is empty.
+ */
+
+void *
+qu_peek(
+	qucb *
+);
+
+/*
+ * qu_create
+ *
+ * create a new queue.
+ *
+ *     in: nothing
+ *
+ * return: the new qu instance.
+ */
+
+qucb *
+qu_create(
+	void
+);
+
+/*
+ * qu_destroy
+ *
+ * free the queue control block if the queue is empty.
+ *
+ *     in: the qu instance
+ *
+ * return: boolean, true if successful, false if queue is not empty
+ */
+
+bool
+qu_destroy(
+	qucb *
+);
+
+/*
+ * qu_reset
+ *
+ * remove all items from the queue.
+ *
+ *     in: the qu instance
+ *
+ * return: int number of items removed
+ */
+
+int
+qu_reset(
+	qucb *
+);
+
+/*
+ * qu_count
+ *
+ * how many items are in the queue?
+ *
+ *     in: the qu instance.
+ *
+ * return: int, number of items.
+ */
+
+int
+qu_count(
+	qucb *
+);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
+/* qu.h ends here */
+/* *** end pub *** */
+
+#endif /* TXBQU_SINGLE_HEADER */
+
+#ifdef TXBQU_IMPLEMENTATION
+#undef TXBQU_IMPLEMENTATION
+/* *** begin priv *** */
 /* qu.c -- blametroi's simple queue -- */
 
 /*
@@ -9,15 +216,14 @@
  * following license: you are granted a perpetual, irrevocable license
  * to copy, modify, publish, and distribute this file as you see fit.
  */
-
+
 #undef NDEBUG
 #include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "../inc/qu.h"
-
+
 /*
  * transparent control block definitions.
  */
@@ -44,7 +250,7 @@ struct qucb {
 	quitem *last;
 };
 
-
+
 /*
  * this is a simple queue implementation.
  *
@@ -83,7 +289,7 @@ struct qucb {
  * qu_destroy -- if the queue is empty and not in use, release
  *               the qucb. returns true if successful.
  */
-
+
 /*
  * qu_empty
  *
@@ -101,7 +307,7 @@ qu_empty(
 	ASSERT_QUCB(qu, "invalid QUCB");
 	return qu->first == NULL;
 }
-
+
 /*
  * qu_count
  *
@@ -131,7 +337,7 @@ qu_count(
 	}
 	return i;
 }
-
+
 /*
  * qu_new_item
  *
@@ -154,7 +360,7 @@ qu_new_item(
 	qi->next = NULL;
 	return qi;
 }
-
+
 /*
  * qu_enqueue
  *
@@ -183,7 +389,7 @@ qu_enqueue(
 	qu->last = qi;
 	return;
 }
-
+
 /*
  * qu_dequeue
  *
@@ -208,7 +414,7 @@ qu_dequeue(
 	free(qi);
 	return res;
 }
-
+
 /*
  * qu_peek
  *
@@ -229,7 +435,7 @@ qu_peek(
 		return NULL;
 	return qu->first->payload;
 }
-
+
 /*
  * qu_create
  *
@@ -252,7 +458,7 @@ qu_create(
 	qu->last = NULL;
 	return qu;
 }
-
+
 /*
  * qu_reset
  *
@@ -281,7 +487,7 @@ qu_reset(
 	return i;
 }
 
-
+
 /*
  * qu_destroy
  *
@@ -305,3 +511,6 @@ qu_destroy(
 }
 
 /* qu.c ends here */
+/* *** end priv *** */
+
+#endif /* TXBQU_IMPLEMENTATION */

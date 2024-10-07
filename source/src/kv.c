@@ -29,7 +29,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "kv.h"
+#include "../inc/kv.h"
 
 /*
  * a key:value store contains an ordered array of key:value pairs. the
