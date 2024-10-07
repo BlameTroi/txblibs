@@ -1,17 +1,5 @@
 a.out
 *.dSYM/
 *.d
-CMakeLists.txt.user
-CMakeCache.txt
-CMakeFiles
-CMakeScripts
-Testing
-# until we're done switching to ninja Makefile
-cmake_install.cmake
-install_manifest.txt
-compile_commands.json
-CTestTestfile.cmake
-_deps
-CMakeUserPresets.json
-# not sure we should ignore these build*.ninja
-.ninja*
+build/
+build-ninja/
