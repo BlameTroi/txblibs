@@ -287,14 +287,13 @@ sb_to_string(
  * to copy, modify, publish, and distribute this file as you see fit.
  */
 
-#undef NDEBUG
-#include <assert.h>
 #include <stdbool.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
 
+#include "txbabort_if.h"
 
 /*
  * an instance of a string builder.
@@ -302,8 +301,12 @@ sb_to_string(
 
 #define SBCB_TAG "__SBCB__"
 #define SBCB_TAG_LEN 8
-#define ASSERT_SBCB(p, m) assert((p) && memcmp((p), SBCB_TAG, SBCB_TAG_LEN) == 0 && (m))
-#define ASSERT_SBCB_OR_NULL(p) assert((p) == NULL || memcmp((p), SBCB_TAG, SBCB_TAG_LEN) == 0)
+
+#define ASSERT_SBCB(p, m) \
+	abort_if(!(p) || memcmp((p), SBCB_TAG, SBCB_TAG_LEN) != 0, (m));
+
+#define ASSERT_SBCB_OR_NULL(p, m) \
+	abort_if(p && memcmp((p), SBCB_TAG, SBCB_TAG_LEN) != 0, (m));
 
 struct sbcb {
 	char tag[SBCB_TAG_LEN];
@@ -337,7 +340,8 @@ sb_create_blksize(
 ) {
 	/* allocate the base block */
 	sbcb *sb = malloc(sizeof(sbcb));
-	assert(sb);
+	abort_if(!sb,
+		"sb_create_blksize could not allocate sbcb");
 	memset(sb, 0, sizeof(sbcb));
 	memcpy(sb->tag, SBCB_TAG, sizeof(sb->tag));
 	sb->is_null = blksize == 0;
@@ -348,7 +352,8 @@ sb_create_blksize(
 
 	/* allocate the initial buffer */
 	sb->buf = malloc(blksize);
-	assert(sb->buf);
+	abort_if(!sb->buf,
+		"sb_create_blksize could not allocate initial buffer");
 	memset(sb->buf, 0, blksize);
 	sb->buf_len = blksize;
 	sb->blksize = blksize;
@@ -430,7 +435,8 @@ sb_create_file(
 	struct stat info;
 	fstat(fileno(ifile), &info);
 	char *data_buf = malloc(info.st_size + 1);
-	assert(data_buf);
+	abort_if(!data_buf,
+		"sb_create_file could not allocate buffer for file contents");
 	memset(data_buf, 0, info.st_size + 1);
 	fread(data_buf, info.st_size, 1, ifile);
 	sbcb *sb = sb_create_string(data_buf);
@@ -523,10 +529,12 @@ sb_grow_buffer(
 	sbcb *sb
 ) {
 	ASSERT_SBCB(sb, "invalid SBCB");
-	assert(!sb->is_null && "error trying to expand empty SBCB");
+	abort_if(sb->is_null,
+		"sb_grow_buffer error trying to expand empty SBCB");
 	int new_len = sb->buf_len + sb->blksize;
 	char *new_buf = malloc(new_len);
-	assert(new_buf);
+	abort_if(!new_buf,
+		"sb_grow_buffer could not allocate new buffer");
 	memset(new_buf, 0, new_len);
 	memcpy(new_buf, sb->buf, sb->buf_len);
 	memset(sb->buf, 253, sb->buf_len);
@@ -581,12 +589,14 @@ sb_to_string(
 	char *str = NULL;
 	if (sb->is_null) {
 		str = malloc(2);
-		assert(str);
+		abort_if(!str,
+			"sb_to_string could not allocate output string buffer");
 		str[0] = '\0';
 		str[1] = '\0';
 	} else {
 		str = malloc(sb->buf_used + 1);
-		assert(str);
+		abort_if(!str,
+			"sb_to_string could not allocate output string buffer");
 		memcpy(str, sb->buf, sb->buf_used);
 		str[sb->buf_used] = '\0';
 	}
@@ -612,7 +622,8 @@ sb_puts(
 	char *str
 ) {
 	ASSERT_SBCB(sb, "invalid SBCB");
-	assert(str && "missing string on SB_PUTS");
+	abort_if(!str,
+		"sb_puts missing string to put");
 	size_t additional = strlen(str);
 	if (!sb->is_null) {
 		size_t new_length = sb->buf_used + additional;

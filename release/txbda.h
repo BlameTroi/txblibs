@@ -209,10 +209,11 @@ da_count(
  * to copy, modify, publish, and distribute this file as you see fit.
  */
 
-#undef NDEBUG
-#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "txbabort_if.h"
+
 
 
 /*
@@ -223,8 +224,12 @@ da_count(
 
 #define DACB_TAG "__DACB__"
 #define DACB_TAG_LEN 8
-#define ASSERT_DACB(p, m) assert((p) && memcmp((p), DACB_TAG, DACB_TAG_LEN) == 0 && (m))
-#define ASSERT_DACB_OR_NULL(p) assert((p) == NULL || memcmp((p), DACB_TAG, DACB_TAG_LEN) == 0)
+
+#define ASSERT_DACB(p, m) \
+	abort_if(!(p) || memcmp((p), DACB_TAG, DACB_TAG_LEN) != 0, (m));
+
+#define ASSERT_DACB_OR_NULL(p, m) \
+	abort_if(p && memcmp((p), DACB_TAG, DACB_TAG_LEN) != 0, (m));
 
 #define DACB_DEFAULT_SIZE 512
 
@@ -303,8 +308,8 @@ da_get(
 	dacb *da,
 	int n
 ) {
-	ASSERT_DACB(da, "invalid DACB");
-	assert(n < da->size);
+	ASSERT_DACB(da, "da_get invalid DACB");
+	abort_if(n >= da->size, "da_get out of bounds request");
 	void *res = da->data[n];
 	return res;
 }
@@ -331,8 +336,8 @@ da_put(
 	int n,
 	void *put
 ) {
-	ASSERT_DACB(da, "invalid DACB");
-	assert(put);
+	ASSERT_DACB(da, "da_put invalid DACB");
+	abort_if(!put, "da_put NULL payload");
 	while (n >= da->size) {
 		void **old = da->data;
 		da->data = malloc(2 * da->size * sizeof(void *));

@@ -26,7 +26,7 @@ install:
 
 # all the things
 
-build:  txbda txbdl txbkl txbkv txbmd5 txbmisc txbpat txbpmute txbpq txbrand txbqu txbrs txbsb txbst txbstr
+build:  txbabort txbda txbdl txbkl txbkv txbmd5 txbmisc txbpat txbpmute txbpq txbrand txbqu txbrs txbsb txbst txbstr
 
 PRIV = ./source/src
 PUB = ./source/inc
@@ -36,6 +36,9 @@ PUB = ./source/inc
 $(PUB)/*.h:
 
 $(PRIV)/*.c:
+
+txbabort: $(PUB)/abort_if.h
+	buildhdr --macro TXBABORT --intro LICENSE --pub $(PUB)/abort_if.h >release/txbabort_if.h
 
 txbda: $(PUB)/da.h $(PRIV)/da.c
 	buildhdr --macro TXBDA --intro LICENSE --pub $(PUB)/da.h --priv $(PRIV)/da.c >release/txbda.h

@@ -352,13 +352,13 @@ rs_gets(
  * to copy, modify, publish, and distribute this file as you see fit.
  */
 
-#undef NDEBUG
-#include <assert.h>
 #include <stdbool.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+
+#include "txbabort_if.h"
 
 
 /*
@@ -367,8 +367,12 @@ rs_gets(
 
 #define RSCB_TAG "__RSCB__"
 #define RSCB_TAG_LEN 8
-#define ASSERT_RSCB(p, m) assert((p) && memcmp((p), RSCB_TAG, RSCB_TAG_LEN) == 0 && (m))
-#define ASSERT_RSCB_OR_NULL(p) assert((p) == NULL || memcmp((p), RSCB_TAG, RSCB_TAG_LEN) == 0)
+
+#define ASSERT_RSCB(p, m) \
+	abort_if(!(p) || memcmp((p), RSCB_TAG, RSCB_TAG_LEN) != 0, (m));
+
+#define ASSERT_RSCB_OR_NULL(p, m) \
+	abort_if(p && memcmp((p), RSCB_TAG, RSCB_TAG_LEN) != 0, (m));
 
 struct rscb {
 	char tag[RSCB_TAG_LEN];
@@ -395,9 +399,11 @@ rscb *
 rs_create_string(
 	const char *str
 ) {
-	assert(str);
+	abort_if(!str,
+		"rs_create_string no string provided");
 	rscb *rs = malloc(sizeof(rscb));
-	assert(rs);
+	abort_if(!rs,
+		"rs_create_string could not allocate RSCB");
 	memset(rs, 0, sizeof(rscb));
 	memcpy(rs->tag, RSCB_TAG, sizeof(rs->tag));
 	rs->len = strlen(str);
@@ -430,7 +436,8 @@ rs_create_string_from_file(
 	struct stat info;
 	fstat(fileno(ifile), &info);
 	char *data_buf = malloc(info.st_size + 1);
-	assert(data_buf);
+	abort_if(!data_buf,
+		"rs_create_file could not allocate file buffer");
 	memset(data_buf, 0, info.st_size + 1);
 	fread(data_buf, info.st_size, 1, ifile);
 	rscb *rs = rs_create_string(data_buf);
@@ -456,13 +463,16 @@ rs_clone(
 ) {
 	ASSERT_RSCB(original, "invalid RSCB");
 	rscb *rs = malloc(sizeof(rscb));
-	assert(rs);
+	abort_if(!rs,
+		"rs_clone could not allocate new RSCB");
 	memset(rs, 0, sizeof(rscb));
 	memcpy(rs->tag, RSCB_TAG, sizeof(rs->tag));
 	rs->len = original->len;
 	rs->pos = original->pos;
 	rs->eos = original->eos;
 	rs->str = malloc(rs->len + 1);
+	abort_if(!rs->str,
+		"rs_clone could not allocate space for new buffer");
 	memset(rs->str, 0, rs->len + 1);
 	strcpy(rs->str, original->str);
 	return rs;

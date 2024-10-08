@@ -23,12 +23,12 @@
  * control structures.
  */
 
-#undef NDEBUG
-#include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "../inc/abort_if.h"
 
 #include "../inc/md5.h"
 
@@ -38,8 +38,12 @@
 
 #define MD5_TAG "__MD5___"
 #define MD5_TAG_LEN 8
-#define ASSERT_MD5(p, m) assert((p) && memcmp((p), MD5_TAG, MD5_TAG_LEN) == 0 && (m))
-#define ASSERT_MD5_OR_NULL(p) assert((p) == NULL || memcmp((p), MD5_TAG, MD5_TAG_LEN) == 0)
+
+#define ASSERT_MD5(p, m) \
+	abort_if(!(p) || memcmp((p), MD5_TAG, MD5_TAG_LEN) != 0, (m));
+
+#define ASSERT_MD5_OR_NULL(p, m) \
+	abort_if(p && memcmp((p), MD5_TAG, MD5_TAG_LEN) != 0, (m));
 
 struct md5_context {
 	char tag[MD5_TAG_LEN];          /* eye catcher */

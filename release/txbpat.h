@@ -476,8 +476,6 @@ glob_match(
  * and so on.
  */
 
-#undef NDEBUG
-#include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -485,6 +483,8 @@ glob_match(
 
 #include "txbmisc.h"
 #include "txbstr.h"
+
+#include "txbabort_if.h"
 
 
 /*
@@ -699,8 +699,7 @@ pattern_length(
 
 	else
 		pl = 1;
-	assert(pl >= 1 &&
-			"error calculating pattern length");
+	abort_if(pl < 1, "pat pattern_length error calculating pattern length");
 	return pl;
 }
 
@@ -836,8 +835,8 @@ print_compiled_pattern(
 			break;
 
 		default:
-			assert(NULL &&
-				"error detected in compiled pattern buffer");
+			abort_if(true,
+				"pat print_compiled_pattern error detected in compiled pattern buffer");
 		}
 		i = next_pattern(pat, i);
 
@@ -994,9 +993,7 @@ add_pattern_item(
 	const char *str,           /* the input search string */
 	int *from                  /* in-out arg: current position in str */
 ) {
-	assert(*pos + 8 < max &&
-		"pattern buffer overflowed");
-
+	abort_if(*pos + 8 >= max, "pat add_pattern_item pattern buffer overflow");
 	int this_item = *pos;
 	int last_item = *pos ? pat[*pos] : 0;
 
@@ -1061,8 +1058,8 @@ add_pattern_item(
 
 	} else
 
-		assert(NULL &&
-			"illegal pattern item type in add_pattern_item");
+		abort_if(true,
+			"pat add_pattern_item illegal item type in add_pattern_item");
 
 
 	/* remember the prior code position for character class groups and
@@ -1132,8 +1129,8 @@ reorganize_pattern_buffer(
 
 		/* quantifiers should follow the item they refer to up to this
 		 * point. if we see one here we've made an error. */
-		assert(!is_quantifier(pat[pp]) &&
-			"optimize error, should not see a quantifier here.");
+		abort_if(is_quantifier(pat[pp]),
+			"pat reorganize_pattern_buffer optimize error, should not see a quantifier here.");
 
 		/* look ahead, are we followed by a quantifier? remember that
 		 * during pattern compilation character class groups have an end
@@ -1249,8 +1246,7 @@ compile_pattern(
 
 	int max_pat = 5 * max(strlen(str), 16) + 3;
 	cpat *pat = malloc(max_pat * sizeof(cpat));
-	assert(pat &&
-		"could not allocate pattern buffer");
+	abort_if(!pat, "pat compile_pattern could not allocate pattern buffer");
 	memset(pat, 0xde, max_pat * sizeof(cpat));
 
 	/* the current position within the string (ps) and pattern buffer
@@ -1374,12 +1370,12 @@ compile_pattern(
 
 			in_class = true;
 			if (str[ps+1] == META_NCCLASS) {
-				assert(str[ps+2] != ']' &&
-						"empty character class found in source string");
+				abort_if(str[ps+2] == ']',
+					"pat compile_pattern empty character class found in source string");
 				class_pattern_code = PAT_NOT_CCLASS;
 			} else {
-				assert(str[ps+1] != ']' &&
-						"empty character class found in source string");
+				abort_if(str[ps+1] == ']',
+					"pat compile_pattern empty character class found in source string");
 				class_pattern_code = PAT_CCLASS;
 			}
 
@@ -1395,8 +1391,8 @@ compile_pattern(
 			 * character and pass the following character through as a
 			 * literal. */
 
-			assert(str[ps+1] != '\0' &&
-					"backslash escape can not be the last character of a search string");
+			abort_if(str[ps+1] == '\0',
+				"pat compile_pattern backslash escape can not be the last character of a search string");
 
 			/* character class escapes have their own pattern items. */
 
@@ -1441,8 +1437,8 @@ compile_pattern(
 			/* the close class token should not be seen here. this is for
 			 * completeness. */
 
-			assert(NULL &&
-				"error parsing pattern -- unexpected close class ]");
+			abort_if(true,
+				"pat compile_pattern error parsing pattern unexpected close class ]");
 			break;
 
 		case META_WILD:
@@ -1471,22 +1467,22 @@ compile_pattern(
 
 		case META_OR:
 
-			assert(NULL &&
-				"or | not yet implemented.");
+			abort_if(true,
+				"pat compile_pattern or | not yet implemented.");
 			break;
 
 		case META_REP_COUNT:
 		case META_REP_END_COUNT:
 
-			assert(NULL &&
-				"repeat counts {m,n} not yet implemented.");
+			abort_if(true,
+				"pat compile_pattern repeat counts {m,n} not yet implemented.");
 			break;
 
 		case META_GROUP:
 		case META_END_GROUP:
 
-			assert(NULL &&
-				"grouping via () not yet implemented.");
+			abort_if(true,
+				"pat compile_pattern grouping via () not yet implemented.");
 			break;
 
 		default:
@@ -1602,8 +1598,8 @@ convert_glob(
 		if (glob[pg] == '[') {
 			while (glob[pg] && glob[pg] != ']') {
 				if (glob[pg] == '\\') {
-					assert(glob[pg+1] != '\0' &&
-							"improperly constructed [] in glob string");
+					abort_if(glob[pg+1] == '\0',
+						"pat convert_glob improperly constructed [] in glob string");
 					str[ps] = glob[pg];
 					ps += 1;
 					pg += 1;
@@ -1806,10 +1802,9 @@ match_this_item(
 	 * as * are handled in match_from). report and abort. */
 
 	char *em = calloc(256, sizeof(char));
-	snprintf(em, 256, "unknown pattern type code in match_this: %d %s",
+	snprintf(em, 256, "pat match_this_item unknown pattern type code in: %d %s",
 		*p, displayable_match_code(*p));
-	fprintf(stderr, "\npat: fatal error: %s\n", em);
-	assert(NULL);
+	abort_if(true, em);
 	return false;
 }
 
@@ -2007,8 +2002,8 @@ match_from(
 
 			} else
 
-				assert(NULL &&
-					"error unknown quantifier in pattern");
+				abort_if(true,
+					"pat match_from error unknown quantifier in pattern");
 
 
 		} else if (!match_this_item(str, &ps, pat+pp)) {
@@ -2057,8 +2052,8 @@ match(
 	int ps = 0;
 	int pm = -1;
 
-	assert(str && pat &&
-		"match called with illegal missing arguments");
+	abort_if(!str || !pat,
+		"pat match missing arguments");
 
 	while (str[ps] && pm == -1) {
 		pm = match_from(str, ps, pat, 0);
@@ -2100,8 +2095,8 @@ glob_match(
 	int ps = 0;
 	int pm = -1;
 
-	assert(str && pat &&
-		"glob_match called with illegal missing arguments");
+	abort_if(!str || !pat,
+		"pat glob_match missing arguments");
 
 	/* boy this is ugly */
 	if (str[0] == '.') {

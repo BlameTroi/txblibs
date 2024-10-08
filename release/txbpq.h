@@ -278,11 +278,11 @@ pq_empty(
  * to copy, modify, publish, and distribute this file as you see fit.
  */
 
-#undef NDEBUG
-#include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "txbabort_if.h"
 
 
 /*
@@ -290,8 +290,12 @@ pq_empty(
  */
 #define PQITEM_TAG "__PQIT__"
 #define PQITEM_TAG_LEN 8
-#define ASSERT_PQITEM(p, m) assert((p) && memcmp((p), PQITEM_TAG, PQITEM_TAG_LEN) == 0 && (m))
-#define ASSERT_PQITEM_OR_NULL(p) assert((p) == NULL || memcmp((p), PQITEM_TAG, PQITEM_TAG_LEN) == 0)
+
+#define ASSERT_PQITEM(p, m) \
+	abort_if(!(p) || memcmp((p), PQITEM_TAG, PQITEM_TAG_LEN) != 0, (m));
+
+#define ASSERT_PQITEM_OR_NULL(p, m) \
+	abort_if(p && memcmp((p), PQITEM_TAG, PQITEM_TAG_LEN) != 0, (m));
 
 typedef struct pqitem pqitem;
 
@@ -305,8 +309,12 @@ struct pqitem {
 
 #define PQCB_TAG "__PQCB__"
 #define PQCB_TAG_LEN 8
-#define ASSERT_PQCB(p, m) assert((p) && memcmp((p), PQCB_TAG, PQCB_TAG_LEN) == 0 && (m))
-#define ASSERT_PQCB_OR_NULL(p) assert((p) == NULL || memcmp((p), PQCB_TAG, PQCB_TAG_LEN) == 0)
+
+#define ASSERT_PQCB(p, m) \
+	abort_if(!(p) || memcmp((p), PQCB_TAG, PQCB_TAG_LEN) != 0, (m));
+
+#define ASSERT_PQCB_OR_NULL(p, m) \
+	abort_if(p && memcmp((p), PQCB_TAG, PQCB_TAG_LEN) != 0, (m));
 
 struct pqcb {
 	char tag[PQCB_TAG_LEN];
@@ -487,8 +495,8 @@ pq_insert(
 	}
 
 	/* if we get here, the queue is broken. */
-	assert(NULL &&
-		"error in priority queue chaining");
+	abort_if(true,
+		"pq_insert error in priority queue chaining");
 }
 
 /*
@@ -636,8 +644,8 @@ pq_create(
 	void
 ) {
 	pqcb *pq = malloc(sizeof(*pq));
-	assert(pq &&
-		"could not allocate PQCB");
+	abort_if(!pq,
+		"pq_create could not allocate PQCB");
 	memset(pq, 0, sizeof(*pq));
 	memcpy(pq->tag, PQCB_TAG, sizeof(pq->tag));
 	pq->first = NULL;

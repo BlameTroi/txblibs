@@ -10,10 +10,10 @@
  * to copy, modify, publish, and distribute this file as you see fit.
  */
 
-#undef NDEBUG
-#include <assert.h>
 #include <string.h>
 #include <stdlib.h>
+
+#include "../inc/abort_if.h"
 
 #include "../inc/dl.h"
 
@@ -25,8 +25,12 @@
 
 #define STCB_TAG "__STCB__"
 #define STCB_TAG_LEN 8
-#define ASSERT_STCB(p, m) assert((p) && memcmp((p), STCB_TAG, STCB_TAG_LEN) == 0 && (m))
-#define ASSERT_STCB_OR_NULL(p) assert((p) == NULL || memcmp((p), STCB_TAG, STCB_TAG_LEN) == 0)
+
+#define ASSERT_STCB(p, m) \
+	abort_if(!(p) || memcmp((p), STCB_TAG, STCB_TAG_LEN) != 0, (m));
+
+#define ASSERT_STCB_OR_NULL(p, m) \
+	abort_if(p && memcmp((p), STCB_TAG, STCB_TAG_LEN) != 0, (m));
 
 struct stcb {
 	char tag[STCB_TAG_LEN];
@@ -92,7 +96,8 @@ st_pop(
 	ASSERT_STCB(st, "invalid STCB");
 	void *payload = NULL;
 	dlid id = dl_get_last(st->dl, &payload);
-	assert(!null_dlid(id) && "stack empty");
+	abort_if(null_dlid(id),
+		"st st_pop stack empty");
 	dl_delete(st->dl, id);
 	return payload;
 }
@@ -114,7 +119,8 @@ st_peek(
 	ASSERT_STCB(st, "invalid STCB");
 	void *payload = NULL;
 	dlid id = dl_get_last(st->dl, &payload);
-	assert(!null_dlid(id) && "stack empty");
+	abort_if(null_dlid(id),
+		"st st_peek stack empty");
 	return payload;
 }
 

@@ -10,11 +10,11 @@
  * to copy, modify, publish, and distribute this file as you see fit.
  */
 
-#undef NDEBUG
-#include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "../inc/abort_if.h"
 
 #include "../inc/dl.h"
 
@@ -30,8 +30,11 @@ typedef struct dlnode dlnode;
 #define DLCB_TAG      "__DLCB__"
 #define DLCB_TAG_LEN  8
 
-#define ASSERT_DLCB(p, m) assert((p) && memcmp((p), DLCB_TAG, DLCB_TAG_LEN) == 0 && (m))
-#define ASSERT_DLCB_OR_NULL(p) assert((p) == NULL || memcmp((p), DLCB_TAG, DLCB_TAG_LEN) == 0)
+#define ASSERT_DLCB(p, m) \
+	abort_if(!(p) || memcmp((p), DLCB_TAG, DLCB_TAG_LEN) != 0, (m));
+
+#define ASSERT_DLCB_OR_NULL(p, m) \
+	abort_if(p && memcmp((p), DLCB_TAG, DLCB_TAG_LEN) != 0, (m));
 
 struct dlcb {
 	char tag[8];
@@ -118,8 +121,8 @@ dl_create(
 	void
 ) {
 	dlcb *dl = malloc(sizeof(*dl));
-	assert(dl &&
-		"could not allocate DLCB");
+	abort_if(!dl,
+		"dl_create could not allocate DLCB");
 	memset(dl, 0, sizeof(*dl));
 	memcpy(dl->tag, DLCB_TAG, sizeof(dl->tag));
 	dl->count = 0;
@@ -193,8 +196,8 @@ dl_count(
 		n += 1;
 		dn = dn->next;
 	}
-	assert(n == dl->count &&
-			"dl_count error in node count");
+	abort_if(n != dl->count,
+		"dl_count error in node count");
 	return dl->count;
 }
 
@@ -253,8 +256,8 @@ dl_reset(
 	 * dl->id is intentionally *not* reset
 	 */
 
-	assert(dl->count == deleted &&
-			"dl_reset mismatch between deleted and count");
+	abort_if(dl->count != deleted,
+		"dl_reset mismatch between deleted and count");
 	dl->count = 0;
 
 	return deleted;
@@ -279,8 +282,8 @@ create_dlnode(
 	ASSERT_DLCB(dl, "invalid DLCB");
 
 	dlnode *dn = malloc(sizeof(*dn));
-	assert(dn &&
-		"could not allocate DLNODE");
+	abort_if(!dn,
+		"dl create_dlnode could not allocate DLNODE");
 
 	memset(dn, 0, sizeof(*dn));
 	memcpy(dn->tag, DLNODE_TAG, sizeof(dl->tag));

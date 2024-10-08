@@ -20,12 +20,11 @@
  * to copy, modify, publish, and distribute this file as you see fit.
  */
 
-#undef NDEBUG
-#include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "../inc/abort_if.h"
 #include "../inc/kl.h"
 
 /*
@@ -45,8 +44,11 @@ struct klnode {
 #define KLCB_TAG "__KLCB__"
 #define KLCB_TAG_LEN 8
 
-#define ASSERT_KLCB(p, m) assert((p) && memcmp((p), KLCB_TAG, KLCB_TAG_LEN) == 0 && (m))
-#define ASSERT_KLCB_OR_NULL(p) assert((p) == NULL || memcmp((p), KLCB_TAG, KLCB_TAG_LEN) == 0)
+#define ASSERT_KLCB(p, m) \
+	abort_if(!(p) || memcmp((p), KLCB_TAG, KLCB_TAG_LEN) != 0, (m));
+
+#define ASSERT_KLCB_OR_NULL(p, m) \
+	abort_if(p && memcmp((p), KLCB_TAG, KLCB_TAG_LEN) != 0, (m));
 
 struct klcb {
 	char tag[KLCB_TAG_LEN];  /* eye catcher */
@@ -82,10 +84,10 @@ kl_create(
 	int (*fn_compare_keys)(void *, void *)
 ) {
 	klcb *kl = malloc(sizeof(*kl));
-	assert(kl &&
-		"could not allocate KLCB");
-	assert(fn_compare_keys &&
-		"missing fn_compare_keys function");
+	abort_if(!kl,
+		"kl_create could not allocate KLCB");
+	abort_if(!fn_compare_keys,
+		"kl_create missing fn_compare_keys function");
 	memset(kl, 0, sizeof(*kl));
 	memcpy(kl->tag, KLCB_TAG, sizeof(kl->tag));
 	kl->count = 0;
@@ -118,8 +120,8 @@ kl_clone(
 	void *key = NULL;
 	void *value = NULL;
 	if (!kl_get_first(old_kl, &key, &value))
-		assert(NULL &&
-			"impossible error while cloning");
+		abort_if(true,
+			"kl_clone impossible error while cloning");
 	kl_insert(new_kl, key, value);
 	while (kl_get_next(old_kl, &key, &value))
 		kl_insert(new_kl, key, value);
@@ -187,8 +189,8 @@ kl_count(
 		n += 1;
 		curr = curr->fwd;
 	}
-	assert(n == kl->count &&
-			"kl_count error in node count");
+	abort_if(n != kl->count,
+		"kl_count error in node count");
 	return kl->count;
 }
 
@@ -239,8 +241,8 @@ kl_reset(
 	kl->tail = NULL;
 	kl->position = NULL;
 	kl->error = NULL;
-	assert(kl->count == deleted &&
-			"kl_reset mismatch between deleted and count");
+	abort_if(kl->count != deleted,
+		"kl_reset mismatch between deleted and count");
 	kl->count = 0;
 	return deleted;
 }
@@ -332,8 +334,8 @@ kl_insert(
 	}
 	/* if we fall out of the link chase loop, something is
 	 * wrong with the chain, abort. */
-	assert(NULL &&
-		"invalid list chain detected in kl_insert");
+	abort_if(true,
+		"kl_insert invalid keyed list chain detected");
 	return false;
 }
 

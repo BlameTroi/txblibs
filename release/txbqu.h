@@ -217,11 +217,11 @@ qu_count(
  * to copy, modify, publish, and distribute this file as you see fit.
  */
 
-#undef NDEBUG
-#include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "txbabort_if.h"
 
 
 /*
@@ -230,8 +230,12 @@ qu_count(
 
 #define QUITEM_TAG "__QUIT__"
 #define QUITEM_TAG_LEN 8
-#define ASSERT_QUITEM(p, m) assert((p) && memcmp((p), QUITEM_TAG, QUITEM_TAG_LEN) == 0 && (m))
-#define ASSERT_QUITEM_OR_NULL(p) assert((p) == NULL || memcmp((p), QUITEM_TAG, QUITEM_TAG_LEN) == 0)
+
+#define ASSERT_QUITEM(p, m) \
+	abort_if(!(p) || memcmp((p), QUITEM_TAG, QUITEM_TAG_LEN) != 0, (m));
+
+#define ASSERT_QUITEM_OR_NULL(p, m) \
+	abort_if(p && memcmp((p), QUITEM_TAG, QUITEM_TAG_LEN) != 0, (m));
 
 typedef struct quitem {
 	char tag[QUITEM_TAG_LEN];
@@ -241,8 +245,12 @@ typedef struct quitem {
 
 #define QUCB_TAG "__QUCB__"
 #define QUCB_TAG_LEN 8
-#define ASSERT_QUCB(p, m) assert((p) && memcmp((p), QUCB_TAG, QUCB_TAG_LEN) == 0 && (m))
-#define ASSERT_QUCB_OR_NULL(p) assert((p) == NULL || memcmp((p), QUCB_TAG, QUCB_TAG_LEN) == 0)
+
+#define ASSERT_QUCB(p, m) \
+	abort_if(!(p) || memcmp((p), QUCB_TAG, QUCB_TAG_LEN) != 0, (m));
+
+#define ASSERT_QUCB_OR_NULL(p, m) \
+	abort_if(p && memcmp((p), QUCB_TAG, QUCB_TAG_LEN) != 0, (m));
 
 struct qucb {
 	char tag[QUCB_TAG_LEN];
@@ -451,7 +459,8 @@ qu_create(
 	void
 ) {
 	qucb *qu = malloc(sizeof(*qu));
-	assert(qu && "could not allocate QUCB");
+	abort_if(!qu,
+		"qu_create could not allocate QUCB");
 	memset(qu, 0, sizeof(*qu));
 	memcpy(qu->tag, QUCB_TAG, sizeof(qu->tag));
 	qu->first = NULL;

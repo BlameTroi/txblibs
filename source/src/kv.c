@@ -23,12 +23,11 @@
  * to copy, modify, publish, and distribute this file as you see fit.
  */
 
-#undef NDEBUG
-#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "../inc/abort_if.h"
 #include "../inc/kv.h"
 
 /*
@@ -67,8 +66,11 @@ struct kvpair {
 #define KVCB_TAG "__KVCB__"
 #define KVCB_TAG_LEN 8
 
-#define ASSERT_KVCB(p, m) assert((p) && memcmp((p), KVCB_TAG, KVCB_TAG_LEN) == 0 && (m))
-#define ASSERT_KVCB_OR_NULL(p) assert((p) == NULL || memcmp((p), KVCB_TAG, KVCB_TAG_LEN) == 0)
+#define ASSERT_KVCB(p, m) \
+	abort_if(!(p) || memcmp((p), KVCB_TAG, KVCB_TAG_LEN) != 0, (m));
+
+#define ASSERT_KVCB_OR_NULL(p, m) \
+	abort_if(p && memcmp((p), KVCB_TAG, KVCB_TAG_LEN) != 0, (m));
 
 /*
  * we need to be able to compare kvpairs and that requires that
@@ -115,18 +117,15 @@ kvcb *
 kv_create(
 	int (*key_compare)(const void *, const void *)
 ) {
-	assert(key_compare &&
-		"missing key compare function pointer for KVCB");
+	abort_if(!key_compare, "kv_create missing key compare function for KVCB");
 	kvcb *kv = malloc(sizeof(kvcb));
-	assert(kv &&
-		"failed to allocate KVCB");
+	abort_if(!kv, "kv_create could not allocate KVCB");
 	memset(kv, 0, sizeof(kvcb));
 	memcpy(kv->tag, KVCB_TAG, KVCB_TAG_LEN);
 	kv->pairs_increment = PAIRS_INCREMENT_DEFAULT;
 	kv->pairs_size = PAIRS_SIZE_DEFAULT;
 	kv->pairs = malloc(sizeof(kvpair) * (kv->pairs_size + 1));
-	assert(kv->pairs &&
-		"failed to allocate or initialize pair backing for KVCB");
+	abort_if(!kv->pairs, "kv_create coult not allocate backing pairs");
 	memset(kv->pairs, 0, sizeof(kvpair) * (kv->pairs_size + 1));
 	kv->key_compare = key_compare;
 	kv->num_pairs = 0;
@@ -355,8 +354,8 @@ kv_get(
 	kvcb *kv,
 	void *key
 ) {
-	ASSERT_KVCB(kv, "invalid KVCB");
-	assert(key && "key may not be NULL");
+	ASSERT_KVCB(kv, "kv_get invalid KVCB");
+	abort_if(!key, "kv_get key may not be NULL");
 	kvpair *p = am_find_key(kv, key);
 	return p ? p->value : p;
 }
@@ -384,9 +383,10 @@ kv_put(
 	void *key,
 	void *value
 ) {
-	ASSERT_KVCB(kv, "invalid KVCB");
-	assert(key && "key may not be NULL");
-	assert(value && "value may not be NULL");
+	ASSERT_KVCB(kv, "kv_put invalid KVCB");
+	abort_if(!key, "kv_put key may not be NULL");
+	abort_if(!value, "kv_put payload may not be NULL");
+
 	kvpair *p = am_find_key(kv, key);
 	if (p)
 		p->value = value;
@@ -413,8 +413,8 @@ kv_delete(
 	kvcb *kv,
 	void *key
 ) {
-	ASSERT_KVCB(kv, "invalid KVCB");
-	assert(key && "key may not be NULL");
+	ASSERT_KVCB(kv, "kv_delete invalid KVCB");
+	abort_if(!key, "kv_delete key may not be NULL");
 	kvpair *p = am_find_key(kv, key);
 	if (p)
 		am_delete_pair(kv, p);

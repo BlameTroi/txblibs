@@ -309,25 +309,17 @@ Error Handling and Reporting
 
 Negative results (non errors) tend to return NULL or FALSE. Obviously
 fatal errors such as NULL or invalid control block pointers will fail
-with an assert. Diagnostic messages may be printed on stderr.
+with by printing a message to stderr and calling abort().
 
-Each library header that uses the assert macro will undefine NDEBUG if
-it is defined to ensure that assert generates as expected. If you want
-to compile your code with NDEBUG be sure to define it after the
-includes for these libraries.
+I had been using the assert macro but as release builds usually
+disable assert by defining NDEBUG I created an abort_if macro.
 
-Libraries defining NDEBUG:
+abort_if(CONDITION, MESSAGE);
 
- txbkv.h
- txbmd5.h
- txbdl.h
- txbrs.h
- txbda.h
- txbkl.h
- txbpat.h
- txbsb.h
- txbst.h
- txbpq.h
+if (CONDITION) {
+  fprintf(stderr, "abort: '%s' at %s:%d\n", MESSAGE, __FILE__, __LINE__);
+  abort();
+}
 
 Where appropriate a library provides an xx_get_error(instance) which
 returns a brief description of the last non-fatal error.
@@ -335,6 +327,13 @@ returns a brief description of the last non-fatal error.
 			 ====================
 			 Library Descriptions
 			 ====================
+
+
+TXBABORT_IF.H
+-------------
+
+Defines the abort_if macro used throughout these libraries.
+
 
 
 TXBDA.H
