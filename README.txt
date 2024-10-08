@@ -2,6 +2,7 @@
 	   txblibs -- Troy's header only library functions
 	   ===============================================
 
+
 Sean Barrett and others show us the way to create and use relatively
 small include files for library code. I recommend that you read the
 FAQ on his https://github.com/nothings/stbs repository.
@@ -15,13 +16,14 @@ So let it be written,
 So let it be done.
 
 
+
 Installation and Use
 --------------------
 
-The headers to use are in the release subdirectory. They are built by
+The headers to use are in the release sub-directory. They are built by
 the makefile using buildhdr (https://github.com/BlameTroi/buildhdr).
 The source for each header is a pair of files in the inc and src
-subdirctories. txbrand.h is built from inc/rand.h and src/rand.c,
+sub-directories. txbrand.h is built from inc/rand.h and src/rand.c,
 and so on.
 
 I keep all the release headers in my $HOME/.local/include/ directory
@@ -32,42 +34,77 @@ preprocessor variable to control when the executable code will be
 included. #define this in only one source file per linked output.
 
 
+
+External Dependencies
+---------------------
+
+Nothing that isn't already installed by anyone using these libraries.
+If not already installed, they are available in most package managers.
+
+ 1. A C compiler (C99 support or above)
+
+ 2. CMake
+
+ 3. Gnu Make
+
+ 4. ninja
+
+
+
 License
 -------
 
 I can't see why anyone would want any of this, but it's all public
 domain as far as I'm concerned, but you can use this software either
-as public domain under the unlicense or under the terms of the MIT
+as public domain under the UNLICENSE or under the terms of the MIT
 license.
 
 (h/t to Sean Barrett at nothings.org for the most clear description of
 usable licensing I've ever seen.)
+
+
+
+Minunit
+-------
+
+In addition to using these libraries in my own work, I started writing
+unit tests using Minunit. There are multiple descendants of Minunit by
+John Brewer as found at https://jera.com/techinfo/jtns/jtn002.
+Brewer's Minunit is minimal in the extreme, and very instructive.
+
+I want a bit more from a testing framework and the best I could find
+was this version by David Siñuela Pastor siu.4coders@gmail.com at
+https://github.com/siu/minunit.
+
+I maintain my own fork at https://github.com/BlameTroi/minunit as I
+tweak it to my preferences.
+
+Included in source/inc is the current minunit.h used for this project.
+The original is (c) 2022 by David Siñuela Pastor and released under
+the MIT License. See https://github.com/aws/mit-0 for details.
+Included in Minunit are two timing functions written by David Robert
+Nadeau from http://NadeauSoftware.com/ and distributed under the
+Creative Commons Attribution 3.0 Unported License. See
+https://creativecommons.org/licenses/by/3.0/ for details.
 
 			    ==============
 			    Project Layout
 			    ==============
 
-A simple structure:
 
-.                            [the project]
+
+I use CMake and ninja to build the unit tests, and make to run my
+buildhdr to package up the release library headers. Create the build
+directory, it isn't part of the git repository.
+
+.
 ├── LICENSE
-├── README.txt
-├── inc                      [headers for building libraries]
-│   ├── da.h
-│   ├── dl.h
-│   ├── kv.h
-│   ├── md5.h
-│   ├── misc.h
-│   ├── pat.h
-│   ├── pmute.h
-│   ├── pq.h
-│   ├── rand.h
-│   ├── rs.h
-│   ├── sb.h
-│   ├── st.h
-│   └── str.h
+├── MIT-LICENSE
 ├── Makefile
-├── release                  [release build of libraries]
+├── README.txt
+├── build
+├── doc
+├── release
 │   ├── txbda.h
 │   ├── txbdl.h
 │   ├── txbkl.h
@@ -77,57 +114,96 @@ A simple structure:
 │   ├── txbpat.h
 │   ├── txbpmute.h
 │   ├── txbpq.h
+│   ├── txbqu.h
 │   ├── txbrand.h
 │   ├── txbrs.h
 │   ├── txbsb.h
 │   ├── txbst.h
 │   └── txbstr.h
-├── src                      [source for building libraries]
-│   ├── da.c
-│   ├── dl.c
-│   ├── kl.c
-│   ├── kv.c
-│   ├── md5.c
-│   ├── misc.c
-│   ├── pat.c
-│   ├── pmute.c
-│   ├── pq.c
-│   ├── rand.c
-│   ├── rs.c
-│   ├── sb.c
-│   ├── st.c
-│   └── str.c
-└── test                     [source for testing]
-    ├── Makefile
-    ├── testlibs.c
-    ├── unitda.c
-    ├── unitdl.c
-    ├── unitkl.c
-    ├── unitkv.c
-    ├── unitmd5.c
-    ├── unitpat.c
-    ├── unitpq.c
-    ├── unitrand.c
-    ├── unitrs.c
-    ├── unitsb.c
-    ├── unitst.c
-    └── unittest.c
+└── source
+    ├── CMakeLists.txt
+    ├── inc
+    │   ├── da.h
+    │   ├── dl.h
+    │   ├── kl.h
+    │   ├── kv.h
+    │   ├── md5.h
+    │   ├── minunit.h
+    │   ├── misc.h
+    │   ├── pat.h
+    │   ├── pmute.h
+    │   ├── pq.h
+    │   ├── qu.h
+    │   ├── rand.h
+    │   ├── rs.h
+    │   ├── sb.h
+    │   ├── st.h
+    │   └── str.h
+    ├── src
+    │   ├── da.c
+    │   ├── dl.c
+    │   ├── kl.c
+    │   ├── kv.c
+    │   ├── md5.c
+    │   ├── minunit_example.c
+    │   ├── misc.c
+    │   ├── pat.c
+    │   ├── pmute.c
+    │   ├── pq.c
+    │   ├── qu.c
+    │   ├── rand.c
+    │   ├── rs.c
+    │   ├── sb.c
+    │   ├── st.c
+    │   └── str.c
+    └── unit
+        ├── unitda.c
+        ├── unitdl.c
+        ├── unitkl.c
+        ├── unitkv.c
+        ├── unitmd5.c
+        ├── unitmisc.c
+        ├── unitmute.c
+        ├── unitpat.c
+        ├── unitpq.c
+        ├── unitqu.c
+        ├── unitrand.c
+        ├── unitrs.c
+        ├── unitsb.c
+        ├── unitst.c
+        └── unitstr.c
+
+The build directory is not part of the git repository. Once you create
+it, run the following to generate the ninja build scripts:
+
+  cmake -G "Ninja Multi-Config" -S source -B build
+
+Then to build the binaries for testing, run:
+
+  cmake --build build --config (Release|Debug|RelWithDebInfo)
+
+You may want to change or remove the section roughly around line 40
+from "set(CMAKE_C_COMPILER..." through "add_link_options(...".
+
+Depending upon which config you selected, the binaries for the
+unit tests will be in the appropriate directory under build.
+
 
 
 Header Files
 ------------
 
-The complete header libraries are stored in the release/ subdirectory.
+The bundled header libraries are stored in the release/ sub-directory.
 Functions are in what I hope are sensible file groupings. Each header
 can be included multiple times in your projects, but only one file
 should define the implementation triggering macro:
 
-<filename>_IMPLEMENTATION.
+<filename>_IMPLEMENTATION
 
 The library headers are built using a library packer that combines the
 development include and source together with guarding and triggering
 preprocessor statements. The source for this utility is in the
-buildhdr/ subdirectory.
+buildhdr/ sub-directory.
 
 These are the headers:
 
@@ -142,7 +218,7 @@ These are the headers:
 | txbpat.h   | subset of regular expressions                         |
 | txbpmute.h | iterative permutation generator                       |
 | txbpq.h    | simple priority queue                                 |
-| txbrand.h  | random number suppport                                |
+| txbrand.h  | random number support                                 |
 | txbrs.h    | string read stream                                    |
 | txbsb.h    | string builder                                        |
 | txbst.h    | a simple stack                                        |
@@ -153,19 +229,22 @@ the implementation trigger for a header that you don't explicitly
 reference. 
 
 
+
 Library Source
 --------------
 
-The source (.c) and basic header (.h) are stored in the src/ and inc/
-subdirectories. Then a library include such as txbpat.h is created by
-a header library packer utility (see the buildhdr/ subdirectory) from
-the src/pat.c and inc/pat.h.
+The source (.c) and basic header (.h) are stored in the source/src/
+and source/inc/ sub-directories. Then a library include such as
+txbpat.h is created by a header library packer utility (see
+https://github.com/BlameTroi/buildhdr) from the src/pat.c and
+inc/pat.h.
+
 
 
 Testing
 -------
 
-The test/ subdirectory contains test source and build artifacts (.o)
+The test/ sub-directory contains test source and build artifacts (.o)
 for the unpacked versions of the libraries. These are still being
 cleaned up, but ultimately each library will have a separate unit test
 source file.
@@ -177,6 +256,8 @@ https://github.com/siu/minunit/blob/master/minunit.h.
 			 ====================
 			 Implementation Notes
 			 ====================
+
+
 
 Memory Management
 -----------------
@@ -196,6 +277,7 @@ Memory for instance data is cleared when allocated and overwritten
 with 0xfd (253) bytes before it is freed.
 
 
+
 Client Data
 -----------
 
@@ -213,11 +295,13 @@ The payload may be any value that will fit inside a void pointer, but
 is expected to be a pointer to some client managed data.
 
 
+
 Threading
 ---------
 
-I added threading support before I had a clear need for it. I'm in the
-process of removing it.
+I added threading support before I had a clear need for it. I've since
+removed it.
+
 
 
 Error Handling and Reporting
@@ -252,6 +336,7 @@ returns a brief description of the last non-fatal error.
 			 Library Descriptions
 			 ====================
 
+
 TXBDA.H
 -------
 
@@ -264,6 +349,7 @@ A dynamically resizing array.
 | da_put            | add an entry at a specific index               |
 | da_get            | get the entry at a specific index              |
 | da_length         | how many entries have potentially been added   |
+
 
 
 TXBDL.H
@@ -282,11 +368,12 @@ iteration.
 | dl_reset            | bulk delete all entries on the list.         |
 | dl_insert           | add a new item to the list.                  |
 | dl_delete           | remove an item from the list.                |
-| dl_udpate           | update an item on the list.                  |
+| dl_update           | update an item on the list.                  |
 | dl_get_first, _last | get the first or last item on the list.      |
 | dl_get_next,        | read forward or backward through the list.   |
 | _previous           |                                              |
 | dl_get_error        | get a brief description of last error.       | 
+
 
 
 TXBST.H
@@ -307,6 +394,7 @@ A simple stack. This is actually a thin API over txbdl.h.
 | st_depth          | returns number of items on the stack.          |
 
 
+
 TXBKL.H
 -------
 
@@ -322,13 +410,14 @@ A keyed doubly linked list. Entries must have unique orderable keys.
 | kl_reset            | bulk delete all entries on the list.         |
 | kl_insert           | add a new item to the list.                  |
 | kl_delete           | remove an item from the list.                |
-| kl_udpate           | update an item on the list.                  |
+| kl_update           | update an item on the list.                  |
 | kl_get              | get a specific item by key from the list.    |
 | kl_get_first        | get the first or last item on the list.      |
 | kl_get_last         | get the first or last item on the list.      |
 | kl_get_next,        | read forward or backward through the list.   |
 | _previous           |                                              |
 | kl_get_error        | get a brief description of last error.       | 
+
 
 
 TXBKV.H
@@ -352,6 +441,7 @@ storage structure for an application.
 | kv_values         | from the store, useful for iteration           |
 
 
+
 TXBMD5.H
 --------
 
@@ -368,19 +458,20 @@ lifting.
 
 Wilson provided functions to hide the messiness of the actual md5
 calculation, and they should be used for most operations. the lower
-level api functions are available as well, see inc/md5.h.
+level API functions are available as well, see inc/md5.h.
 
 | Function       | Description                                       |
 |----------------+---------------------------------------------------|           
-| md5_bytes      | these are the preferred functions to calcualate   |
+| md5_bytes      | these are the preferred functions to calculate    |
 | md5_string     | md5 hashes for strings of bytes, a character      |
 | md5_file       | string, or any file.                              |
+
 
 
 TXBMISC.H
 ---------
 
-A hodge-podge of several small functions that fall into one or more of
+A hodgepodge of several small functions that fall into one or more of
 the following categories:
 
 * functions with an API that makes little sense to me or is too unlike
@@ -393,7 +484,7 @@ the following categories:
 * functions I just wrote because I'd rather do it myself. 
 
 As these are libraries for personal projects, my definitions of digit,
-character, and word characters is US ASCII centric, that being
+character, and word characters is common US ASCII, that being
 sufficient for my needs.
 
 
@@ -405,15 +496,15 @@ sufficient for my needs.
 | is_odd         | is an integer odd?                                |
 | one_bits_in    | count one bits in an integer                      |
 | is_digit       | is a character a decimal digit?                   |
-| is_word_char   | is a character a word character (us ascii letters |
+| is_word_char   | is a character a word character (us ASCII letters |
 |                | and the underscore _)?                            |
-| is_lowercase   | a-z, us ascii letters?                            |
-| is_uppercase   | A-Z, us ascii letters?                            |
-| is_whitespace  | is the character a whitespace character (space,   |
+| is_lowercase   | a-z, us ASCII letters?                            |
+| is_uppercase   | A-Z, us ASCII letters?                            |
+| is_whitespace  | is the character a white space character (space,  |
 |                | tab, newline)?                                    |
-| is_punctuation | is the character an american english              |
-|                | puncturation character?                           |
-| is_control     | is a character an ascii control character?        |
+| is_punctuation | is the character an American English              |
+|                | punctuation character?                            |
+| is_control     | is a character an ASCII control character?        |
 | is_bracketing  | is a character a bracketing or grouping           |
 |                | character such as a parenthesis or brace?         |
 | fn_cmp_xxx_asc | as needed, comparators for qsort like functions   |
@@ -422,15 +513,17 @@ sufficient for my needs.
 | hex_unpack     | convert a string of bytes to hex digits           |
 
 
+
 TXBPMUTE.H
 ----------
 
-An interative permutation generator.
+An iterative permutation generator.
 
 | Function       | Description                                       |
 |----------------+---------------------------------------------------|           
 | permute_next   | permute the values in an integer array of a given |
 |                | size in place.                                    |
+
 
 
 TXBPAT.H
@@ -475,6 +568,7 @@ Functions:
 |                   | pattern source.                                |
 
 
+
 TXBPQ.H
 -------
 
@@ -491,6 +585,7 @@ A priority queue.
 | pq_create  | create a new empty priority queue.                    |
 | pq_destroy | release system resources of an empty priority queue.  |
 | pq_count   | how many items are in the queue?                      |
+
 
 
 TXBRS.H
@@ -514,9 +609,10 @@ A read stream on character strings (from file or memory).
 | rs_getc           | returns the next character from the string and |
 |                   | advances.                                      |
 | rs_ungetc         | back up one character, does not update string. |
-| rs_peekc          | returns the next characterf rom the string but |
+| rs_peekc          | returns the next character from the string but |
 |                   | does not advance.                              |
 | rs_gets           | returns a string as fgets() would.             |
+
 
 
 TXBRAND.H
@@ -541,6 +637,7 @@ The default is rand() for repeatable testing.
 |                       | been selected.                             |
 
 
+
 TXBSB.H
 -------
 
@@ -557,6 +654,7 @@ A string builder.
 | sb_putc           | append character to builder.                   |
 | sb_puts           | append string to builder.                      |
 | sb_to_string      | returns a copy of the string in the builder.   |
+
 
 
 TXBSTR.H
@@ -579,14 +677,13 @@ should.
 | less_than_.... |                                                   |
 | greater_than_. |                                                   |
 
-		     ============================
-		     TODO Items, Ideas, and Notes
-		     ============================
+		     =============================
+		     TO DO Items, Ideas, and Notes
+		     =============================
 
 
 pat:
 ---
-- remove old debugging code
 - implement decompile_pattern
 - implement {} quantifiers
 - general refactoring
@@ -597,3 +694,5 @@ pat:
 sb:
 --
 - non contiguous buffers.
+
+

@@ -1,20 +1,63 @@
-# Set the minimun CMake version required by the project
+# CMakeLists.txt for txblibs
+#
+# cmake -G "Ninja Multi-Config" -S source -B build
+# cmake --build build --config Release or Debug or RelWithDebInfo ...
+#
+# this builds the unit tests for the libraries. to generate the
+# release includes use Makefile in the root directory to run
+# buildhdr which bundles up the xx.h and xx.c files into txbxx.h
+# for client use.
 
 cmake_minimum_required(VERSION 3.5)
 
-# Set a name for the project
+project(
+  TXBLIBS
+  VERSION 0.0.0.1
+  DESCRIPTION "single header c libraries mostly for my personal use"
+  HOMEPAGE_URL "https://github.com/BlameTroi/txblibs"
+  LANGUAGES C
+)
 
-project(txblibs)
-
+# i'm picky about compiler and options
 #
-set(CMAKE_C_STANDARD 17)
-set(CMAKE_C_STANDARD_REQUIRED True)
+# TO DO how do i change these for the other configurations
+#
+# something like the following is wrong, i'm using configs not builds,
+# but i don't yet know if CMAKE_CONFIG_TYPE is usable this way.
+#
+# if(CMAKE_BUILD_TYPE MATCHES "Debug")
+#   add_compile_options( -Wall --pedantic-errors -Werror -G3 -fsanitize=address -std=c18 )
+# elseif(CMAKE_BUILD_TYPE MATCHES "RelWithDebInfo")
+#   add_compile_options( -Wall --pedantic-errors -Werror -G -std=c18 )
+# elseif(CMAKE_BUILD_TYPE MATCHES "Release")
+#   add_compile_options( -Wall --pedantic-errors -Werror -O2 -std=c18 )
+# endif()
+#
+# testing without tweaking produces binaries of different sizes so it looks
+# as if we're moving in the right direction.
 
-set(CMAKE_C_FLAGS "-Wall -Werror -g3 -pedantic-errors")
+set(
+  CMAKE_C_COMPILER "clang"
+)
+add_compile_options(
+  -Wall
+  --pedantic-errors
+  -Werror
+  -g3
+  -fsanitize=address
+  -std=c18
+)
+add_link_options(
+  -fsanitize=address
+)
 
+# the build done here is for compilation and testing with
+# minunit. the executables are all command line programs.
 
-
-# Create an executable with the source code file
+# the following seems redundant but i think of it like a
+# linkdeck from my mainframe days. declarative and the
+# repetition isn't very expensive. the gnu make scripting
+# to do this on the fly was more hassle than it was worth.
 
 add_executable(unitda "${CMAKE_CURRENT_SOURCE_DIR}/unit/unitda.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/da.c"
