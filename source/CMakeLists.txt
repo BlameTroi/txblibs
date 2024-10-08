@@ -20,36 +20,57 @@ project(
 
 # i'm picky about compiler and options
 #
-# TO DO how do i change these for the other configurations
+# cmake and/or ninja default these so that the debug configurations
+# include -g while the release configuration removes -g and adds
+# -DNDEBUG -O3.
 #
-# something like the following is wrong, i'm using configs not builds,
-# but i don't yet know if CMAKE_CONFIG_TYPE is usable this way.
+# i use assert for error handling so for compiled code that counts
+# on assert i need to manage NDEBUG better.
 #
-# if(CMAKE_BUILD_TYPE MATCHES "Debug")
-#   add_compile_options( -Wall --pedantic-errors -Werror -G3 -fsanitize=address -std=c18 )
-# elseif(CMAKE_BUILD_TYPE MATCHES "RelWithDebInfo")
-#   add_compile_options( -Wall --pedantic-errors -Werror -G -std=c18 )
-# elseif(CMAKE_BUILD_TYPE MATCHES "Release")
-#   add_compile_options( -Wall --pedantic-errors -Werror -O2 -std=c18 )
-# endif()
-#
-# testing without tweaking produces binaries of different sizes so it looks
-# as if we're moving in the right direction.
+# the only executables produced by this project are the minunit
+# example, the unit tests, and buildhdr. buildhdr works well
+# enough that it won't miss the asserts and i'll figure out
+# a proper way to handle NDEBUG.
 
 set(
   CMAKE_C_COMPILER "clang"
 )
+
 add_compile_options(
   -Wall
   --pedantic-errors
   -Werror
-  -g3
-  -fsanitize=address
   -std=c18
 )
-add_link_options(
-  -fsanitize=address
-)
+
+if(CMAKE_CONFIG_TYPE MATCHES "Debug")
+  add_compile_options(
+    -g3
+    -fsanitize=address
+  )
+  add_link_options(
+    -fsanitize=address
+  )
+elseif(CMAKE_CONFIG_TYPE MATCHES "RelWithDebInfo")
+  add_compile_options(
+    -g3
+  )
+endif()
+
+# will the following work?
+# add_compile_options(
+#   -Wall
+#   -Wextra
+#   -Wconversion
+#   -Wsign-conversion
+#   $<$<CONFIG:Debug>:-g3>
+#   $<$<CONFIG:Debug>:-Og>
+#   $<$<CONFIG:Release>:-O3>
+# )
+#
+# add_compile_definitions(
+#   $<$<CONFIG:DEBUG>:DEBUG>
+# )
 
 # the build done here is for compilation and testing with
 # minunit. the executables are all command line programs.
@@ -58,6 +79,12 @@ add_link_options(
 # linkdeck from my mainframe days. declarative and the
 # repetition isn't very expensive. the gnu make scripting
 # to do this on the fly was more hassle than it was worth.
+
+add_executable(minunit_example "${CMAKE_CURRENT_SOURCE_DIR}/src/minunit_example.c")
+target_include_directories(minunit_example PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/inc")
+
+add_executable(buildhdr "${CMAKE_CURRENT_SOURCE_DIR}/src/buildhdr.c")
+target_include_directories(buildhdr PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/inc")
 
 add_executable(unitda "${CMAKE_CURRENT_SOURCE_DIR}/unit/unitda.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/da.c"
