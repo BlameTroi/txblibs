@@ -203,7 +203,7 @@ should define the implementation triggering macro:
 The library headers are built using a library packer that combines the
 development include and source together with guarding and triggering
 preprocessor statements. The source for this utility is in the
-buildhdr/ sub-directory.
+source/src sub-directory.
 
 These are the headers:
 
