@@ -9,7 +9,7 @@
 
 #include "minunit.h"
 
-#include "str.h"
+#include "../inc/str.h"
 
 /*
  * tests for the string library

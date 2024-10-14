@@ -8,7 +8,7 @@
 
 #include "minunit.h"
 
-#include "st.h"
+#include "../inc/st.h"
 
 /*
  * minunit setup and teardown.

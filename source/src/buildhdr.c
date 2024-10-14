@@ -22,6 +22,7 @@
  * to copy, modify, publish, and distribute this file as you see fit.
  */
 
+#include <assert.h>
 #include <sys/errno.h>
 #include <stdbool.h>
 #include <stdio.h>

@@ -9,9 +9,9 @@
 
 #include "minunit.h"
 
-#include "str.h"
-#include "misc.h"
-#include "pat.h"
+#include "../inc/str.h"
+#include "../inc/misc.h"
+#include "../inc/pat.h"
 
 /*
  * the validate_compiled_pattern is a 'hidden' function in txbpat. it

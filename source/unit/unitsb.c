@@ -7,9 +7,9 @@
 
 #include "minunit.h"
 
-#include "str.h"
+#include "../inc/str.h"
 
-#include "sb.h"
+#include "../inc/sb.h"
 
 /*
  * minunit setup and teardown.

@@ -11,10 +11,10 @@
 
 #include "minunit.h"
 
-#include "misc.h"
-#include "dl.h"
-#include "str.h"
-#include "rand.h"
+#include "../inc/misc.h"
+#include "../inc/dl.h"
+#include "../inc/str.h"
+#include "../inc/rand.h"
 
 /*
  * tests for  txbdl -- doubly linked list

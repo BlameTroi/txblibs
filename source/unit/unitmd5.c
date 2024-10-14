@@ -8,7 +8,7 @@
 
 #include "minunit.h"
 
-#include "md5.h"
+#include "../inc/md5.h"
 
 /*
  * minunit setup and teardown of listd infratstructure.

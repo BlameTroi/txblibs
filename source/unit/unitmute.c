@@ -9,7 +9,7 @@
 
 #include "minunit.h"
 
-#include "pmute.h"
+#include "../inc/pmute.h"
 
 /*
  * minunit setup and teardown.
