@@ -36,26 +36,26 @@ set(
   CMAKE_C_COMPILER "clang"
 )
 
-add_compile_options(
-  -Wall
-  --pedantic-errors
-  -Werror
-  -std=c18
-)
 
-if(CMAKE_CONFIG_TYPE MATCHES "Debug")
-  add_compile_options(
-    -g3
-    -fsanitize=address
-  )
-  add_link_options(
-    -fsanitize=address
-  )
-elseif(CMAKE_CONFIG_TYPE MATCHES "RelWithDebInfo")
-  add_compile_options(
-    -g3
-  )
-endif()
+# add_compile_options(
+#   -Wall
+#   --pedantic-errors
+#   -Werror
+#   -std=c18
+# )
+# if(CMAKE_CONFIG_TYPE MATCHES "Debug")
+#   add_compile_options(
+#     -g3
+#     -fsanitize=address
+#   )
+#   add_link_options(
+#     -fsanitize=address
+#   )
+# elseif(CMAKE_CONFIG_TYPE MATCHES "RelWithDebInfo")
+#   add_compile_options(
+#     -g3
+#   )
+# endif()
 
 # will the following work?
 # add_compile_options(
@@ -80,16 +80,47 @@ endif()
 # repetition isn't very expensive. the gnu make scripting
 # to do this on the fly was more hassle than it was worth.
 
+# cmake is a moving target, and the compile options conditionals via
+# if() don't work (if they ever did). the following passes options to
+# each build configuration properly.
+#
+# first, create options variable strings for each configuration.
+#
+# then, for each target, specify:
+#
+# target_<step>_options(generator_expression:replacement)
+#
+# for each possible target configuration using generator expressions
+# for your configurations.
+
+set(MY_RELEASE_OPTIONS "-Wall -Werror -pedantic-errors -std=c18")
+set(MY_RELWITHDEBINFO_OPTIONS "-Wall -Werror -pedantic-errors -std=c18 -g")
+set(MY_DEBUG_OPTIONS "-Wall -Werror -pedantic-errors -std=c18 -g -fsanitize=address")
+set(MY_DEBUG_LINK_OPTIONS "-fsanitize=address")
+
+
 add_executable(minunit_example "${CMAKE_CURRENT_SOURCE_DIR}/src/minunit_example.c")
 target_include_directories(minunit_example PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/inc")
+target_link_options(minunit_example PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_LINK_OPTIONS}>")
+target_compile_options(minunit_example PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:SHELL:${MY_REL_DEB_OPTIONS}>")
+target_compile_options(minunit_example PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_OPTIONS}>")
+target_compile_options(minunit_example PUBLIC "$<$<CONFIG:RELEASE>:SHELL:${MY_RELEASE_OPTIONS}>")
 
 add_executable(buildhdr "${CMAKE_CURRENT_SOURCE_DIR}/src/buildhdr.c")
 target_include_directories(buildhdr PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/inc")
+target_link_options(buildhdr PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_LINK_OPTIONS}>")
+target_compile_options(buildhdr PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:SHELL:${MY_REL_DEB_OPTIONS}>")
+target_compile_options(buildhdr PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_OPTIONS}>")
+target_compile_options(buildhdr PUBLIC "$<$<CONFIG:RELEASE>:SHELL:${MY_RELEASE_OPTIONS}>")
 
 add_executable(unitda "${CMAKE_CURRENT_SOURCE_DIR}/unit/unitda.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/da.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/rand.c")
 target_include_directories(unitda PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/inc")
+target_link_options(unitda PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_LINK_OPTIONS}>")
+target_compile_options(unitda PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:SHELL:${MY_REL_DEB_OPTIONS}>")
+target_compile_options(unitda PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_OPTIONS}>")
+target_compile_options(unitda PUBLIC "$<$<CONFIG:RELEASE>:SHELL:${MY_RELEASE_OPTIONS}>")
 
 add_executable(unitdl "${CMAKE_CURRENT_SOURCE_DIR}/unit/unitdl.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/dl.c"
@@ -97,69 +128,125 @@ add_executable(unitdl "${CMAKE_CURRENT_SOURCE_DIR}/unit/unitdl.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/rand.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/str.c")
 target_include_directories(unitdl PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/inc")
+target_link_options(unitdl PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_LINK_OPTIONS}>")
+target_compile_options(unitdl PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:SHELL:${MY_REL_DEB_OPTIONS}>")
+target_compile_options(unitdl PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_OPTIONS}>")
+target_compile_options(unitdl PUBLIC "$<$<CONFIG:RELEASE>:SHELL:${MY_RELEASE_OPTIONS}>")
 
 add_executable(unitkl "${CMAKE_CURRENT_SOURCE_DIR}/unit/unitkl.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/kl.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/rand.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/str.c")
 target_include_directories(unitkl PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/inc")
+target_link_options(unitkl PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_LINK_OPTIONS}>")
+target_compile_options(unitkl PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:SHELL:${MY_REL_DEB_OPTIONS}>")
+target_compile_options(unitkl PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_OPTIONS}>")
+target_compile_options(unitkl PUBLIC "$<$<CONFIG:RELEASE>:SHELL:${MY_RELEASE_OPTIONS}>")
 
 add_executable(unitkv "${CMAKE_CURRENT_SOURCE_DIR}/unit/unitkv.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/kv.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/rand.c")
 target_include_directories(unitkv PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/inc")
+target_link_options(unitkv PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_LINK_OPTIONS}>")
+target_compile_options(unitkv PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:SHELL:${MY_REL_DEB_OPTIONS}>")
+target_compile_options(unitkv PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_OPTIONS}>")
+target_compile_options(unitkv PUBLIC "$<$<CONFIG:RELEASE>:SHELL:${MY_RELEASE_OPTIONS}>")
 
 add_executable(unitmd5 "${CMAKE_CURRENT_SOURCE_DIR}/unit/unitmd5.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/md5.c")
 target_include_directories(unitmd5 PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/inc")
+target_link_options(unitmd5 PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_LINK_OPTIONS}>")
+target_compile_options(unitmd5 PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:SHELL:${MY_REL_DEB_OPTIONS}>")
+target_compile_options(unitmd5 PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_OPTIONS}>")
+target_compile_options(unitmd5 PUBLIC "$<$<CONFIG:RELEASE>:SHELL:${MY_RELEASE_OPTIONS}>")
 
 add_executable(unitmisc "${CMAKE_CURRENT_SOURCE_DIR}/unit/unitmisc.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/misc.c")
 target_include_directories(unitmisc PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/inc")
+target_link_options(unitmisc PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_LINK_OPTIONS}>")
+target_compile_options(unitmisc PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:SHELL:${MY_REL_DEB_OPTIONS}>")
+target_compile_options(unitmisc PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_OPTIONS}>")
+target_compile_options(unitmisc PUBLIC "$<$<CONFIG:RELEASE>:SHELL:${MY_RELEASE_OPTIONS}>")
 
 add_executable(unitmute "${CMAKE_CURRENT_SOURCE_DIR}/unit/unitmute.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/pmute.c")
 target_include_directories(unitmute PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/inc")
+target_link_options(unitmute PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_LINK_OPTIONS}>")
+target_compile_options(unitmute PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:SHELL:${MY_REL_DEB_OPTIONS}>")
+target_compile_options(unitmute PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_OPTIONS}>")
+target_compile_options(unitmute PUBLIC "$<$<CONFIG:RELEASE>:SHELL:${MY_RELEASE_OPTIONS}>")
 
 add_executable(unitpat "${CMAKE_CURRENT_SOURCE_DIR}/unit/unitpat.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/pat.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/misc.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/str.c")
 target_include_directories(unitpat PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/inc")
+target_link_options(unitpat PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_LINK_OPTIONS}>")
+target_compile_options(unitpat PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:SHELL:${MY_REL_DEB_OPTIONS}>")
+target_compile_options(unitpat PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_OPTIONS}>")
+target_compile_options(unitpat PUBLIC "$<$<CONFIG:RELEASE>:SHELL:${MY_RELEASE_OPTIONS}>")
 
 add_executable(unitpq "${CMAKE_CURRENT_SOURCE_DIR}/unit/unitpq.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/pq.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/rand.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/str.c")
 target_include_directories(unitpq PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/inc")
+target_link_options(unitpq PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_LINK_OPTIONS}>")
+target_compile_options(unitpq PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:SHELL:${MY_REL_DEB_OPTIONS}>")
+target_compile_options(unitpq PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_OPTIONS}>")
+target_compile_options(unitpq PUBLIC "$<$<CONFIG:RELEASE>:SHELL:${MY_RELEASE_OPTIONS}>")
 
 add_executable(unitqu "${CMAKE_CURRENT_SOURCE_DIR}/unit/unitqu.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/str.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/qu.c")
 target_include_directories(unitqu PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/inc")
+target_link_options(unitqu PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_LINK_OPTIONS}>")
+target_compile_options(unitqu PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:SHELL:${MY_REL_DEB_OPTIONS}>")
+target_compile_options(unitqu PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_OPTIONS}>")
+target_compile_options(unitqu PUBLIC "$<$<CONFIG:RELEASE>:SHELL:${MY_RELEASE_OPTIONS}>")
 
 add_executable(unitrand "${CMAKE_CURRENT_SOURCE_DIR}/unit/unitrand.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/rand.c")
 target_include_directories(unitrand PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/inc")
+target_link_options(unitrand PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_LINK_OPTIONS}>")
+target_compile_options(unitrand PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:SHELL:${MY_REL_DEB_OPTIONS}>")
+target_compile_options(unitrand PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_OPTIONS}>")
+target_compile_options(unitrand PUBLIC "$<$<CONFIG:RELEASE>:SHELL:${MY_RELEASE_OPTIONS}>")
 
 add_executable(unitrs "${CMAKE_CURRENT_SOURCE_DIR}/unit/unitrs.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/str.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/rs.c")
 target_include_directories(unitrs PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/inc")
+target_link_options(unitrs PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_LINK_OPTIONS}>")
+target_compile_options(unitrs PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:SHELL:${MY_REL_DEB_OPTIONS}>")
+target_compile_options(unitrs PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_OPTIONS}>")
+target_compile_options(unitrs PUBLIC "$<$<CONFIG:RELEASE>:SHELL:${MY_RELEASE_OPTIONS}>")
 
 add_executable(unitsb "${CMAKE_CURRENT_SOURCE_DIR}/unit/unitsb.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/sb.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/str.c")
 target_include_directories(unitsb PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/inc")
+target_link_options(unitsb PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_LINK_OPTIONS}>")
+target_compile_options(unitsb PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:SHELL:${MY_REL_DEB_OPTIONS}>")
+target_compile_options(unitsb PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_OPTIONS}>")
+target_compile_options(unitsb PUBLIC "$<$<CONFIG:RELEASE>:SHELL:${MY_RELEASE_OPTIONS}>")
 
 add_executable(unitst "${CMAKE_CURRENT_SOURCE_DIR}/unit/unitst.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/st.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/dl.c")
 target_include_directories(unitst PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/inc")
+target_link_options(unitst PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_LINK_OPTIONS}>")
+target_compile_options(unitst PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:SHELL:${MY_REL_DEB_OPTIONS}>")
+target_compile_options(unitst PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_OPTIONS}>")
+target_compile_options(unitst PUBLIC "$<$<CONFIG:RELEASE>:SHELL:${MY_RELEASE_OPTIONS}>")
 
 add_executable(unitstr "${CMAKE_CURRENT_SOURCE_DIR}/unit/unitstr.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/str.c")
 target_include_directories(unitstr PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/inc")
+target_link_options(unitstr PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_LINK_OPTIONS}>")
+target_compile_options(unitstr PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:SHELL:${MY_REL_DEB_OPTIONS}>")
+target_compile_options(unitstr PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_OPTIONS}>")
+target_compile_options(unitstr PUBLIC "$<$<CONFIG:RELEASE>:SHELL:${MY_RELEASE_OPTIONS}>")
 
 # add_library(txblibs OBJECT
 #   "${CMAKE_CURRENT_SOURCE_DIR}/src/da.c"
