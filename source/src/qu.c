@@ -220,7 +220,7 @@ qu_dequeue(
 /*
  * qu_peek
  *
- * return the first (oldet) item on the queue but leave
+ * return the first (oldest) item on the queue but leave
  * it on the queue.
  *
  *     in: the qu instance

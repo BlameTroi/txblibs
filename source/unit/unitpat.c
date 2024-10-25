@@ -264,7 +264,8 @@ MU_TEST(test_compile_metas) {
 
 	pat = compile_pattern("[^^?$.#(){}\\\\<>]");
 	val = (int[]) {
-		PAT_NOT_CCLASS, 12, '^', '?', '$', '.',  '#', '(', ')', '{', '}', '\\', '<',
+		PAT_NOT_CCLASS,
+		12, '^', '?', '$', '.',  '#', '(', ')', '{', '}', '\\', '<',
 		'>', -1
 	};
 	mu_should(validate_compiled_pattern(pat, val));

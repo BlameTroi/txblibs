@@ -1,7 +1,7 @@
-/* st.h -- blametroi's fixed size stack -- */
+/* qu.h -- blametroi's simple queue -- */
 
 /*
- * a header only implementation of a stack.
+ * a header only implementation of a queue.
  *
  * released to the public domain by Troy Brumley blametroi@gmail.com
  *
@@ -10,141 +10,143 @@
  * to copy, modify, publish, and distribute this file as you see fit.
  */
 
+#include <stdbool.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-#include <stdbool.h>
-
 /*
- * an instance of a stack.
+ * an instance of a queue.
  */
 
-typedef struct stcb stcb;
+typedef struct qucb qucb;
 
 /*
- * sb_create
+ * qu_empty
  *
- * create a new empty stack instance.
+ * are there items in the queue?
+ *
+ *     in: the qu instance
+ *
+ * return: boolean, true if empty
+ */
+
+bool
+qu_empty(
+	qucb *
+);
+
+/*
+ * qu_enqueue
+ *
+ * add an item to the queue.
+ *
+ *     in: the qu instance
+ *
+ *     in: void * client payload
+ *
+ * return: nothing.
+ */
+
+void
+qu_enqueue(
+	qucb *,
+	void *
+);
+
+/*
+ * qu_dequeue
+ *
+ * remove and return the first (oldest) item on the queue.
+ *
+ *     in: the qu instance
+ *
+ * return: void * client payload or NULL if queue is empty.
+ */
+
+void *
+qu_dequeue(
+	qucb *
+);
+
+/*
+ * qu_peek
+ *
+ * return the first (oldet) item on the queue but leave
+ * it on the queue.
+ *
+ *     in: the qu instance
+ *
+ * return: void * client payload or NULL if queue is empty.
+ */
+
+void *
+qu_peek(
+	qucb *
+);
+
+/*
+ * qu_create
+ *
+ * create a new queue.
  *
  *     in: nothing
  *
- * return: the st instance
+ * return: the new qu instance.
  */
 
-stcb *
-st_create(
+qucb *
+qu_create(
 	void
 );
 
 /*
- * st_push
+ * qu_destroy
  *
- * push a new item on the stack.
+ * free the queue control block if the queue is empty.
  *
- *     in: the st instance
+ *     in: the qu instance
  *
- *     in: the item as a void *
- *
- * return: nothing
- */
-
-void
-st_push(
-	stcb *st,
-	void *item
-);
-/*
- * st_pop
- *
- * pop an item off the stack.
- *
- *     in: the st instance
- *
- * return: the item as a void *
- */
-
-void *
-st_pop(
-	stcb *st
-);
-
-/*
- * st_peek
- *
- * get the top item from the stack without removing it.
- *
- *     in: the st instance
- *
- * return: the item as a void *
- */
-
-void *
-st_peek(
-	stcb *st
-);
-
-/*
- * st_empty
- *
- * is the stack empty?
- *
- *    in: the st instance
- *
- * return: bool
+ * return: boolean, true if successful, false if queue is not empty
  */
 
 bool
-st_empty(
-	stcb *st
+qu_destroy(
+	qucb *
 );
 
 /*
- * st_depth
+ * qu_reset
  *
- * how many items are on the stack?
+ * remove all items from the queue.
  *
- *    in: the st instance
+ *     in: the qu instance
  *
- * return: int
+ * return: int number of items removed
  */
 
 int
-st_depth(
-	stcb *st
+qu_reset(
+	qucb *
 );
 
 /*
- * st_reset
+ * qu_count
  *
- * delete all items from the stack.
+ * how many items are in the queue?
  *
- *     in: the st instance
+ *     in: the qu instance.
  *
- * return: int number of items deleted
+ * return: int, number of items.
  */
 
 int
-st_reset(
-	stcb *st
-);
-
-/*
- * sb_destroy
- *
- * if the stack is empty, release its resources.
- *
- *     in: the st instance
- *
- * return: bool was the st destroyed and freed
- */
-
-bool
-st_destroy(
-	stcb *st
+qu_count(
+	qucb *
 );
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-/* st.h ends here */
+/* qu.h ends here */

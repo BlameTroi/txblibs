@@ -247,21 +247,3 @@ target_link_options(unitstr PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_LINK_OPTI
 target_compile_options(unitstr PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:SHELL:${MY_REL_DEB_OPTIONS}>")
 target_compile_options(unitstr PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_OPTIONS}>")
 target_compile_options(unitstr PUBLIC "$<$<CONFIG:RELEASE>:SHELL:${MY_RELEASE_OPTIONS}>")
-
-# add_library(txblibs OBJECT
-#   "${CMAKE_CURRENT_SOURCE_DIR}/src/da.c"
-#   "${CMAKE_CURRENT_SOURCE_DIR}/src/da.c"
-#   "${CMAKE_CURRENT_SOURCE_DIR}/src/dl.c"
-#   "${CMAKE_CURRENT_SOURCE_DIR}/src/kl.c"
-#   "${CMAKE_CURRENT_SOURCE_DIR}/src/kv.c"
-#   "${CMAKE_CURRENT_SOURCE_DIR}/src/md5.c"
-#   "${CMAKE_CURRENT_SOURCE_DIR}/src/misc.c"
-#   "${CMAKE_CURRENT_SOURCE_DIR}/src/pat.c"
-#   "${CMAKE_CURRENT_SOURCE_DIR}/src/pmute.c"
-#   "${CMAKE_CURRENT_SOURCE_DIR}/src/pq.c"
-#   "${CMAKE_CURRENT_SOURCE_DIR}/src/qu.c"
-#   "${CMAKE_CURRENT_SOURCE_DIR}/src/rand.c"
-#   "${CMAKE_CURRENT_SOURCE_DIR}/src/rs.c"
-#   "${CMAKE_CURRENT_SOURCE_DIR}/src/sb.c"
-#   "${CMAKE_CURRENT_SOURCE_DIR}/src/st.c"
-#   "${CMAKE_CURRENT_SOURCE_DIR}/src/str.c")

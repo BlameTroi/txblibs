@@ -21,6 +21,7 @@
 # transient artifacts and file system helpers, along
 # with binaries that shouldn't be versioned.
 
+.cache/
 a.out
 *.dSYM/
 *.d

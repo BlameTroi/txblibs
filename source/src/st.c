@@ -1,7 +1,7 @@
-/* st.c -- blametroi's simple stack -- */
+/* qu.c -- blametroi's simple queue -- */
 
 /*
- * a header only implementation of a simple stack.
+ * a header only implementation of a simple queue.
  *
  * released to the public domain by Troy Brumley blametroi@gmail.com
  *
@@ -10,194 +10,307 @@
  * to copy, modify, publish, and distribute this file as you see fit.
  */
 
-#include <string.h>
+#include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "../inc/abort_if.h"
 
-#include "../inc/dl.h"
-
-#include "../inc/st.h"
-
-/*
- * the st is a stack api laid over a doubly linked list.
- */
-
-#define STCB_TAG "__STCB__"
-#define STCB_TAG_LEN 8
-
-#define ASSERT_STCB(p, m) \
-	abort_if(!(p) || memcmp((p), STCB_TAG, STCB_TAG_LEN) != 0, (m));
-
-#define ASSERT_STCB_OR_NULL(p, m) \
-	abort_if(p && memcmp((p), STCB_TAG, STCB_TAG_LEN) != 0, (m));
-
-struct stcb {
-	char tag[STCB_TAG_LEN];
-	dlcb *dl;
-};
+#include "../inc/qu.h"
 
 /*
- * sb_create
- *
- * create a new empty stack instance.
- *
- *     in: nothing
- *
- * return: the st instance
+ * transparent control block definitions.
  */
 
-stcb *
-st_create(
-	void
+#define QUITEM_TAG "__QUIT__"
+#define QUITEM_TAG_LEN 8
+
+#define ASSERT_QUITEM(p, m) \
+	abort_if(!(p) || memcmp((p), QUITEM_TAG, QUITEM_TAG_LEN) != 0, (m));
+
+#define ASSERT_QUITEM_OR_NULL(p, m) \
+	abort_if(p && memcmp((p), QUITEM_TAG, QUITEM_TAG_LEN) != 0, (m));
+
+typedef struct quitem {
+	char tag[QUITEM_TAG_LEN];
+	struct quitem *next;
+	void *payload;
+} quitem;
+
+#define QUCB_TAG "__QUCB__"
+#define QUCB_TAG_LEN 8
+
+#define ASSERT_QUCB(p, m) \
+	abort_if(!(p) || memcmp((p), QUCB_TAG, QUCB_TAG_LEN) != 0, (m));
+
+#define ASSERT_QUCB_OR_NULL(p, m) \
+	abort_if(p && memcmp((p), QUCB_TAG, QUCB_TAG_LEN) != 0, (m));
+
+struct qucb {
+	char tag[QUCB_TAG_LEN];
+	quitem *first;
+	quitem *last;
+};
+
+
+/*
+ * this is a simple queue implementation.
+ *
+ * error checking:
+ *
+ * minimal via assertions. fatal errors such as passing an invalid
+ * qucb will fail the assertion. qu_destroy will return a false
+ * if it can not complete, but that shouldn't happen. i just haven't
+ * worked out the threading around there.
+ *
+ * brief api overview:
+ *
+ * all functions except qu_create take a qucb*, the queue control
+ * block.
+ *
+ * the data to manage in the queue is a void *, a pointer to the data
+ * or if it will fit in a void *, the data itself.
+ *
+ * the order of retrieval of items is first in first out.
+ *
+ * qu_create  -- create a new queue, returns a qucb*
+ *
+ * qu_empty   -- is the queue empty? returns bool
+ *
+ * qu_count   -- how many items are in the queue? returns int
+ *
+ * qu_enqueue -- add an item to the queue.
+ *
+ * qu_dequeue -- remove and return the oldest item in the queue.
+ *
+ * qu_peek    -- return the oldest item in the queue, but leave
+ *               it on the queue.
+ *
+ * qu_reset   -- remove all items from the queue.
+ *
+ * qu_destroy -- if the queue is empty and not in use, release
+ *               the qucb. returns true if successful.
+ */
+
+/*
+ * qu_empty
+ *
+ * are there items in the queue?
+ *
+ *     in: the qu instance
+ *
+ * return: boolean, true if empty
+ */
+
+bool
+qu_empty(
+	qucb *qu
 ) {
-	stcb *st = malloc(sizeof(*st));
-	memset(st, 0, sizeof(*st));
-	memcpy(st->tag, STCB_TAG, sizeof(st->tag));
-	st->dl = dl_create();
-	return st;
+	ASSERT_QUCB(qu, "invalid QUCB");
+	return qu->first == NULL;
 }
 
 /*
- * st_push
+ * qu_count
  *
- * push a new item on the stack.
+ * how many items are in the queue?
  *
- *     in: the st instance
+ *     in: the qu instance.
  *
- *     in: the item as a void *
+ * return: int, number of items.
+ */
+
+int
+qu_count(
+	qucb *qu
+) {
+	ASSERT_QUCB(qu, "invalid QUCB");
+
+	if (qu->first == NULL)
+		return 0;
+	if (qu->first == qu->last)
+		return 1;
+
+	int i = 0;
+	quitem *qi = qu->first;
+	while (qi) {
+		i += 1;
+		qi = qi->next;
+	}
+	return i;
+}
+
+/*
+ * qu_new_item
  *
- * return: nothing
+ * package the client payload for enry in queue.
+ *
+ *     in: void * client payload
+ *
+ * return: the new quitem
+ */
+
+static
+quitem *
+qu_new_item(
+	void *payload
+) {
+	quitem *qi = malloc(sizeof(*qi));
+	memset(qi, 0, sizeof(*qi));
+	memcpy(qi->tag, QUITEM_TAG, sizeof(qi->tag));
+	qi->payload = payload;
+	qi->next = NULL;
+	return qi;
+}
+
+/*
+ * qu_enqueue
+ *
+ * add an item to the queue.
+ *
+ *     in: the qu instance
+ *
+ *     in: void * client payload
+ *
+ * return: nothing.
  */
 
 void
-st_push(
-	stcb *st,
-	void *item
+qu_enqueue(
+	qucb *qu,
+	void *payload
 ) {
-	ASSERT_STCB(st, "invalid STCB");
-	dl_insert_last(st->dl, item);
+	ASSERT_QUCB(qu, "invalid QUCB");
+	quitem *qi = qu_new_item(payload);
+	if (qu->first == NULL) {
+		qu->first = qi;
+		qu->last = qi;
+		return;
+	}
+	qu->last->next = qi;
+	qu->last = qi;
+	return;
 }
 
 /*
- * st_pop
+ * qu_dequeue
  *
- * pop an item off the stack.
+ * remove and return the first (oldest) item on the queue.
  *
- *     in: the st instance
+ *     in: the qu instance
  *
- * return: the item as a void *
+ * return: void * client payload or NULL if queue is empty.
  */
 
 void *
-st_pop(
-	stcb *st
+qu_dequeue(
+	qucb *qu
 ) {
-	ASSERT_STCB(st, "invalid STCB");
-	void *payload = NULL;
-	dlid id = dl_get_last(st->dl, &payload);
-	abort_if(null_dlid(id),
-		"st st_pop stack empty");
-	dl_delete(st->dl, id);
-	return payload;
+	ASSERT_QUCB(qu, "invalid QUCB");
+	if (qu->first == NULL)
+		return NULL;
+	quitem *qi = qu->first;
+	qu->first = qi->next;
+	void *res = qi->payload;
+	memset(qi, 253, sizeof(*qi));
+	free(qi);
+	return res;
 }
 
 /*
- * st_peek
+ * qu_peek
  *
- * get the top item from the stack without removing it.
+ * return the first (oldest) item on the queue but leave
+ * it on the queue.
  *
- *     in: the st instance
+ *     in: the qu instance
  *
- * return: the item as a void *
+ * return: void * client payload or NULL if queue is empty.
  */
 
 void *
-st_peek(
-	stcb *st
+qu_peek(
+	qucb *qu
 ) {
-	ASSERT_STCB(st, "invalid STCB");
-	void *payload = NULL;
-	dlid id = dl_get_last(st->dl, &payload);
-	abort_if(null_dlid(id),
-		"st st_peek stack empty");
-	return payload;
+	ASSERT_QUCB(qu, "invalid QUCB");
+	if (qu->first == NULL)
+		return NULL;
+	return qu->first->payload;
 }
 
 /*
- * st_empty
+ * qu_create
  *
- * is the stack empty?
+ * create a new queue.
  *
- *    in: the st instance
+ *     in: nothing
  *
- * return: bool
+ * return: the new qu instance.
  */
 
-bool
-st_empty(
-	stcb *st
+qucb *
+qu_create(
+	void
 ) {
-	ASSERT_STCB(st, "invalid STCB");
-	return dl_empty(st->dl);
+	qucb *qu = malloc(sizeof(*qu));
+	abort_if(!qu,
+		"qu_create could not allocate QUCB");
+	memset(qu, 0, sizeof(*qu));
+	memcpy(qu->tag, QUCB_TAG, sizeof(qu->tag));
+	qu->first = NULL;
+	qu->last = NULL;
+	return qu;
 }
 
 /*
- * st_depth
+ * qu_reset
  *
- * how many items are on the stack?
+ * remove all items from the queue.
  *
- *    in: the st instance
+ *     in: the qu instance
  *
- * return: int
+ * return: int number of items removed
  */
 
 int
-st_depth(
-	stcb *st
+qu_reset(
+	qucb *qu
 ) {
-	ASSERT_STCB(st, "invalid STCB");
-	return dl_count(st->dl);
+	ASSERT_QUCB(qu, "invalid QUCB");
+	if (qu->first == NULL)
+		return 0;
+	int i = 0;
+	while (qu->first) {
+		quitem *qi = qu->first;
+		qu->first = qi->next;
+		memset(qi, 253, sizeof(*qi));
+		free(qi);
+		i += 1;
+	}
+	return i;
 }
+
 
 /*
- * st_reset
+ * qu_destroy
  *
- * delete all items from the stack.
+ * free the queue control block if the queue is empty.
  *
- *     in: the st instance
+ *     in: the qu instance
  *
- * return: int number of items deleted
- */
-
-int
-st_reset(
-	stcb *st
-) {
-	ASSERT_STCB(st, "invalid STCB");
-	return dl_reset(st->dl);
-}
-
-/*
- * sb_destroy
- *
- * if the stack is empty, release its resources.
- *
- *     in: the st instance
- *
- * return: bool was the st destroyed and freed
+ * return: boolean, true if successful, false if queue is not empty
  */
 
 bool
-st_destroy(
-	stcb *st
+qu_destroy(
+	qucb *qu
 ) {
-	ASSERT_STCB(st, "invalid STCB");
-	if (!st_empty(st))
+	ASSERT_QUCB(qu, "invalid QUCB");
+	if (qu->first != NULL)
 		return false;
-	dl_destroy(st->dl);
-	memset(st, 253, sizeof(*st));
-	free(st);
+	memset(qu, 253, sizeof(*qu));
+	free(qu);
 	return true;
 }
-/* st.c ends here */
+
+/* qu.c ends here */
