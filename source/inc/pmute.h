@@ -28,6 +28,8 @@ extern "C" {
  * call and the function returns 0 when no more permutations are
  * possible.
  *
+ * (the array has been reversed, and is now highest to lowest values.)
+ *
  * sample code:
  *
  * int n = 5;

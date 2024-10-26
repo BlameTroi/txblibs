@@ -31,17 +31,18 @@ and add that to my $CPATH or in makefiles as needed.
 
 Include the appropriate headers in your project. Each header has a
 preprocessor variable to control when the executable code will be
-included. #define this in only one source file per linked output.
+included. #define this in only one source file per linked target .
 
 
 
 External Dependencies
 ---------------------
 
-Nothing that isn't already installed by anyone using these libraries.
-If not already installed, they are available in most package managers.
+Nothing that isn't likely to be already installed by anyone using
+these libraries. If not already installed, they are available in most
+package managers.
 
- 1. A C compiler (C99 support or above)
+ 1. A C compiler (minimum c99, I compile with std=c18)
 
  2. CMake
 
@@ -86,6 +87,9 @@ Included in Minunit are two timing functions written by David Robert
 Nadeau from http://NadeauSoftware.com/ and distributed under the
 Creative Commons Attribution 3.0 Unported License. See
 https://creativecommons.org/licenses/by/3.0/ for details.
+
+As the unit tests are not something one would compile into application
+binaries, Minunit has no impact on licensing or use of the libraries.
 
 			    ==============
 			    Project Layout
@@ -291,16 +295,58 @@ structure. While each item stored will require overhead for chain
 pointers and such, the client only needs to deal with its own data,
 referred to as value or payload in these libraries.
 
-The payload may be any value that will fit inside a void pointer, but
-is expected to be a pointer to some client managed data.
+The payload may be any value that will fit inside a void * pointer.
+This probably means it is really a pointer to one of the client's
+structures.
 
 
 
-Threading
----------
+Naming and Typedefs
+-------------------
 
-I added threading support before I had a clear need for it. I've since
-removed it.
+In the other header only libraries I've looked at, there is no
+concensus on naming and prefixing. In C++ there are namespaces, but we
+don't get those in C. I've taken a minimalist's approach and with very
+few exceptions I use a two character prefix with an underscore: 'dl_'
+for Doubly linked List, 'kv_' for Key:Value store, 'll_' for singly
+Linked List, and so on.
+
+I find snake_case to be more readable than either camelCase or
+PascalCase.
+
+All names that aren't normally uppercased outside these libraries
+(example, MD5_) are lowercased.
+
+Function names use the prefix and underscore for naming.
+
+Most structures are defined as "typedef struct fred fred" instead of
+the other alternatives. Their names are prefixed but do not have the
+underscore. 'dlcb', kvcb', 'llcb', and so on.
+
+
+
+Dealing with void *
+-------------------
+
+I find chains of dereferences and C's pointer syntax offensive at
+best, but I realize that idiomatic usage is idiomatic. Pointers
+aren't hard, but C obfuscates them.
+
+These libraries deal with client data assumed to be provided as
+anonymous pointers.
+
+And here I bend the idiom a bit:
+
+Depending on the context, clients are passing keys, values, or
+payloads. These are all void * sized things and are typically
+pointers.
+
+In these instances, I use a typedef to hide the void * to avoid
+(hah) constructs such as '*(int *)payload' and 'void **payload'.
+
+typedef void * pkey;
+typedef void * pvalue;
+typedef void * ppayload;
 
 
 

@@ -52,7 +52,7 @@ MU_TEST(test_empty) {
 MU_TEST(test_access_empty) {
 	pqcb *pq = pq_create();
 	long priority;
-	void *payload;
+	ppayload payload;
 	mu_shouldnt(pq_peek_highest(pq, &priority, &payload));
 	mu_shouldnt(pq_peek_lowest(pq, &priority, &payload));
 	mu_shouldnt(pq_get_highest(pq, &priority, &payload));
@@ -67,7 +67,7 @@ MU_TEST(test_insert) {
 	mu_should(pq_count(pq) == 1);
 	mu_shouldnt(pq_destroy(pq));
 	long priority;
-	void *payload;
+	ppayload payload;
 	mu_should(pq_get_highest(pq, &priority, &payload));
 	mu_should(equal_string(payload, "100"));
 	mu_should(pq_empty(pq));
@@ -82,7 +82,7 @@ MU_TEST(test_read_loop) {
 	pq_insert(pq, 101, "101");
 	int i = 0;
 	long priority;
-	void *payload;
+	ppayload payload;
 	while (pq_get_highest(pq, &priority, &payload))
 		i += 1;
 	mu_should(i == 3);
@@ -97,7 +97,7 @@ MU_TEST(test_peek_high_low) {
 	pq_insert(pq, 101, "101");
 
 	long priority;
-	void *payload;
+	ppayload payload;
 
 	pq_peek_highest(pq, &priority, &payload);
 	mu_should(priority = 101);
@@ -130,7 +130,7 @@ MU_TEST(test_random_volume) {
 	mu_should(pq_count(pq) == 10003);
 	long last_pri;
 	long priority;
-	void *payload;
+	ppayload payload;
 	mu_should(pq_peek_highest(pq, &priority, &payload));
 	last_pri = priority;
 	while (!pq_empty(pq)) {

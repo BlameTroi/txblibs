@@ -2,8 +2,6 @@
 
 /* released to the public domain, troy brumley, may 2024 */
 
-#undef NDEBUG
-#include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -55,8 +53,6 @@ test_setup(void) {
 	char buffer[100];
 	memset(buffer, 0, 100);
 	test_dl = dl_create();
-	assert(test_dl &&
-		"error creating test data linked list");
 	for (int i = 10; i < 1000; i += 10) {
 		snprintf(buffer, 99, "%04d bogus", i);
 		dl_insert_last(test_dl, strdup(buffer));
@@ -79,7 +75,7 @@ test_teardown(void) {
 	if (!test_dl)
 		return;
 	dlid id = NULL_DLID;
-	void *payload;
+	ppayload payload;
 	while (id = dl_get_first(test_dl, &payload), payload) {
 		free(payload);
 		dl_delete(test_dl, id);
@@ -140,7 +136,7 @@ MU_TEST(test_insert_ends) {
 
 	/* the expected ordering forward is 6421357 */
 	i = 0;
-	void *payload;
+	ppayload payload;
 	while (ordering[i]) {
 		id = dl_get_first(dl, &payload);
 		mu_should(((char *)payload)[0] == ordering[i]);
@@ -201,7 +197,7 @@ MU_TEST(test_insert_ends) {
 MU_TEST(test_insert_after) {
 	dlcb *dl = NULL;
 	dlid id = NULL_DLID;
-	void *payload = NULL;
+	ppayload payload = NULL;
 
 	/* in an empty list do the inserts work as expected? after the
 	 * inserts, traverse the list from first to last and then last
@@ -347,7 +343,7 @@ MU_TEST(test_insert_after) {
 MU_TEST(test_insert_before) {
 	dlcb *dl = NULL;
 	dlid id = NULL_DLID;
-	void *payload = NULL;
+	ppayload payload = NULL;
 
 	/* in an empty list do the inserts work as expected? after the
 	 * inserts, traverse the list from first to last and then last
@@ -491,7 +487,7 @@ MU_TEST(test_insert_before) {
 
 MU_TEST(test_insert_many) {
 	dlcb *dl = test_dl;
-	void *payload = NULL;
+	ppayload payload = NULL;
 	int start_nodes = dl_count(dl);
 	int added_nodes = 0;
 
@@ -571,7 +567,7 @@ MU_TEST(test_insert_many) {
 
 MU_TEST(test_get_first) {
 	dlcb *dl = test_dl;
-	void *payload = NULL;
+	ppayload payload = NULL;
 	dlid id = dl_get_first(dl, &payload);
 	mu_shouldnt(null_dlid(id));
 	mu_should(payload);
@@ -586,7 +582,7 @@ MU_TEST(test_get_first) {
 
 MU_TEST(test_get_last) {
 	dlcb *dl = test_dl;
-	void *payload = NULL;
+	ppayload payload = NULL;
 	dlid id = dl_get_last(dl, &payload);
 	mu_shouldnt(null_dlid(id));
 	mu_should(payload);
@@ -604,7 +600,7 @@ MU_TEST(test_get_next) {
 	dlcb *dl = test_dl;
 
 	/* somewhere in the list */
-	void *payload = NULL;
+	ppayload payload = NULL;
 	dlid id = dl_get_first(dl, &payload);
 	mu_shouldnt(null_dlid(id));
 	while (!equal_string(payload, "0500 bogus"))
@@ -634,7 +630,7 @@ MU_TEST(test_get_next) {
 MU_TEST(test_get_previous) {
 	dlcb *dl = NULL;
 	dlid id = NULL_DLID;
-	void *payload = NULL;
+	ppayload payload = NULL;
 
 	/* can't read previous from first, no wrap */
 	dl = test_dl;
@@ -668,7 +664,7 @@ MU_TEST(test_get_previous) {
 MU_TEST(test_delete) {
 	dlcb *dl = NULL;
 	dlid id = NULL_DLID;
-	void *payload = NULL;
+	ppayload payload = NULL;
 
 	/* test deleting from the head */
 	dl = test_dl;
@@ -728,8 +724,8 @@ MU_TEST(test_delete) {
 MU_TEST(test_update) {
 	dlcb *dl = NULL;
 	dlid id = NULL_DLID;
-	void *old_payload = NULL;
-	void *new_payload = NULL;
+	ppayload old_payload = NULL;
+	ppayload new_payload = NULL;
 
 	/* test updating end items */
 	dl = test_dl;
@@ -755,18 +751,18 @@ MU_TEST(test_update) {
 
 MU_TEST(test_bad_position) {
 	dlcb *dl = test_dl;
-	void *first_payload = NULL;
+	ppayload first_payload = NULL;
 	dlid first_id = dl_get_first(dl, &first_payload);
-	void *last_payload = NULL;
+	ppayload last_payload = NULL;
 	dlid last_id = dl_get_last(dl, &last_payload);
-	void *replacement_payload = "this should fail";
+	ppayload replacement_payload = "this should fail";
 	/* list is positioned on last, so try to update with the first node */
 	bool result = dl_update(dl, first_id, replacement_payload);
 	mu_should(dl_get_error(dl));
 	mu_shouldnt(result);
 	/* position is lost, so moving relative to the current position
 	 * should error. */
-	void *previous_payload = NULL;
+	ppayload previous_payload = NULL;
 	result = dl_get_previous(dl, last_id, &previous_payload);
 	mu_should(dl_get_error(dl));
 	mu_shouldnt(result);

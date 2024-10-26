@@ -107,6 +107,7 @@ MU_TEST(test_factor) {
 	result = factors_of(33100000);
 	free(result);
 }
+
 MU_TEST(test_pack) {
 	char chr_buffer[64];
 	uint8_t hex_buffer[32];

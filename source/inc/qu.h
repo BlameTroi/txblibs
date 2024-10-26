@@ -23,6 +23,25 @@ extern "C" {
 typedef struct qucb qucb;
 
 /*
+ * ppayload, pkey, pvalue
+ *
+ * these libraries manage client 'payloads'. these are void * sized
+ * and are generally assumed to be a pointer to client managed data,
+ * but anything that will fit in a void * pointer (typically eight
+ * bytes) is allowed.
+ *
+ * it is the client's responsibility to free any of its dynamically
+ * allocated memory. library code provides 'destroy' methods to clear
+ * and release library data structures.
+ *
+ * these type helpers are all synonyms for void *.
+ */
+
+typedef void * pkey;
+typedef void * pvalue;
+typedef void * ppayload;
+
+/*
  * qu_empty
  *
  * are there items in the queue?
@@ -52,7 +71,7 @@ qu_empty(
 void
 qu_enqueue(
 	qucb *,
-	void *
+	ppayload
 );
 
 /*
@@ -65,7 +84,7 @@ qu_enqueue(
  * return: void * client payload or NULL if queue is empty.
  */
 
-void *
+ppayload
 qu_dequeue(
 	qucb *
 );
@@ -81,7 +100,7 @@ qu_dequeue(
  * return: void * client payload or NULL if queue is empty.
  */
 
-void *
+ppayload
 qu_peek(
 	qucb *
 );
@@ -93,7 +112,7 @@ qu_peek(
  *
  *     in: nothing
  *
- * return: the new qu instance.
+ * return: the new qu instance
  */
 
 qucb *
@@ -108,7 +127,7 @@ qu_create(
  *
  *     in: the qu instance
  *
- * return: boolean, true if successful, false if queue is not empty
+ * return: boolean, true if successful
  */
 
 bool
@@ -123,7 +142,7 @@ qu_destroy(
  *
  *     in: the qu instance
  *
- * return: int number of items removed
+ * return: integer number of items removed
  */
 
 int
@@ -138,7 +157,7 @@ qu_reset(
  *
  *     in: the qu instance.
  *
- * return: int, number of items.
+ * return: integer number of items.
  */
 
 int

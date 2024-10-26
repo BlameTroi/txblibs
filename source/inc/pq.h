@@ -25,6 +25,25 @@ extern "C" {
 typedef struct pqcb pqcb;
 
 /*
+ * ppayload, pkey, pvalue
+ *
+ * these libraries manage client 'payloads'. these are void * sized
+ * and are generally assumed to be a pointer to client managed data,
+ * but anything that will fit in a void * pointer (typically eight
+ * bytes) is allowed.
+ *
+ * it is the client's responsibility to free any of its dynamically
+ * allocated memory. library code provides 'destroy' methods to clear
+ * and release library data structures.
+ *
+ * these type helpers are all synonyms for void *.
+ */
+
+typedef void * pkey;
+typedef void * pvalue;
+typedef void * ppayload;
+
+/*
  * pq_insert
  *
  * add an item to the queue with the specified priority.
@@ -42,14 +61,13 @@ void
 pq_insert(
 	pqcb *,
 	long,
-	void *
+	ppayload
 );
 
 /*
  * pq_get_highest
  *
- * remove and return the highest priority item from the
- * queue.
+ * remove and return the highest priority item from the queue.
  *
  *     in: the pq instance
  *
@@ -57,21 +75,20 @@ pq_insert(
  *
  *    out: payload
  *
- * return: bool was there an item
+ * return: boolean was there an item
  */
 
 bool
 pq_get_highest(
 	pqcb *,
 	long *,
-	void **
+	ppayload*
 );
 
 /*
  * pq_get_lowest
  *
- * remove and return the lowest priority item from the
- * queue.
+ * remove and return the lowest priority item from the queue.
  *
  *     in: the pq instance
  *
@@ -79,21 +96,20 @@ pq_get_highest(
  *
  *    out: payload
  *
- * return: bool was there an item
+ * return: boolean was there an item
  */
 
 bool
 pq_get_lowest(
 	pqcb *,
 	long *,
-	void **
+	ppayload*
 );
 
 /*
  * pq_peek_highest
  *
- * return the highest priority item from the queue while leaving the
- * item in place.
+ * return but do not remove the highest priority item from the queue.
  *
  *     in: the pq instance
  *
@@ -101,21 +117,20 @@ pq_get_lowest(
  *
  *    out: payload
  *
- * return: bool was there an item
+ * return: boolean was there an item
  */
 
 bool
 pq_peek_highest(
 	pqcb *,
 	long *,
-	void **
+	ppayload*
 );
 
 /*
  * pq_peek_lowest
  *
- * remove and return the lowest priority item from the queue while
- * leaving the item in place.
+ * return but do not remove the lowest priority item from the queue.
  *
  *     in: the pq instance
  *
@@ -123,14 +138,14 @@ pq_peek_highest(
  *
  *    out: payload
  *
- * return: bool was there an item
+ * return: boolean was there an item
  */
 
 bool
 pq_peek_lowest(
 	pqcb *,
 	long *,
-	void **
+	ppayload*
 );
 
 /*
@@ -154,7 +169,7 @@ pq_create(
  *
  *     in: the pq instance
  *
- * return: int number of items removed from the queue.
+ * return: integer number of items removed from the queue.
  */
 
 int
@@ -169,7 +184,7 @@ pq_reset(
  *
  *     in: the pq instance
  *
- * return: bool was the queue destroyed
+ * return: boolean was the queue destroyed
  */
 
 bool
@@ -184,7 +199,7 @@ pq_destroy(
  *
  *     in: the pq instance
  *
- * return: int number of items
+ * return: integer number of items
  */
 
 int
@@ -199,7 +214,7 @@ pq_count(
  *
  *     in: the pq instance
  *
- * return: bool
+ * return: boolean
  */
 
 bool

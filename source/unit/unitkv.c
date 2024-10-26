@@ -171,8 +171,9 @@ MU_TEST(test_load) {
 	mu_shouldnt(kv_empty(kv));
 	mu_should(kv_count(kv) == i);
 
-	int **keys = kv_keys(kv);
-	char **values = kv_values(kv);
+	pkey *keys = kv_keys(kv);
+	pvalue *values = kv_values(kv);
+
 	mu_should(keys);
 	mu_should(values);
 
@@ -198,13 +199,13 @@ MU_TEST(test_put) {
 	kvcb *kv = load_ints();
 
 	/* get a list of all the keys in the store */
-	int **keys = kv_keys(kv);
+	pkey *keys = kv_keys(kv);
 	mu_should(keys);
 
 	/* print them and their associated values */
 	printf("\n");
 	for (int i = 0; keys[i]; i++)
-		printf("%d %d\n", *keys[i], *(int *)kv_get(kv, keys[i]));
+		printf("%d %d\n", *(int *)keys[i], *(int *)kv_get(kv, keys[i]));
 	free(keys);
 
 	/* we expect 10 pairs, and keys 4 and 5
@@ -277,13 +278,13 @@ MU_TEST(test_keys) {
 	mu_should(kv_count(kv) == 10);
 
 	/* get a list of all the keys in the store */
-	int **keys = kv_keys(kv);
+	pkey *keys = kv_keys(kv);
 	mu_should(keys);
 
 	/* print them and their associated values */
 	printf("\n");
 	for (int i = 0; keys[i]; i++)
-		printf("%d %d\n", *keys[i], *(int *)kv_get(kv, keys[i]));
+		printf("%d %d\n", *(int *)keys[i], *(int *)kv_get(kv, keys[i]));
 	free(keys);
 
 	kv_reset(kv);
@@ -295,7 +296,7 @@ MU_TEST(test_values) {
 	mu_should(kv_count(kv) == 10);
 
 	/* get the list of all the values in the store */
-	char **values = kv_values(kv);
+	pvalue *values = kv_values(kv);
 	mu_should(values);
 
 	/* all we can really do here is print and count them */
@@ -303,7 +304,7 @@ MU_TEST(test_values) {
 	int k = 0;
 	for (int i = 0; values[i]; i++) {
 		k += 1;
-		printf("%s\n", values[i]);
+		printf("%s\n", (char *)values[i]);
 	}
 	mu_should(k == kv_count(kv));
 	free(values);
@@ -340,15 +341,15 @@ MU_TEST(test_volume_ascending) {
 	*anteoriginal = 0;
 	kv_put(kv, anteoriginal, anteoriginal);
 	mu_should(kv_count(kv) == 10004);
-	int **keys = kv_keys(kv);
-	mu_should(*keys[0] == -10);
-	mu_should(*keys[1] == 0);
-	mu_should(*keys[2] == 1);
-	mu_should(*keys[3] == 2);
-	mu_should(*keys[10000] == 9999);
-	mu_should(*keys[10001] == 10000);
-	mu_should(*keys[10002] == 10005);
-	mu_should(*keys[10003] == 10010);
+	pkey *keys = kv_keys(kv);
+	mu_should(*(int *)keys[0] == -10);
+	mu_should(*(int *)keys[1] == 0);
+	mu_should(*(int *)keys[2] == 1);
+	mu_should(*(int *)keys[3] == 2);
+	mu_should(*(int *)keys[10000] == 9999);
+	mu_should(*(int *)keys[10001] == 10000);
+	mu_should(*(int *)keys[10002] == 10005);
+	mu_should(*(int *)keys[10003] == 10010);
 	kv_delete(kv, after);
 	kv_delete(kv, before);
 	kv_delete(kv, penultimate);
@@ -356,10 +357,10 @@ MU_TEST(test_volume_ascending) {
 	free(keys);
 
 	keys = kv_keys(kv);
-	mu_should(*keys[0] == 1);
-	mu_should(*keys[1] == 2);
-	mu_should(*keys[9998] == 9999);
-	mu_should(*keys[9999] == 10000);
+	mu_should(*(int *)keys[0] == 1);
+	mu_should(*(int *)keys[1] == 2);
+	mu_should(*(int *)keys[9998] == 9999);
+	mu_should(*(int *)keys[9999] == 10000);
 
 	int i = 0;
 	while (keys[i]) {
@@ -399,15 +400,15 @@ MU_TEST(test_volume_descending) {
 	*anteoriginal = 0;
 	kv_put(kv, anteoriginal, anteoriginal);
 	mu_should(kv_count(kv) == 10004);
-	int **keys = kv_keys(kv);
-	mu_should(*keys[0] == -10);
-	mu_should(*keys[1] == 0);
-	mu_should(*keys[2] == 1);
-	mu_should(*keys[3] == 2);
-	mu_should(*keys[10000] == 9999);
-	mu_should(*keys[10001] == 10000);
-	mu_should(*keys[10002] == 10005);
-	mu_should(*keys[10003] == 10010);
+	pkey *keys = kv_keys(kv);
+	mu_should(*(int *)keys[0] == -10);
+	mu_should(*(int *)keys[1] == 0);
+	mu_should(*(int *)keys[2] == 1);
+	mu_should(*(int *)keys[3] == 2);
+	mu_should(*(int *)keys[10000] == 9999);
+	mu_should(*(int *)keys[10001] == 10000);
+	mu_should(*(int *)keys[10002] == 10005);
+	mu_should(*(int *)keys[10003] == 10010);
 	int i = 0;
 	while (keys[i]) {
 		free(keys[i]);
@@ -434,16 +435,16 @@ MU_TEST(test_volume_random) {
 	clock_t e = clock();
 	printf("\ntime random %lu\n", b-e);
 	mu_should(kv_count(kv) == 10000);
-	int **keys = kv_keys(kv);
+	pkey *keys = kv_keys(kv);
 	printf("\n");
 	for (int i = 0; i < 10; i++)
-		printf("%d %d\n", i, *keys[i]);
+		printf("%d %d\n", i, *(int *)keys[i]);
 	printf("\n");
 	for (int i = 5000; i < 5010; i++)
-		printf("%d %d\n", i, *keys[i]);
+		printf("%d %d\n", i, *(int *)keys[i]);
 	printf("\n");
 	for (int i = 9990; i < 10000; i++)
-		printf("%d %d\n", i, *keys[i]);
+		printf("%d %d\n", i, *(int *)keys[i]);
 	printf("\n");
 	/* add after end (which is 10000) */
 	i = 0;
@@ -462,23 +463,23 @@ MU_TEST(test_string_keys) {
 	mu_should(kv_count(kv) == 6);
 
 	/* key and value lists */
-	char **keys = kv_keys(kv);
+	pkey *keys = kv_keys(kv);
 	mu_should(keys);
-	int **values = kv_values(kv);
+	pvalue *values = kv_values(kv);
 	mu_should(values);
 
 	/* are the keys that loaded strings? the printf will tell */
 	printf("\n");
 	for (int i = 0; keys[i]; i++)
-		printf("%s %d\n", keys[i], *values[i]);
+		printf("%s %d\n", (char *)keys[i], *(int *)values[i]);
 	free(values);
 	free(keys);
 
 	/* check known key:value pairs */
-	int *value = kv_get(kv, "alpha");
-	mu_should(*value == 0);
+	pvalue value = kv_get(kv, "alpha");
+	mu_should(*(int *)value == 0);
 	value = kv_get(kv, "charlie");
-	mu_should(*value == 17);
+	mu_should(*(int *)value == 17);
 
 	mu_should(kv_reset(kv) == 6);
 	kv_destroy(kv);

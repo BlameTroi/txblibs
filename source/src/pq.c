@@ -21,6 +21,7 @@
 /*
  * transparent control block definitions.
  */
+
 #define PQITEM_TAG "__PQIT__"
 #define PQITEM_TAG_LEN 8
 
@@ -37,7 +38,7 @@ struct pqitem {
 	long priority;
 	pqitem *bwd;
 	pqitem *fwd;
-	void *payload;
+	ppayload payload;
 };
 
 #define PQCB_TAG "__PQCB__"
@@ -67,15 +68,15 @@ struct pqcb {
  *
  * brief api overview:
  *
- * all functions except pq_create take a pqcb_t*, the priority queue
+ * all functions except pq_create take a pqcb, the priority queue
  * control block.
  *
  * priorities are longs, and the data to manage in the queue is a
- * void*, a pointer to the data or if it will fit in a void*, the data
- * itself.
+ * ppayload, usually a pointer to the client data.
  *
- * the order of retrieval of items of the same priority is not
- * specified.
+ * the order of retrieval of items of the same priority is neither
+ * specified nor guaranteed to be consistent across different versions
+ * of this library.
  *
  * pq_create  -- create a new queue, returns a pqcb_t*
  *
@@ -88,8 +89,8 @@ struct pqcb {
  * pq_get_*   -- remove and return the item with the _highest
  *               or _lowest priority from the queue.
  *
- * pq_peek_*  -- return the item in the queue with the _highest
- *               or _lowest priority from the queue.
+ * pq_peek_*  -- return but do not remove the item in the queue with
+ *               the _highest or _lowest priority from the queue.
  *
  * pq_destroy -- if the queue is empty and not in use, release
  *               the pqcb. returns true if successful.
@@ -104,7 +105,7 @@ struct pqcb {
  *
  *     in: the pq instance
  *
- * return: bool
+ * return: boolean true if empty
  */
 
 bool
@@ -122,7 +123,7 @@ pq_empty(
  *
  *     in: the pq instance
  *
- * return: int number of items
+ * return: integer number of items
  */
 
 int
@@ -142,8 +143,7 @@ pq_count(
 /*
  * pq_create_item
  *
- * create a new queue item wrapping priority and payload
- * to store on the queue.
+ * create a new queue item packaging the priority and payload.
  *
  *     in: long priority
  *
@@ -156,7 +156,7 @@ static
 pqitem *
 pq_create_item(
 	long priority,
-	void *payload
+	ppayload payload
 ) {
 	pqitem *qi = malloc(sizeof(*qi));
 	memset(qi, 0, sizeof(*qi));
@@ -186,7 +186,7 @@ void
 pq_insert(
 	pqcb *pq,
 	long priority,
-	void *payload
+	ppayload payload
 ) {
 	ASSERT_PQCB(pq, "invalid PQCB");
 	pqitem *qi = pq_create_item(priority, payload);
@@ -244,14 +244,14 @@ pq_insert(
  *
  *    out: payload
  *
- * return: bool was there an item
+ * return: boolean was there an item
  */
 
 bool
 pq_get_highest(
 	pqcb *pq,
 	long *priority,
-	void **payload
+	ppayload *payload
 ) {
 	ASSERT_PQCB(pq, "invalid PQCB");
 	if (pq->first == NULL)
@@ -281,14 +281,14 @@ pq_get_highest(
  *
  *    out: payload
  *
- * return: bool was there an item
+ * return: boolean was there an item
  */
 
 bool
 pq_get_lowest(
 	pqcb *pq,
 	long *priority,
-	void **payload
+	ppayload *payload
 ) {
 	ASSERT_PQCB(pq, "invalid PQCB");
 	if (pq->first == NULL)
@@ -309,8 +309,7 @@ pq_get_lowest(
 /*
  * pq_peek_highest
  *
- * return the highest priority item from the queue while leaving the
- * item in place.
+ * return but do not remove the highest priority item from the queue.
  *
  *     in: the pq instance
  *
@@ -318,14 +317,14 @@ pq_get_lowest(
  *
  *    out: payload
  *
- * return: bool was there an item
+ * return: boolean was there an item
  */
 
 bool
 pq_peek_highest(
 	pqcb *pq,
 	long *priority,
-	void **payload
+	ppayload *payload
 ) {
 	ASSERT_PQCB(pq, "invalid PQCB");
 	if (pq->last == NULL)
@@ -338,8 +337,7 @@ pq_peek_highest(
 /*
  * pq_peek_lowest
  *
- * remove and return the lowest priority item from the queue while
- * leaving the item in place.
+ * return but do not remove the lowest priority item from the queue.
  *
  *     in: the pq instance
  *
@@ -354,7 +352,7 @@ bool
 pq_peek_lowest(
 	pqcb *pq,
 	long *priority,
-	void **payload
+	ppayload *payload
 ) {
 	ASSERT_PQCB(pq, "invalid PQCB");
 	if (pq->first == NULL)
@@ -394,7 +392,7 @@ pq_create(
  *
  *     in: the pq instance
  *
- * return: int number of items removed from the queue.
+ * return: integer number of items removed from the queue.
  */
 
 int
@@ -419,7 +417,7 @@ pq_reset(
  *
  *     in: the pq instance
  *
- * return: bool was the queue destroyed
+ * return: boolean was the queue destroyed
  */
 
 bool

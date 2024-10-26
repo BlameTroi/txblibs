@@ -1,10 +1,10 @@
 /* pat.c -- blametroi's regular expression and pattern matching -- */
 
 /*
- * released to the public domain by Troy Brumley blametroi@gmail.com
- *
  * this is a header only implementation of a subset of a regular
  * expression parser and pattern matcher.
+ *
+ * released to the public domain by Troy Brumley blametroi@gmail.com
  *
  * this software is dual-licensed to the public domain and under the
  * following license: you are granted a perpetual, irrevocable license
@@ -12,10 +12,10 @@
  */
 
 /*
- * a match string expression is compiled into pattern buffer. the
+ * a match string expression is compiled into a pattern buffer. the
  * buffer is a one dimensional array of unsigned integers. a pattern
  * item occupies at least one item in the array. the item code is
- * symbolically identified by the macros PAT_???.
+ * symbolically identified in code by the macros PAT_???.
  *
  * the first item in the array is always PAT_BEG, and the last is
  * always PAT_END. PAT_END is guaranteed to be followed by an
@@ -29,7 +29,7 @@
  * ^ for start of line, $ for end of line, and . for any single
  * character matches all take one slot.
  *
- * common character type matches for digits, letters, and whitespace
+ * common character class matches for digits, letters, and whitespace
  * all take one slot (\d, \w, \s) as do their negations.
  *
  * quantifiers (*, ?, +) all take only one slot.
@@ -170,7 +170,7 @@ typedef struct match_code_t {
 	char *text;
 } match_code_t;
 
-const match_code_t match_codes[] = {
+static const match_code_t match_codes[] = {
 	{ 0, PAT_BEG, ">>>BEGIN PATTERN" },
 	{ 0, PAT_END, "<<<END PATTERN" },
 	{ 0, PAT_FF, "\\f FORM FEED" },
@@ -205,6 +205,7 @@ const match_code_t match_codes[] = {
  * representation.
  */
 
+static
 const char *
 displayable_match_code(
 	cpat code
@@ -233,6 +234,7 @@ displayable_match_code(
  *
  * return: boolean
  */
+
 static
 bool
 is_quantifier(

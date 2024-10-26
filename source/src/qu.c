@@ -115,9 +115,9 @@ qu_empty(
  *
  * how many items are in the queue?
  *
- *     in: the qu instance.
+ *     in: the qu instance
  *
- * return: int, number of items.
+ * return: integer number of items
  */
 
 int
@@ -153,7 +153,7 @@ qu_count(
 static
 quitem *
 qu_new_item(
-	void *payload
+	ppayload payload
 ) {
 	quitem *qi = malloc(sizeof(*qi));
 	memset(qi, 0, sizeof(*qi));
@@ -178,7 +178,7 @@ qu_new_item(
 void
 qu_enqueue(
 	qucb *qu,
-	void *payload
+	ppayload payload
 ) {
 	ASSERT_QUCB(qu, "invalid QUCB");
 	quitem *qi = qu_new_item(payload);
@@ -202,7 +202,7 @@ qu_enqueue(
  * return: void * client payload or NULL if queue is empty.
  */
 
-void *
+ppayload
 qu_dequeue(
 	qucb *qu
 ) {
@@ -228,7 +228,7 @@ qu_dequeue(
  * return: void * client payload or NULL if queue is empty.
  */
 
-void *
+ppayload
 qu_peek(
 	qucb *qu
 ) {
@@ -269,7 +269,7 @@ qu_create(
  *
  *     in: the qu instance
  *
- * return: int number of items removed
+ * return: integer number of items removed
  */
 
 int
@@ -298,7 +298,7 @@ qu_reset(
  *
  *     in: the qu instance
  *
- * return: boolean, true if successful, false if queue is not empty
+ * return: boolean, true if successful
  */
 
 bool

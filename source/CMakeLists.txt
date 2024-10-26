@@ -36,50 +36,6 @@ set(
   CMAKE_C_COMPILER "clang"
 )
 
-
-# add_compile_options(
-#   -Wall
-#   --pedantic-errors
-#   -Werror
-#   -std=c18
-# )
-# if(CMAKE_CONFIG_TYPE MATCHES "Debug")
-#   add_compile_options(
-#     -g3
-#     -fsanitize=address
-#   )
-#   add_link_options(
-#     -fsanitize=address
-#   )
-# elseif(CMAKE_CONFIG_TYPE MATCHES "RelWithDebInfo")
-#   add_compile_options(
-#     -g3
-#   )
-# endif()
-
-# will the following work?
-# add_compile_options(
-#   -Wall
-#   -Wextra
-#   -Wconversion
-#   -Wsign-conversion
-#   $<$<CONFIG:Debug>:-g3>
-#   $<$<CONFIG:Debug>:-Og>
-#   $<$<CONFIG:Release>:-O3>
-# )
-#
-# add_compile_definitions(
-#   $<$<CONFIG:DEBUG>:DEBUG>
-# )
-
-# the build done here is for compilation and testing with
-# minunit. the executables are all command line programs.
-
-# the following seems redundant but i think of it like a
-# linkdeck from my mainframe days. declarative and the
-# repetition isn't very expensive. the gnu make scripting
-# to do this on the fly was more hassle than it was worth.
-
 # cmake is a moving target, and the compile options conditionals via
 # if() don't work (if they ever did). the following passes options to
 # each build configuration properly.
@@ -152,6 +108,15 @@ target_compile_options(unitkv PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:SHELL:${MY_REL_
 target_compile_options(unitkv PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_OPTIONS}>")
 target_compile_options(unitkv PUBLIC "$<$<CONFIG:RELEASE>:SHELL:${MY_RELEASE_OPTIONS}>")
 
+add_executable(unitll "${CMAKE_CURRENT_SOURCE_DIR}/unit/unitll.c"
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/ll.c"
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/str.c")
+target_include_directories(unitll PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/inc")
+target_link_options(unitll PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_LINK_OPTIONS}>")
+target_compile_options(unitll PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:SHELL:${MY_REL_DEB_OPTIONS}>")
+target_compile_options(unitll PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_OPTIONS}>")
+target_compile_options(unitll PUBLIC "$<$<CONFIG:RELEASE>:SHELL:${MY_RELEASE_OPTIONS}>")
+
 add_executable(unitmd5 "${CMAKE_CURRENT_SOURCE_DIR}/unit/unitmd5.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/md5.c")
 target_include_directories(unitmd5 PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/inc")
@@ -185,6 +150,17 @@ target_link_options(unitpat PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_LINK_OPTI
 target_compile_options(unitpat PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:SHELL:${MY_REL_DEB_OPTIONS}>")
 target_compile_options(unitpat PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_OPTIONS}>")
 target_compile_options(unitpat PUBLIC "$<$<CONFIG:RELEASE>:SHELL:${MY_RELEASE_OPTIONS}>")
+
+# add_executable(unitpl "${CMAKE_CURRENT_SOURCE_DIR}/unit/unitpl.c"
+#   "${CMAKE_CURRENT_SOURCE_DIR}/src/pl.c"
+#   "${CMAKE_CURRENT_SOURCE_DIR}/src/misc.c"
+#   "${CMAKE_CURRENT_SOURCE_DIR}/src/rand.c"
+#   "${CMAKE_CURRENT_SOURCE_DIR}/src/str.c")
+# target_include_directories(unitpl PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/inc")
+# target_link_options(unitpl PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_LINK_OPTIONS}>")
+# target_compile_options(unitpl PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:SHELL:${MY_REL_DEB_OPTIONS}>")
+# target_compile_options(unitpl PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_OPTIONS}>")
+# target_compile_options(unitpl PUBLIC "$<$<CONFIG:RELEASE>:SHELL:${MY_RELEASE_OPTIONS}>")
 
 add_executable(unitpq "${CMAKE_CURRENT_SOURCE_DIR}/unit/unitpq.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/pq.c"

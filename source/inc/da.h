@@ -1,8 +1,7 @@
 /* da.h -- blametroi's dynamic array library */
 
 /*
- * a header only implementation of a very basic and somewhat leaky
- * dynamic array.
+ * a header only implementation of a very basic dynamic array.
  *
  * released to the public domain by Troy Brumley blametroi@gmail.com
  *
@@ -15,16 +14,16 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#include <stdlib.h>
-
 /*
- * the da is a dynmically sized array. to deal with various datatypes
- * ranging from standard types to structures the da holds void *
- * pointers. storage management of elements stored in the da is the
- * responsibility of the client. freeing the da by da_destroy only
- * removes the dacb and supporting structures.
+ * the da is a dynamically sized array. to deal with various data
+ * types ranging from standard types to structures the da holds
+ * 'payloads'. a payload is void * sized and typically holds a
+ * pointer to some client data.
  *
- * the da grows by doubling its current allocation.
+ * storage management of items stored in the da is the responsibility
+ * of the client.
+ *
+ * the da grows by doubling.
  *
  * initially all elements of the da are NULL. gaps are allowed. so
  * after:
@@ -47,15 +46,34 @@ extern "C" {
 typedef struct dacb dacb;
 
 /*
+ * ppayload, pkey, pvalue
+ *
+ * these libraries manage client 'payloads'. these are void * sized
+ * and are generally assumed to be a pointer to client managed data,
+ * but anything that will fit in a void * pointer (typically eight
+ * bytes) is allowed.
+ *
+ * it is the client's responsibility to free any of its dynamically
+ * allocated memory. library code provides 'destroy' methods to clear
+ * and release library data structures.
+ *
+ * these type helpers are all synonyms for void *.
+ */
+
+typedef void * pkey;
+typedef void * pvalue;
+typedef void * ppayload;
+
+/*
  * da_create
  *
- * create a new instance of a dynamic array. the lone argument is the
+ * create a new dynamic array instance. the lone argument is the
  * number of items in the initial allocation. if more are needed,
  * the allocation doubles.
  *
- *     in: initial size of 0 for a default value.
+ *     in: initial size or 0 for a default value
  *
- * return: the da instance.
+ * return: the da instance
  */
 
 dacb *
@@ -66,9 +84,9 @@ da_create(
 /*
  * da_destroy
  *
- * overwrite and release all dynamically allocated memory for a da.
+ * overwrite and release da memory.
  *
- *     in: the da instance.
+ *     in: the da instance
  *
  * return: nothing
  */
@@ -81,19 +99,19 @@ da_destroy(
 /*
  * da_get
  *
- * return the contents of array index n which will be NULL if nothing
- * has been put at that index.
+ * return the item at array index n which will be NULL if nothing
+ * has been put there yet.
  *
- * fails via an assert if n greater than the highest index of a da_put.
+ * fails via an abort if n is greater than the highest index established
+ * by a da_put.
  *
- *     in: the da instance.
+ *     in: the da instance
+ *     in: integer index of item
  *
- *     in: integer index of item.
- *
- * return: the item as a void *, NULL if never put.
+ * return: a payload or NULL
  */
 
-void *
+ppayload
 da_get(
 	dacb *da,
 	int n
@@ -102,22 +120,23 @@ da_get(
 /*
  * da_put
  *
- * insert or overwrite the contents of array index n.
+ * insert or overwrite the item at index n. if the location is outside
+ * the current buffer, repeatedly double the buffer size until it can
+ * hold the location.
  *
- *     in: the da instance.
+ *     in: the da instance
+ *     in: integer index of item
+ *     in: a payload
  *
- *     in: integer index of item.
- *
- *     in: address of item as a void *.
- *
- * return: nothing.
+ * return: nothing
  */
 
 void
 da_put(
 	dacb *da,
 	int n,
-	void *put);
+	ppayload payload
+);
 
 /*
  * da_count
@@ -125,7 +144,7 @@ da_put(
  * how many items (null or otherwise) does the array hold. this will
  * be one more than the highest 'n' passed to da_put.
  *
- *     in: the da instance.
+ *     in: the da instance
  *
  * return: integer number of possible items, one more than the
  *         highest 'n' passed to da_put.

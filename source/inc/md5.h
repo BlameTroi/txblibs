@@ -8,6 +8,10 @@
  * with the rest of them, it's all public domain as far as i am
  * concerned.
  *
+ * the externally visible functions and types are all prefixed by
+ * upper cased 'MD5_'. internal functions and types are all in lower
+ * case.
+ *
  * released to the public domain by Troy Brumley blametroi@gmail.com
  *
  * this software is dual-licensed to the public domain and under the
@@ -32,20 +36,20 @@ extern "C" {
  */
 
 void
-md5_bytes(
+MD5_bytes(
 	void *input,
 	size_t len,
 	uint8_t *result
 );
 
 void
-md5_string(
+MD5_string(
 	char *input,
 	uint8_t *result
 );
 
 void
-md5_file(
+MD5_file(
 	FILE *file,
 	uint8_t *result
 );
@@ -56,38 +60,38 @@ md5_file(
  * calculation, and return the result in the digest.
  */
 
-typedef struct md5_context md5_context;
+typedef struct md5_context MD5_context;
 
-md5_context *
-md5_allocate_context(
+MD5_context *
+MD5_allocate_context(
 	void
 );
 
 void
-md5_release_context(
-	md5_context *ctx
+MD5_release_context(
+	MD5_context *ctx
 );
 
 void
-md5_initialize(
-	md5_context *ctx
+MD5_initialize(
+	MD5_context *ctx
 );
 
 void
-md5_update(
-	md5_context *ctx,
+MD5_update(
+	MD5_context *ctx,
 	uint8_t *input,
 	size_t input_len
 );
 
 void
-md5_finalize(
-	md5_context *ctx
+MD5_finalize(
+	MD5_context *ctx
 );
 
 void
-md5_get_digest(
-	md5_context *ctx,
+MD5_get_digest(
+	MD5_context *ctx,
 	uint8_t *result
 );
 

@@ -2,7 +2,7 @@
 
 /* released to the public domain, troy brumley, may 2024 */
 
-
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -42,6 +42,7 @@ MU_TEST(test_rs) {
 		p += 1;
 	}
 	printf("\n%c %ld %s\n", c, rs_position(rs), rs_at_end(rs) ? "true" : "false");
+
 	/* semantics, we have not actually read the end yet. */
 	mu_shouldnt(rs_at_end(rs));
 	c = rs_getc(rs);
@@ -49,6 +50,7 @@ MU_TEST(test_rs) {
 	mu_should(rs_at_end(rs));
 	rs_rewind(rs);
 	mu_shouldnt(rs_at_end(rs));
+
 	char fwd[4] = { 0, 0, 0, 0 };
 	char bwd[4] = { 0, 0, 0, 0 };
 	for (int i = 0; i < 4; i++)
@@ -65,8 +67,20 @@ MU_TEST(test_rs) {
 	rs_destroy_string(rs);
 }
 
+static char *testfile = NULL;
+
 MU_TEST(test_file) {
-	FILE *file = fopen("unitrs.c", "r");
+	if (testfile == NULL) {
+		fprintf(stderr, "unitrs test_file, no test file provided, test skipped.");
+		return;
+	}
+	FILE *file = fopen(testfile, "r");
+	if (file == NULL) {
+		int keep = errno;
+		fprintf(stderr, "could not open file %s, errno %d,  test skipped.", testfile,
+			keep);
+		return;
+	}
 	rscb *source = rs_create_string_from_file(file);
 	mu_should(source);
 	mu_should(rs_length(source) > 3000); /* just a did we get it? */
@@ -212,6 +226,8 @@ MU_TEST_SUITE(test_suite) {
 
 int
 main(int argc, char *argv[]) {
+	if (argc > 1)
+		testfile = argv[1];
 	MU_RUN_SUITE(test_suite);
 	MU_REPORT();
 	return MU_EXIT_CODE;

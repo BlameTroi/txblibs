@@ -29,7 +29,7 @@ typedef struct sbcb sbcb;
  */
 
 #ifndef SBCB_DEFAULT_BLKSIZE
-#define SBCB_DEFAULT_BLKSIZE 4096
+#define SBCB_DEFAULT_BLKSIZE 8192
 #endif
 
 /*
@@ -103,9 +103,9 @@ sb_create_string(
 /*
  * sb_create_file
  *
- * create a new string builder initialized with the contents
- * of the provided file stream. the entire file is read and
- * left positioned at the beginning of the file.
+ * create a new string builder initialized with the contents of the
+ * provided file stream. the entire file is read and then left
+ * positioned at the beginning of the file.
  *
  *     in: an open file stream
  *
@@ -120,8 +120,8 @@ sb_create_file(
 /*
  * sb_reset
  *
- * reset string builder to an initial empty state. this clears but doesnot
- * release the buffer.
+ * reset string builder to an initial empty state. this clears but
+ * does not release the buffer.
  *
  *     in: the sb instance
  *
@@ -155,7 +155,7 @@ sb_destroy(
  *
  *     in: the sb instance
  *
- * return: character count
+ * return: size_t character count
  */
 
 size_t
@@ -170,7 +170,7 @@ sb_length(
  *
  *     in: the sb instance
  *
- *     in: character
+ *     in: integer character
  *
  * return: nothing
  */
@@ -188,7 +188,7 @@ sb_putc(
  *
  *     in: the sb instance
  *
- * return: string
+ * return: nothing
  *
  * sb_puts behaves like fputs() and not puts() in the standard
  * library. it does not append a newline after the string.

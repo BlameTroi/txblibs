@@ -19,7 +19,7 @@
 #include "../inc/dl.h"
 
 typedef struct dlnode dlnode;
-
+
 /*
  * dlcb.
  *
@@ -45,7 +45,7 @@ struct dlcb {
 	int count;
 	const char *error;
 };
-
+
 /*
  * next_id
  *
@@ -64,7 +64,7 @@ next_id(dlcb *dl) {
 	dl->id += 1;
 	return dl->id;
 }
-
+
 /*
  * dlcb.error will reference one of these in certain conditions,
  * otherwise NULL.
@@ -74,7 +74,7 @@ static const char *error_list_empty       = "list empty";
 static const char *error_next_at_tail     = "get next reached tail of list";
 static const char *error_previous_at_head = "get previous reached head of list";
 static const char *error_not_positioned   = "get next/prev not positioned";
-
+
 /*
  * dlnode
  *
@@ -85,7 +85,7 @@ static const char *error_not_positioned   = "get next/prev not positioned";
  * it. if the data to store will fit in a void *, the client may
  * store it directly.
  *
- * the dlnode is the position of the item in the list. functions that
+ * the dlid is the position of the item in the list. functions that
  * return a dlid also mark the current position in the dlcb and when a
  * function receives a dlid it checks it against the position stored
  * in the dlcb. if they differ, it is an error.
@@ -103,7 +103,7 @@ struct dlnode {
 	dlcb *owner;
 	dlnode *next;
 	dlnode *previous;
-	void *payload;
+	ppayload payload;
 };
 
 /*
@@ -165,7 +165,8 @@ dl_destroy(
  * return: constant string with a brief message or NULL
  */
 
-const char *
+const
+char *
 dl_get_error(
 	dlcb *dl
 ) {
@@ -277,7 +278,7 @@ static
 dlnode *
 create_dlnode(
 	dlcb *dl,
-	void *payload
+	ppayload payload
 ) {
 	ASSERT_DLCB(dl, "invalid DLCB");
 
@@ -311,7 +312,7 @@ create_dlnode(
 dlid
 dl_insert_first(
 	dlcb *dl,
-	void *payload
+	ppayload payload
 ) {
 	ASSERT_DLCB(dl, "invalid DLCB");
 	dl->error = NULL;
@@ -348,7 +349,7 @@ dl_insert_first(
 dlid
 dl_insert_last(
 	dlcb *dl,
-	void *payload
+	ppayload payload
 ) {
 	ASSERT_DLCB(dl, "invalid DLCB");
 	dl->error = NULL;
@@ -389,7 +390,7 @@ dlid
 dl_insert_before(
 	dlcb *dl,
 	dlid id,
-	void *payload
+	ppayload payload
 ) {
 	ASSERT_DLCB(dl, "invalid DLCB");
 	dl->error = NULL;
@@ -439,7 +440,7 @@ dlid
 dl_insert_after(
 	dlcb *dl,
 	dlid id,
-	void *payload
+	ppayload payload
 ) {
 	ASSERT_DLCB(dl, "invalid DLCB");
 	dl->error = NULL;
@@ -483,7 +484,7 @@ dl_insert_after(
 dlid
 dl_get_first(
 	dlcb *dl,
-	void **payload
+	ppayload *payload
 ) {
 	ASSERT_DLCB(dl, "invalid DLCB");
 	dl->error = NULL;
@@ -512,7 +513,7 @@ dl_get_first(
 dlid
 dl_get_last(
 	dlcb *dl,
-	void **payload
+	ppayload *payload
 ) {
 	ASSERT_DLCB(dl, "invalid DLCB");
 	dl->error = NULL;
@@ -545,7 +546,7 @@ dlid
 dl_get_next(
 	dlcb *dl,
 	dlid id,
-	void **payload
+	ppayload *payload
 ) {
 	ASSERT_DLCB(dl, "invalid DLCB");
 	dl->error = NULL;
@@ -585,7 +586,7 @@ dlid
 dl_get_previous(
 	dlcb *dl,
 	dlid id,
-	void **payload
+	ppayload *payload
 ) {
 	ASSERT_DLCB(dl, "invalid DLCB");
 	dl->error = NULL;
@@ -683,7 +684,7 @@ bool
 dl_update(
 	dlcb *dl,
 	dlid id,
-	void *payload
+	ppayload payload
 ) {
 	ASSERT_DLCB(dl, "invalid DLCB");
 	dl->error = NULL;

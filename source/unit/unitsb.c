@@ -2,7 +2,7 @@
 
 /* released to the public domain, troy brumley, may 2024 */
 
-
+#include <errno.h>
 #include <stdlib.h>
 
 #include "minunit.h"
@@ -58,6 +58,7 @@ MU_TEST(test_basic) {
 /*
  * the same as test_sb except use the null sink string builder
  */
+
 MU_TEST(test_null) {
 	sbcb *sb = sb_create_null();
 	mu_should(sb);
@@ -103,8 +104,20 @@ MU_TEST(test_abusive) {
 	sb_destroy(sb);
 }
 
+static char *filename = NULL;
+
 MU_TEST(test_file) {
-	FILE *file = fopen("unitrs.c", "r");
+	if (filename == NULL) {
+		fprintf(stderr, "no file provided, test skipped.");
+		return;
+	}
+	FILE *file = fopen(filename, "r");
+	if (file == NULL) {
+		int keep = errno;
+		fprintf(stderr, "could not open file %s, error %d, test skipped", filename,
+			keep);
+		return;
+	}
 	sbcb *source = sb_create_file(file);
 	mu_should(source);
 	mu_should(sb_length(source) > 2000); /* just a did we get it check? */
@@ -140,6 +153,8 @@ MU_TEST_SUITE(test_suite) {
 
 int
 main(int argc, char *argv[]) {
+	if (argc > 1)
+		filename = argv[1];
 	MU_RUN_SUITE(test_suite);
 	MU_REPORT();
 	return MU_EXIT_CODE;

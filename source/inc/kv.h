@@ -1,20 +1,21 @@
 /* kv.h -- blametroi's key:value store functions -- */
 
 /*
- * a header only implementation of a key:value store. it's not
- * really a hash table or dictionary, but eventually its backing
- * store might be either.
+ * a header only implementation of a key:value store. it's not really
+ * a hash table or dictionary, but eventually its backing store might
+ * be either.
  *
- * problems in the advent of code series present opportunities
- * to use various abstract data types and i've been using aoc as
- * a prompt to implement my own versions. i finally saw a need
- * for a better key:value system and started to implement a binary
- * search tree, but the particular problem would tend to load the
- * tree in an unbalancing manner. i really didn't want to do a
- * more complex implementation at that time.
+ * problems in the advent of code series present opportunities to use
+ * various abstract data types and i've been using aoc as a prompt to
+ * implement my own versions. i finally saw a need for a better
+ * key:value system and started to implement a binary search tree, but
+ * the problem that inspired this effort would tend to load the tree
+ * in an unbalancing manner.
  *
- * i finally settled on creating a 'good enough' access api that
- * could have any backing hidden behind it.
+ * not wanting to do a more complex implementation, i finally settled
+ * on creating a 'good enough' access api that could have any backing
+ * store hidden behind it. when I feel like doing a proper hash or
+ * binary search tree, it will help out here.
  *
  * released to the public domain by Troy Brumley blametroi@gmail.com
  *
@@ -36,14 +37,33 @@ extern "C" {
 typedef struct kvcb kvcb;
 
 /*
+ * ppayload, pkey, pvalue
+ *
+ * these libraries manage client 'payloads'. these are void * sized
+ * and are generally assumed to be a pointer to client managed data,
+ * but anything that will fit in a void * pointer (typically eight
+ * bytes) is allowed.
+ *
+ * it is the client's responsibility to free any of its dynamically
+ * allocated memory. library code provides 'destroy' methods to clear
+ * and release library data structures.
+ *
+ * these type helpers are all synonyms for void *.
+ */
+
+typedef void * pkey;
+typedef void * pvalue;
+typedef void * ppayload;
+
+/*
  * kv_create
  *
  * creates an instance of the key:value store.
  *
- * requires a function pointer to a function that will compare the
- * keys in the store via the < =0 > convention.
+ * this requires a function pointer to a function that will compare
+ * the keys using the <0 =0 >0 convention as for qsort.
  *
- *     in: key comparison function pointer, as in qsort.
+ *     in: key comparison function pointer
  *
  * return: the new kv instance
  */
@@ -60,7 +80,7 @@ kv_create(
  *
  *     in: the kv instance
  *
- * return: how many pairs were deleted
+ * return: integer how many pairs were deleted
  */
 
 int
@@ -75,7 +95,7 @@ kv_reset(
  *
  *     in: the kv instance
  *
- * return: NULL
+ * return: boolean was the kv destroyed?
  */
 
 bool
@@ -86,8 +106,7 @@ kv_destroy(
 /*
  * kv_get
  *
- * if the key exists in the key:value store, return the pointer
- * to the value.
+ * if the key exists in the key:value store, return the value.
  *
  *     in: the kv instance
  *
@@ -96,17 +115,17 @@ kv_destroy(
  * return: the value from the key:value pair or NULL if not found
  */
 
-void *
+pvalue
 kv_get(
 	kvcb *kv,
-	void *key
+	pkey key
 );
 
 /*
  * kv_put
  *
- * given pointers to a key and associated value, store them in the
- * key:value store.
+ * given a key and associated value, store the pair in the key:value
+ * store.
  *
  * if the key exists in the store, its value is overwritten. if the
  * key does not exist in the store, a new key:value pair is created.
@@ -120,21 +139,29 @@ kv_get(
  * return: the value passed as input
  */
 
-void *
+pvalue
 kv_put(
 	kvcb *kv,
-	void *key,
-	void *value
+	pkey key,
+	pvalue value
 );
 
 /*
+ * kv_delete
  *
+ * given a key, remove the associated key:value pair from the store.
+ *
+ *     in: the kv instance
+ *
+ *     in: the key
+ *
+ * return: boolean was anything deleted?
  */
 
 bool
 kv_delete(
 	kvcb *kv,
-	void *key
+	pkey key
 );
 
 /*
@@ -159,7 +186,7 @@ kv_empty(
  *
  *     in: the kv instance
  *
- * return: int number of pairs
+ * return: integer number of pairs
  */
 
 int
@@ -170,14 +197,14 @@ kv_count(
 /*
  * kv_keys
  *
- * returns a null terminated array of keys from the store.
+ * returns a list of all the keys in the store.
  *
  *     in: the kv instance
  *
- * return: null terminated array of void *
+ * return: NULL terminated list (array) of keys.
  */
 
-void *
+pkey *
 kv_keys(
 	kvcb *kv
 );
@@ -185,14 +212,14 @@ kv_keys(
 /*
  * kv_values
  *
- * returns a null terminated array of values from the store.
+ * returns a list of all the values in the store.
  *
  *     in: the kv instance
  *
- * return: null terminated array of void *
+ * return: NULL terminated list (array) of values.
  */
 
-void *
+pvalue *
 kv_values(
 	kvcb *kv
 );

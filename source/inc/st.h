@@ -1,7 +1,7 @@
-/* qu.h -- blametroi's simple queue -- */
+/* st.h -- blametroi's simple stack -- */
 
 /*
- * a header only implementation of a queue.
+ * a header only implementation of a stack.
  *
  * released to the public domain by Troy Brumley blametroi@gmail.com
  *
@@ -17,136 +17,154 @@ extern "C" {
 #endif /* __cplusplus */
 
 /*
- * an instance of a queue.
+ * an instance of a stack.
  */
 
-typedef struct qucb qucb;
+typedef struct stcb stcb;
 
 /*
- * qu_empty
+ * ppayload, pkey, pvalue
  *
- * are there items in the queue?
+ * these libraries manage client 'payloads'. these are void * sized
+ * and are generally assumed to be a pointer to client managed data,
+ * but anything that will fit in a void * pointer (typically eight
+ * bytes) is allowed.
  *
- *     in: the qu instance
+ * it is the client's responsibility to free any of its dynamically
+ * allocated memory. library code provides 'destroy' methods to clear
+ * and release library data structures.
+ *
+ * these type helpers are all synonyms for void *.
+ */
+
+typedef void * pkey;
+typedef void * pvalue;
+typedef void * ppayload;
+
+/*
+ * st_empty
+ *
+ * are there any items on the stack?
+ *
+ *     in: the st instance
  *
  * return: boolean, true if empty
  */
 
 bool
-qu_empty(
-	qucb *
+st_empty(
+	stcb *
 );
 
 /*
- * qu_enqueue
+ * st_push
  *
- * add an item to the queue.
+ * add an item to the top of the stack.
  *
- *     in: the qu instance
+ *     in: the st instance
  *
- *     in: void * client payload
+ *     in: ppayload
  *
- * return: nothing.
+ * return: nothing
  */
 
 void
-qu_enqueue(
-	qucb *,
-	void *
+st_push(
+	stcb *,
+	ppayload
 );
 
 /*
- * qu_dequeue
+ * st_pop
  *
- * remove and return the first (oldest) item on the queue.
+ * remove and return the top item on the stack.
  *
- *     in: the qu instance
+ *     in: the st instance
  *
- * return: void * client payload or NULL if queue is empty.
+ * return: ppayload or NULL if the stack is empty
  */
 
-void *
-qu_dequeue(
-	qucb *
+ppayload
+st_pop(
+	stcb *
 );
 
 /*
- * qu_peek
+ * st_peek
  *
- * return the first (oldet) item on the queue but leave
- * it on the queue.
+ * return but do not remove the top item on the stack.
  *
- *     in: the qu instance
+ *     in: the st instance
  *
- * return: void * client payload or NULL if queue is empty.
+ * return: ppayload or NULL If the stack is empty
  */
 
-void *
-qu_peek(
-	qucb *
+ppayload
+st_peek(
+	stcb *
 );
 
 /*
- * qu_create
+ * st_create
  *
- * create a new queue.
+ * create a new stack.
  *
  *     in: nothing
  *
- * return: the new qu instance.
+ * return: the new st instance
  */
 
-qucb *
-qu_create(
+stcb *
+st_create(
 	void
 );
 
 /*
- * qu_destroy
+ * st_destroy
  *
- * free the queue control block if the queue is empty.
+ * free the stack control block if the stack is empty.
  *
- *     in: the qu instance
+ *     in: the st instance
  *
- * return: boolean, true if successful, false if queue is not empty
+ * return: boolean, true if successful
  */
 
 bool
-qu_destroy(
-	qucb *
+st_destroy(
+	stcb *
 );
 
 /*
- * qu_reset
+ * st_reset
  *
- * remove all items from the queue.
+ * remove all items from the stack.
  *
- *     in: the qu instance
+ *     in: the st instance
  *
- * return: int number of items removed
+ * return: integer number of items removed
  */
 
 int
-qu_reset(
-	qucb *
+st_reset(
+	stcb *
 );
 
 /*
- * qu_count
+ * st_depth
  *
- * how many items are in the queue?
+ * how many items are in the stack?
  *
- *     in: the qu instance.
+ *     in: the st instance
  *
- * return: int, number of items.
+ * return: inegert, number of items on the stack
  */
 
 int
-qu_count(
-	qucb *
+st_depth(
+	stcb *
 );
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-/* qu.h ends here */
+/* st.h ends here */

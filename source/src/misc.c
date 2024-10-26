@@ -4,10 +4,9 @@
  * a header only implementation of various bits of code don't fit in
  * any of my other single c header file libraries.
  *
- * many of these functions are marked for inlining. some of the
- * numeric functions us long instead of int to deal with some of the
- * big numbers seen in problems from advent of code and other puzzle
- * sites.
+ * some of the numeric functions us long instead of int to deal with
+ * some of the large numbers seen in problems from advent of code and
+ * other puzzle sites.
  *
  * released to the public domain by Troy Brumley blametroi@gmail.com
  *

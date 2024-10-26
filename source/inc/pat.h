@@ -79,10 +79,10 @@
  */
 
 /*
- * a match string expression is compiled into pattern buffer. the
+ * a match string expression is compiled into a pattern buffer. this
  * buffer is a one dimensional array of unsigned integers. a pattern
  * item occupies at least one slot of the array. the item code is
- * symbolically identified by the macros PAT_???.
+ * symbolically identified in code by the macros PAT_???.
  *
  * the first item in the array is always PAT_BEG, and the last is
  * always PAT_END. PAT_END is guaranteed to be followed by an
@@ -96,7 +96,7 @@
  * ^ for start of line, $ for end of line, and . for any single
  * character matches all take one slot.
  *
- * common character type matches for digits, letters, and whitespace
+ * common character class matches for digits, letters, and whitespace
  * all take one slot (\d, \w, \s) as do their negations.
  *
  * quantifiers (*, ?, +) all take only one slot.

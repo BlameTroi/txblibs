@@ -37,8 +37,8 @@ typedef struct klnode klnode;
 struct klnode {
 	klnode *fwd;
 	klnode *bwd;
-	void *key;
-	void *value;
+	pkey key;
+	pvalue value;
 };
 
 #define KLCB_TAG "__KLCB__"
@@ -101,7 +101,7 @@ kl_create(
 /*
  * kl_clone
  *
- * create a copy of a kl instance.
+ * create a shallow copy of a kl instance.
  *
  *     in: the kl instance to copy
  *
@@ -117,8 +117,8 @@ kl_clone(
 	if (kl_empty(old_kl))
 		return new_kl;
 	/* copy items */
-	void *key = NULL;
-	void *value = NULL;
+	pkey key = NULL;
+	pvalue value = NULL;
 	if (!kl_get_first(old_kl, &key, &value))
 		abort_if(true,
 			"kl_clone impossible error while cloning");
@@ -161,7 +161,8 @@ kl_destroy(
  *
  */
 
-const char *
+const
+char *
 kl_get_error(
 	klcb *kl
 ) {
@@ -175,7 +176,7 @@ kl_get_error(
  *
  *     in: the kl instance
  *
- * return: int number of items on the list
+ * return: integer number of items on the list
  */
 
 int
@@ -183,14 +184,6 @@ kl_count(
 	klcb *kl
 ) {
 	ASSERT_KLCB(kl, "invalid KLCB");
-	int n = 0;
-	klnode *curr = kl->head;
-	while (curr) {
-		n += 1;
-		curr = curr->fwd;
-	}
-	abort_if(n != kl->count,
-		"kl_count error in node count");
 	return kl->count;
 }
 
@@ -215,11 +208,11 @@ kl_empty(
 /*
  * kl_reset
  *
- * reset the keyed link list, deleting all items.
+ * reset the list, deleting all items.
  *
  *     in: the kl instance
  *
- * return: int number of items deleted
+ * return: integer number of items deleted
  */
 
 int
@@ -258,16 +251,17 @@ kl_reset(
  *
  *     in: pointer to the value as a void *
  *
- * return: bool was the insert successful?
+ * return: boolean was the insert successful?
  */
 
 bool
 kl_insert(
 	klcb *kl,
-	void *key,
-	void *value
+	pkey key,
+	pvalue value
 ) {
 	ASSERT_KLCB(kl, "invalid KLCB");
+
 	/* build new list item */
 	klnode *new = NULL;
 	new = malloc(sizeof(*new));
@@ -276,6 +270,7 @@ kl_insert(
 	new->value = value;
 	kl->position = NULL;
 	kl->error = NULL;
+
 	/* if the list is empty, easy peasy */
 	if (kl->head == NULL) {
 		kl->head = new;
@@ -283,9 +278,11 @@ kl_insert(
 		kl->count += 1;
 		return true;
 	}
+
 	/* work the ends of the list first */
 	int rf = kl->compare_keys(new->key, kl->head->key);
 	int rt = kl->compare_keys(new->key, kl->tail->key);
+
 	/* can't have duplicate keys */
 	if (rf == 0 || rt == 0) {
 		memset(new, 253, sizeof(*new));
@@ -293,6 +290,7 @@ kl_insert(
 		kl->error = error_duplicate_key;
 		return false;
 	}
+
 	/* insert at head or tail if that's the position */
 	if (rf < 0) {
 		new->fwd = kl->head;
@@ -308,6 +306,7 @@ kl_insert(
 		kl->count += 1;
 		return true;
 	}
+
 	/* chase the link chain and insert where appropriate */
 	klnode *curr = kl->head->fwd;
 	while (curr) {
@@ -332,6 +331,7 @@ kl_insert(
 		kl->count += 1;
 		return true;
 	}
+
 	/* if we fall out of the link chase loop, something is
 	 * wrong with the chain, abort. */
 	abort_if(true,
@@ -350,25 +350,28 @@ kl_insert(
  *
  *     in: the kl instance
  *
- * in/out: pointer to the address of the key
+ *     in: pointer to the address of the key
  *
  * in/out: pointer to the address to store the value as a void *
  *
- * return: bool was the key found
+ * return: boolean was the key found?
  */
 
 bool
 kl_get(
 	klcb *kl,
-	void **key,
-	void **value
+	pkey *key,
+	pvalue *value
 ) {
 	ASSERT_KLCB(kl, "invalid KLCB");
+
 	kl->position = NULL;
 	kl->error = NULL;
 	*value = NULL;
+
 	if (kl->head == NULL)
 		return false;
+
 	klnode *curr = kl->head;
 	while (curr) {
 		int rc = kl->compare_keys(*key, curr->key);
@@ -382,6 +385,7 @@ kl_get(
 			break;
 		curr = curr->fwd;
 	}
+
 	kl->error = error_key_not_found;
 	return false;
 }
@@ -397,26 +401,29 @@ kl_get(
  *
  * in/out: pointer to the address to store the value
  *
- * return: bool was there a first item
+ * return: boolean was there a first item?
  */
 
 bool
 kl_get_first(
 	klcb *kl,
-	void **key,
-	void **value
+	pkey *key,
+	pvalue *value
 ) {
 	ASSERT_KLCB(kl, "invalid KLCB");
+
 	kl->position = NULL;
 	kl->error = NULL;
 	*key = NULL;
 	*value = NULL;
+
 	if (kl->head) {
 		kl->position = kl->head;
 		*key = kl->position->key;
 		*value = kl->position->value;
 	} else
 		kl->error = error_list_empty;
+
 	return kl->position != NULL;
 }
 
@@ -431,26 +438,29 @@ kl_get_first(
  *
  * in/out: pointer to the address to store the value
  *
- * return: bool was there a last item
+ * return: boolean was there a last item?
  */
 
 bool
 kl_get_last(
 	klcb *kl,
-	void **key,
-	void **value
+	pkey *key,
+	pvalue *value
 ) {
 	ASSERT_KLCB(kl, "invalid KLCB");
+
 	kl->position = NULL;
 	kl->error = NULL;
 	*key = NULL;
 	*value = NULL;
+
 	if (kl->tail) {
 		kl->position = kl->tail;
 		*key = kl->position->key;
 		*value = kl->position->value;
 	} else
 		kl->error = error_list_empty;
+
 	return kl->position != NULL;
 }
 
@@ -465,27 +475,31 @@ kl_get_last(
  *
  * in/out: pointer to the address to store the value
  *
- * return: bool was there a next item
+ * return: boolean was there a next item?
  */
 
 bool
 kl_get_next(
 	klcb *kl,
-	void **key,
-	void **value
+	pkey *key,
+	pvalue *value
 ) {
 	ASSERT_KLCB(kl, "invalid KLCB");
+
 	if (!kl->position)
 		return false;
-	kl->position = kl->position->fwd;
+
 	kl->error = NULL;
 	*key = NULL;
 	*value = NULL;
+
+	kl->position = kl->position->fwd;
 	if (kl->position) {
 		*key = kl->position->key;
 		*value = kl->position->value;
 	} else
 		kl->error = error_next_at_tail;
+
 	return kl->position != NULL;
 }
 
@@ -500,27 +514,30 @@ kl_get_next(
  *
  * in/out: pointer to the address to store the value
  *
- * return: bool was there a previous item
+ * return: boolean was there a previous item?
  */
 
 bool
 kl_get_previous(
 	klcb *kl,
-	void **key,
-	void **value
+	pkey *key,
+	pvalue *value
 ) {
 	ASSERT_KLCB(kl, "invalid KLCB");
+
 	if (!kl->position)
 		return false;
-	kl->position = kl->position->bwd;
 	kl->error = NULL;
 	*key = NULL;
 	*value = NULL;
+
+	kl->position = kl->position->bwd;
 	if (kl->position) {
 		*key = kl->position->key;
 		*value = kl->position->value;
 	} else
 		kl->error = error_previous_at_head;
+
 	return kl->position != NULL;
 }
 
@@ -542,16 +559,17 @@ kl_get_previous(
  *
  *     in: pointer to the value
  *
- * return: did the update succeed
+ * return: boolean did the update succeed?
  */
 
 bool
 kl_update(
 	klcb *kl,
-	void *key,
-	void *value
+	pkey key,
+	pvalue value
 ) {
 	ASSERT_KLCB(kl, "invalid KLCB");
+
 	kl->error = NULL;
 	if (kl->position == NULL ||
 			kl->compare_keys(key, kl->position->key) != 0) {
@@ -559,6 +577,7 @@ kl_update(
 		kl->error = error_bad_update_key;
 		return false;
 	}
+
 	kl->position->value = value;
 	return true;
 }
@@ -576,25 +595,30 @@ kl_update(
  *
  * in/out: pointer to the value
  *
- * return: did the delete succeed
+ * return: boolean did the delete succeed?
  */
 
 bool
 kl_delete(
 	klcb *kl,
-	void *key
+	pkey key
 ) {
 	ASSERT_KLCB(kl, "invalid KLCB");
+
 	kl->error = NULL;
+
+	/* can't delete what isn't there */
 	if (kl->position == NULL ||
 			kl->compare_keys(key, kl->position->key) != 0) {
 		kl->position = NULL;
 		kl->error = error_bad_delete_key;
 		return false;
 	}
+
 	/* deletes clear position */
 	klnode *curr = kl->position;
 	kl->position = NULL;
+
 	if (curr->fwd == NULL && curr->bwd == NULL) {
 		/* this is the only item */
 		kl->head = NULL;
@@ -612,8 +636,10 @@ kl_delete(
 		curr->bwd->fwd = curr->fwd;
 		curr->fwd->bwd = curr->bwd;
 	}
+
 	memset(curr, 253, sizeof(*curr));
 	free(curr);
+
 	kl->count -= 1;
 	return true;
 }

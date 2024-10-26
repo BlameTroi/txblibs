@@ -54,19 +54,19 @@ MU_TEST(test_test) {
 
 	printf("\n");
 	char *str1 = "abc3231929";
-	md5_string(str1, result);
+	MD5_string(str1, result);
 	print_hash(result);
 	mu_should((result[2] & 0x0f) == 1);
 
 	printf("\n");
 	char *str2 = "abc5017308";
-	md5_string(str2, result);
+	MD5_string(str2, result);
 	print_hash(result);
 	mu_should((result[2] & 0x0f) == 8);
 
 	printf("\n");
 	char *str3 = "abc5278568";
-	md5_string(str3, result);
+	MD5_string(str3, result);
 	print_hash(result);
 	mu_should((result[2] & 0x0f) == 0x0f);
 }

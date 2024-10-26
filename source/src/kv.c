@@ -1,20 +1,21 @@
 /* kv.c -- blametroi's key:value store library */
 
 /*
- * a header only implementation of a key:value store. it's not
- * really a hash table or dictionary, but eventually its backing
- * store might be either.
+ * a header only implementation of a key:value store. it's not really
+ * a hash table or dictionary, but eventually its backing store might
+ * be either.
  *
- * problems in the advent of code series present opportunities
- * to use various abstract data types and i've been using aoc as
- * a prompt to implement my own versions. i finally saw a need
- * for a better key:value system and started to implement a binary
- * search tree, but the particular problem would tend to load the
- * tree in an unbalancing manner. i really didn't want to do a
- * more complex implementation at that time.
+ * problems in the advent of code series present opportunities to use
+ * various abstract data types and i've been using aoc as a prompt to
+ * implement my own versions. i finally saw a need for a better
+ * key:value system and started to implement a binary search tree, but
+ * the problem that inspired this effort would tend to load the tree
+ * in an unbalancing manner.
  *
- * i finally settled on creating a 'good enough' access api that
- * could have any backing hidden behind it.
+ * not wanting to do a more complex implementation, i finally settled
+ * on creating a 'good enough' access api that could have any backing
+ * store hidden behind it. when I feel like doing a proper hash or
+ * binary search tree, it will help out here.
  *
  * released to the public domain by Troy Brumley blametroi@gmail.com
  *
@@ -52,8 +53,8 @@
 typedef struct kvpair kvpair;
 struct kvpair {
 	kvcb *owner;
-	void *key;
-	void *value;
+	pkey key;
+	pvalue value;
 };
 
 /*
@@ -94,6 +95,7 @@ struct kvcb {
  * for the client comparator.
  */
 
+static
 int
 fn_kvpair_compare_keys(const void *a, const void *b) {
 	return ((kvpair *)a)->owner->key_compare(
@@ -105,10 +107,10 @@ fn_kvpair_compare_keys(const void *a, const void *b) {
  *
  * creates an instance of the key:value store.
  *
- * requires a function pointer to a function that will compare the
- * keys in the store via the < =0 > convention.
+ * this requires a function pointer to a function that will compare
+ * the keys using the <0 =0 >0 convention as for qsort.
  *
- *     in: key comparison function pointer, as in qsort.
+ *     in: key comparison function pointer
  *
  * return: the new kv instance
  */
@@ -117,16 +119,18 @@ kvcb *
 kv_create(
 	int (*key_compare)(const void *, const void *)
 ) {
-	abort_if(!key_compare, "kv_create missing key compare function for KVCB");
+	abort_if(!key_compare,
+		"kv_create missing key compare function for KVCB");
+
 	kvcb *kv = malloc(sizeof(kvcb));
-	abort_if(!kv, "kv_create could not allocate KVCB");
 	memset(kv, 0, sizeof(kvcb));
 	memcpy(kv->tag, KVCB_TAG, KVCB_TAG_LEN);
+
 	kv->pairs_increment = PAIRS_INCREMENT_DEFAULT;
 	kv->pairs_size = PAIRS_SIZE_DEFAULT;
 	kv->pairs = malloc(sizeof(kvpair) * (kv->pairs_size + 1));
-	abort_if(!kv->pairs, "kv_create coult not allocate backing pairs");
 	memset(kv->pairs, 0, sizeof(kvpair) * (kv->pairs_size + 1));
+
 	kv->key_compare = key_compare;
 	kv->num_pairs = 0;
 	return kv;
@@ -139,7 +143,7 @@ kv_create(
  *
  *     in: the kv instance
  *
- * return: how many pairs were deleted
+ * return: integer how many pairs were deleted
  */
 
 int
@@ -161,12 +165,9 @@ kv_reset(
  *
  * destroy an instance of the key:value pair store.
  *
- * overwrites and then releases all key:value store related storage.
- * actual key and value storage is the responsibility of the client.
- *
  *     in: the kv instance
  *
- * return: NULL
+ * return: boolean was the kv destroyed?
  */
 
 bool
@@ -177,10 +178,10 @@ kv_destroy(
 	if (kv->num_pairs != 0)
 		return false;
 
-	memset(kv->pairs, 0xfd, sizeof(kvpair) * (kv->pairs_size + 1));
+	memset(kv->pairs, 253, sizeof(kvpair) * (kv->pairs_size + 1));
 	free(kv->pairs);
 
-	memset(kv, 0xfd, sizeof(kvcb));
+	memset(kv, 253, sizeof(kvcb));
 	free(kv);
 
 	return true;
@@ -202,7 +203,7 @@ static
 kvpair *
 am_find_key(
 	kvcb *kv,
-	void *key
+	pkey key
 ) {
 	kvpair search_key = (kvpair) { kv, key, NULL };
 	kvpair *p = bsearch(&search_key, kv->pairs, kv->num_pairs, sizeof(kvpair),
@@ -223,7 +224,6 @@ am_find_key(
  * return: nothing
  */
 
-
 static
 void
 am_delete_pair(
@@ -239,7 +239,8 @@ am_delete_pair(
 /*
  * am_new_pair
  *
- * given key and value pointers, create a new key:value pair in the
+ * given a key and value, create a new
+ * key:value pair in the
  * underlying store. when called it should be known that key does
  * not alrady exist in the store.
  *
@@ -259,8 +260,8 @@ static
 kvpair *
 am_new_pair(
 	kvcb *kv,
-	void *key,
-	void *value
+	pkey key,
+	pvalue value
 ) {
 	if (kv->num_pairs >= kv->pairs_size) {
 
@@ -339,8 +340,7 @@ am_new_pair(
 /*
  * kv_get
  *
- * if the key exists in the key:value store, return the pointer
- * to the value.
+ * if the key exists in the key:value store, return the value.
  *
  *     in: the kv instance
  *
@@ -349,13 +349,15 @@ am_new_pair(
  * return: the value from the key:value pair or NULL if not found
  */
 
-void *
+pvalue
 kv_get(
 	kvcb *kv,
-	void *key
+	pkey key
 ) {
 	ASSERT_KVCB(kv, "kv_get invalid KVCB");
-	abort_if(!key, "kv_get key may not be NULL");
+	abort_if(!key,
+		"kv_get key may not be NULL");
+
 	kvpair *p = am_find_key(kv, key);
 	return p ? p->value : p;
 }
@@ -363,7 +365,8 @@ kv_get(
 /*
  * kv_put
  *
- * given pointers to a key value, store them in the key:value store.
+ * given a key and associated value, store the pair in the key:value
+ * store.
  *
  * if the key exists in the store, its value is overwritten. if the
  * key does not exist in the store, a new key:value pair is created.
@@ -377,47 +380,50 @@ kv_get(
  * return: the value passed as input
  */
 
-void *
+pvalue
 kv_put(
 	kvcb *kv,
-	void *key,
-	void *value
+	pkey key,
+	pvalue value
 ) {
 	ASSERT_KVCB(kv, "kv_put invalid KVCB");
-	abort_if(!key, "kv_put key may not be NULL");
-	abort_if(!value, "kv_put payload may not be NULL");
+	abort_if(!key,
+		"kv_put key may not be NULL");
 
 	kvpair *p = am_find_key(kv, key);
 	if (p)
 		p->value = value;
 	else
 		p = am_new_pair(kv, key, value);
+
 	return value;
 }
 
 /*
  * kv_delete
  *
- * given a key, if it exists in the key:value store, delete its pair
- * in the store.
+ * given a key, remove the associated key:value pair from the store.
  *
  *     in: the kv instance
  *
  *     in: the key
  *
- * return: boolean true if key found and pair deleted
+ * return: boolean was anything deleted?
  */
 
 bool
 kv_delete(
 	kvcb *kv,
-	void *key
+	pkey key
 ) {
 	ASSERT_KVCB(kv, "kv_delete invalid KVCB");
-	abort_if(!key, "kv_delete key may not be NULL");
+	abort_if(!key,
+		"kv_delete key may not be NULL");
+
 	kvpair *p = am_find_key(kv, key);
 	if (p)
 		am_delete_pair(kv, p);
+
 	return p != NULL;
 }
 
@@ -446,7 +452,7 @@ kv_empty(
  *
  *     in: the kv instance
  *
- * return: int number of pairs
+ * return: intger number of pairs
  */
 
 int
@@ -460,50 +466,53 @@ kv_count(
 /*
  * kv_keys
  *
- * returns a null terminated array of keys from the store.
+ * returns a list of all the keys in the store.
  *
  *     in: the kv instance
  *
- * return: null terminated array of void *
+ * return: NULL terminated list (array) of keys.
  */
 
-void *
+pkey *
 kv_keys(
 	kvcb *kv
 ) {
 	ASSERT_KVCB(kv, "invalid KVCB");
 	if (kv->num_pairs == 0)
 		return NULL;
-	void **keys = malloc((kv->num_pairs + 1) * sizeof(void *));
+
+	pkey *keys = malloc((kv->num_pairs + 1) * sizeof(void *));
 	memset(keys, 0, (kv->num_pairs + 1) * sizeof(void *));
-	for (int i = 0; i < kv->num_pairs; i++) {
+
+	for (int i = 0; i < kv->num_pairs; i++)
 		keys[i] = kv->pairs[i].key;
-	}
+
 	return keys;
 }
 
 /*
  * kv_values
  *
- * returns a null terminated array of values from the store.
+ * returns a list of all the values in the store.
  *
  *     in: the kv instance
  *
- * return: null terminated array of void *
+ * return: NULL terminated list (array) of values.
  */
 
-void *
+pvalue *
 kv_values(
 	kvcb *kv
 ) {
 	ASSERT_KVCB(kv, "invalid KVCB");
 	if (kv->num_pairs == 0)
 		return NULL;
-	void **values = malloc((kv->num_pairs + 1) * sizeof(void *));
+	pvalue *values = malloc((kv->num_pairs + 1) * sizeof(void *));
 	memset(values, 0, (kv->num_pairs + 1) * sizeof(void *));
-	for (int i = 0; i < kv->num_pairs; i++) {
+
+	for (int i = 0; i < kv->num_pairs; i++)
 		values[i] = kv->pairs[i].value;
-	}
+
 	return values;
 }
 
