@@ -248,7 +248,7 @@ Naming and Typedefs
 -------------------
 
 In the other header only libraries I've looked at, there is no
-concensus on naming and prefixing. In C++ there are namespaces, but we
+consensus on naming and prefixing. In C++ there are namespaces, but we
 don't get those in C. I've taken a minimalist's approach and with very
 few exceptions I use a two character prefix with an underscore: 'dl_'
 for Doubly linked List, 'kv_' for Key:Value store, 'll_' for singly
@@ -400,7 +400,7 @@ TXBMISC.H
 A hodgepodge of several small functions that fall into one or more of
 the following categories:
 
-* repplacements for functions with an API that make little sense to me
+* replacements for functions with an API that make little sense to me
   or is too unlike what I'm used to from my prior work.
 
 * functions that might be some library somewhere, but I'm not familiar
@@ -437,7 +437,7 @@ While I was heavily influenced by the chapters _Software Tools in
 Pascal_ on pattern matching, searching, and editing, the code is not a
 transliteration of the Pascal to C.
 
-A first pass at filename globbing is pretty bad and will probably be
+A first pass at filename globing is pretty bad and will probably be
 deleted.
 
 There are some entry point declarations not explicitly exposed in the
