@@ -67,32 +67,45 @@ extern "C" {
 /*
  * dlcb
  *
- * an opaque definition of an instance of the doubly linked list.
+ * the dlcb is an instance of the doubly linked list.
  */
 
 typedef struct dlcb dlcb;
 
 /*
- * dlnode
+ * ppayload, pkey, pvalue
  *
- * client code should consider everything but the payload pointer as
- * read only. the whole node is returned from many functions and is
- * expected to be passed on a subsequent function call to check the
- * position within the list.
+ * these libraries manage client 'payloads'. these are void * sized
+ * and are generally assumed to be a pointer to client managed data,
+ * but anything that will fit in a void * pointer (typically eight
+ * bytes) is allowed.
  *
- * a payload is expected to be a pointer to some client managed data.
- * if the data is malloced, it is the clients responsibility to free
- * it. if the data to store will fit in a void *, the client may
- * store it directly.
+ * it is the client's responsibility to free any of its dynamically
+ * allocated memory. library code provides 'destroy' methods to clear
+ * and release library data structures.
  *
- * the dlid is the synchronization token with the list. functions
- * return a dlid also mark the current position in the dlcb and when a
- * function receives a dlid it checks it against the position stored
- * in the dlid. if they differ, it is an error.
+ * these type helpers are all synonyms for void *.
+ */
+
+typedef void * pkey;
+typedef void * pvalue;
+typedef void * ppayload;
+
+/*
+ * dlid
  *
- * for functions that return a dlid, if null_dlid is true then there
+ * the dlid is a synchronization token between the client and the
+ * library. functions that return a dlid also mark the current
+ * position in the dlcb and when a function receives a dlid it checks
+ * it against the position stored in the dlid. if they differ, it is
+ * an error.
+ *
+ * for functions that return a dlid, if 'null_dlid' is true then there
  * was an error. if the function should return a payload, the payload
  * pointer is set to NULL.
+ *
+ * use the null_dlid macro for this check in case the dlid structure
+ * ever changes.
  */
 
 typedef unsigned long dlid;
@@ -121,7 +134,7 @@ dl_create(
  *
  *     in: the dl instance
  *
- * return: true if successful, false if the dl was not empty
+ * return: boolean, was the dl destroyed?
  */
 
 bool
@@ -132,14 +145,16 @@ dl_destroy(
 /*
  * dl_get_error
  *
- * get status of last command if there was an error.
+ * get a brief description of any error produced by the last dl_xxx
+ * function.
  *
  *     in: the dl instance
  *
  * return: constant string with a brief message or NULL
  */
 
-const char *
+const
+char *
 dl_get_error(
 	dlcb *dl
 );
@@ -147,8 +162,8 @@ dl_get_error(
 /*
  * dl_count
  *
- * how many items are on the list? the current list position
- * is not changed.
+ * how many items are on the list? the current list position is not
+ * changed.
  *
  *     in: the dl instance
  *
@@ -167,7 +182,7 @@ dl_count(
  *
  *     in: the dl instance
  *
- * return: bool
+ * return: boolean
  */
 
 bool
@@ -178,11 +193,13 @@ dl_empty(
 /*
  * dl_reset
  *
- * reset the list, deleting all items. does not free payload storage.
+ * reset the list an empty state.
  *
  *     in: the dl instance
  *
  * return: int number of items deleted
+ *
+ * note that this does not issue frees on the payloads.
  */
 
 int
@@ -198,16 +215,15 @@ dl_reset(
  *
  *     in: the dl instance
  *
- *     in: the client data must fit in in a void *, typically
- *         a pointer to the client data
+ *     in: a payload
  *
- * return: the dlid
+ * return: dlid of the item or NULL_DLID
  */
 
 dlid
 dl_insert_first(
 	dlcb *dl,
-	void *payload
+	ppayload payload
 );
 
 /*
@@ -218,16 +234,15 @@ dl_insert_first(
  *
  *     in: the dl instance
  *
- *     in: the client data must fit in in a void *, typically
- *         a pointer to the client data
+ *     in: a payload
  *
- * return: the dlid
+ * return: dlid of the item or NULL_DLID
  */
 
 dlid
 dl_insert_last(
 	dlcb *dl,
-	void *payload
+	ppayload payload
 );
 
 /*
@@ -240,17 +255,16 @@ dl_insert_last(
  *
  *     in: the dlid of the current position in the dl
  *
- *     in: the client data must fit in in a void *, typically
- *         a pointer to the client data
+ *     in: a payload
  *
- * return: the new dlid
+ * return: dlid of the item or NULL_DLID
  */
 
 dlid
 dl_insert_before(
 	dlcb *dl,
 	dlid id,
-	void *payload
+	ppayload payload
 );
 
 /*
@@ -263,17 +277,16 @@ dl_insert_before(
  *
  *     in: the dlid of the current position in the dl
  *
- *     in: the client data must fit in in a void *, typically
- *         a pointer to the client data
+ *     in: a payload
  *
- * return: the new dlid
+ * return: dlid of the item or NULL_DLID
  */
 
 dlid
 dl_insert_after(
 	dlcb *dl,
 	dlid id,
-	void *payload
+	ppayload payload
 );
 
 /*
@@ -283,15 +296,18 @@ dl_insert_after(
  *
  *     in: the dl instance
  *
- *     in: address of *payload
+ *     in: pointer to a payload
  *
- * return: dlid of the first item
+ * return: dlid of the item or NULL_DLID
+ *
+ * if there was an item, the payload is delivered via the
+ * pointer.
  */
 
 dlid
 dl_get_first(
 	dlcb *dl,
-	void **payload
+	ppayload *payload
 );
 
 /*
@@ -301,37 +317,43 @@ dl_get_first(
  *
  *     in: the dl instance
  *
- *     in: address of *payload
+ *     in: pointer to a payload
  *
- * return: dlid of the last item
+ * return: dlid of the item or NULL_DLID
+ *
+ * if there was an item, the payload is delivered via the
+ * pointer.
  */
 
 dlid
 dl_get_last(
 	dlcb *dl,
-	void **payload
+	ppayload *payload
 );
 
 /*
  * dl_get_next
  *
- * get item after the current positioned item, advancing
- * the position to this item.
+ * get item after the current positioned item, advancing the position
+ * to this item.
  *
  *     in: the dl instance
  *
  *     in: the dlid of the positioned item
  *
- *     in: address of *payload
+ *     in: pointer to a payload
  *
  * return: the dlid or NULL_DLID if no item
+ *
+ * if there was an item, the payload is delivered via the
+ * pointer.
  */
 
 dlid
 dl_get_next(
 	dlcb *dl,
 	dlid id,
-	void **payload
+	ppayload *payload
 );
 
 /*
@@ -347,13 +369,16 @@ dl_get_next(
  *     in: address of *payload
  *
  * return: the dlid or NULL_DLID if no item
+ *
+ * if there was an item, the payload is delivered via the
+ * pointer.
  */
 
 dlid
 dl_get_previous(
 	dlcb *dl,
 	dlid id,
-	void **payload
+	ppayload *payload
 );
 
 /*
@@ -381,10 +406,6 @@ dl_delete(
  * update an item's value in the list. the list should be positioned
  * on the node to update. and the position is not changed.
  *
- * as items are stored in memory, if you do not change the address of
- * the value (ie, you updated its contents in place) there is no need
- * to use dl_update.
- *
  *     in: the dl instance
  *
  *     in: the dlid of the item to update
@@ -392,13 +413,16 @@ dl_delete(
  *     in: the new payload, typically a void * pointer to a value
  *
  * return: the dlid of the updated item
+ *
+ * if your payloads are pointers and the referenced client data does
+ * not move, there is no need to use the dl_update function.
  */
 
 bool
 dl_update(
 	dlcb *dl,
 	dlid id,
-	void *payload
+	ppayload payload
 );
 
 #ifdef __cplusplus
@@ -497,7 +521,7 @@ static const char *error_not_positioned   = "get next/prev not positioned";
  * it. if the data to store will fit in a void *, the client may
  * store it directly.
  *
- * the dlnode is the position of the item in the list. functions that
+ * the dlid is the position of the item in the list. functions that
  * return a dlid also mark the current position in the dlcb and when a
  * function receives a dlid it checks it against the position stored
  * in the dlcb. if they differ, it is an error.
@@ -515,7 +539,7 @@ struct dlnode {
 	dlcb *owner;
 	dlnode *next;
 	dlnode *previous;
-	void *payload;
+	ppayload payload;
 };
 
 /*
@@ -577,7 +601,8 @@ dl_destroy(
  * return: constant string with a brief message or NULL
  */
 
-const char *
+const
+char *
 dl_get_error(
 	dlcb *dl
 ) {
@@ -689,7 +714,7 @@ static
 dlnode *
 create_dlnode(
 	dlcb *dl,
-	void *payload
+	ppayload payload
 ) {
 	ASSERT_DLCB(dl, "invalid DLCB");
 
@@ -723,7 +748,7 @@ create_dlnode(
 dlid
 dl_insert_first(
 	dlcb *dl,
-	void *payload
+	ppayload payload
 ) {
 	ASSERT_DLCB(dl, "invalid DLCB");
 	dl->error = NULL;
@@ -760,7 +785,7 @@ dl_insert_first(
 dlid
 dl_insert_last(
 	dlcb *dl,
-	void *payload
+	ppayload payload
 ) {
 	ASSERT_DLCB(dl, "invalid DLCB");
 	dl->error = NULL;
@@ -801,7 +826,7 @@ dlid
 dl_insert_before(
 	dlcb *dl,
 	dlid id,
-	void *payload
+	ppayload payload
 ) {
 	ASSERT_DLCB(dl, "invalid DLCB");
 	dl->error = NULL;
@@ -851,7 +876,7 @@ dlid
 dl_insert_after(
 	dlcb *dl,
 	dlid id,
-	void *payload
+	ppayload payload
 ) {
 	ASSERT_DLCB(dl, "invalid DLCB");
 	dl->error = NULL;
@@ -895,7 +920,7 @@ dl_insert_after(
 dlid
 dl_get_first(
 	dlcb *dl,
-	void **payload
+	ppayload *payload
 ) {
 	ASSERT_DLCB(dl, "invalid DLCB");
 	dl->error = NULL;
@@ -924,7 +949,7 @@ dl_get_first(
 dlid
 dl_get_last(
 	dlcb *dl,
-	void **payload
+	ppayload *payload
 ) {
 	ASSERT_DLCB(dl, "invalid DLCB");
 	dl->error = NULL;
@@ -957,7 +982,7 @@ dlid
 dl_get_next(
 	dlcb *dl,
 	dlid id,
-	void **payload
+	ppayload *payload
 ) {
 	ASSERT_DLCB(dl, "invalid DLCB");
 	dl->error = NULL;
@@ -997,7 +1022,7 @@ dlid
 dl_get_previous(
 	dlcb *dl,
 	dlid id,
-	void **payload
+	ppayload *payload
 ) {
 	ASSERT_DLCB(dl, "invalid DLCB");
 	dl->error = NULL;
@@ -1095,7 +1120,7 @@ bool
 dl_update(
 	dlcb *dl,
 	dlid id,
-	void *payload
+	ppayload payload
 ) {
 	ASSERT_DLCB(dl, "invalid DLCB");
 	dl->error = NULL;

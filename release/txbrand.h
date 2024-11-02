@@ -50,9 +50,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 /*
  * this is a header only implementation of non cryptographic quality
- * random number support that i keep
- * repeating in my hobby programming. all functions are
- * small and i think pretty obvious.
+ * random number support that i keep repeating in my hobby
+ * programming. all functions are small and i think pretty obvious.
  *
  * released to the public domain by Troy Brumley blametroi@gmail.com
  *
@@ -63,7 +62,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <stdlib.h>
 
 #ifdef __cplusplus
 extern "C" {

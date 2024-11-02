@@ -56,8 +56,9 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "txbmisc.h"
-#include "txbstr.h"
+#include "../inc/misc.h"
+
+#include "../inc/str.h"
 
 #include "../inc/abort_if.h"
 

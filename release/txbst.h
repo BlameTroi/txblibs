@@ -46,7 +46,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef TXBST_SINGLE_HEADER
 #define TXBST_SINGLE_HEADER
 /* *** begin pub *** */
-/* st.h -- blametroi's fixed size stack -- */
+/* st.h -- blametroi's simple stack -- */
 
 /*
  * a header only implementation of a stack.
@@ -58,11 +58,11 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * to copy, modify, publish, and distribute this file as you see fit.
  */
 
+#include <stdbool.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-
-#include <stdbool.h>
 
 /*
  * an instance of a stack.
@@ -71,13 +71,95 @@ extern "C" {
 typedef struct stcb stcb;
 
 /*
- * sb_create
+ * ppayload, pkey, pvalue
  *
- * create a new empty stack instance.
+ * these libraries manage client 'payloads'. these are void * sized
+ * and are generally assumed to be a pointer to client managed data,
+ * but anything that will fit in a void * pointer (typically eight
+ * bytes) is allowed.
+ *
+ * it is the client's responsibility to free any of its dynamically
+ * allocated memory. library code provides 'destroy' methods to clear
+ * and release library data structures.
+ *
+ * these type helpers are all synonyms for void *.
+ */
+
+typedef void * pkey;
+typedef void * pvalue;
+typedef void * ppayload;
+
+/*
+ * st_empty
+ *
+ * are there any items on the stack?
+ *
+ *     in: the st instance
+ *
+ * return: boolean, true if empty
+ */
+
+bool
+st_empty(
+	stcb *
+);
+
+/*
+ * st_push
+ *
+ * add an item to the top of the stack.
+ *
+ *     in: the st instance
+ *
+ *     in: ppayload
+ *
+ * return: nothing
+ */
+
+void
+st_push(
+	stcb *,
+	ppayload
+);
+
+/*
+ * st_pop
+ *
+ * remove and return the top item on the stack.
+ *
+ *     in: the st instance
+ *
+ * return: ppayload or NULL if the stack is empty
+ */
+
+ppayload
+st_pop(
+	stcb *
+);
+
+/*
+ * st_peek
+ *
+ * return but do not remove the top item on the stack.
+ *
+ *     in: the st instance
+ *
+ * return: ppayload or NULL If the stack is empty
+ */
+
+ppayload
+st_peek(
+	stcb *
+);
+
+/*
+ * st_create
+ *
+ * create a new stack.
  *
  *     in: nothing
  *
- * return: the st instance
+ * return: the new st instance
  */
 
 stcb *
@@ -86,110 +168,48 @@ st_create(
 );
 
 /*
- * st_push
+ * st_destroy
  *
- * push a new item on the stack.
- *
- *     in: the st instance
- *
- *     in: the item as a void *
- *
- * return: nothing
- */
-
-void
-st_push(
-	stcb *st,
-	void *item
-);
-/*
- * st_pop
- *
- * pop an item off the stack.
+ * free the stack control block if the stack is empty.
  *
  *     in: the st instance
  *
- * return: the item as a void *
- */
-
-void *
-st_pop(
-	stcb *st
-);
-
-/*
- * st_peek
- *
- * get the top item from the stack without removing it.
- *
- *     in: the st instance
- *
- * return: the item as a void *
- */
-
-void *
-st_peek(
-	stcb *st
-);
-
-/*
- * st_empty
- *
- * is the stack empty?
- *
- *    in: the st instance
- *
- * return: bool
+ * return: boolean, true if successful
  */
 
 bool
-st_empty(
-	stcb *st
-);
-
-/*
- * st_depth
- *
- * how many items are on the stack?
- *
- *    in: the st instance
- *
- * return: int
- */
-
-int
-st_depth(
-	stcb *st
+st_destroy(
+	stcb *
 );
 
 /*
  * st_reset
  *
- * delete all items from the stack.
+ * remove all items from the stack.
  *
  *     in: the st instance
  *
- * return: int number of items deleted
+ * return: integer number of items removed
  */
 
 int
 st_reset(
-	stcb *st
+	stcb *
 );
 
 /*
- * sb_destroy
+ * st_depth
  *
- * if the stack is empty, release its resources.
+ * how many items are in the stack?
  *
  *     in: the st instance
  *
- * return: bool was the st destroyed and freed
+ * return: inegert, number of items on the stack
  */
 
-bool
-st_destroy(
-	stcb *st
+int
+st_depth(
+	stcb *
 );
 
 #ifdef __cplusplus
@@ -203,10 +223,10 @@ st_destroy(
 #ifdef TXBST_IMPLEMENTATION
 #undef TXBST_IMPLEMENTATION
 /* *** begin priv *** */
-/* st.c -- blametroi's simple stack -- */
+/* qu.c -- blametroi's simple queue -- */
 
 /*
- * a header only implementation of a simple stack.
+ * a header only implementation of a stack.
  *
  * released to the public domain by Troy Brumley blametroi@gmail.com
  *
@@ -215,16 +235,16 @@ st_destroy(
  * to copy, modify, publish, and distribute this file as you see fit.
  */
 
-#include <string.h>
+#include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "txbabort_if.h"
 
 #include "txbdl.h"
 
-
 /*
- * the st is a stack api laid over a doubly linked list.
+ * transparent control block definitions.
  */
 
 #define STCB_TAG "__STCB__"
@@ -242,100 +262,52 @@ struct stcb {
 };
 
 /*
- * sb_create
+ * this is a simple stack implementation (lifo).
  *
- * create a new empty stack instance.
+ * error checking:
  *
- *     in: nothing
+ * minimal via assertions. fatal errors such as passing an invalid
+ * stcb will fail the assertion. st_destroy will return a false
+ * if it can not complete, but that shouldn't happen. i just haven't
+ * worked out the threading around there.
  *
- * return: the st instance
+ * brief api overview:
+ *
+ * all functions except st_create take a stcb*, the stack control
+ * block. the implementation is just an abstraction layer over a
+ * doubly linked list. a dynamic array would be faster but this
+ * is more flexible.
+ *
+ * the data to manage on the stack is a ppayload.
+ *
+ * the order of retrieval of items is first in first out.
+ *
+ * st_create  -- create a new stack, returns a stcb*
+ *
+ * st_empty   -- is the stack empty? returns boolean
+ *
+ * st_count   -- how many items are in the stack? returns int
+ *
+ * st_push    -- add an item to the stack.
+ *
+ * st_pop     -- remove and return the top item from the stack.
+ *
+ * st_peek    -- return but do not remove the top item from the stack.
+ *
+ * st_reset   -- remove all items from the stack.
+ *
+ * st_destroy -- if the stack is empty and not in use, release
+ *               the stcb. returns true if successful.
  */
-
-stcb *
-st_create(
-	void
-) {
-	stcb *st = malloc(sizeof(*st));
-	memset(st, 0, sizeof(*st));
-	memcpy(st->tag, STCB_TAG, sizeof(st->tag));
-	st->dl = dl_create();
-	return st;
-}
-
-/*
- * st_push
- *
- * push a new item on the stack.
- *
- *     in: the st instance
- *
- *     in: the item as a void *
- *
- * return: nothing
- */
-
-void
-st_push(
-	stcb *st,
-	void *item
-) {
-	ASSERT_STCB(st, "invalid STCB");
-	dl_insert_last(st->dl, item);
-}
-
-/*
- * st_pop
- *
- * pop an item off the stack.
- *
- *     in: the st instance
- *
- * return: the item as a void *
- */
-
-void *
-st_pop(
-	stcb *st
-) {
-	ASSERT_STCB(st, "invalid STCB");
-	void *payload = NULL;
-	dlid id = dl_get_last(st->dl, &payload);
-	abort_if(null_dlid(id),
-		"st st_pop stack empty");
-	dl_delete(st->dl, id);
-	return payload;
-}
-
-/*
- * st_peek
- *
- * get the top item from the stack without removing it.
- *
- *     in: the st instance
- *
- * return: the item as a void *
- */
-
-void *
-st_peek(
-	stcb *st
-) {
-	ASSERT_STCB(st, "invalid STCB");
-	void *payload = NULL;
-	dlid id = dl_get_last(st->dl, &payload);
-	abort_if(null_dlid(id),
-		"st st_peek stack empty");
-	return payload;
-}
 
 /*
  * st_empty
  *
- * is the stack empty?
+ * are there items in the stack?
  *
- *    in: the st instance
+ *     in: the st instance
  *
- * return: bool
+ * return: boolean, true if empty
  */
 
 bool
@@ -347,13 +319,13 @@ st_empty(
 }
 
 /*
- * st_depth
+ * st_count
  *
- * how many items are on the stack?
+ * how many items are in the stack?
  *
- *    in: the st instance
+ *     in: the st instance.
  *
- * return: int
+ * return: int, number of items.
  */
 
 int
@@ -365,13 +337,102 @@ st_depth(
 }
 
 /*
- * st_reset
+ * st_push
  *
- * delete all items from the stack.
+ * add an item to the stack.
  *
  *     in: the st instance
  *
- * return: int number of items deleted
+ *     in: void * client payload
+ *
+ * return: nothing.
+ */
+
+void
+st_push(
+	stcb *st,
+	void *payload
+) {
+	ASSERT_STCB(st, "invalid STCB");
+	dl_insert_first(st->dl, payload);
+}
+
+/*
+ * st_pop
+ *
+ * remove and return the first (oldest) item on the stack.
+ *
+ *     in: the st instance
+ *
+ * return: ppayload or NULL if the stack is empty
+ */
+
+ppayload
+st_pop(
+	stcb *st
+) {
+	dlid id;
+	ppayload payload;
+	ASSERT_STCB(st, "invalid STCB");
+	id = dl_get_first(st->dl, &payload);
+	if (payload != NULL) {
+		dl_delete(st->dl, id);
+	}
+	return payload;
+}
+
+/*
+ * st_peek
+ *
+ * return the first (oldest) item on the stack but leave
+ * it on the stack.
+ *
+ *     in: the st instance
+ *
+ * return: void * client payload or NULL if stack is empty.
+ */
+
+ppayload
+st_peek(
+	stcb *st
+) {
+	ppayload payload;
+	ASSERT_STCB(st, "invalid STCB");
+	dl_get_first(st->dl, &payload);
+	return payload;
+}
+
+/*
+ * st_create
+ *
+ * create a new stack.
+ *
+ *     in: nothing
+ *
+ * return: the new st instance.
+ */
+
+stcb *
+st_create(
+	void
+) {
+	stcb *st = malloc(sizeof(*st));
+	abort_if(!st,
+		"st_create could not allocate STCB");
+	memset(st, 0, sizeof(*st));
+	memcpy(st->tag, STCB_TAG, sizeof(st->tag));
+	st->dl = dl_create();
+	return st;
+}
+
+/*
+ * st_reset
+ *
+ * remove all items from the stack.
+ *
+ *     in: the st instance
+ *
+ * return: int number of items removed
  */
 
 int
@@ -382,14 +443,15 @@ st_reset(
 	return dl_reset(st->dl);
 }
 
+
 /*
- * sb_destroy
+ * st_destroy
  *
- * if the stack is empty, release its resources.
+ * free the stack control block if the stack is empty.
  *
  *     in: the st instance
  *
- * return: bool was the st destroyed and freed
+ * return: boolean, true if successful, false if stack is not empty
  */
 
 bool
@@ -397,13 +459,9 @@ st_destroy(
 	stcb *st
 ) {
 	ASSERT_STCB(st, "invalid STCB");
-	if (!st_empty(st))
-		return false;
-	dl_destroy(st->dl);
-	memset(st, 253, sizeof(*st));
-	free(st);
-	return true;
+	return dl_destroy(st->dl);
 }
+
 /* st.c ends here */
 /* *** end priv *** */
 

@@ -36,13 +36,15 @@
  */
 
 #define TXBSTR_IMPLEMENTATION
-#include "txbstr.h"
+#include "../inc/str.h"
+#include "../src/str.c"
 
 #define TXBMISC_IMPLEMENTATION
-#include "txbmisc.h"
-
+#include "../inc/misc.h"
+#include "../src/misc.c"
 #define TXBPAT_IMPLEMENTATION
-#include "txbpat.h"
+#include "../inc/pat.h"
+#include "../src/pat.c"
 
 /*
  * sometime globals are the right answer, but grouping them in a typedef namespace

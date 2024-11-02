@@ -56,9 +56,9 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * libraries to end up in released software i will follow the
  * standard.
  *
- * instead of my preferred assert(must be true condition &&
- * "descriptive message") with this abort_if macro. this will reverse
- * various conditional checks throughout these libraries.
+ * i'm replacing my preferred 'assert(must be true condition &&
+ * "descriptive message")' with this 'abort_if' macro. this will
+ * reverse various conditional checks throughout these libraries.
  *
  * released to the public domain by Troy Brumley blametroi@gmail.com
  *
@@ -68,7 +68,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 #include <stdio.h>
-#include <stdlib.h>
+
 #define abort_if(condition, message) \
 	do { \
 		if ((condition)) { \

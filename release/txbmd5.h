@@ -56,6 +56,10 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * with the rest of them, it's all public domain as far as i am
  * concerned.
  *
+ * the externally visible functions and types are all prefixed by
+ * upper cased 'MD5_'. internal functions and types are all in lower
+ * case.
+ *
  * released to the public domain by Troy Brumley blametroi@gmail.com
  *
  * this software is dual-licensed to the public domain and under the
@@ -80,20 +84,20 @@ extern "C" {
  */
 
 void
-md5_bytes(
+MD5_bytes(
 	void *input,
 	size_t len,
 	uint8_t *result
 );
 
 void
-md5_string(
+MD5_string(
 	char *input,
 	uint8_t *result
 );
 
 void
-md5_file(
+MD5_file(
 	FILE *file,
 	uint8_t *result
 );
@@ -104,38 +108,38 @@ md5_file(
  * calculation, and return the result in the digest.
  */
 
-typedef struct md5_context md5_context;
+typedef struct md5_context MD5_context;
 
-md5_context *
-md5_allocate_context(
+MD5_context *
+MD5_allocate_context(
 	void
 );
 
 void
-md5_release_context(
-	md5_context *ctx
+MD5_release_context(
+	MD5_context *ctx
 );
 
 void
-md5_initialize(
-	md5_context *ctx
+MD5_initialize(
+	MD5_context *ctx
 );
 
 void
-md5_update(
-	md5_context *ctx,
+MD5_update(
+	MD5_context *ctx,
 	uint8_t *input,
 	size_t input_len
 );
 
 void
-md5_finalize(
-	md5_context *ctx
+MD5_finalize(
+	MD5_context *ctx
 );
 
 void
-md5_get_digest(
-	md5_context *ctx,
+MD5_get_digest(
+	MD5_context *ctx,
 	uint8_t *result
 );
 
@@ -158,6 +162,10 @@ md5_get_digest(
  * public domain. i've massaged it to fit in my libraries, and as
  * with the rest of them, it's all public domain as far as i am
  * concerned.
+ *
+ * the externally visible functions and types are all prefixed by
+ * upper cased 'MD5_'. internal functions and types are all in lower
+ * case.
  *
  * released to the public domain by Troy Brumley blametroi@gmail.com
  *
@@ -337,22 +345,22 @@ md5_step(
  * allocate and free, opaquely.
  */
 
-md5_context *
-md5_allocate_context(
+MD5_context *
+MD5_allocate_context(
 	void
 ) {
-	md5_context *ctx = malloc(sizeof(md5_context));
-	memset(ctx, 0, sizeof(md5_context));
+	MD5_context *ctx = malloc(sizeof(MD5_context));
+	memset(ctx, 0, sizeof(MD5_context));
 	memcpy(ctx->tag, MD5_TAG, sizeof(MD5_TAG));
 	return ctx;
 }
 
 void
-md5_release_context(
-	md5_context *ctx
+MD5_release_context(
+	MD5_context *ctx
 ) {
 	ASSERT_MD5(ctx, "invalid md5 context");
-	memset(ctx, 253, sizeof(md5_context));
+	memset(ctx, 253, sizeof(MD5_context));
 	free(ctx);
 }
 
@@ -361,8 +369,8 @@ md5_release_context(
  */
 
 void
-md5_initialize(
-	md5_context *ctx
+MD5_initialize(
+	MD5_context *ctx
 ) {
 	ASSERT_MD5(ctx, "invalid md5 context");
 	ctx->size = (uint64_t)0;
@@ -381,8 +389,8 @@ md5_initialize(
  */
 
 void
-md5_update(
-	md5_context *ctx,
+MD5_update(
+	MD5_context *ctx,
 	uint8_t *input_buffer,
 	size_t input_len
 ) {
@@ -429,8 +437,8 @@ md5_update(
  */
 
 void
-md5_finalize(
-	md5_context *ctx
+MD5_finalize(
+	MD5_context *ctx
 ) {
 	ASSERT_MD5(ctx, "invalid md5 context");
 	uint32_t input[16];
@@ -440,7 +448,7 @@ md5_finalize(
 	/* fill in the padding and undo the changes to size that resulted
 	 * from the update */
 
-	md5_update(ctx, PADDING, padding_length);
+	MD5_update(ctx, PADDING, padding_length);
 	ctx->size -= (uint64_t)padding_length;
 
 	/* do a final update (internal to this function)
@@ -474,50 +482,50 @@ md5_finalize(
  */
 
 void
-md5_bytes(
+MD5_bytes(
 	void *input,
 	size_t len,
 	uint8_t *result
 ) {
-	md5_context *ctx = md5_allocate_context();
-	md5_initialize(ctx);
-	md5_update(ctx, (uint8_t *)input, len);
-	md5_finalize(ctx);
+	MD5_context *ctx = MD5_allocate_context();
+	MD5_initialize(ctx);
+	MD5_update(ctx, (uint8_t *)input, len);
+	MD5_finalize(ctx);
 	memcpy(result, ctx->digest, 16);
-	md5_release_context(ctx);
+	MD5_release_context(ctx);
 }
 
 void
-md5_string(
+MD5_string(
 	char *input,
 	uint8_t *result
 ) {
-	md5_context *ctx = md5_allocate_context();
-	md5_initialize(ctx);
-	md5_update(ctx, (uint8_t *)input, strlen(input));
-	md5_finalize(ctx);
+	MD5_context *ctx = MD5_allocate_context();
+	MD5_initialize(ctx);
+	MD5_update(ctx, (uint8_t *)input, strlen(input));
+	MD5_finalize(ctx);
 	memcpy(result, ctx->digest, 16);
-	md5_release_context(ctx);
+	MD5_release_context(ctx);
 }
 
 void
-md5_file(
+MD5_file(
 	FILE *file,
 	uint8_t *result
 ) {
 	char *input_buffer = malloc(1024);
 	size_t input_size = 0;
 
-	md5_context *ctx = md5_allocate_context();
-	md5_initialize(ctx);
+	MD5_context *ctx = MD5_allocate_context();
+	MD5_initialize(ctx);
 
 	while ((input_size = fread(input_buffer, 1, 1024, file)) > 0)
-		md5_update(ctx, (uint8_t *)input_buffer, input_size);
+		MD5_update(ctx, (uint8_t *)input_buffer, input_size);
 
-	md5_finalize(ctx);
+	MD5_finalize(ctx);
 	free(input_buffer);
 	memcpy(result, ctx->digest, 16);
-	md5_release_context(ctx);
+	MD5_release_context(ctx);
 }
 
 /*
@@ -526,8 +534,8 @@ md5_file(
  */
 
 void
-md5_get_digest(
-	md5_context *ctx,
+MD5_get_digest(
+	MD5_context *ctx,
 	uint8_t *result
 ) {
 	ASSERT_MD5(ctx, "invalid md5 context");

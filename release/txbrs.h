@@ -99,8 +99,8 @@ rs_create_string(
  *
  * return: the rs instance
  *
- * the entire file will be read and stored as a single string.
- * the file left positioned at the beginning of the file
+ * the entire file will be read and stored as a single string. the
+ * file is left positioned at the beginning of the file.
  */
 
 rscb *
@@ -143,12 +143,12 @@ rs_destroy_string(
  *
  * has the stream reached the end? only set -after- having read to the end.
  *
- * this is consistent with feof(). to see if the next read will eof, use
- * rs_peekc().
+ * this is consistent with feof(). to see if the next read will reach
+ * the end of file, use rs_peekc().
  *
  *     in: the rs instance
  *
- * return: bool
+ * return: boolean
  */
 
 bool
@@ -178,7 +178,7 @@ rs_position(
  *
  *     in: the rs instance
  *
- * return: length
+ * return: size_t length
  */
 
 size_t
@@ -194,7 +194,7 @@ rs_length(
  *
  *     in: the rs instance
  *
- * return: length
+ * return: size_t remaining length
  */
 
 size_t
@@ -238,14 +238,14 @@ rs_seek(
 /*
  * rs_skip
  *
- * change the current position in the stream by some
- * number of bytes.
+ * change the current position in the stream by some number of bytes.
+ * this is not wide character friendly.
  *
  *     in: the rs instance
  *
  *     in: signed number of characters to skip
  *
- * return: bool, false if skip would move the position out of the
+ * return: boolean false if skip would move the position out of the
  *         string
  */
 
@@ -274,8 +274,9 @@ rs_getc(
 /*
  * rs_ungetc
  *
- * back the stream position up by one character. in spite of the name ungetc,
- * no character is pushed back onto the stream.
+ * back the stream position up by one character. in spite of the name
+ * ungetc, no character is pushed back onto the stream. string gets
+ * are not destructive.
  *
  *     in: the rs instance
  *
@@ -391,8 +392,9 @@ struct rscb {
  *
  * return: the rs instance
  *
- * rs_create_string allocates its own copy of the string passed and
- * assumes responsibility for managing storage for that copy.
+ * rs_create_string allocates storage for its copy of the string
+ * passed and assumes responsibility for managing storage for that
+ * copy.
  */
 
 rscb *
@@ -721,7 +723,7 @@ rs_skip(
 
 	/* using the getc and ungetc functions
 	 * might seem slow but it will generalize
-	 * to buffered streams. */
+	 * to other buffered streams. */
 
 	typedef int (*fn_getter)(rscb *);
 	fn_getter getter = rs_getc;
@@ -764,12 +766,14 @@ rs_gets(
 	int buflen
 ) {
 	ASSERT_RSCB(rs, "invalid RSCB");
+
 	/* return null for bad arguments or when at eof */
 	if (rs->eos || buflen < 2 || buffer == NULL)
 		return NULL;
 	char c = rs_getc(rs);
 	if (c == EOF)
 		return NULL;
+
 	/* we could pull it all out directly with a memcpy but the slight
 	 * performance improvement isn't worth losing the ability to swap
 	 * out stream sources in the future. */
@@ -781,6 +785,7 @@ rs_gets(
 		buflen -= 1;
 		c = rs_getc(rs);
 	}
+
 	/* if we hit newline and there's room, store it in the buffer
 	 * otherwise put whatever character back for the next request. */
 	if (c == '\n' && buflen > 1) {
@@ -788,6 +793,7 @@ rs_gets(
 		*(p+1) = '\0';
 	} else
 		rs_ungetc(rs);
+
 	return buffer;
 }
 /* *** end priv *** */
