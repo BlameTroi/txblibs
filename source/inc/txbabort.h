@@ -1,5 +1,6 @@
-/* abort_if.h -- a replacement for assert */
-
+/* txbabort.h -- a replacement for assert */
+#ifndef TXBABORT_H
+#define TXBABORT_H
 /*
  * some conditions are both "should not occur" and "should not
  * continue" errors. i prefer using assert to detect errors and end
@@ -28,4 +29,5 @@
 			abort(); \
 		} \
 	} while(0)
-/* abort_if.h ends here */
+#endif /* TXBABORT_H */
+/* txbabort_if.h ends here */
