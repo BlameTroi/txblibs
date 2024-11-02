@@ -1,18 +1,15 @@
-/*  unitpq.c -- units for my header libraries -- troy brumley */
+/*  unitpq.c -- tests for the priority queue header library -- troy brumley */
 
 /* released to the public domain, troy brumley, may 2024 */
 
 #include <stdbool.h>
 #include <stdio.h>
-
 #include "minunit.h"
+#include "txbmisc.h"
+#include "txbrand.h"
+#include "txbstr.h"
+#include "txbpq.h"
 
-#include "../inc/misc.h"
-#include "../inc/rand.h"
-#include "../inc/str.h"
-
-#include "../inc/pq.h"
-
 /*
  * minunit setup and teardown of listd infratstructure.
  */
@@ -21,8 +18,6 @@
 
 void
 test_setup(void) {
-	/* let's use a different seed than 1, but not time() because i want
-	   repeatable tests. */
 	set_random_generator(RAND_DEFAULT);
 	seed_random_generator(RAND_SEED);
 
@@ -37,20 +32,20 @@ test_teardown(void) {
  */
 
 MU_TEST(test_create) {
-	pqcb *pq = pq_create();
+	hpq *pq = pq_create();
 	mu_should(pq);
 	mu_should(pq_destroy(pq));
 }
 
 MU_TEST(test_empty) {
-	pqcb *pq = pq_create();
+	hpq *pq = pq_create();
 	mu_should(pq_empty(pq));
 	mu_should(pq_count(pq) == 0);
 	mu_should(pq_destroy(pq));
 }
 
 MU_TEST(test_access_empty) {
-	pqcb *pq = pq_create();
+	hpq *pq = pq_create();
 	long priority;
 	ppayload payload;
 	mu_shouldnt(pq_peek_highest(pq, &priority, &payload));
@@ -61,7 +56,7 @@ MU_TEST(test_access_empty) {
 }
 
 MU_TEST(test_insert) {
-	pqcb *pq = pq_create();
+	hpq *pq = pq_create();
 	pq_insert(pq, 100, "100");
 	mu_shouldnt(pq_empty(pq));
 	mu_should(pq_count(pq) == 1);
@@ -76,7 +71,7 @@ MU_TEST(test_insert) {
 }
 
 MU_TEST(test_read_loop) {
-	pqcb *pq = pq_create();
+	hpq *pq = pq_create();
 	pq_insert(pq, 100, "100");
 	pq_insert(pq, 99, "99");
 	pq_insert(pq, 101, "101");
@@ -91,7 +86,7 @@ MU_TEST(test_read_loop) {
 }
 
 MU_TEST(test_peek_high_low) {
-	pqcb *pq = pq_create();
+	hpq *pq = pq_create();
 	pq_insert(pq, 100, "100");
 	pq_insert(pq, 99, "99");
 	pq_insert(pq, 101, "101");
@@ -116,7 +111,7 @@ MU_TEST(test_peek_high_low) {
 }
 
 MU_TEST(test_random_volume) {
-	pqcb *pq = pq_create();
+	hpq *pq = pq_create();
 	pq_insert(pq, 1024, (void *)1024);
 	pq_insert(pq, 8888, (void *)8888);
 	pq_insert(pq, -3, (void *)-3);
@@ -144,21 +139,9 @@ MU_TEST(test_random_volume) {
 	mu_should(pq_count(pq) == 0);
 }
 
-/*
- * here we define the whole test suite. sadly there's no runtime
- * introspection. there is probably an opportunity for an elisp helper
- * to create the suite in the editor, but for now it's just a matter
- * of doing it manually.
- */
-
 MU_TEST_SUITE(test_suite) {
 
-	/* always have a setup and teardown, even if they */
-	/* do nothing. */
-
 	MU_SUITE_CONFIGURE(test_setup, test_teardown);
-
-	/* run your tests here */
 
 	printf("\n\npriority queue\n\n");
 	MU_RUN_TEST(test_create);
@@ -169,10 +152,6 @@ MU_TEST_SUITE(test_suite) {
 	MU_RUN_TEST(test_random_volume);
 	MU_RUN_TEST(test_peek_high_low);
 }
-
-/*
- * master control:
- */
 
 int
 main(int argc, char *argv[]) {

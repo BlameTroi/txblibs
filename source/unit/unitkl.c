@@ -1,4 +1,4 @@
-/*  unittest.c -- units for my header libraries -- troy brumley */
+/* unitkl.c -- tests for keyed linked list library -- troy brumley */
 
 /* released to the public domain, troy brumley, may 2024 */
 
@@ -6,29 +6,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include "minunit.h"
-
-#include "../inc/misc.h"
-#include "../inc/kl.h"
-#include "../inc/str.h"
-#include "../inc/rand.h"
-
-/*
- * fn_compare_key for strings and longs
- *
- * these follow the same api as cmpstr as would be expected by qsort.
- */
-
-static int
-fn_compare_key_string(void *s1, void *s2) {
-	return strcmp(s1, s2);
-}
-
-static int
-fn_compare_key_long(void *i, void *j) {
-	return (long)i - (long)j;
-}
+#include "txbmisc.h"
+#include "txbkl.h"
+#include "txbstr.h"
+#include "txbrand.h"
 
 /*
  * minunit setup and teardown.
@@ -50,16 +32,32 @@ test_teardown(void) {
 }
 
 /*
+ * fn_compare_key for strings and longs
+ *
+ * these follow the same api as cmpstr as would be expected by qsort.
+ */
+
+static int
+fn_compare_key_string(void *s1, void *s2) {
+	return strcmp(s1, s2);
+}
+
+static int
+fn_compare_key_long(void *i, void *j) {
+	return (long)i - (long)j;
+}
+
+/*
  * utility functions to create and destroy lists for testing. just a list of
  * 100 items to work with, keys run from 10 to 990 by 10s.
  */
 
 static
-klcb *
+hkl *
 create_populated_key_long(void) {
 	char buffer[100];
 	memset(buffer, 0, 100 * sizeof(char));
-	klcb *kl = kl_create(fn_compare_key_long);
+	hkl *kl = kl_create(fn_compare_key_long);
 	for (long i = 10; i < 1000; i += 10) {
 		snprintf(buffer, 99, "%06ld bogus", i);
 		kl_insert(kl, (pkey)i, strdup(buffer));
@@ -69,7 +67,7 @@ create_populated_key_long(void) {
 
 static
 void
-destroy_populated_key_long(klcb *kl) {
+destroy_populated_key_long(hkl *kl) {
 	pkey key;
 	pvalue value;
 	while (kl_get_first(kl, &key, &value)) {
@@ -84,11 +82,11 @@ destroy_populated_key_long(klcb *kl) {
 }
 
 static
-klcb *
+hkl *
 create_populated_key_string(void) {
 	char buffer[100];
 	memset(buffer, 0, 100 * sizeof(char));
-	klcb *kl = kl_create(fn_compare_key_string);
+	hkl *kl = kl_create(fn_compare_key_string);
 	for (int i = 10; i < 1000; i += 10) {
 		snprintf(buffer, 99, "%06d", i);
 		kl_insert(kl, strdup(buffer), strdup(buffer));
@@ -98,7 +96,7 @@ create_populated_key_string(void) {
 
 static
 void
-destroy_populated_key_string(klcb *kl) {
+destroy_populated_key_string(hkl *kl) {
 	pkey key;
 	pvalue value;
 	while (kl_get_first(kl, &key, &value)) {
@@ -120,7 +118,7 @@ destroy_populated_key_string(klcb *kl) {
  */
 
 MU_TEST(test_create) {
-	klcb *kl = kl_create(fn_compare_key_string);
+	hkl *kl = kl_create(fn_compare_key_string);
 	mu_should(kl);
 	mu_should(kl_empty(kl));
 	mu_should(kl_count(kl) == 0);
@@ -134,10 +132,11 @@ MU_TEST(test_create) {
  */
 
 MU_TEST(test_insert_single) {
-	klcb *kl = kl_create(fn_compare_key_string);
+	hkl *kl = kl_create(fn_compare_key_string);
 	mu_should(kl_insert(kl, "abcd", "1234"));
 	mu_shouldnt(kl_empty(kl));
 	mu_should(kl_count(kl) == 1);
+
 	/* the following doesn't leak because the refs are to
 	 * constants. */
 	mu_should(kl_reset(kl) == 1);
@@ -155,7 +154,7 @@ MU_TEST(test_insert_single) {
  */
 
 MU_TEST(test_insert_multiple) {
-	klcb *kl = NULL;
+	hkl *kl = NULL;
 
 	/* using longs as keys, quick tests */
 	kl = kl_create(fn_compare_key_long);
@@ -237,7 +236,7 @@ MU_TEST(test_insert_multiple) {
  */
 
 MU_TEST(test_insert_duplicate) {
-	klcb *kl = kl_create(fn_compare_key_long);
+	hkl *kl = kl_create(fn_compare_key_long);
 
 	for (long i = 1; i < 10; i++)
 		kl_insert(kl, (pkey)i, NULL);
@@ -261,7 +260,7 @@ MU_TEST(test_insert_duplicate) {
  */
 
 MU_TEST(test_insert_random) {
-	klcb *kl = kl_create(fn_compare_key_long);
+	hkl *kl = kl_create(fn_compare_key_long);
 
 	int generated = 0;
 	int inserted = 0;
@@ -293,7 +292,7 @@ MU_TEST(test_insert_random) {
 
 MU_TEST(test_get_first) {
 	printf("\n");
-	klcb *kl = create_populated_key_long();
+	hkl *kl = create_populated_key_long();
 
 	pkey key = NULL;
 	pvalue value = NULL;
@@ -319,7 +318,7 @@ MU_TEST(test_get_first) {
 
 MU_TEST(test_get_last) {
 	printf("\n");
-	klcb *kl = create_populated_key_long();
+	hkl *kl = create_populated_key_long();
 
 	pkey key = NULL;
 	pvalue value = NULL;
@@ -345,7 +344,7 @@ MU_TEST(test_get_last) {
 
 MU_TEST(test_get_specific) {
 	printf("\n");
-	klcb *kl = create_populated_key_long();
+	hkl *kl = create_populated_key_long();
 
 	pkey key = NULL;
 	pvalue value = NULL;
@@ -400,7 +399,7 @@ MU_TEST(test_get_specific) {
 
 MU_TEST(test_get_previous) {
 	printf("\n");
-	klcb *kl = create_populated_key_long();
+	hkl *kl = create_populated_key_long();
 
 	pkey key = NULL;
 	pvalue value = NULL;
@@ -459,7 +458,7 @@ MU_TEST(test_get_previous) {
 
 MU_TEST(test_get_next) {
 	printf("\n");
-	klcb *kl = create_populated_key_long();
+	hkl *kl = create_populated_key_long();
 
 	pkey key = NULL;
 	pvalue value = NULL;
@@ -517,8 +516,8 @@ MU_TEST(test_get_next) {
 
 MU_TEST(test_clone
 ) {
-	klcb *kl = create_populated_key_long();
-	klcb *clone = kl_clone(kl);
+	hkl *kl = create_populated_key_long();
+	hkl *clone = kl_clone(kl);
 
 	mu_shouldnt(kl_empty(clone));
 	mu_should(kl_count(kl) == kl_count(clone));
@@ -542,7 +541,7 @@ MU_TEST(test_clone
  */
 
 MU_TEST(test_update) {
-	klcb *kl = create_populated_key_long();
+	hkl *kl = create_populated_key_long();
 
 	pkey key = NULL;
 	pvalue value = NULL;
@@ -619,7 +618,7 @@ MU_TEST(test_update) {
  */
 
 MU_TEST(test_delete) {
-	klcb *kl = create_populated_key_string();
+	hkl *kl = create_populated_key_string();
 	pkey key = NULL;
 	pvalue value = NULL;
 
@@ -665,13 +664,6 @@ MU_TEST(test_delete) {
 	destroy_populated_key_string(kl);
 }
 
-/*
- * here we define the whole test suite. sadly there's no runtime
- * introspection. there is probably an opportunity for an elisp helper
- * to create the suite in the editor, but for now it's just a matter
- * of doing it manually.
- */
-
 MU_TEST_SUITE(test_suite) {
 
 	MU_SUITE_CONFIGURE(test_setup, test_teardown);
@@ -689,12 +681,7 @@ MU_TEST_SUITE(test_suite) {
 	MU_RUN_TEST(test_clone);
 	MU_RUN_TEST(test_update);
 	MU_RUN_TEST(test_delete);
-
 }
-
-/*
- * master control:
- */
 
 int
 main(int argc, char *argv[]) {
@@ -702,3 +689,4 @@ main(int argc, char *argv[]) {
 	MU_REPORT();
 	return MU_EXIT_CODE;
 }
+/* unitkl.c ends here */

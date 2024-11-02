@@ -1,16 +1,13 @@
-/* unitda.c -- units for my header libraries -- troy brumley */
+/* unitqu.c -- tests for the fifo queue header library -- troy brumley */
 
 /* released to the public domain, troy brumley, may 2024 */
 
 #include <stdio.h>
 #include <stdlib.h>
-
 #include "minunit.h"
+#include "txbstr.h"
+#include "txbqu.h"
 
-#include "../inc/str.h"
-
-#include "../inc/qu.h"
-
 /*
  * minunit setup and teardown.
  */
@@ -33,7 +30,7 @@ test_teardown(void) {
  */
 
 MU_TEST(test_qu) {
-	qucb *qu = NULL;
+	hqu *qu = NULL;
 
 	qu = qu_create();
 	mu_should(qu);
@@ -63,28 +60,12 @@ MU_TEST(test_qu) {
 
 }
 
-/*
- * here we define the whole test suite. sadly there's no runtime
- * introspection. there is probably an opportunity for an elisp helper
- * to create the suite in the editor, but for now it's just a matter
- * of doing it manually.
- */
-
 MU_TEST_SUITE(test_suite) {
-
-	/* always have a setup and teardown, even if they
-	 * do nothing. */
 
 	MU_SUITE_CONFIGURE(test_setup, test_teardown);
 
-	/* run your tests here */
-
 	MU_RUN_TEST(test_qu);
 }
-
-/*
- * master control:
- */
 
 int
 main(int argc, char *argv[]) {

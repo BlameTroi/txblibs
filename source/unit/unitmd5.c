@@ -1,17 +1,15 @@
-/*  unitmd5.c -- units for my header libraries -- troy brumley */
+/*  unitmd5.c -- tests for the md5 hash library -- troy brumley */
 
 /* released to the public domain, troy brumley, may 2024 */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-
 #include "minunit.h"
+#include "txbmd5.h"
 
-#include "../inc/md5.h"
-
 /*
- * minunit setup and teardown of listd infratstructure.
+ * minunit setup and teardown.
  */
 
 #define RAND_SEED 6803
@@ -19,8 +17,6 @@
 static
 void
 test_setup(void) {
-	/* let's use a different seed than 1, but not time() because i want
-	   repeatable tests. */
 	srand(RAND_SEED);
 }
 
@@ -29,16 +25,6 @@ void
 test_teardown(void) {
 }
 
-static
-void
-print_hash(
-	uint8_t *p
-) {
-	for (unsigned int i = 0; i < 16; ++i)
-		printf("%02x", p[i]);
-	printf("\n");
-}
-
 /*
  * i'm just testing to make sure things are wired together and working
  * as expected. a common problem class in advent of code uses md5 hash
@@ -48,6 +34,16 @@ print_hash(
  * the problem. the following three tests are from AOC 2016 day 05. if
  * they work, the wiring works.
  */
+
+static
+void
+print_hash(
+	uint8_t *p
+) {
+	for (unsigned int i = 0; i < 16; ++i)
+		printf("%02x", p[i]);
+	printf("\n");
+}
 
 MU_TEST(test_test) {
 	uint8_t result[16];
@@ -71,29 +67,12 @@ MU_TEST(test_test) {
 	mu_should((result[2] & 0x0f) == 0x0f);
 }
 
-/*
- * here we define the whole test suite. sadly there's no runtime
- * introspection. there is probably an opportunity for an elisp helper
- * to create the suite in the editor, but for now it's just a matter
- * of doing it manually.
- */
-
 MU_TEST_SUITE(test_suite) {
-
-	/* always have a setup and teardown, even if they */
-	/* do nothing. */
 
 	MU_SUITE_CONFIGURE(test_setup, test_teardown);
 
-	/* run your tests here */
-
 	MU_RUN_TEST(test_test);
-
 }
-
-/*
- * master control:
- */
 
 int
 main(int argc, char *argv[]) {
@@ -101,3 +80,4 @@ main(int argc, char *argv[]) {
 	MU_REPORT();
 	return MU_EXIT_CODE;
 }
+/* unitmd5.c ends here */

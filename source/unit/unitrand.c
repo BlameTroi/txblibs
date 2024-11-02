@@ -1,15 +1,12 @@
-/* unitrand.c -- units for my header libraries -- troy brumley */
+/* unitrand.c -- tests for the random numbers header library -- troy brumley */
 
 /* released to the public domain, troy brumley, may 2024 */
 
-
+#include "minunit.h"
+#include "txbrand.h"
 #include <stdio.h>
 #include <stdint.h>
 
-#include "minunit.h"
-
-#include "../inc/rand.h"
-
 /*
  * minunit setup and teardown.
  */
@@ -76,29 +73,12 @@ MU_TEST(test_rand) {
 	mu_should(memcmp(first, last, sizeof(first)) == 0);
 }
 
-/*
- * here we define the whole test suite. sadly there's no runtime
- * introspection. there is probably an opportunity for an elisp helper
- * to create the suite in the editor, but for now it's just a matter
- * of doing it manually.
- */
-
 MU_TEST_SUITE(test_suite) {
-
-	/* always have a setup and teardown, even if they */
-	/* do nothing. */
 
 	MU_SUITE_CONFIGURE(test_setup, test_teardown);
 
-	/* run your tests here */
-
 	MU_RUN_TEST(test_rand);
 }
-
-
-/*
- * master control:
- */
 
 int
 main(int argc, char *argv[]) {
@@ -106,3 +86,4 @@ main(int argc, char *argv[]) {
 	MU_REPORT();
 	return MU_EXIT_CODE;
 }
+/* unitrand.c ends here */

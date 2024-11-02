@@ -1,16 +1,13 @@
-/* unitrs.c -- units for my header libraries -- troy brumley */
+/* unitsb.c -- tests for the string builder header library -- troy brumley */
 
 /* released to the public domain, troy brumley, may 2024 */
 
 #include <errno.h>
 #include <stdlib.h>
-
 #include "minunit.h"
+#include "txbstr.h"
+#include "txbsb.h"
 
-#include "../inc/str.h"
-
-#include "../inc/sb.h"
-
 /*
  * minunit setup and teardown.
  */
@@ -31,7 +28,7 @@ test_teardown(void) {
  */
 
 MU_TEST(test_basic) {
-	sbcb *sb = sb_create();
+	hsb *sb = sb_create();
 	mu_should(sb);
 	mu_should(sb_length(sb) == 0);
 
@@ -60,7 +57,7 @@ MU_TEST(test_basic) {
  */
 
 MU_TEST(test_null) {
-	sbcb *sb = sb_create_null();
+	hsb *sb = sb_create_null();
 	mu_should(sb);
 	mu_should(sb_length(sb) == 0);
 
@@ -90,7 +87,7 @@ MU_TEST(test_null) {
  */
 
 MU_TEST(test_abusive) {
-	sbcb *sb = sb_create_blksize(32);
+	hsb *sb = sb_create_blksize(32);
 	for (int i = 0; i < 100; i++)
 		sb_puts(sb, "four");
 	mu_should(sb_length(sb) == 400);
@@ -118,38 +115,22 @@ MU_TEST(test_file) {
 			keep);
 		return;
 	}
-	sbcb *source = sb_create_file(file);
+	hsb *source = sb_create_file(file);
 	mu_should(source);
 	mu_should(sb_length(source) > 2000); /* just a did we get it check? */
 	fclose(file);
 	sb_destroy(source);
 }
 
-/*
- * here we define the whole test suite. sadly there's no runtime
- * introspection. there is probably an opportunity for an elisp helper
- * to create the suite in the editor, but for now it's just a matter
- * of doing it manually.
- */
-
 MU_TEST_SUITE(test_suite) {
 
-	/* always have a setup and teardown, even if they */
-	/* do nothing. */
-
 	MU_SUITE_CONFIGURE(test_setup, test_teardown);
-
-	/* run your tests here */
 
 	MU_RUN_TEST(test_basic);
 	MU_RUN_TEST(test_null);
 	MU_RUN_TEST(test_abusive);
 	MU_RUN_TEST(test_file);
 }
-
-/*
- * master control:
- */
 
 int
 main(int argc, char *argv[]) {

@@ -1,14 +1,12 @@
-/* unitst.c -- units for my header libraries -- troy brumley */
+/* unitst.c -- tests for the stack header library -- troy brumley */
 
 /* released to the public domain, troy brumley, may 2024 */
 
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include "minunit.h"
-
-#include "../inc/st.h"
+#include "txbst.h"
 
 /*
  * minunit setup and teardown.
@@ -23,10 +21,10 @@ static
 void
 test_teardown(void) {
 }
-
+
 MU_TEST(test_st) {
 
-	stcb *st = st_create();
+	hst *st = st_create();
 	mu_should(st);
 	mu_should(st_empty(st));
 	for (int i = 1; i < 5; i++) {
@@ -62,30 +60,13 @@ MU_TEST(test_st) {
 	mu_should(st_destroy(st));
 	st = NULL;
 }
-
-/*
- * here we define the whole test suite. sadly there's no runtime
- * introspection. there is probably an opportunity for an elisp helper
- * to create the suite in the editor, but for now it's just a matter
- * of doing it manually.
- */
-
+
 MU_TEST_SUITE(test_suite) {
-
-	/* always have a setup and teardown, even if they */
-	/* do nothing. */
 
 	MU_SUITE_CONFIGURE(test_setup, test_teardown);
 
-	/* run your tests here */
-
 	MU_RUN_TEST(test_st);
 }
-
-
-/*
- * master control:
- */
 
 int
 main(int argc, char *argv[]) {
@@ -93,3 +74,4 @@ main(int argc, char *argv[]) {
 	MU_REPORT();
 	return MU_EXIT_CODE;
 }
+/* unitst.c ends here */

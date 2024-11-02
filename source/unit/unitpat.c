@@ -1,4 +1,4 @@
-/*  unittest.c -- units for my header libraries -- troy brumley */
+/*  unitpat.c -- tests for the pattern matching header library -- troy brumley */
 
 /* released to the public domain, troy brumley, may 2024 */
 
@@ -6,24 +6,34 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include "minunit.h"
-
-#include "../inc/str.h"
-#include "../inc/misc.h"
-#include "../inc/pat.h"
+#include "txbstr.h"
+#include "txbmisc.h"
+#include "txbpat.h"
 
 /*
- * the validate_compiled_pattern is a 'hidden' function in txbpat. it
- * can be used to test the construction of various patterns. it
- * compares the pattern items between PAT_BEG and PAT_END in the
- * pattern buffer against the array of expected values. the expected
- * values array needs an ending sentinel value of -1.
+ * test setup and teardown.
+ */
+
+void
+test_setup(void) {
+}
+
+void
+test_teardown(void) {
+}
+
+/*
+ * validate_compiled_pattern is a 'hidden' function in txbpat. it can
+ * be used to test the construction of various patterns. it compares
+ * the pattern items between PAT_BEG and PAT_END in the pattern buffer
+ * against the array of expected values. the expected values array
+ * needs an ending sentinel value of -1.
  */
 
 bool
 validate_compiled_pattern(const cpat *, int *);
-
+
 /*
  * a sample directory for glob testing:
  */
@@ -45,18 +55,6 @@ char *filenames[] = {
 	".gitignore",                  /* .* */
 	NULL
 };
-
-/*
- * reset and release context for tests.
- */
-
-void
-test_setup(void) {
-}
-
-void
-test_teardown(void) {
-}
 
 /*
  * test the compilation of literals, runs of one or more characters.
@@ -173,7 +171,7 @@ MU_TEST(test_compile_literals) {
 	mu_should(validate_compiled_pattern(pat, val));
 	free((void *)pat);
 }
-
+
 /*
  * there are quite a few meta characters. the syntax used is a subset
  * of modern regular expressions.
@@ -310,7 +308,7 @@ MU_TEST(test_compile_metas) {
 	mu_should(validate_compiled_pattern(pat, val));
 	free((void *)pat);
 }
-
+
 /*
  * one of and none of groupings can contain range specifications to
  * reduce typing. <first char>-<last char> is expanded in the
@@ -368,7 +366,7 @@ MU_TEST(test_compile_ranges) {
 	mu_should(validate_compiled_pattern(pat, val));
 	free((void *)pat);
 }
-
+
 /*
  * character class metas are shortcuts for ranged one/none of
  * groupings. so \d means [0-9], \D means [^0-9]. similarly \w and \W
@@ -417,14 +415,15 @@ MU_TEST(test_compile_class_metas) {
 	mu_should(validate_compiled_pattern(pat, val));
 	free((void *)pat);
 }
-
+
 /*
- * compile with quantifiers. this library does not support match groups, so you
- * can't match something like asdfasdfasdf with (asdf)* or (asdf)+, but a
- * quantifier can be applid to a character class meta (\d*, \W?, etc), a one of
- * or none of grouping ([a-z][a-z0-9_]* would match a basic variable name),
- * or the _last_ character of a literal run (asdf* would match asd, asdf,
- * asdffffff, and so on).
+ * compile with quantifiers. this library does not support match
+ * groups (yet), so you can't match something like asdfasdfasdf with
+ * (asdf)* or (asdf)+, but a quantifier can be applid to a character
+ * class meta (\d*, \W?, etc), a one of or none of grouping
+ * ([a-z][a-z0-9_]* would match a basic variable name), or the _last_
+ * character of a literal run (asdf* would match asd, asdf, asdffffff,
+ * and so on).
  */
 
 MU_TEST(test_compile_quantifiers) {
@@ -509,7 +508,7 @@ MU_TEST(test_compile_quantifiers) {
 
 	/* more to come */
 }
-
+
 /*
  * match quantifiers, trying to hit edge cases.
  */
@@ -632,7 +631,7 @@ MU_TEST(test_match_quantifiers) {
 	mu_should(match("asdgh", pat));
 	free((void *)pat);
 }
-
+
 /*
  * a pattern with no anchors and one wildcard character.
  */
@@ -646,7 +645,7 @@ MU_TEST(test_match_any) {
 	mu_shouldnt(match("asfd", pat));
 	free((void *)pat);
 }
-
+
 /*
  * a simple literal matching at various locations in a string.
  */
@@ -667,7 +666,7 @@ MU_TEST(test_match_literals) {
 	free(dup);
 	free((void *)pat);
 }
-
+
 /*
  * exercise the class metas \d, \w, \s and their negations.
  */
@@ -734,7 +733,7 @@ MU_TEST(test_match_class_metas) {
 	mu_shouldnt(match(" ?9a_+", pat));
 	free((void *)pat);
 }
-
+
 /*
  * some matching edge cases.
  */
@@ -765,7 +764,7 @@ MU_TEST(test_match_edgecases) {
 	mu_shouldnt(match("", pat));
 	free((void *)pat);
 }
-
+
 /*
  * matching against the beginning or ending of a line.
  */
@@ -798,7 +797,7 @@ MU_TEST(test_match_anchors) {
 	mu_should(match("asdf\n", pat));
 	free((void *)pat);
 }
-
+
 /*
  * groups match one character against one of (or none of) the enclosed
  * characters. ^[0-9] would match a basic line number, while [^0-9]
@@ -849,7 +848,7 @@ MU_TEST(test_match_classes) {
 	mu_should(match("this is a long line that should match &", pat));
 	free((void *)pat);
 }
-
+
 /*
  * file name globbing uses a subset of the meta characters for regular
  * expressions, but their meanings are slightly different. this library
@@ -904,30 +903,21 @@ MU_TEST(test_match_globs) {
 	mu_should(glob_match(".asdf.txt", pat));
 
 }
-
+
 MU_TEST(test_bad_include) {
 	const cpat *pat = compile_pattern("^ *#include +[\"]");
 	mu_should(pat);
 }
-
 
-/*
- * here we define the whole test suite. sadly there's no runtime
- * introspection. there is probably an opportunity for an elisp helper
- * to create the suite in the editor, but for now it's just a matter
- * of doing it manually.
- */
-
 MU_TEST_SUITE(test_suite) {
-
-	/* always have a setup and teardown, even if they do nothing. */
 
 	MU_SUITE_CONFIGURE(test_setup, test_teardown);
 
 	MU_RUN_TEST(test_bad_include);
 
-	/* test compiling a search pattern string into a pattern buffer.
-	 * these rely on an exposed pattern buffer comparator. */
+	/* test compiling a search pattern string into a pattern
+	 * buffer. these rely on an exposed pattern buffer
+	 * comparator. */
 
 	MU_RUN_TEST(test_compile_literals);
 	MU_RUN_TEST(test_compile_metas);
@@ -952,12 +942,7 @@ MU_TEST_SUITE(test_suite) {
 
 	MU_RUN_TEST(test_convert_globs);
 	MU_RUN_TEST(test_match_globs);
-
 }
-
-/*
- * master control:
- */
 
 int
 main(int argc, char *argv[]) {

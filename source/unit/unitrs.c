@@ -1,17 +1,14 @@
-/* unitrs.c -- units for my header libraries -- troy brumley */
+/* unitrs.c -- tests for the string read stream header library -- troy brumley */
 
 /* released to the public domain, troy brumley, may 2024 */
 
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-
 #include "minunit.h"
+#include "txbstr.h"
+#include "txbrs.h"
 
-#include "../inc/str.h"
-
-#include "../inc/rs.h"
-
 /*
  * minunit setup and teardown.
  */
@@ -27,7 +24,7 @@ test_teardown(void) {
 MU_TEST(test_rs) {
 	const char *testing = "this is a test";
 	char *copy = strdup(testing);
-	rscb *rs = rs_create_string(copy);
+	hrs *rs = rs_create_string(copy);
 	free(copy);
 	copy = "changed";
 	mu_should(rs_position(rs) == 0);
@@ -81,7 +78,7 @@ MU_TEST(test_file) {
 			keep);
 		return;
 	}
-	rscb *source = rs_create_string_from_file(file);
+	hrs *source = rs_create_string_from_file(file);
 	mu_should(source);
 	mu_should(rs_length(source) > 3000); /* just a did we get it? */
 	fclose(file);
@@ -89,8 +86,8 @@ MU_TEST(test_file) {
 }
 
 MU_TEST(test_clone) {
-	rscb *original = rs_create_string("this is a test");
-	rscb *clone = rs_clone(original);
+	hrs *original = rs_create_string("this is a test");
+	hrs *clone = rs_clone(original);
 	int c;
 	int n = 0;
 	while ((c = rs_getc(original)) != EOF)
@@ -104,7 +101,7 @@ MU_TEST(test_clone) {
 }
 
 MU_TEST(test_gets) {
-	rscb *original = rs_create_string("this is a test\nthis is another test\n");
+	hrs *original = rs_create_string("this is a test\nthis is another test\n");
 	char *buffer = malloc(256);
 	int buflen = 255;
 	char *res = NULL;
@@ -167,7 +164,7 @@ MU_TEST(test_gets) {
 }
 
 MU_TEST(test_skip) {
-	rscb *rs = rs_create_string("0123456789abcdefghijklmnopqrstuvwxyz");
+	hrs *rs = rs_create_string("0123456789abcdefghijklmnopqrstuvwxyz");
 
 	mu_should(rs_length(rs) == 36);
 	mu_should(rs_position(rs) == 0);
@@ -197,21 +194,10 @@ MU_TEST(test_skip) {
 	rs_destroy_string(rs);
 }
 
-/*
- * here we define the whole test suite. sadly there's no runtime
- * introspection. there is probably an opportunity for an elisp helper
- * to create the suite in the editor, but for now it's just a matter
- * of doing it manually.
- */
 
 MU_TEST_SUITE(test_suite) {
 
-	/* always have a setup and teardown, even if they */
-	/* do nothing. */
-
 	MU_SUITE_CONFIGURE(test_setup, test_teardown);
-
-	/* run your tests here */
 
 	MU_RUN_TEST(test_rs);
 	MU_RUN_TEST(test_file);
@@ -219,10 +205,6 @@ MU_TEST_SUITE(test_suite) {
 	MU_RUN_TEST(test_gets);
 	MU_RUN_TEST(test_skip);
 }
-
-/*
- * master control:
- */
 
 int
 main(int argc, char *argv[]) {
@@ -232,3 +214,4 @@ main(int argc, char *argv[]) {
 	MU_REPORT();
 	return MU_EXIT_CODE;
 }
+/* unitrs.c ends here */

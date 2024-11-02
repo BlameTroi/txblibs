@@ -1,4 +1,4 @@
-/*  unittest.c -- units for my header libraries -- troy brumley */
+/*  unitstr.c -- tests for the string utilities header library -- troy brumley */
 
 /* released to the public domain, troy brumley, may 2024 */
 
@@ -6,14 +6,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include "minunit.h"
-
-#include "../inc/str.h"
-
-/*
- * tests for the string library
- */
+#include "txbstr.h"
 
 /*
  * minunit setup and teardown of listd infratstructure.
@@ -27,8 +21,9 @@ void
 test_teardown(void) {
 }
 
-
-/* test split_string and friends */
+/*
+ * test split_string and friends.
+ */
 
 MU_TEST(test_split_string) {
 	char *s = "this is a test string";
@@ -86,21 +81,9 @@ MU_TEST(test_compare_string) {
 	mu_shouldnt(greater_than_string("asdf", "f"));
 }
 
-/*
- * here we define the whole test suite. sadly there's no runtime
- * introspection. there is probably an opportunity for an elisp helper
- * to create the suite in the editor, but for now it's just a matter
- * of doing it manually.
- */
-
 MU_TEST_SUITE(test_suite) {
 
-	/* always have a setup and teardown, even if they */
-	/* do nothing. */
-
 	MU_SUITE_CONFIGURE(test_setup, test_teardown);
-
-	/* run your tests here */
 
 	printf("\n\nstring and character\n\n");
 	MU_RUN_TEST(test_split_string);
@@ -109,13 +92,10 @@ MU_TEST_SUITE(test_suite) {
 	MU_RUN_TEST(test_compare_string);
 }
 
-/*
- * master control:
- */
-
 int
 main(int argc, char *argv[]) {
 	MU_RUN_SUITE(test_suite);
 	MU_REPORT();
 	return MU_EXIT_CODE;
 }
+/* unitstr.c ends here */

@@ -1,4 +1,4 @@
-/*  unittest.c -- units for my header libraries -- troy brumley */
+/*  unitdl.c -- tests for my doubly linked list library -- troy brumley */
 
 /* released to the public domain, troy brumley, may 2024 */
 
@@ -6,25 +6,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include "minunit.h"
-
-#include "../inc/misc.h"
-#include "../inc/dl.h"
-#include "../inc/str.h"
-#include "../inc/rand.h"
-
-/*
- * tests for  txbdl -- doubly linked list
- */
+#include "txbmisc.h"
+#include "txbdl.h"
+#include "txbstr.h"
+#include "txbrand.h"
 
 /*
  * minunit setup and teardown.
  */
 
 #define RAND_SEED 6803
-
-static dlcb *test_dl = NULL;
+static hdl *test_dl = NULL;
 
 /*
  * test_setup.
@@ -83,7 +76,7 @@ test_teardown(void) {
 	dl_destroy(test_dl);
 	test_dl = NULL;
 }
-
+
 /*
  * test_create.
  *
@@ -92,7 +85,7 @@ test_teardown(void) {
  */
 
 MU_TEST(test_create) {
-	dlcb *dl = dl_create();
+	hdl *dl = dl_create();
 	mu_should(dl);
 	mu_should(dl_empty(dl));
 	mu_should(dl_count(dl) == 0);
@@ -119,7 +112,7 @@ MU_TEST(test_insert_ends) {
 	char *items[] = { "1", "2", "3", "4", "5", "6", "7", NULL };
 	char ordering[] = { '6', '4', '2', '1', '3', '5', '7', '\0' };
 
-	dlcb *dl = dl_create();
+	hdl *dl = dl_create();
 	dlid id = NULL_DLID;
 	int i = 0;
 
@@ -195,7 +188,7 @@ MU_TEST(test_insert_ends) {
  */
 
 MU_TEST(test_insert_after) {
-	dlcb *dl = NULL;
+	hdl *dl = NULL;
 	dlid id = NULL_DLID;
 	ppayload payload = NULL;
 
@@ -341,7 +334,7 @@ MU_TEST(test_insert_after) {
  */
 
 MU_TEST(test_insert_before) {
-	dlcb *dl = NULL;
+	hdl *dl = NULL;
 	dlid id = NULL_DLID;
 	ppayload payload = NULL;
 
@@ -486,7 +479,7 @@ MU_TEST(test_insert_before) {
  */
 
 MU_TEST(test_insert_many) {
-	dlcb *dl = test_dl;
+	hdl *dl = test_dl;
 	ppayload payload = NULL;
 	int start_nodes = dl_count(dl);
 	int added_nodes = 0;
@@ -566,7 +559,7 @@ MU_TEST(test_insert_many) {
  */
 
 MU_TEST(test_get_first) {
-	dlcb *dl = test_dl;
+	hdl *dl = test_dl;
 	ppayload payload = NULL;
 	dlid id = dl_get_first(dl, &payload);
 	mu_shouldnt(null_dlid(id));
@@ -581,7 +574,7 @@ MU_TEST(test_get_first) {
  */
 
 MU_TEST(test_get_last) {
-	dlcb *dl = test_dl;
+	hdl *dl = test_dl;
 	ppayload payload = NULL;
 	dlid id = dl_get_last(dl, &payload);
 	mu_shouldnt(null_dlid(id));
@@ -597,7 +590,7 @@ MU_TEST(test_get_last) {
  */
 
 MU_TEST(test_get_next) {
-	dlcb *dl = test_dl;
+	hdl *dl = test_dl;
 
 	/* somewhere in the list */
 	ppayload payload = NULL;
@@ -628,7 +621,7 @@ MU_TEST(test_get_next) {
  */
 
 MU_TEST(test_get_previous) {
-	dlcb *dl = NULL;
+	hdl *dl = NULL;
 	dlid id = NULL_DLID;
 	ppayload payload = NULL;
 
@@ -662,7 +655,7 @@ MU_TEST(test_get_previous) {
  */
 
 MU_TEST(test_delete) {
-	dlcb *dl = NULL;
+	hdl *dl = NULL;
 	dlid id = NULL_DLID;
 	ppayload payload = NULL;
 
@@ -722,7 +715,7 @@ MU_TEST(test_delete) {
  */
 
 MU_TEST(test_update) {
-	dlcb *dl = NULL;
+	hdl *dl = NULL;
 	dlid id = NULL_DLID;
 	ppayload old_payload = NULL;
 	ppayload new_payload = NULL;
@@ -750,7 +743,7 @@ MU_TEST(test_update) {
  */
 
 MU_TEST(test_bad_position) {
-	dlcb *dl = test_dl;
+	hdl *dl = test_dl;
 	ppayload first_payload = NULL;
 	dlid first_id = dl_get_first(dl, &first_payload);
 	ppayload last_payload = NULL;
@@ -767,22 +760,11 @@ MU_TEST(test_bad_position) {
 	mu_should(dl_get_error(dl));
 	mu_shouldnt(result);
 }
-
-/*
- * here we define the whole test suite. sadly there's no runtime
- * introspection. there is probably an opportunity for an elisp helper
- * to create the suite in the editor, but for now it's just a matter
- * of doing it manually.
- */
+
 
 MU_TEST_SUITE(test_suite) {
 
-	/* always have a setup and teardown, even if they */
-	/* do nothing. */
-
 	MU_SUITE_CONFIGURE(test_setup, test_teardown);
-
-	/* run your tests here */
 
 	MU_RUN_TEST(test_create);
 	MU_RUN_TEST(test_insert_ends);
@@ -798,13 +780,10 @@ MU_TEST_SUITE(test_suite) {
 	MU_RUN_TEST(test_bad_position);
 }
 
-/*
- * master control:
- */
-
 int
 main(int argc, char *argv[]) {
 	MU_RUN_SUITE(test_suite);
 	MU_REPORT();
 	return MU_EXIT_CODE;
 }
+/* unitdl.c ends here */

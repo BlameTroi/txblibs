@@ -1,4 +1,4 @@
-/* unitmute.c -- units for my header libraries -- troy brumley */
+/* unitpmute.c -- tests for the permutations generator library -- troy brumley */
 
 /* released to the public domain, troy brumley, may 2024 */
 
@@ -6,10 +6,8 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-
 #include "minunit.h"
-
-#include "../inc/pmute.h"
+#include "txbpmute.h"
 
 /*
  * minunit setup and teardown.
@@ -31,6 +29,7 @@ test_teardown(void) {
  * print_current
  */
 
+static
 void
 print_current(int *iter, int n, int *ints) {
 	*iter += 1;
@@ -44,6 +43,7 @@ print_current(int *iter, int n, int *ints) {
  * permute
  */
 
+static
 int
 permute(const int n) {
 
@@ -75,28 +75,12 @@ MU_TEST(test_pmute) {
 	mu_should(24 == permute(4));
 }
 
-/*
- * here we define the whole test suite. sadly there's no runtime
- * introspection. there is probably an opportunity for an elisp helper
- * to create the suite in the editor, but for now it's just a matter
- * of doing it manually.
- */
-
 MU_TEST_SUITE(test_suite) {
-
-	/* always have a setup and teardown, even if they */
-	/* do nothing. */
 
 	MU_SUITE_CONFIGURE(test_setup, test_teardown);
 
-	/* run your tests here */
-
 	MU_RUN_TEST(test_pmute);
 }
-
-/*
- * master control:
- */
 
 int
 main(int argc, char *argv[]) {
@@ -104,4 +88,4 @@ main(int argc, char *argv[]) {
 	MU_REPORT();
 	return MU_EXIT_CODE;
 }
-/* unitmute.c ends here */
+/* unitpmute.c ends here */

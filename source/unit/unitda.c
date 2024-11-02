@@ -1,16 +1,13 @@
-/* unitda.c -- units for my header libraries -- troy brumley */
+/* unitda.c -- tests for the dynamic array library -- troy brumley */
 
 /* released to the public domain, troy brumley, may 2024 */
 
 #include <stdio.h>
 #include <stdlib.h>
-
 #include "minunit.h"
+#include "txbrand.h"
+#include "txbda.h"
 
-#include "../inc/rand.h"
-
-#include "../inc/da.h"
-
 /*
  * minunit setup and teardown.
  */
@@ -40,7 +37,7 @@ test_teardown(void) {
  */
 
 MU_TEST(test_da) {
-	dacb *da = NULL;
+	hda *da = NULL;
 	da = da_create(10);
 	mu_should(da && da_count(da) == 0);
 
@@ -68,21 +65,16 @@ MU_TEST(test_da) {
 	da_destroy(da);
 }
 
-MU_TEST_SUITE(test_suite) {
-
-	/* always have a setup and teardown, even if they */
-	/* do nothing. */
-
-	MU_SUITE_CONFIGURE(test_setup, test_teardown);
-
-	/* run your tests here */
-
-	MU_RUN_TEST(test_da);
-}
-
 /*
  * master control:
  */
+
+MU_TEST_SUITE(test_suite) {
+
+	MU_SUITE_CONFIGURE(test_setup, test_teardown);
+
+	MU_RUN_TEST(test_da);
+}
 
 int
 main(int argc, char *argv[]) {
@@ -90,3 +82,4 @@ main(int argc, char *argv[]) {
 	MU_REPORT();
 	return MU_EXIT_CODE;
 }
+/* unitda.c ends here */

@@ -1,17 +1,13 @@
-/* unitkv.c -- units for my header libraries -- troy brumley */
+/* unitkv.c -- tests for the key:value store library -- troy brumley */
 
 /* released to the public domain, troy brumley, may 2024 */
-
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-
 #include "minunit.h"
-
-#include "../inc/rand.h"
-
-#include "../inc/kv.h"
+#include "txbrand.h"
+#include "txbkv.h"
 
 /*
  * minunit setup and teardown.
@@ -26,7 +22,7 @@ test_setup(void) {
 void
 test_teardown(void) {
 }
-
+
 /*
  * key comparators for integer and string keys.
  */
@@ -99,9 +95,9 @@ int_str str_valued[] = {
  * loaders for test data test data
  */
 
-kvcb *
+hkv *
 load_ints(void) {
-	kvcb *kv = kv_create(fn_key_compare_int);
+	hkv *kv = kv_create(fn_key_compare_int);
 	int i = 0;
 	while (int_keyed[i][0] != -1) {
 		kv_put(kv, &int_keyed[i][0], &int_keyed[i][1]);
@@ -110,9 +106,9 @@ load_ints(void) {
 	return kv;
 }
 
-kvcb *
+hkv *
 load_strs(void) {
-	kvcb *kv = kv_create(fn_key_compare_int);
+	hkv *kv = kv_create(fn_key_compare_int);
 	int i = 0;
 	while (str_valued[i].value) {
 		kv_put(kv, &str_valued[i].key, str_valued[i].value);
@@ -121,9 +117,9 @@ load_strs(void) {
 	return kv;
 }
 
-kvcb *
+hkv *
 load_str_keys(void) {
-	kvcb *kv = kv_create(fn_key_compare_string);
+	hkv *kv = kv_create(fn_key_compare_string);
 	int i = 0;
 	while (str_keyed[i].key) {
 		kv_put(kv, str_keyed[i].key, &str_keyed[i].value);
@@ -131,7 +127,7 @@ load_str_keys(void) {
 	}
 	return kv;
 }
-
+
 /*
  * test_create
  *
@@ -139,7 +135,7 @@ load_str_keys(void) {
  */
 
 MU_TEST(test_create) {
-	kvcb *kv = kv_create(fn_key_compare_int);
+	hkv *kv = kv_create(fn_key_compare_int);
 	mu_should(kv);
 	mu_should(kv_count(kv) == 0);
 	mu_should(kv_empty(kv));
@@ -161,7 +157,7 @@ MU_TEST(test_load) {
 	int cb = fn_key_compare_int(&ia, &ib);
 	mu_should(ca == cb);
 
-	kvcb *kv = kv_create(fn_key_compare_int);
+	hkv *kv = kv_create(fn_key_compare_int);
 
 	int i = 0;
 	while (int_keyed[i][0] != -1) {
@@ -196,7 +192,7 @@ MU_TEST(test_load) {
  */
 
 MU_TEST(test_put) {
-	kvcb *kv = load_ints();
+	hkv *kv = load_ints();
 
 	/* get a list of all the keys in the store */
 	pkey *keys = kv_keys(kv);
@@ -237,7 +233,7 @@ MU_TEST(test_put) {
  */
 
 MU_TEST(test_delete) {
-	kvcb *kv = load_ints();
+	hkv *kv = load_ints();
 
 	/* establish that pairs 2, 8, and 9 exist */
 	mu_should(kv_count(kv) == 10);
@@ -274,7 +270,7 @@ MU_TEST(test_delete) {
 }
 
 MU_TEST(test_keys) {
-	kvcb *kv = load_ints();
+	hkv *kv = load_ints();
 	mu_should(kv_count(kv) == 10);
 
 	/* get a list of all the keys in the store */
@@ -292,7 +288,7 @@ MU_TEST(test_keys) {
 }
 
 MU_TEST(test_values) {
-	kvcb *kv = load_strs();
+	hkv *kv = load_strs();
 	mu_should(kv_count(kv) == 10);
 
 	/* get the list of all the values in the store */
@@ -314,7 +310,7 @@ MU_TEST(test_values) {
 }
 
 MU_TEST(test_volume_ascending) {
-	kvcb *kv = kv_create(fn_key_compare_int);
+	hkv *kv = kv_create(fn_key_compare_int);
 	/* grow a few times */
 	clock_t b = clock();
 	for (int i = 1; i <= 10000; i++) {
@@ -373,7 +369,7 @@ MU_TEST(test_volume_ascending) {
 }
 
 MU_TEST(test_volume_descending) {
-	kvcb *kv = kv_create(fn_key_compare_int);
+	hkv *kv = kv_create(fn_key_compare_int);
 	/* grow a few times */
 	clock_t b = clock();
 	for (int i = 10000; i >= 1; i--) {
@@ -420,7 +416,7 @@ MU_TEST(test_volume_descending) {
 }
 
 MU_TEST(test_volume_random) {
-	kvcb *kv = kv_create(fn_key_compare_int);
+	hkv *kv = kv_create(fn_key_compare_int);
 	/* grow a few times */
 	clock_t b = clock();
 	int i = 0;
@@ -459,7 +455,7 @@ MU_TEST(test_volume_random) {
 }
 
 MU_TEST(test_string_keys) {
-	kvcb *kv = load_str_keys();
+	hkv *kv = load_str_keys();
 	mu_should(kv_count(kv) == 6);
 
 	/* key and value lists */
@@ -484,22 +480,10 @@ MU_TEST(test_string_keys) {
 	mu_should(kv_reset(kv) == 6);
 	kv_destroy(kv);
 }
-
-/*
- * here we define the whole test suite. sadly there's no runtime
- * introspection. there is probably an opportunity for an elisp helper
- * to create the suite in the editor, but for now it's just a matter
- * of doing it manually.
- */
-
+
 MU_TEST_SUITE(test_suite) {
 
-	/* always have a setup and teardown, even if they */
-	/* do nothing. */
-
 	MU_SUITE_CONFIGURE(test_setup, test_teardown);
-
-	/* run your tests here */
 
 	MU_RUN_TEST(test_create);
 	MU_RUN_TEST(test_load);
@@ -513,15 +497,10 @@ MU_TEST_SUITE(test_suite) {
 	MU_RUN_TEST(test_volume_random);
 }
 
-/*
- * master control:
- */
-
 int
 main(int argc, char *argv[]) {
 	MU_RUN_SUITE(test_suite);
 	MU_REPORT();
 	return MU_EXIT_CODE;
 }
-
 /* unitkv.c ends here */

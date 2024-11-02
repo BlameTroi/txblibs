@@ -1,4 +1,4 @@
-/*  unitmisc.c -- units for my header libraries -- troy brumley */
+/*  unitmisc.c -- tests for the miscellany header library -- troy brumley */
 
 /* released to the public domain, troy brumley, may 2024 */
 
@@ -6,13 +6,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include "minunit.h"
-
-#include "../inc/misc.h"
-
+#include "txbmisc.h"
+
 /*
- * minunit setup and teardown of listd infratstructure.
+ * minunit setup and teardown.
  */
 
 void
@@ -29,8 +27,6 @@ test_teardown(void) {
  * txbmisc is a catch all of things that don't warrant their own distinct
  * library header.
  */
-
-/* min and max */
 
 MU_TEST(test_min_max) {
 	mu_assert_int_eq(1, min(1, 2));
@@ -118,31 +114,15 @@ MU_TEST(test_pack) {
 	mu_should(strcmp(chr_buffer, "0123456789abcdef") == 0);
 }
 
-/*
- * here we define the whole test suite. sadly there's no runtime
- * introspection. there is probably an opportunity for an elisp helper
- * to create the suite in the editor, but for now it's just a matter
- * of doing it manually.
- */
-
 MU_TEST_SUITE(test_suite) {
 
-	/* always have a setup and teardown, even if they */
-	/* do nothing. */
-
 	MU_SUITE_CONFIGURE(test_setup, test_teardown);
-
-	/* run your tests here */
 
 	MU_RUN_TEST(test_min_max);
 	MU_RUN_TEST(test_even_odd);
 	MU_RUN_TEST(test_factor);
 	MU_RUN_TEST(test_pack);
 }
-
-/*
- * master control:
- */
 
 int
 main(int argc, char *argv[]) {
