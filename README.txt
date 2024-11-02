@@ -1,17 +1,17 @@
-	   ===============================================
-	   txblibs -- Troy's header only library functions
-	   ===============================================
+	   ==============================================
+	   txblibs -- Troy's Single File Header Libraries
+	   ==============================================
 
 
 Sean Barrett and others show us the way to create and use relatively
 small include files for library code. I recommend that you read the
-FAQ on his https://github.com/nothings/stbs repository.
+FAQ at his https://github.com/nothings/stbs repository.
 
 This repository holds my own bits of code that either aren't part of
 the C standard or those versions don't work quite the way I want them
 to.
 
-Troy Brumley, blametroi@gmail.com, July 2024.
+Troy Brumley, blametroi@gmail.com, November 2024.
 
 So let it be written,
 So let it be done.
@@ -21,11 +21,8 @@ So let it be done.
 Installation and Use
 --------------------
 
-The headers to use are in the release/ sub-directory. They are built
-by the makefile using buildhdr (https://github.com/BlameTroi/buildhdr).
-The source for each header is a pair of files in the inc/ and src/
-sub-directories. txbrand.h is built from inc/rand.h and src/rand.c,
-and so on.
+The headers to use are in the source/inc sub-directory. Put them
+somehwere in your C include path.
 
 Include the appropriate headers in your project. Each header has a
 preprocessor variable to control when the executable code will be
@@ -36,9 +33,9 @@ included. #define this in only one source file per linked target.
 External Dependencies
 ---------------------
 
-To build or work with these, you need nothing that isn't likely to
-be already installed. If something is not already installed, it is
-certainly available in all package managers.
+To build or work with these you need nothing that isn't likely to
+be already installed. If it isn't, it is likely to be available
+in your OS' package manager.
 
  1. A C compiler (minimum c99, I compile with std=c18)
 
@@ -67,16 +64,15 @@ Minunit
 -------
 
 In addition to using these libraries in my own work, I started writing
-unit tests using Minunit. There are multiple descendants of John
+unit tests with Minunit. There are multiple descendants of John
 Brewer's Minunit as found at https://jera.com/techinfo/jtns/jtn002.
 Brewer's Minunit is minimal in the extreme but very instructive.
 
-I want a bit more from a testing framework and the best I could find
+I wanted a bit more from a testing framework and the best I could find
 was this version by David Siñuela Pastor siu.4coders@gmail.com at
 https://github.com/siu/minunit.
 
-I maintain my own fork at https://github.com/BlameTroi/minunit as I
-tweak it to my preferences.
+I maintain my own fork at https://github.com/BlameTroi/minunit.
 
 Included in source/inc is the current minunit.h used for this project.
 The original is (c) 2022 by David Siñuela Pastor and released under
@@ -89,6 +85,7 @@ https://creativecommons.org/licenses/by/3.0/ for details.
 
 As the unit tests are not something one would compile into application
 binaries, Minunit has no impact on licensing or use of the libraries.
+
 
 			    ==============
 			    Project Layout
@@ -96,32 +93,28 @@ binaries, Minunit has no impact on licensing or use of the libraries.
 
 
 
-I use CMake and ninja to build the unit tests, and GNU Make to run
-buildhdr to package up the release library headers. You will need to
-create the build/ directory, it isn't part of the git repository.
+I use CMake and ninja to create dependency metadata for clang/clangd
+and scripting to build the unit tests. CMakeFiles.txt describes the
+dependencies and the compile_commands.json it produces is used file to
+inform Emacs eglot & clangd of the build dependencies. You will need
+to create the build/ directory, it isn't part of the git repository.
 
 
 .
 ├── LICENSE
-├── MIT-LICENSE
 ├── Makefile
 ├── README.txt
 ├── build
-├── doc
-├── release
-│   └── txb*.h
 └── source
     ├── CMakeLists.txt
     ├── inc
     │   └── *.h
-    ├── src
-    │   └── *.c
     └── unit
         └── unit*.c
 
 
-The build/ directory is not part of the git repository. Once you
-create it, run the following to generate the ninja build scripts:
+Once build/ is created, run the following to generate the ninja build
+scripts:
 
   cmake -G "Ninja Multi-Config" -S source -B build
 
@@ -129,76 +122,64 @@ Then to build the binaries for testing, run:
 
   cmake --build build --config (Release|Debug|RelWithDebInfo)
 
-You may want to change or remove the section roughly around line 40
-from "set(CMAKE_C_COMPILER..." through "add_link_options(...".
-
 Depending upon which config you selected, the binaries for the
-unit tests will be in the appropriate directory under build.
+unit tests will be in the appropriate directory under build/.
 
 
 
 Header Files
 ------------
 
-The bundled header libraries are stored in the release/ sub-directory.
-Functions are in what I hope are sensible file groupings. Each header
-can be included multiple times in your projects, but only one file
-should define the implementation triggering macro:
+Each header can be included multiple times in your projects, but only
+one file should define the implementation triggering macro per binary
+target:
 
 #define <filename>_IMPLEMENTATION
 
-The library headers are built using a library packer that combines the
-development include and source together with guarding and triggering
-preprocessor statements. The source for this utility is in the
-source/src sub-directory.
 
 These are the headers:
 
-| File          | Description                                        |
-|---------------+----------------------------------------------------|
-| txbabort_if.h | common test and abort macro                        |
-| txbda.h       | dynamic array                                      |
-| txbdl.h       | doubly linked list                                 |
-| txbkl.h       | keyed doubly linked list                           |
-| txbkv.h       | key:value store that can have various backing      |
-| txbmd5.h      | md-5 hash (credit to Bryce Wilson)                 |
-| txbmisc.h     | "missing" functions such as min/max                |
-| txbpat.h      | subset of regular expressions                      |
-| txbpmute.h    | iterative permutation generator                    |
-| txbpq.h       | priority queue                                     |
-| txbqu.h       | queue                                              |
-| txbrand.h     | random number support                              |
-| txbrs.h       | string read stream                                 |
-| txbsb.h       | string builder                                     |
-| txbst.h       | stack                                              |
-| txbstr.h      | split/tokenize and compare strings                 |
-
-Some of these reference each other. You may need to include and define
-the implementation trigger for a header that you don't explicitly
-reference. 
+| File       | Description                                        |
+|------------+----------------------------------------------------|
+| txbabort.h | common test and abort macro                        |
+| txbda.h    | dynamic array                                      |
+| txbdl.h    | doubly linked list                                 |
+| txbkl.h    | keyed doubly linked list                           |
+| txbkv.h    | key:value store that can have various backing      |
+| txbmd5.h   | md-5 hash (credit to Bryce Wilson)                 |
+| txbmisc.h  | "missing" functions such as min/max                |
+| txbpat.h   | pattern matching with a regular expressions subset |
+| txbpmute.h | iterative permutation generator                    |
+| txbpq.h    | priority queue                                     |
+| txbqu.h    | queue (fifo)                                       |
+| txbrand.h  | random number support                              |
+| txbrs.h    | string read stream                                 |
+| txbsb.h    | string builder                                     |
+| txbst.h    | stack (lifo)                                       |
+| txbstr.h   | split/tokenize and compare strings                 |
 
 
+Some of these reference each other. You may need to define the
+implementation trigger for a header that you don't explicitly
+reference.
 
-Library Source
---------------
-
-The source (.c) and basic header (.h) are stored in the source/src/
-and source/inc/ sub-directories. Then a library include such as
-release/txbpat.h is created by a header library packer utility (see
-https://github.com/BlameTroi/buildhdr) from the src/pat.c and
-inc/pat.h files.
+TXBST.H requires TXBDL.H
+TXBPAT.H requires TXBSTR.H
 
 
 
 Testing
 -------
 
-The test/ sub-directory contains test source for the unpacked versions
-of the libraries: inc/da.h, src/da.c are included by unit/unitda.c.
+Testing is done with my version of minunit as described earlier in
+this document. Most of the tests are self contained. Some will run
+additional test cases if a file is specified as a command argument.
 
-Testing is done with my own version of minunit. My version is at
-https://github.com/BlameTroi/minunit which is forked from
-https://github.com/siu/minunit/blob/master/minunit.h.
+Examples:
+
+./build/Debug/unitda 
+./build/Debug/unitrs some_file.txt
+
 
 			 ====================
 			 Implementation Notes
@@ -209,16 +190,17 @@ https://github.com/siu/minunit/blob/master/minunit.h.
 Memory Management
 -----------------
 
-Generally the libraries are responsible for managing their own data.
-An instance is created via a xx_create() function, and deleted via a
+Libraries are responsible for managing their own data. A controlling
+instance is created via a xx_create() function, and deleted via a
 xx_destroy() function.
 
-Instances are opaque struct typedefs and returned to the client as
-typed pointers, but think of them as handles. Any control block that
-the client code uses has a character tag used as a quick sanity check,
-verifying that the correct instance type has been passed. If there is
-an error, a message is printed on stderr and the program is terminated
-by an abort().
+Instances are opaque struct typedefs. While they are actually pointers,
+they should be treated as handles.
+
+Any library defined structure that is shared with client code has a
+character tag used as a quick sanity check, verifying that the correct
+instance type has been passed. If there is an error, a message is
+printed on stderr and the program is terminated by an abort().
 
 Memory managed by the libraries is cleared when allocated and
 overwritten with 0xfd (253) bytes before it is freed.
@@ -229,18 +211,18 @@ Client Data
 -----------
 
 Data structures such as the doubly linked list and priority queue have
-control blocks. These are dynamically allocated and contain state for
-an instance of the structure. If two priority queues are needed, each
-will have its own control block.
+instance handles. If two priority queues are needed, each will have
+its own handle.
 
-I try to isolate the client code from the wiring inside the data
-structure. While each item stored will require overhead for chain
+Client code is isolated the from the wiring in a data structure. While
+each item of client data stored will require overhead for chain
 pointers and such, the client only needs to deal with its own data,
-referred to as value or payload in these libraries.
+referred to as key, value, or payload in these libraries.
 
-The payload may be any value that will fit inside a void * pointer.
-This probably means it is really a pointer to one of the client's
-structures.
+The payload may be any value that will fit inside a void * pointer. The
+libraries do not examine the payloads, but as they are often expected
+to be pointers, NULL becomes a special case. See 'Dealing with void *'
+later in this document for more details.
 
 
 
@@ -264,7 +246,7 @@ Function names use the prefix and underscore for naming.
 
 Most structures are defined as "typedef struct fred fred" instead of
 the other alternatives. Their names are prefixed but do not have the
-underscore. 'dlcb', kvcb', 'llcb', and so on.
+underscore. 'hda', hst', 'hll', and so on.
 
 
 
@@ -315,6 +297,7 @@ Where appropriate a library provides an xx_get_error(instance) which
 returns a brief description of the last non-fatal error.
 
 
+
 Comparator Functions
 --------------------
 
@@ -326,18 +309,18 @@ int fn_cmp(const void *a, const void *b);
 
 The return value is an integer less than zero if a comes before b,
 zero if a equals b, and greater than zero if a comes after b.
+
 
 			 ====================
 			 Library Descriptions
 			 ====================
 
 
-Detailed API documentation can be found both the header and source
-files for each library.
+Detailed API documentation can be found in the inc/*.h files.
 
 
-TXBABORT_IF.H
--------------
+TXBABORT.H
+----------
 
 Defines the abort_if macro used throughout these libraries.
 
@@ -477,11 +460,49 @@ TXBSB.H
 A string builder.
 
 
+TXBST.H
+-------
+
+A stack (lifo). It uses TXBDL.H internally so if TXBDL.H is not
+included elsewhere in your code, define TXBDL_IMPLEMENTATION where
+you define TXBST_IMPLEMENTATION.
+
 TXBSTR.H
 --------
 
 Various character string functions that work the way I think they
 should.
+
+
+			  =================
+			  Oddities and Bugs
+			  =================
+
+This is weird but circumvented. In my Emacs configuration I get a
+bogus error from eglot/clangd in the unit/mylib.c file. I say bogus
+because the error message is:
+
+mylibs.c ... 1 0 error e-f-b  clang [fatal_too_many_errors]:
+Too many errors emitted, stopping now
+
+That's it, that's the only diagnostic. It only shows up when both
+txbkv.h and txbsb.h are included in unit/mylib.c. Remove either and
+the error message is gone.
+
+The build through CMake works fine with no errors. 
+
+But if I don't compile txbrand.h as an object dependency for the unit
+test targets, arc4random_uniform() is not defined. Defining macro
+_DARWIN_C_SOURCE resolves that, but it should not be required.
+
+I've examined the metadata for CMake and ninja and can not find a
+difference. Same Emacs session, same shell session, different results.
+
+A day of chasing both issues led to no explanation so I'm leaving it
+as a circumvented issue. I'm not a fan of CMake and started using it
+for clangd suppport in Emacs eglot. Emacs eglot with clangd requires
+the compile_commands.json file produced when generating build scripts
+to be useful.
 
 
 		     =============================

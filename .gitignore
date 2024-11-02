@@ -67,6 +67,7 @@ general-side-notes.txt
 *.ninja
 .ninja*
 *.d
+compile_comands.json
 CMakeLists.txt.user
 CMakeCache.txt
 CMakeFiles
