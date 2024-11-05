@@ -25,7 +25,7 @@ test_teardown(void) {
 /*
  * test_ll
  *
- * a fifo lleue is pretty simple, so just one test running through the
+ * a fifo queue is pretty simple, so just one test running through the
  * functions.
  */
 
