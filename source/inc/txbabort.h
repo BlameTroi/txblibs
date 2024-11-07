@@ -1,4 +1,4 @@
-/* txbabort.h -- a replacement for assert */
+/* txbabort.h -- a replacement for assert -- blametroi@gmail.com */
 #ifndef TXBABORT_H
 #define TXBABORT_H
 /*
@@ -30,4 +30,4 @@
 		} \
 	} while(0)
 #endif /* TXBABORT_H */
-/* txbabort_if.h ends here */
+/* txbabort.h ends here */
