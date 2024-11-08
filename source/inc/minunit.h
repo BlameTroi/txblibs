@@ -28,14 +28,14 @@
 #define MINUNIT_MINUNIT_H
 
 #ifdef __cplusplus
-	extern "C" {
+extern "C" {
 #endif
 
 #if defined(_WIN32)
 #include <Windows.h>
 #if defined(_MSC_VER) && _MSC_VER < 1900
-  #define snprintf _snprintf
-  #define __func__ __FUNCTION__
+#define snprintf _snprintf
+#define __func__ __FUNCTION__
 #endif
 
 #elif defined(__unix__) || defined(__unix) || defined(unix) || (defined(__APPLE__) && defined(__MACH__))
@@ -46,9 +46,9 @@
 #define _POSIX_C_SOURCE 200112L
 #endif
 
-#include <unistd.h>	/* POSIX flags */
-#include <time.h>	/* clock_gettime(), time() */
-#include <sys/time.h>	/* gethrtime(), gettimeofday() */
+#include <unistd.h>     /* POSIX flags */
+#include <time.h>       /* clock_gettime(), time() */
+#include <sys/time.h>   /* gethrtime(), gettimeofday() */
 #include <sys/resource.h>
 #include <sys/times.h>
 #include <string.h>
@@ -96,8 +96,8 @@ static void (*minunit_teardown)(void) = NULL;
 #define MU_TEST_SUITE(suite_name) static void suite_name(void)
 
 #define MU__SAFE_BLOCK(block) do {\
-	block\
-} while(0)
+		block\
+	} while(0)
 
 /*  Run test suite and unset setup and teardown functions */
 #define MU_RUN_SUITE(suite_name) MU__SAFE_BLOCK(\
@@ -114,25 +114,25 @@ static void (*minunit_teardown)(void) = NULL;
 
 /*  Test runner */
 #define MU_RUN_TEST(test) MU__SAFE_BLOCK(\
-	if (minunit_real_timer==0 && minunit_proc_timer==0) {\
-		minunit_real_timer = mu_timer_real();\
-		minunit_proc_timer = mu_timer_cpu();\
-	}\
-	if (minunit_setup) (*minunit_setup)();\
-	minunit_status = 0;\
-   printf("\n%s:", #test);\
-	(void)fflush(stdout);\
-	test();\
-	minunit_run++;\
-	if (minunit_status) {\
-		minunit_fail++;\
-		printf("F");\
+if (minunit_real_timer==0 && minunit_proc_timer==0) {\
+minunit_real_timer = mu_timer_real();\
+	minunit_proc_timer = mu_timer_cpu();\
+}\
+if (minunit_setup) (*minunit_setup)();\
+minunit_status = 0;\
+printf("\n%s:\n", #test);\
+(void)fflush(stdout);\
+test();\
+minunit_run++;\
+if (minunit_status) {\
+	minunit_fail++;\
+	printf("F");\
 		printf("\n%s\n", minunit_last_message);\
 	} else {\
-      printf("\n");\
-   }\
-   (void)fflush(stdout);\
-   if (minunit_teardown) (*minunit_teardown)();\
+		printf("\n");\
+	}\
+(void)fflush(stdout);\
+if (minunit_teardown) (*minunit_teardown)();\
 )
 
 /*  Report */
@@ -143,44 +143,44 @@ static void (*minunit_teardown)(void) = NULL;
 	minunit_end_real_timer = mu_timer_real();\
 	minunit_end_proc_timer = mu_timer_cpu();\
 	printf("\nFinished in %.8f seconds (real) %.8f seconds (proc)\n\n",\
-		minunit_end_real_timer - minunit_real_timer,\
-		minunit_end_proc_timer - minunit_proc_timer);\
+	minunit_end_real_timer - minunit_real_timer,\
+	minunit_end_proc_timer - minunit_proc_timer);\
 )
 #define MU_EXIT_CODE minunit_fail
 
 /* i prefer the smalltalk sunit verbiage */
 #define mu_should(test) MU__SAFE_BLOCK(\
-   minunit_assert++;\
-   if (!(test)) {\
-      (void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: mu_should(%s)", __func__, __FILE__, __LINE__, #test);\
-      minunit_status = 1;\
-      return;\
-   } else {\
-      printf(".");\
-   }\
+	minunit_assert++;\
+if (!(test)) {\
+(void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: mu_should(%s)", __func__, __FILE__, __LINE__, #test);\
+	minunit_status = 1;\
+	return;\
+} else {\
+	printf(".");\
+}\
 )
 
 #define mu_shouldnt(test) MU__SAFE_BLOCK(\
-   minunit_assert++;\
-   if ((test)) {\
-      (void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: mu_shoudnt(%s)", __func__, __FILE__, __LINE__, #test);\
-      minunit_status = 1;\
-      return;\
-   } else {\
-      printf(".");\
-   }\
+	minunit_assert++;\
+if ((test)) {\
+(void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: mu_shoudnt(%s)", __func__, __FILE__, __LINE__, #test);\
+	minunit_status = 1;\
+	return;\
+} else {\
+	printf(".");\
+}\
 )
 
 /*  Assertions */
 #define mu_check(test) MU__SAFE_BLOCK(\
 	minunit_assert++;\
-	if (!(test)) {\
-		(void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: %s", __func__, __FILE__, __LINE__, #test);\
-		minunit_status = 1;\
-		return;\
-	} else {\
-		printf(".");\
-	}\
+if (!(test)) {\
+(void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: %s", __func__, __FILE__, __LINE__, #test);\
+	minunit_status = 1;\
+	return;\
+} else {\
+	printf(".");\
+}\
 )
 
 #define mu_fail(message) MU__SAFE_BLOCK(\
@@ -192,13 +192,13 @@ static void (*minunit_teardown)(void) = NULL;
 
 #define mu_assert(test, message) MU__SAFE_BLOCK(\
 	minunit_assert++;\
-	if (!(test)) {\
-		(void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: %s", __func__, __FILE__, __LINE__, message);\
-		minunit_status = 1;\
-		return;\
-	} else {\
-		printf(".");\
-	}\
+if (!(test)) {\
+(void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: %s", __func__, __FILE__, __LINE__, message);\
+	minunit_status = 1;\
+	return;\
+} else {\
+	printf(".");\
+}\
 )
 
 #define mu_assert_int_eq(expected, result) MU__SAFE_BLOCK(\
@@ -207,13 +207,13 @@ static void (*minunit_teardown)(void) = NULL;
 	minunit_assert++;\
 	minunit_tmp_e = (expected);\
 	minunit_tmp_r = (result);\
-	if (minunit_tmp_e != minunit_tmp_r) {\
-		(void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: %d expected but was %d", __func__, __FILE__, __LINE__, minunit_tmp_e, minunit_tmp_r);\
-		minunit_status = 1;\
-		return;\
-	} else {\
-		printf(".");\
-	}\
+if (minunit_tmp_e != minunit_tmp_r) {\
+(void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: %d expected but was %d", __func__, __FILE__, __LINE__, minunit_tmp_e, minunit_tmp_r);\
+	minunit_status = 1;\
+	return;\
+} else {\
+	printf(".");\
+}\
 )
 
 #define mu_assert_double_eq(expected, result) MU__SAFE_BLOCK(\
@@ -222,33 +222,33 @@ static void (*minunit_teardown)(void) = NULL;
 	minunit_assert++;\
 	minunit_tmp_e = (expected);\
 	minunit_tmp_r = (result);\
-	if (fabs(minunit_tmp_e-minunit_tmp_r) > MINUNIT_EPSILON) {\
-		int minunit_significant_figures = 1 - log10(MINUNIT_EPSILON);\
-		(void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: %.*g expected but was %.*g", __func__, __FILE__, __LINE__, minunit_significant_figures, minunit_tmp_e, minunit_significant_figures, minunit_tmp_r);\
-		minunit_status = 1;\
-		return;\
-	} else {\
-		printf(".");\
-	}\
+if (fabs(minunit_tmp_e-minunit_tmp_r) > MINUNIT_EPSILON) {\
+int minunit_significant_figures = 1 - log10(MINUNIT_EPSILON);\
+	(void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: %.*g expected but was %.*g", __func__, __FILE__, __LINE__, minunit_significant_figures, minunit_tmp_e, minunit_significant_figures, minunit_tmp_r);\
+	minunit_status = 1;\
+	return;\
+} else {\
+	printf(".");\
+}\
 )
 
 #define mu_assert_string_eq(expected, result) MU__SAFE_BLOCK(\
 	const char* minunit_tmp_e = expected;\
 	const char* minunit_tmp_r = result;\
 	minunit_assert++;\
-	if (!minunit_tmp_e) {\
-		minunit_tmp_e = "<null pointer>";\
-	}\
-	if (!minunit_tmp_r) {\
-		minunit_tmp_r = "<null pointer>";\
-	}\
-	if(strcmp(minunit_tmp_e, minunit_tmp_r) != 0) {\
-		(void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: '%s' expected but was '%s'", __func__, __FILE__, __LINE__, minunit_tmp_e, minunit_tmp_r);\
-		minunit_status = 1;\
-		return;\
-	} else {\
-		printf(".");\
-	}\
+if (!minunit_tmp_e) {\
+minunit_tmp_e = "<null pointer>";\
+}\
+if (!minunit_tmp_r) {\
+minunit_tmp_r = "<null pointer>";\
+}\
+if(strcmp(minunit_tmp_e, minunit_tmp_r) != 0) {\
+(void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: '%s' expected but was '%s'", __func__, __FILE__, __LINE__, minunit_tmp_e, minunit_tmp_r);\
+	minunit_status = 1;\
+	return;\
+} else {\
+	printf(".");\
+}\
 )
 
 /*
@@ -264,8 +264,7 @@ static void (*minunit_teardown)(void) = NULL;
  * The returned real time is only useful for computing an elapsed time
  * between two calls to this function.
  */
-static double mu_timer_real(void)
-{
+static double mu_timer_real(void) {
 #if defined(_WIN32)
 	/* Windows 2000 and later. ---------------------------------- */
 	LARGE_INTEGER Time;
@@ -281,20 +280,19 @@ static double mu_timer_real(void)
 
 #elif (defined(__hpux) || defined(hpux)) || ((defined(__sun__) || defined(__sun) || defined(sun)) && (defined(__SVR4) || defined(__svr4__)))
 	/* HP-UX, Solaris. ------------------------------------------ */
-	return (double)gethrtime( ) / 1000000000.0;
+	return (double)gethrtime() / 1000000000.0;
 
 #elif defined(__MACH__) && defined(__APPLE__)
 	/* OSX. ----------------------------------------------------- */
 	static double timeConvert = 0.0;
-	if ( timeConvert == 0.0 )
-	{
+	if (timeConvert == 0.0) {
 		mach_timebase_info_data_t timeBase;
-		(void)mach_timebase_info( &timeBase );
+		(void)mach_timebase_info(&timeBase);
 		timeConvert = (double)timeBase.numer /
 			(double)timeBase.denom /
 			1000000000.0;
 	}
-	return (double)mach_absolute_time( ) * timeConvert;
+	return (double)mach_absolute_time() * timeConvert;
 
 #elif defined(_POSIX_VERSION)
 	/* POSIX. --------------------------------------------------- */
@@ -318,9 +316,9 @@ static double mu_timer_real(void)
 		/* AIX, BSD, HP-UX, Linux, POSIX. ------------------- */
 		const clockid_t id = CLOCK_REALTIME;
 #else
-		const clockid_t id = (clockid_t)-1;	/* Unknown. */
+		const clockid_t id = (clockid_t)-1;     /* Unknown. */
 #endif /* CLOCK_* */
-		if ( id != (clockid_t)-1 && clock_gettime( id, &ts ) != -1 )
+		if (id != (clockid_t)-1 && clock_gettime(id, &ts) != -1)
 			return (double)ts.tv_sec +
 				(double)ts.tv_nsec / 1000000000.0;
 		/* Fall thru. */
@@ -328,10 +326,10 @@ static double mu_timer_real(void)
 #endif /* _POSIX_TIMERS */
 
 	/* AIX, BSD, Cygwin, HP-UX, Linux, OSX, POSIX, Solaris. ----- */
-	gettimeofday( &tm, NULL );
+	gettimeofday(&tm, NULL);
 	return (double)tm.tv_sec + (double)tm.tv_usec / 1000000.0;
 #else
-	return -1.0;		/* Failed. */
+	return -1.0;            /* Failed. */
 #endif
 }
 
@@ -339,8 +337,7 @@ static double mu_timer_real(void)
  * Returns the amount of CPU time used by the current process,
  * in seconds, or -1.0 if an error occurred.
  */
-static double mu_timer_cpu(void)
-{
+static double mu_timer_cpu(void) {
 #if defined(_WIN32)
 	/* Windows -------------------------------------------------- */
 	FILETIME createTime;
@@ -349,9 +346,8 @@ static double mu_timer_cpu(void)
 	FILETIME userTime;
 
 	/* This approach has a resolution of 1/64 second. Unfortunately, Windows' API does not offer better */
-	if ( GetProcessTimes( GetCurrentProcess( ),
-		&createTime, &exitTime, &kernelTime, &userTime ) != 0 )
-	{
+	if (GetProcessTimes(GetCurrentProcess(),
+		&createTime, &exitTime, &kernelTime, &userTime) != 0) {
 		ULARGE_INTEGER userSystemTime;
 		memcpy(&userSystemTime, &userTime, sizeof(ULARGE_INTEGER));
 		return (double)userSystemTime.QuadPart / 10000000.0;
@@ -367,7 +363,7 @@ static double mu_timer_cpu(void)
 		struct timespec ts;
 #if _POSIX_CPUTIME > 0
 		/* Clock ids vary by OS.  Query the id, if possible. */
-		if ( clock_getcpuclockid( 0, &id ) == -1 )
+		if (clock_getcpuclockid(0, &id) == -1)
 #endif
 #if defined(CLOCK_PROCESS_CPUTIME_ID)
 			/* Use known clock id for AIX, Linux, or Solaris. */
@@ -378,7 +374,7 @@ static double mu_timer_cpu(void)
 #else
 			id = (clockid_t)-1;
 #endif
-		if ( id != (clockid_t)-1 && clock_gettime( id, &ts ) != -1 )
+		if (id != (clockid_t)-1 && clock_gettime(id, &ts) != -1)
 			return (double)ts.tv_sec +
 				(double)ts.tv_nsec / 1000000000.0;
 	}
@@ -387,7 +383,7 @@ static double mu_timer_cpu(void)
 #if defined(RUSAGE_SELF)
 	{
 		struct rusage rusage;
-		if ( getrusage( RUSAGE_SELF, &rusage ) != -1 )
+		if (getrusage(RUSAGE_SELF, &rusage) != -1)
 			return (double)rusage.ru_utime.tv_sec +
 				(double)rusage.ru_utime.tv_usec / 1000000.0;
 	}
@@ -395,24 +391,24 @@ static double mu_timer_cpu(void)
 
 #if defined(_SC_CLK_TCK)
 	{
-		const double ticks = (double)sysconf( _SC_CLK_TCK );
+		const double ticks = (double)sysconf(_SC_CLK_TCK);
 		struct tms tms;
-		if ( times( &tms ) != (clock_t)-1 )
+		if (times(&tms) != (clock_t)-1)
 			return (double)tms.tms_utime / ticks;
 	}
 #endif
 
 #if defined(CLOCKS_PER_SEC)
 	{
-		clock_t cl = clock( );
-		if ( cl != (clock_t)-1 )
+		clock_t cl = clock();
+		if (cl != (clock_t)-1)
 			return (double)cl / (double)CLOCKS_PER_SEC;
 	}
 #endif
 
 #endif
 
-	return -1;		/* Failed. */
+	return -1;              /* Failed. */
 }
 
 #ifdef __cplusplus

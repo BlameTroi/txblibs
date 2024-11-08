@@ -236,6 +236,9 @@ itmalloc(size_t n, char *f, int l) {
 	table[i].line = l;
 	table[i].addr = malloc(n);
 	memset(table[i].addr, 0, n);
+	fprintf(stderr, "alloc: %5d %p len %lu for %s %d\n", table[i].number,
+		table[i].addr, n,
+		f, l);
 	return table[i].addr;
 }
 
@@ -272,15 +275,21 @@ itfree(void *p, char *f, int l) {
 		return;
 	}
 
-	assert(high > 0);
+	assert(odometer);  /* free called without alloc? */
 	int i;
 	for (i = 0; i < capacity; i++)
 		if (table[i].addr == p)
 			break;
-	assert(i < capacity);
+	if (i >= capacity) {
+		fprintf(stderr, "error: block to free not in trace: %5d %p for %s %d\n",
+			odometer, p, f, l);
+		return;
+	}
+
+	fprintf(stderr, "free : %5d %p len %lu for %s %d\n", table[i].number, p,
+		table[i].size, f, l);
+
 	memset(&table[i], 0, sizeof(table[i]));
-	if (i == high)
-		i -= 1;
 	free(p);
 }
 
@@ -313,8 +322,9 @@ tterm(FILE *f) {
 		if (table[i].number > 0) {
 			leaked += 1;
 			size += table[i].size;
-			fprintf(f, "%d %s %d %zu\n", leaked, table[i].file, table[i].line,
-				table[i].size);
+			fprintf(f, "%d @ %5d %p len %lu %s %d\n", leaked, table[i].number,
+				table[i].addr, table[i].size,
+				table[i].file, table[i].line);
 		}
 	free(table);
 	fprintf(f, "\ntterm memory summary:\n high %d odometer %d leaked %d size %lu\n",
