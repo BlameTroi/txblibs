@@ -19,31 +19,60 @@
 extern "C" {
 #endif /* __cplusplus */
 
+#include <stdint.h>
 #include <stdio.h>
 
+#define txballoc_f_allocs    (1 << 0)
+#define txballoc_f_frees     (1 << 1)
+#define txballoc_f_dup_frees (1 << 2)
+#define txballoc_f_leaks     (1 << 3)
+#define txballoc_f_silent    (0)
+#define txballoc_f_trace     (txballoc_f_allocs + txballoc_f_frees)
+#define txballoc_f_errors    (txballoc_f_dup_frees + txballoc_f_leaks)
+#define txballoc_f_full      (txballoc_f_trace + txballoc_f_errors)
+
 void
-tinit(size_t pool);
+txballoc_initialize(
+	size_t pool,    /* max number of active allocates to track */
+	uint16_t flags, /* configuration */
+	FILE *f         /* file stream to log on */
+);
 
 void *
-itmalloc(size_t n, char *f, int l);
+txballoc_malloc(        /* *** do not call directly, use tmalloc *** */
+	size_t n,       /* as in malloc # bytes */
+	char *f,        /* __FILE__ */
+	int l           /* __LINE__ */
+);
 
 void *
-itcalloc(size_t c, size_t n, char *f, int l);
+txballoc_calloc(        /* *** do not call directly, use tcalloc *** */
+	int c,          /* as in calloc, # cells */
+	size_t n,       /* as in calloc, # bytes */
+	char *f,        /* __FILE__ */
+	int l           /* __LINE__ */
+);
 
 void
-itfree(void *p, char *f, int l);
+txballoc_free(          /* *** do not call directly, use tfree *** */
+	void *p,        /* as in free, @ block */
+	char *f,        /* __FILE__ */
+	int l           /* __LINE__ */
+);
 
 void
-tterm(FILE *f);
+txballoc_terminate(
+	void
+);
 
 #define tmalloc(n) \
-	itmalloc((n), __FILE__, __LINE__)
+	txballoc_malloc((n), __FILE__, __LINE__)
 
 #define tcalloc(c, n) \
-	itcalloc((c), (n), __FILE__, __LINE__)
+	txballoc_calloc((c), (n), __FILE__, __LINE__)
 
 #define tfree(p) \
-	itfree((p), __FILE__, __LINE__)
+	txballoc_free((p), __FILE__, __LINE__)
 
 #ifdef __cplusplus
 }
@@ -67,24 +96,30 @@ tterm(FILE *f);
 
 #include <assert.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <txballoc.h>
 
 /*
- * to use this trace, you first call tinit with the maximum number of
- * active (allocted but not yet freed) entries. then replace the
- * malloc/calloc:free pairs you want to trace with the macros tmalloc,
- * tcalloc, and tfree. the arguments are unchanged but the tracing
- * hooks are invoked with the __FILE__ and __LINE__ of the replaced
- * calls. finally, call tterm with an opened filestream (stdout or
- * stderr is sufficient) and a report of any leaked storage from the
- * hooked calls is printed.
+ * to use this trace, you first call txballoc_initialize with the
+ * maximum number of concurrent allocations (allocated but not yet
+ * freed) to track, logging options, and a file stream handle for the
+ * log.
+ *
+ * then replace the malloc/calloc:free pairs you want to trace with
+ * the macros tmalloc, tcalloc, and tfree. the arguments are unchanged
+ * but the tracing hooks are invoked with the __FILE__ and __LINE__ of
+ * the replaced calls.
+ *
+ * finally, call txballoc_terminate to report on any leaked
+ * allocations along with some other information.
  *
  * only one instance of the trace may be active at a time. if you
- * attempt two tinit calls without an intervening tterm call, the
- * program will terminate via an assert.
+ * attempt two txballoc_initization calls without an intervening
+ * txballoc_termination call, the program will terminate via an
+ * assert.
  *
  * allocations are logged when made and removed when freed. the
  * address of the allocation is carried and is used as a key when
@@ -106,10 +141,10 @@ typedef struct trace trace;
 
 struct trace {
 	int number;           /* allocation call number, the odometer */
-	int line;             /* __line__ of the allocation */
+	int line;             /* __LINE__ of the allocation */
 	void *addr;           /* address of allocation */
 	size_t size;          /* size requested */
-	char file[32];        /* basename of __file__ */
+	char file[32];        /* basename of __FILE__ */
 };
 
 /*
@@ -121,13 +156,19 @@ static bool active = false;   /* initialized and running? */
 static int odometer = 0;      /* an indication of how many allocations */
 static int capacity = 0;      /* number of trace table entries */
 static int high = 0;          /* high water mark for active allocations */
+static uint16_t flags;        /* bit flags txballoc_f_... */
+static FILE *report;          /* file to report on, defaults to stderr */
 
 /*
- * tinit
+ * txballoc_initialize
  *
  * initialize and enable allocation trace.
  *
  *     in: size_t number of entries in trace table
+ *
+ *     in: uint16_t reporting flags txballoc_f_...
+ *
+ *     in: FILE * file to report on, if NULL use stderr
  *
  * return: nothing
  *
@@ -141,7 +182,11 @@ static int high = 0;          /* high water mark for active allocations */
  */
 
 void
-tinit(size_t n) {
+txballoc_initialize(
+	size_t n,
+	uint16_t request,
+	FILE *f
+) {
 	assert(!active);
 	active = true;
 
@@ -150,16 +195,18 @@ tinit(size_t n) {
 	table = calloc(capacity, sizeof(trace));
 	assert(table);
 	high = 0;
+	flags = request;
+	report = f == NULL ? stderr : f;
 }
 
 /*
- * itcalloc
+ * txballoc_calloc
  *
  * hook for tracing calloc calls.
  *
- *     in: size_t number of 'cells'
+ *     in: int number of 'cells'
  *
- *     in: size_t size of one 'cell'
+ *     in: size_t length of one 'cell'
  *
  *     in: string __FILE__
  *
@@ -167,24 +214,44 @@ tinit(size_t n) {
  *
  * return: address of allocated storage
  *
- * if tracing is not active, return the result of the intended calloc.
+ * if tracing is not active, pass the request straight through to
+ * calloc.
  *
- * if tracing is active, multiply number * size and call itmalloc. the
- * tracing is all done there and it already clears allocated storage.
+ * if tracing is active, multiply number of cells * cell length and
+ * call txballoc_malloc, clearing the memory before returning it to
+ * the client.
  */
 
 void *
-itcalloc(size_t c, size_t n, char *f, int l) {
+txballoc_calloc(
+	int c,
+	size_t len,
+	char *f,
+	int l
+) {
+	if (!active) return calloc(c, len);
 
-	if (!active)
-		return calloc(c, n);
-
-	/* itmalloc clears allocated memory */
-	return itmalloc(c * n, f, l);
+	return memset(txballoc_malloc(c * len, f, l), c, len);
 }
 
 /*
- * itmalloc
+ * find the basename of a file path. this should work on either
+ * macos/linux or windows.
+ */
+
+static
+char *
+file_basename(
+	char *f
+) {
+	char *p = f + strlen(f);
+	while (p > f && *(p-1) != '/' && *(p-1) != '\\')
+		p -= 1;
+	return p;
+}
+
+/*
+ * txballoc_malloc
  *
  * hook for tracing malloc calls.
  *
@@ -199,51 +266,61 @@ itcalloc(size_t c, size_t n, char *f, int l) {
  * if tracing is not active, return the result of the intended malloc.
  *
  * if tracing is active, find a free entry in the trace table, fill it
- * in, and then malloc and clear the requested memory.
+ * in, and then malloc the requested memory.
  *
  * if the trace table is full, fail via an assert.
  */
 
 void *
-itmalloc(size_t n, char *f, int l) {
-
-	if (!active)
-		return malloc(n);
+txballoc_malloc(
+	size_t n,
+	char *f,
+	int l
+) {
+	if (!active) return malloc(n);
 
 	odometer += 1;
+
 	if (high >= capacity)
-		assert(false); /* TODO: grow table */
+		assert(false); /* TODO: grow table or not? */
+
+	/* find free trace table entry */
 	int i;
 	for (i = 0; i < capacity; i++)
 		if (table[i].number == 0)
 			break;
+
+	/* no free entry found, abort */
 	assert(i < capacity);
+
+	/* track high water mark */
 	if (i > high)
 		high = i;
+
+	/* fill in table entry */
 	table[i].number = odometer;
 	table[i].size = n;
-	char *p = f + strlen(f);
-	int c = 0;
-	while (p > f && *p != '/') {
-		p -= 1;
-		c += 1;
-	}
-	p += 1;
-	c -= 1;
+	char *ft = file_basename(f);
+	int c = strlen(ft);
 	if (c > sizeof(table[i].file) - 1)
 		c = sizeof(table[i].file) - 1;
-	strncpy(table[i].file, p, c);
+	strncpy(table[i].file, ft, c);
 	table[i].line = l;
+
+	/* get the memory */
 	table[i].addr = malloc(n);
-	memset(table[i].addr, 0, n);
-	fprintf(stderr, "alloc: %5d %p len %lu for %s %d\n", table[i].number,
-		table[i].addr, n,
-		f, l);
+
+	/* report if enabled */
+	if (flags & txballoc_f_allocs)
+		fprintf(report, "alloc: %5d %p len %lu for %s %d\n",
+			table[i].number, table[i].addr, table[i].size,
+			table[i].file, table[i].line);
+
 	return table[i].addr;
 }
 
 /*
- * itfree
+ * txballoc_free
  *
  * hook for tracing free calls
  *
@@ -261,45 +338,58 @@ itmalloc(size_t n, char *f, int l) {
  * allocation, clear it out, and then free the memory block.
  *
  * if the trace table somehow underflows (an impossibility) or the
- * requested allocation does not exist in the trace table, fail via an
- * assert.
- *
- * i thought about logging these, but free should fail if the address
- * passed is invalid.
+ * requested allocation does not exist in the trace table, report it
+ * and return. we could abort here but i decided not to.
  */
 
 void
-itfree(void *p, char *f, int l) {
+txballoc_free(
+	void *p,
+	char *f,
+	int l
+) {
 	if (!active) {
 		free(p);
 		return;
 	}
 
-	assert(odometer);  /* free called without alloc? */
+	/* find the entry for this allocation in the trace table.
+	 * allocation address is the key. */
 	int i;
 	for (i = 0; i < capacity; i++)
 		if (table[i].addr == p)
 			break;
+
+	/* no entry found. if the memory is already freed, calling
+	 * free again will abort. i've decided to log the event and
+	 * and return. */
 	if (i >= capacity) {
-		fprintf(stderr, "error: block to free not in trace: %5d %p for %s %d\n",
-			odometer, p, f, l);
+		char *ft = file_basename(f);
+		if (flags & txballoc_f_errors)
+			fprintf(report, "error: %5d %p for %s %d -- free not in trace, dup free?\n",
+				odometer, p, ft, l);
 		return;
 	}
 
-	fprintf(stderr, "free : %5d %p len %lu for %s %d\n", table[i].number, p,
-		table[i].size, f, l);
+	/* log the free. */
+	if (flags & txballoc_f_frees) {
+		char *ft = file_basename(f);
+		fprintf(report, "free : %5d %p len %lu for %s %d\n", table[i].number, p,
+			table[i].size, ft, l);
+	}
 
+	/* clear table entry and release the requested storage. */
 	memset(&table[i], 0, sizeof(table[i]));
 	free(p);
 }
 
 /*
- * tterm
+ * txballoc_terminate
  *
  * terminate c/malloc logging and report any dangling allocations left
  * in the trace table.
  *
- *     in: opened filestream to write report on
+ *     in: nothing
  *
  * return: nothing
  *
@@ -312,26 +402,33 @@ itfree(void *p, char *f, int l) {
  */
 
 void
-tterm(FILE *f) {
+txballoc_terminate(
+	void
+) {
 	assert(active);
-	fprintf(f, "\n***tterm memory leak report***\n");
-	active = false;
-	int leaked = 0;
-	size_t size = 0;
-	for (int i = 0; i < capacity; i++)
-		if (table[i].number > 0) {
-			leaked += 1;
-			size += table[i].size;
-			fprintf(f, "%d @ %5d %p len %lu %s %d\n", leaked, table[i].number,
-				table[i].addr, table[i].size,
-				table[i].file, table[i].line);
-		}
+	if (flags & txballoc_f_full) {
+		fprintf(report, "\n***txballoc termination memory leak report***\n");
+		active = false;
+		int leaked = 0;
+		size_t size = 0;
+		for (int i = 0; i < capacity; i++)
+			if (table[i].number > 0) {
+				leaked += 1;
+				size += table[i].size;
+				fprintf(report, "%d @ %5d %p len %lu %s %d\n",
+					leaked, table[i].number, table[i].addr,
+					table[i].size, table[i].file, table[i].line);
+			}
+		fprintf(report,
+			"\ntxballoc termination summary:\n[high %d][odometer %d][leaked %d][size %lu]\n",
+			high+1, odometer, leaked, size);
+	}
 	free(table);
-	fprintf(f, "\ntterm memory summary:\n high %d odometer %d leaked %d size %lu\n",
-		high+1, odometer, leaked, size);
+	table = NULL;
 	high = 0;
 	odometer = 0;
 	capacity = 0;
+	flags = 0;
 }
 
 #endif /* TXBALLOC_IMPLEMENTATION */

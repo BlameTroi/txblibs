@@ -6,6 +6,9 @@
  * somewhere. it's bogus, as this file compiles cleanly with with the
  * same compile_commands.json created by cmake/ninja using clang. */
 
+#define TXBALLOC_IMPLEMENTATION
+#include "txballoc.h"
+
 #define TXBDA_IMPLEMENTATION
 #include "txbda.h"
 

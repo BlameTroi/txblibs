@@ -1,3 +1,4 @@
+
 # CMakeLists.txt for txblibs
 #
 # cmake -G "Ninja Multi-Config" -S source -B build
@@ -12,7 +13,7 @@ cmake_minimum_required(VERSION 3.5)
 
 project(
   TXBLIBS
-  VERSION 0.0.0.2
+  VERSION 1.3.0.0
   DESCRIPTION "single header c libraries mostly for my personal use"
   HOMEPAGE_URL "https://github.com/BlameTroi/txblibs"
   LANGUAGES C
@@ -56,6 +57,17 @@ set(MY_RELEASE_OPTIONS "-Wall -Werror -pedantic-errors -std=c18")
 set(MY_RELWITHDEBINFO_OPTIONS "-Wall -Werror -pedantic-errors -std=c18 -g")
 set(MY_DEBUG_OPTIONS "-Wall -Werror -pedantic-errors -std=c18 -g -fsanitize=address")
 set(MY_DEBUG_LINK_OPTIONS "-fsanitize=address")
+
+add_executable(unitone "${CMAKE_CURRENT_SOURCE_DIR}/unit/unitone.c"
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/txbone.c"
+  "${CMAKE_CURRENT_SOURCE_DIR}/unit/mylibs.c")
+target_include_directories(unitone PUBLIC
+  "${CMAKE_CURRENT_SOURCE_DIR}/inc")
+#  "${CMAKE_CURRENT_SOURCE_DIR}/txblibs")
+target_link_options(unitone PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_LINK_OPTIONS}>")
+target_compile_options(unitone PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:SHELL:${MY_REL_DEB_OPTIONS}>")
+target_compile_options(unitone PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_OPTIONS}>")
+target_compile_options(unitone PUBLIC "$<$<CONFIG:RELEASE>:SHELL:${MY_RELEASE_OPTIONS}>")
 
 add_executable(unitda "${CMAKE_CURRENT_SOURCE_DIR}/unit/unitda.c" "${CMAKE_CURRENT_SOURCE_DIR}/unit/mylibs.c")
 target_include_directories(unitda PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/inc")
