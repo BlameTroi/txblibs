@@ -1,0 +1,83 @@
+#+title: api notes for txblibs
+!api !dst !adt !algorithm
+
+I want to implement the following structures correctly and consistently:
+
+	deque
+	queue
+	stack
+	singly linked list
+	doubly linked list
+	dynamic array
+	binary search tree (use 2-3 tree, self balancing)
+	hash table/key-value store
+
+Where:
+
+	queue & stack as specialized versions of a singly linked list
+	singly linked list could be an api restricted doubly linked list
+
+dynamic array needs terminology update: logical size vs capacity
+
+
+API notes/names/ideas
+=====================
+
+
+deque
+-----
+push_back
+push_front
+pop_back
+pop_front
+peek_back
+peek_front
+
+
+queue
+-----
+enqueue
+dequeue
+peek
+
+
+stack
+-----
+push
+pop
+peek
+
+
+singly linked list
+------------------
+add_first, add_last, peek_, get_ count, empty, purge
+
+
+doubly linked list
+------------------
+same as singly
+
+
+dynamic array
+-------------
+(terminology logical size vs capacity)
+
+
+binary search tree
+------------------
+(use 2-3 tree)
+
+
+hash table
+----------
+insert/put
+delete/remove
+find/get
+
+
+key-value store is a hash table
+dictionary is a hash table
+set operations?
+bag
+ordered collection
+

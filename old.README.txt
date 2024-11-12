@@ -142,6 +142,7 @@ These are the headers:
 | File       | Description                                        |
 |------------+----------------------------------------------------|
 | txbabort.h | common test and abort macro                        |
+| txballoc.h | a c/malloc-free trace to help find leaks
 | txbda.h    | dynamic array                                      |
 | txbdl.h    | doubly linked list                                 |
 | txbkl.h    | keyed doubly linked list                           |
@@ -323,6 +324,14 @@ TXBABORT.H
 ----------
 
 Defines the abort_if macro used throughout these libraries.
+
+
+TXBALLOC.H
+----------
+
+Provides wrapper macros for calloc/malloc/free providing a simple
+record of allocations. frees are removed from the record, and at end
+of program you can see any remaining allocated blocks.
 
 
 TXBDA.H
