@@ -1,9 +1,17 @@
 /* txballoc.h -- memory allocation tracker */
 
 /*
- * a memory allocation tracker. i know i have some leaky code, this
- * can help me find it. i know there are other tools, but many of
- * them don't work with macos/clang.
+ * this is a header only implementation of a memory allocation tracker
+ * for use in my library code. i have hopes to add pooling and limited
+ * garbage collection in the future.
+ *
+ * i had some leaky code and this was written to find it. the approach
+ * is to replace the standard library calls malloc, calloc, and free
+ * with wrapper macros that call hooks with some additional
+ * information for tracking.
+ *
+ * this is opt-in tracking. eventually all of my library code will use
+ * this but it won't interfere with non-library code.
  *
  * released to the public domain by Troy Brumley blametroi@gmail.com
  *
@@ -83,9 +91,17 @@ txballoc_terminate(
 #undef TXBALLOC_IMPLEMENTATION
 
 /*
- * a memory allocation tracker. i know i have some leaky code, this
- * can help me find it. i know there are other tools, but many of
- * them don't work with macos/clang.
+ * this is a header only implementation of a memory allocation tracker
+ * for use in my library code. i have hopes to add pooling and limited
+ * garbage collection in the future.
+ *
+ * i had some leaky code and this was written to find it. the approach
+ * is to replace the standard library calls malloc, calloc, and free
+ * with wrapper macros that call hooks with some additional
+ * information for tracking.
+ *
+ * this is opt-in tracking. eventually all of my library code will use
+ * this but it won't interfere with non-library code.
  *
  * released to the public domain by Troy Brumley blametroi@gmail.com
  *

@@ -61,9 +61,7 @@ set(MY_DEBUG_LINK_OPTIONS "-fsanitize=address")
 add_executable(unitone "${CMAKE_CURRENT_SOURCE_DIR}/unit/unitone.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/txbone.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/unit/mylibs.c")
-target_include_directories(unitone PUBLIC
-  "${CMAKE_CURRENT_SOURCE_DIR}/inc")
-#  "${CMAKE_CURRENT_SOURCE_DIR}/txblibs")
+target_include_directories(unitone PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/inc")
 target_link_options(unitone PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_LINK_OPTIONS}>")
 target_compile_options(unitone PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:SHELL:${MY_REL_DEB_OPTIONS}>")
 target_compile_options(unitone PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_OPTIONS}>")

@@ -1,12 +1,37 @@
 /* txbone.h -- one data structure library to rule them all */
-#ifndef _LISTING_H_
-#define _LISTING_H_
+
+/*
+ * a header only implementation several data structures (linked lists,
+ * queues, dynamic arrays, etc.) that i have written while working on
+ * advent of code problems. this is a 'grand unified' library as i
+ * rewrite several of the prior implementations for consistency and
+ * some actual reuse. along the way i've added simplistic memory leak
+ * tracking.
+ *
+ * there are better dst libraries out there, but anyone is welcome to
+ * use these if they wish.
+ *
+ * released to the public domain by Troy Brumley blametroi@gmail.com
+ *
+ * this software is dual-licensed to the public domain and under the
+ * following license: you are granted a perpetual, irrevocable license
+ * to copy, modify, publish, and distribute this file as you see fit.
+ */
+
+#ifndef _TXBONE_H_
+#define _TXBONE_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
 #include <stdbool.h>
+
+/*
+ * the supported data structures. there is a table of tag strings in
+ * the implementation side that must be kept in synch with these
+ * values. also make sure ONE_TYPE_MAX is correct.
+ */
 
 enum one_type {
 	unknown = 0,
@@ -28,25 +53,31 @@ enum one_type {
 
 #define ONE_TAG_LEN 24
 
+/*
+ * this is completely arbitrary. some implementations actually
+ * start at 1 or 2.
+ */
+
 #define DYNARRAY_DEFAULT_CAPACITY 512
+
+/*
+ * i prefer working with typedefs of structs. the one_block carries
+ * all the information needed for an instance of any of the data
+ * structures in these libraries.
+ */
 
 typedef struct one_block one_block;
 
 typedef union one_details one_details;
 
-typedef struct one_deque one_deque;
+/*
+ * the declarations and definitions of the supported data
+ * structures.
+ */
 
-struct one_deque {
-	void *front;
-	void *back;
-};
-
-typedef struct one_queue one_queue;
-
-struct one_queue {
-	void *front;
-	void *back;
-};
+/*
+ * a singly linked list and its nodes.
+ */
 
 typedef struct sgl_item sgl_item;
 
@@ -55,18 +86,21 @@ struct sgl_item {
 	void *payload;
 };
 
-/*
- * singly linked list
- * stack
- */
-
 typedef struct one_singly one_singly;
-
-typedef struct one_singly one_stack;
 
 struct one_singly {
 	sgl_item *first;
 };
+
+/*
+ * a stack (lifo) is merely a different api for a singly linked list.
+ */
+
+typedef one_singly one_stack;
+
+/*
+ * a doubly linked list and it's nodes.
+ */
 
 typedef struct dbl_item dbl_item;
 
@@ -83,25 +117,51 @@ struct one_doubly {
 	dbl_item *last;
 };
 
+/*
+ * both a deque (double ended queue) and queue (fifo) are just
+ * different apis over a doubly linked list.
+ */
+
+typedef one_doubly one_deque;
+
+typedef one_doubly one_queue;
+
+/*
+ * a dynamically resizing array.
+ */
+
 typedef struct one_dynarray one_dynarray;
 
 struct one_dynarray {
 	int length;                 /* last used via put */
 	int capacity;               /* current maximum capacity */
-	void **array;
+	void **array;               /* and where can it be now */
 };
+
+/*
+ * a binary search tree.
+ */
 
 typedef struct one_bst one_bst;
 
 struct one_bst {
-	void *something;
+	void *not_implemented_yet;
 };
+
+/*
+ * a key value store.
+ */
 
 typedef struct one_keyval one_keyval;
 
 struct one_keyval {
-	void *something;
+	void *not_implemented_yet;
 };
+
+/*
+ * rather than have separate high level control blocks, this union
+ * approach allows for a cleaner interface and less redundancy.
+ */
 
 union one_details {
 	one_deque deq;
@@ -113,6 +173,12 @@ union one_details {
 	one_bst bst;
 	one_keyval kvl;
 };
+
+/*
+ * the 'one_block' is a control block used as a handle for the client
+ * code. it is kept small and the details of each specific data
+ * structure are kept here in common via a union.
+ */
 
 struct one_block {
 	enum one_type isa;
@@ -194,8 +260,8 @@ get_last(
 );
 
 /*
- * stack is implemented on a singly linked list, but it should use the
- * following entry points.
+ * a stack is implemented on a singly linked list, but it should use
+ * the following entry points.
  */
 
 one_block *
@@ -220,8 +286,8 @@ depth(
 );
 
 /*
- * a queue (fifo) is implemented on a doubly linked list, but it should
- * use the following entry points.
+ * a queue (fifo) is implemented on a doubly linked list, but it
+ * should use the following entry points.
  */
 
 one_block *
@@ -238,8 +304,8 @@ dequeue(
 /* queue also has: peek as in stack, count, empty, and purge */
 
 /*
- * a deque is built on a doubly linked list, but it should use the following
- * entry points.
+ * a deque is built on a doubly linked list, but it should use the
+ * following entry points.
  */
 
 one_block *
@@ -277,8 +343,9 @@ peek_front(
 /* deque also has: count, empty, and purge */
 
 /*
- * dynamic arrays are resizing arrays. in addition to make and free, they
- * support hbound, get, put. TODO: sort and func for sort.
+ * dynamic arrays are resizing arrays. in addition to make and free,
+ * they support hbound via high_index, get, put. TODO: sort and func
+ * for sort.
  */
 
 int
@@ -303,5 +370,5 @@ get_at(
 }
 #endif /* __cplusplus */
 
-#endif /* _LISTING_H_ */
+#endif /* _TXBONE_H_ */
 /* txbone.h ends here */

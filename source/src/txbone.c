@@ -1,5 +1,23 @@
 /* txbone.c -- one data structure library to rule them all */
 
+/*
+ * a header only implementation several data structures (linked lists,
+ * queues, dynamic arrays, etc.) that i have written while working on
+ * advent of code problems. this is a 'grand unified' library as i
+ * rewrite several of the prior implementations for consistency and
+ * some actual reuse. along the way i've added simplistic memory leak
+ * tracking.
+ *
+ * there are better dst libraries out there, but anyone is welcome to
+ * use these if they wish.
+ *
+ * released to the public domain by Troy Brumley blametroi@gmail.com
+ *
+ * this software is dual-licensed to the public domain and under the
+ * following license: you are granted a perpetual, irrevocable license
+ * to copy, modify, publish, and distribute this file as you see fit.
+ */
+
 #include <stdbool.h>
 #include <string.h>
 
