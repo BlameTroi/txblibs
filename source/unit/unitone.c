@@ -171,9 +171,9 @@ MU_TEST(test_api_dynarray) {
 	one_block *ob = make_one(dynarray);
 	mu_should(ob);
 	mu_should(high_index(ob) < 0);   /* nothing written yet */
-	mu_should(put_at(ob, 1, "fred"));
-	mu_should(equal_string(get_at(ob, 1), "fred"));
-	mu_shouldnt(get_at(ob, 10));
+	mu_should(put_at(ob, "fred", 1));
+	mu_should(equal_string(get_from(ob, 1), "fred"));
+	mu_shouldnt(get_from(ob, 10));
 	mu_shouldnt(get_first(ob));      /* illegal op */
 	mu_should(purge(ob) < 0);        /* illegal op */
 	mu_should(free_one(ob));
@@ -579,11 +579,11 @@ MU_TEST(test_dynarray) {
 	one_block *ob = make_one(dynarray);
 	/* default capacity is 512 */
 	for (long i = 0; i < 4096; i++) {
-		put_at(ob, i, (void *)(i * -1));
+		put_at(ob, (void *)(i * -1), i);
 	}
 	printf("\n");
 	for (long i = 500; i < 700; i++) {
-		long v = (long)get_at(ob, i);
+		long v = (long)get_from(ob, i);
 		printf("%ld", v);
 	}
 	printf("\n");
