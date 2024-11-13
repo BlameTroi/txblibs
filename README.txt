@@ -142,12 +142,14 @@ These are the headers:
 | File       | Description                                        |
 |------------+----------------------------------------------------|
 | txbabort.h | common test and abort macro                        |
+| txballoc.h | a c/malloc-free trace to help find leaks
 | txbda.h    | dynamic array                                      |
 | txbdl.h    | doubly linked list                                 |
 | txbkl.h    | keyed doubly linked list                           |
 | txbkv.h    | key:value store that can have various backing      |
 | txbmd5.h   | md-5 hash (credit to Bryce Wilson)                 |
 | txbmisc.h  | "missing" functions such as min/max                |
+| txbone.h   | unified data structure header library              |
 | txbpat.h   | pattern matching with a regular expressions subset |
 | txbpmute.h | iterative permutation generator                    |
 | txbpq.h    | priority queue                                     |
@@ -166,6 +168,7 @@ reference.
 TXBST.H requires TXBDL.H
 TXBPAT.H requires TXBSTR.H
 
+Everything else requires TXBALLOC.H
 
 
 Testing
@@ -191,20 +194,17 @@ Memory Management
 -----------------
 
 Libraries are responsible for managing their own data. A controlling
-instance is created via a xx_create() function, and deleted via a
-xx_destroy() function.
+instance is created via an xx_create() or a make_one() function, and
+deleted via an xx_destroy() or free_one() function.
 
 Instances are opaque struct typedefs. While they are actually pointers,
 they should be treated as handles.
 
-Any library defined structure that is shared with client code has a
-character tag used as a quick sanity check, verifying that the correct
-instance type has been passed. If there is an error, a message is
-printed on stderr and the program is terminated by an abort().
-
 Memory managed by the libraries is cleared when allocated and
 overwritten with 0xfd (253) bytes before it is freed.
 
+All library code uses wrappers over malloc, calloc, and free for
+tracing and (future) pooled memory management. 
 
 
 Client Data
@@ -223,6 +223,8 @@ The payload may be any value that will fit inside a void * pointer. The
 libraries do not examine the payloads, but as they are often expected
 to be pointers, NULL becomes a special case. See 'Dealing with void *'
 later in this document for more details.
+
+Client code should not use the macros and functions in txballoc.
 
 
 
@@ -265,15 +267,6 @@ And here I bend the idiom a bit:
 Depending on the context, clients are passing keys, values, or
 payloads. These are all void * sized things and are typically
 pointers.
-
-In these instances, I use a typedef to hide the void * to avoid
-(hah) constructs such as 'void **payload' and emphasize that
-the libraries do not dereference these as pointers.
-
-typedef void * pkey;
-typedef void * pvalue;
-typedef void * ppayload;
-
 
 
 Error Handling and Reporting
@@ -323,6 +316,12 @@ TXBABORT.H
 ----------
 
 Defines the abort_if macro used throughout these libraries.
+
+
+TXBALLOC.H
+----------
+
+Library memory management.
 
 
 TXBDA.H
@@ -401,6 +400,13 @@ TXBPMUTE.H
 ----------
 
 An iterative permutation generator.
+
+
+TXBONE.H
+--------
+
+Some typical data structures: stacks, queues, dynamic arrays, and
+more.
 
 
 TXBPAT.H
@@ -503,7 +509,6 @@ as a circumvented issue. I'm not a fan of CMake and started using it
 for clangd suppport in Emacs eglot. Emacs eglot with clangd requires
 the compile_commands.json file produced when generating build scripts
 to be useful.
-
 
 		     =============================
 		     TO DO Items, Ideas, and Notes
@@ -522,3 +527,9 @@ pat:
 sb:
 --
 - non contiguous buffers.
+
+
+all:
+---
+- begin deleting redundant data structure implementations as they are
+  replaced by TXBONE.
