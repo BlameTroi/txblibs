@@ -445,14 +445,6 @@ TXBSB.H
 A string builder.
 
 
-TXBST.H
--------
-
-A stack (lifo). It uses TXBDL.H internally so if TXBDL.H is not
-included elsewhere in your code, define TXBDL_IMPLEMENTATION where
-you define TXBST_IMPLEMENTATION.
-
-
 TXBSTR.H
 --------
 
