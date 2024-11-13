@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "minunit.h"
-#include "txbst.h"
+#include "txbone.h"
 
 /*
  * minunit setup and teardown.
@@ -14,58 +14,57 @@
 
 static
 void
-test_setup(void) {
+tesetup(void) {
 }
 
 static
 void
-test_teardown(void) {
+teteardown(void) {
 }
 
-MU_TEST(test_st) {
+MU_TEST(test) {
 
-	hst *st = st_create();
+	one_block *st = make_one(stack);
 	mu_should(st);
-	mu_should(st_empty(st));
+	mu_should(empty(st));
 	for (int i = 1; i < 5; i++) {
-		st_push(st, (void *)(long)i);
-		printf("%ld\n", (long)st_peek(st));
+		push(st, (void *)(long)i);
+		printf("%ld\n", (long)peek(st));
 	}
-	mu_shouldnt(st_destroy(st));
+	mu_should(depth(st) == 4);
 	for (int i = 1; i < 5; i++) {
-		long x = (long)st_pop(st);
+		long x = (long)pop(st);
 		printf("%ld\n", x);
 	}
-	mu_should(st_destroy(st));
+	mu_should(free_one(st));
 	st = NULL;
 
-	st = st_create();
+	st = make_one(stack);
 	mu_should(st);
-	mu_should(st_empty(st));
-	st_push(st, "a");
-	st_push(st, "b");
-	mu_should(st_pop(st));
-	mu_should(st_pop(st));
-	mu_should(st_empty(st));
-	mu_should(st_destroy(st));
+	mu_should(empty(st));
+	push(st, "a");
+	push(st, "b");
+	mu_should(pop(st));
+	mu_should(pop(st));
+	mu_should(empty(st));
+	mu_should(free_one(st));
 	st = NULL;
 
-	st = st_create();
-	mu_should(st && st_empty(st));
-	st_push(st, "a");
-	st_push(st, "b");
-	mu_shouldnt(st_empty(st));
-	mu_shouldnt(st_destroy(st));
-	mu_should(st_reset(st) == 2);
-	mu_should(st_destroy(st));
+	st = make_one(stack);
+	mu_should(st && empty(st));
+	push(st, "a");
+	push(st, "b");
+	mu_shouldnt(empty(st));
+	mu_should(purge(st) == 2);
+	mu_should(free_one(st));
 	st = NULL;
 }
 
 MU_TEST_SUITE(test_suite) {
 
-	MU_SUITE_CONFIGURE(test_setup, test_teardown);
+	MU_SUITE_CONFIGURE(tesetup, teteardown);
 
-	MU_RUN_TEST(test_st);
+	MU_RUN_TEST(test);
 }
 
 int

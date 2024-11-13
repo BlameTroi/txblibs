@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include "minunit.h"
 #include "txbstr.h"
-#include "txbll.h"
+#include "txbone.h"
 
 /*
  * minunit setup and teardown.
@@ -29,71 +29,69 @@ test_teardown(void) {
  * functions.
  */
 
-MU_TEST(test_ll) {
-	hll *ll = NULL;
+MU_TEST(test_q) {
+	one_block *q = NULL;
 
-	ll = ll_create();
-	mu_should(ll);
-	mu_should(ll_empty(ll));
-	ll_add_last(ll, "one");
-	ll_add_last(ll, "two");
-	mu_should(ll_count(ll) == 2);
-	ll_add_last(ll, "three");
-	mu_should(equal_string("one", ll_remove_first(ll)));
-	mu_should(equal_string("two", ll_peek_first(ll)));
-	mu_should(ll_count(ll) == 2);
-	mu_should(equal_string("two", ll_remove_first(ll)));
-	mu_should(ll_count(ll) == 1);
-	mu_shouldnt(ll_destroy(ll));
-	mu_shouldnt(ll_empty(ll));
-	mu_should(equal_string("three", ll_remove_first(ll)));
-	mu_should(ll_count(ll) == 0);
-	mu_shouldnt(ll_remove_first(ll));
-	mu_should(ll_destroy(ll));
+	q = make_one(queue);
+	mu_should(q);
+	mu_should(empty(q));
+	enqueue(q, "one");
+	enqueue(q, "two");
+	mu_should(count(q) == 2);
+	enqueue(q, "three");
+	mu_should(equal_string("one", dequeue(q)));
+	mu_should(equal_string("two", peek(q)));
+	mu_should(count(q) == 2);
+	mu_should(equal_string("two", dequeue(q)));
+	mu_should(count(q) == 1);
+	mu_should(purge(q) == 1);
+	mu_should(empty(q));
+	mu_shouldnt(equal_string("three", dequeue(q)));
+	mu_should(count(q) == 0);
+	mu_shouldnt(dequeue(q));
+	mu_should(free_one(q));
 
-	ll = ll_create();
-	ll_add_last(ll, "one");
-	ll_add_last(ll, "two");
-	mu_shouldnt(ll_destroy(ll));
-	mu_should(ll_reset(ll) == 2);
-	mu_should(ll_destroy(ll));
+	q = make_one(queue);
+	enqueue(q, "one");
+	enqueue(q, "two");
+	mu_should(purge(q) == 2);
+	mu_should(free_one(q));
 
-	/* test add last (push) and remove first (pop) */
-	ll = ll_create();
-	ll_add_last(ll, "add_last_one");
-	ll_add_last(ll, "add_last_two");
-	ll_add_last(ll, "add_last_three");
-	mu_should(ll_count(ll) == 3);
-	mu_should(equal_string(ll_remove_first(ll), "add_last_one"));
-	mu_should(equal_string(ll_remove_first(ll), "add_last_two"));
-	mu_should(equal_string(ll_remove_first(ll), "add_last_three"));
-	mu_should(ll_remove_first(ll) == NULL);
-	ll_destroy(ll);
+	q = make_one(queue);
+	enqueue(q, "enqueue_one");
+	enqueue(q, "enqueue_two");
+	enqueue(q, "enqueue_three");
+	mu_should(count(q) == 3);
+	mu_should(equal_string(dequeue(q), "enqueue_one"));
+	mu_should(equal_string(dequeue(q), "enqueue_two"));
+	mu_should(equal_string(dequeue(q), "enqueue_three"));
+	mu_should(dequeue(q) == NULL);
+	free_one(q);
 
 	/* test add first (enqueue) and remove last (dequeue) */
-	ll = ll_create();
-	ll_add_first(ll, "add_first_one");
-	ll_add_first(ll, "add_first_two");
-	ll_add_first(ll, "add_first_three");
-	mu_should(ll_count(ll) == 3);
-	ppayload pl = ll_remove_last(ll);
+	q = make_one(queue);
+	enqueue(q, "add_first_one");
+	enqueue(q, "add_first_two");
+	enqueue(q, "add_first_three");
+	mu_should(count(q) == 3);
+	void *pl = dequeue(q);
 	printf("\n%s", (char *)pl);
 	mu_should(equal_string(pl, "add_first_one"));
-	pl = ll_remove_last(ll);
+	pl = dequeue(q);
 	printf("\n%s", (char *)pl);
 	mu_should(equal_string(pl, "add_first_two"));
-	pl = ll_remove_last(ll);
+	pl = dequeue(q);
 	printf("\n%s", (char *)pl);
 	mu_should(equal_string(pl, "add_first_three"));
-	mu_should(ll_remove_first(ll) == NULL);
-	ll_destroy(ll);
+	mu_should(dequeue(q) == NULL);
+	free_one(q);
 }
 
 MU_TEST_SUITE(test_suite) {
 
 	MU_SUITE_CONFIGURE(test_setup, test_teardown);
 
-	MU_RUN_TEST(test_ll);
+	MU_RUN_TEST(test_q);
 }
 
 int

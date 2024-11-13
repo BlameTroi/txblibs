@@ -9,9 +9,6 @@
 #define TXBALLOC_IMPLEMENTATION
 #include "txballoc.h"
 
-#define TXBDA_IMPLEMENTATION
-#include "txbda.h"
-
 #define TXBDL_IMPLEMENTATION
 #include "txbdl.h"
 
@@ -20,9 +17,6 @@
 
 #define TXBKV_IMPLEMENTATION
 #include "txbkv.h"
-
-#define TXBLL_IMPLEMENTATION
-#include "txbll.h"
 
 #define TXBMD5_IMPLEMENTATION
 #include "txbmd5.h"
@@ -39,9 +33,6 @@
 #define TXBPQ_IMPLEMENTATION
 #include "txbpq.h"
 
-#define TXBQU_IMPLEMENTATION
-#include "txbqu.h"
-
 #define TXBRAND_IMPLEMENTATION
 #include "txbrand.h"
 
@@ -50,9 +41,6 @@
 
 #define TXBSB_IMPLEMENTATION
 #include "txbsb.h"
-
-#define TXBST_IMPLEMENTATION
-#include "txbst.h"
 
 #define TXBSTR_IMPLEMENTATION
 #include "txbstr.h"

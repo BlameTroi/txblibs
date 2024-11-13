@@ -5,8 +5,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "minunit.h"
+#include "txbone.h"
 #include "txbrand.h"
-#include "txbda.h"
 
 /*
  * minunit setup and teardown.
@@ -37,32 +37,31 @@ test_teardown(void) {
  */
 
 MU_TEST(test_da) {
-	hda *da = NULL;
-	da = da_create(10);
-	mu_should(da && da_count(da) == 0);
+	one_block *da = NULL;
+	da = make_one(dynarray);
+	mu_should(da && high_index(da) < 1);
 
-	ppayload item = NULL;
+	void *item = NULL;
 	int sum = 0;
-	for (int i = 0; i < 1000; i++) {
+	for (int i = 0; i < 10000; i++) {
 		item = malloc(sizeof(int));
 		*(int *)item = random_between(100, 900);
 		sum += *(int *)item;
-		da_put(da, i, item);
+		put_at(da, item, i);
 	}
 	mu_should(sum != 0);
-	mu_should(da_count(da) == 1000);
+	mu_should(high_index(da) == 9999);
 
-	for (int i = 0; i < 1000; i++) {
+	for (int i = 0; i < 10000; i++) {
 		int *n = NULL;
-		n = da_get(da, i);
+		n = get_from(da, i);
 		sum -= *n;
 		free(n);
 	}
 
 	mu_should(sum == 0);
-	mu_should(da_count(da) == 1000);
 
-	da_destroy(da);
+	free_one(da);
 }
 
 /*

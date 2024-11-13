@@ -67,7 +67,8 @@ target_compile_options(unitone PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:SHELL:${MY_REL
 target_compile_options(unitone PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_OPTIONS}>")
 target_compile_options(unitone PUBLIC "$<$<CONFIG:RELEASE>:SHELL:${MY_RELEASE_OPTIONS}>")
 
-add_executable(unitda "${CMAKE_CURRENT_SOURCE_DIR}/unit/unitda.c" "${CMAKE_CURRENT_SOURCE_DIR}/unit/mylibs.c")
+add_executable(unitda "${CMAKE_CURRENT_SOURCE_DIR}/unit/unitda.c" "${CMAKE_CURRENT_SOURCE_DIR}/unit/mylibs.c"
+"${CMAKE_CURRENT_SOURCE_DIR}/src/txbone.c")
 target_include_directories(unitda PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/inc")
 target_link_options(unitda PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_LINK_OPTIONS}>")
 target_compile_options(unitda PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:SHELL:${MY_REL_DEB_OPTIONS}>")
@@ -95,7 +96,8 @@ target_compile_options(unitkv PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:SHELL:${MY_REL_
 target_compile_options(unitkv PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_OPTIONS}>")
 target_compile_options(unitkv PUBLIC "$<$<CONFIG:RELEASE>:SHELL:${MY_RELEASE_OPTIONS}>")
 
-add_executable(unitll "${CMAKE_CURRENT_SOURCE_DIR}/unit/unitll.c" "${CMAKE_CURRENT_SOURCE_DIR}/unit/mylibs.c")
+add_executable(unitll "${CMAKE_CURRENT_SOURCE_DIR}/unit/unitll.c" "${CMAKE_CURRENT_SOURCE_DIR}/unit/mylibs.c"
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/txbone.c")
 target_include_directories(unitll PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/inc")
 target_link_options(unitll PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_LINK_OPTIONS}>")
 target_compile_options(unitll PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:SHELL:${MY_REL_DEB_OPTIONS}>")
@@ -137,7 +139,8 @@ target_compile_options(unitpq PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:SHELL:${MY_REL_
 target_compile_options(unitpq PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_OPTIONS}>")
 target_compile_options(unitpq PUBLIC "$<$<CONFIG:RELEASE>:SHELL:${MY_RELEASE_OPTIONS}>")
 
-add_executable(unitqu "${CMAKE_CURRENT_SOURCE_DIR}/unit/unitqu.c" "${CMAKE_CURRENT_SOURCE_DIR}/unit/mylibs.c")
+add_executable(unitqu "${CMAKE_CURRENT_SOURCE_DIR}/unit/unitqu.c" "${CMAKE_CURRENT_SOURCE_DIR}/unit/mylibs.c"
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/txbone.c")
 target_include_directories(unitqu PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/inc")
 target_link_options(unitqu PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_LINK_OPTIONS}>")
 target_compile_options(unitqu PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:SHELL:${MY_REL_DEB_OPTIONS}>")
@@ -165,7 +168,8 @@ target_compile_options(unitsb PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:SHELL:${MY_REL_
 target_compile_options(unitsb PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_OPTIONS}>")
 target_compile_options(unitsb PUBLIC "$<$<CONFIG:RELEASE>:SHELL:${MY_RELEASE_OPTIONS}>")
 
-add_executable(unitst "${CMAKE_CURRENT_SOURCE_DIR}/unit/unitst.c" "${CMAKE_CURRENT_SOURCE_DIR}/unit/mylibs.c")
+add_executable(unitst "${CMAKE_CURRENT_SOURCE_DIR}/unit/unitst.c" "${CMAKE_CURRENT_SOURCE_DIR}/unit/mylibs.c"
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/txbone.c")
 target_include_directories(unitst PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/inc")
 target_link_options(unitst PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_LINK_OPTIONS}>")
 target_compile_options(unitst PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:SHELL:${MY_REL_DEB_OPTIONS}>")

@@ -142,8 +142,7 @@ These are the headers:
 | File       | Description                                        |
 |------------+----------------------------------------------------|
 | txbabort.h | common test and abort macro                        |
-| txballoc.h | a c/malloc-free trace to help find leaks
-| txbda.h    | dynamic array                                      |
+| txballoc.h | a c/malloc-free trace to help find leaks           |
 | txbdl.h    | doubly linked list                                 |
 | txbkl.h    | keyed doubly linked list                           |
 | txbkv.h    | key:value store that can have various backing      |
@@ -153,11 +152,9 @@ These are the headers:
 | txbpat.h   | pattern matching with a regular expressions subset |
 | txbpmute.h | iterative permutation generator                    |
 | txbpq.h    | priority queue                                     |
-| txbqu.h    | queue (fifo)                                       |
 | txbrand.h  | random number support                              |
 | txbrs.h    | string read stream                                 |
 | txbsb.h    | string builder                                     |
-| txbst.h    | stack (lifo)                                       |
 | txbstr.h   | split/tokenize and compare strings                 |
 
 
@@ -180,7 +177,7 @@ additional test cases if a file is specified as a command argument.
 
 Examples:
 
-./build/Debug/unitda 
+./build/Debug/unitone 
 ./build/Debug/unitrs some_file.txt
 
 
@@ -324,23 +321,11 @@ TXBALLOC.H
 Library memory management.
 
 
-TXBDA.H
--------
-
-A dynamically resizing array.
-
-
 TXBDL.H
 -------
 
 A doubly linked list suitable for creating queues, stacks, or
 iterators.
-
-
-TXBST.H
--------
-
-A simple stack. This is actually a thin API over txbdl.h.
 
 
 TXBKL.H
@@ -442,12 +427,6 @@ A priority queue, or more properly a priority deque. Items can be
 retrieved from either the high or low end of the queue.
 
 
-TXBRS.H
--------
-
-A read stream on character strings.
-
-
 TXBRAND.H
 ---------
 
@@ -473,12 +452,12 @@ A stack (lifo). It uses TXBDL.H internally so if TXBDL.H is not
 included elsewhere in your code, define TXBDL_IMPLEMENTATION where
 you define TXBST_IMPLEMENTATION.
 
+
 TXBSTR.H
 --------
 
 Various character string functions that work the way I think they
 should.
-
 
 			  =================
 			  Oddities and Bugs
@@ -533,3 +512,4 @@ all:
 ---
 - begin deleting redundant data structure implementations as they are
   replaced by TXBONE.
+  done: txbda txbll txbqu txbst

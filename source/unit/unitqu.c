@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include "minunit.h"
 #include "txbstr.h"
-#include "txbqu.h"
+#include "txbone.h"
 
 /*
  * minunit setup and teardown.
@@ -30,33 +30,31 @@ test_teardown(void) {
  */
 
 MU_TEST(test_qu) {
-	hqu *qu = NULL;
+	one_block *qu = NULL;
 
-	qu = qu_create();
+	qu = make_one(queue);
 	mu_should(qu);
-	mu_should(qu_empty(qu));
-	qu_enqueue(qu, "one");
-	qu_enqueue(qu, "two");
-	mu_should(qu_count(qu) == 2);
-	qu_enqueue(qu, "three");
-	mu_should(equal_string("one", qu_dequeue(qu)));
-	mu_should(equal_string("two", qu_peek(qu)));
-	mu_should(qu_count(qu) == 2);
-	mu_should(equal_string("two", qu_dequeue(qu)));
-	mu_should(qu_count(qu) == 1);
-	mu_shouldnt(qu_destroy(qu));
-	mu_shouldnt(qu_empty(qu));
-	mu_should(equal_string("three", qu_dequeue(qu)));
-	mu_should(qu_count(qu) == 0);
-	mu_shouldnt(qu_dequeue(qu));
-	mu_should(qu_destroy(qu));
+	mu_should(empty(qu));
+	enqueue(qu, "one");
+	enqueue(qu, "two");
+	mu_should(count(qu) == 2);
+	enqueue(qu, "three");
+	mu_should(equal_string("one", dequeue(qu)));
+	mu_should(equal_string("two", peek(qu)));
+	mu_should(count(qu) == 2);
+	mu_should(equal_string("two", dequeue(qu)));
+	mu_should(count(qu) == 1);
+	mu_shouldnt(empty(qu));
+	mu_should(equal_string("three", dequeue(qu)));
+	mu_should(count(qu) == 0);
+	mu_shouldnt(dequeue(qu));
+	mu_should(free_one(qu));
 
-	qu = qu_create();
-	qu_enqueue(qu, "one");
-	qu_enqueue(qu, "two");
-	mu_shouldnt(qu_destroy(qu));
-	mu_should(qu_reset(qu) == 2);
-	mu_should(qu_destroy(qu));
+	qu = make_one(queue);
+	enqueue(qu, "one");
+	enqueue(qu, "two");
+	mu_should(purge(qu) == 2);
+	mu_should(free_one(qu));
 
 }
 
