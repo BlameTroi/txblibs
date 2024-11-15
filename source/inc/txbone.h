@@ -54,10 +54,13 @@ enum one_type {
 	doubly, /* linked list */
 	dynarray,
 	bst,
+	tree,
 	keyval,
 	hash,
+	heap,
 	dictionary,
 	bag,
+	set,
 	ordered /* collection */
 };
 
@@ -160,6 +163,19 @@ struct one_bst {
 	void *not_implemented_yet;
 };
 
+typedef struct tree_node tree_node;
+struct tree_node {
+	tree_node *left;
+	tree_node *right;
+	void *key;
+	void *value;
+};
+typedef struct one_tree one_tree;
+struct one_tree {
+	tree_node *root;
+	void *comparator;
+};
+
 /*
  * a key value store.
  */
@@ -169,6 +185,20 @@ typedef struct one_keyval one_keyval;
 struct one_keyval {
 	void *not_implemented_yet;
 };
+
+/* not yet implemented place holders */
+typedef struct one_hash one_hash;
+struct one_hash { void *not_implemented_yet;};
+typedef struct one_heap one_heap;
+struct one_heap { void *not_implemented_yet;};
+typedef struct one_dictionary one_dictionary;
+struct one_dictionary { void *not_implemented_yet;};
+typedef struct one_bag one_bag;
+struct one_bag { void *not_implemented_yet;};
+typedef struct one_set one_set;
+struct one_set { void *not_implemented_yet;};
+typedef struct one_ordered one_ordered;
+struct one_ordered { void *not_implemented_yet;};
 
 /*
  * rather than have separate high level control blocks, this union
@@ -183,7 +213,14 @@ union one_details {
 	one_doubly dbl;              /* doubly linked list */
 	one_dynarray dyn;            /* dynamically resizing array */
 	one_bst bst;                 /* binary search tree */
+	one_tree tree;               /* a general tree */
 	one_keyval kvl;              /* key:value store */
+	one_hash hash;               /* a hash */
+	one_heap heap;               /* a heap */
+	one_dictionary dict;         /* dictionary */
+	one_bag bag;                 /* multi-set */
+	one_set set;                 /* a set */
+	one_ordered ordered;         /* ordered collection */
 };
 
 /*
@@ -560,6 +597,41 @@ get_from(
 	one_block *me,
 	int n
 );
+
+/*
+ * tree/bst -- some of thee are key:value based, and some are node based.
+ */
+
+one_block *
+insert(
+	one_block *me,
+	void *key,
+	void *value
+);
+
+one_block *
+delete (
+	one_block *me,
+	void *key
+);
+
+void *
+get_value_for(
+	one_block *me,
+	void *key
+);
+
+void *
+smallest_key(
+	one_block *me
+);
+
+void *
+largest_key(
+	one_block *me
+);
+
+/* traversal is going to need callbacks */
 
 #ifdef __cplusplus
 }

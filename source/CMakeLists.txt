@@ -13,7 +13,7 @@ cmake_minimum_required(VERSION 3.5)
 
 project(
   TXBLIBS
-  VERSION 1.3.0.0
+  VERSION 1.3.0.1
   DESCRIPTION "single header c libraries mostly for my personal use"
   HOMEPAGE_URL "https://github.com/BlameTroi/txblibs"
   LANGUAGES C
@@ -147,7 +147,8 @@ target_compile_options(unitqu PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:SHELL:${MY_REL_
 target_compile_options(unitqu PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_OPTIONS}>")
 target_compile_options(unitqu PUBLIC "$<$<CONFIG:RELEASE>:SHELL:${MY_RELEASE_OPTIONS}>")
 
-add_executable(unitrand "${CMAKE_CURRENT_SOURCE_DIR}/unit/unitrand.c" "${CMAKE_CURRENT_SOURCE_DIR}/unit/mylibs.c")
+add_executable(unitrand "${CMAKE_CURRENT_SOURCE_DIR}/unit/unitrand.c"
+  "${CMAKE_CURRENT_SOURCE_DIR}/unit/mylibs.c")
 target_include_directories(unitrand PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/inc")
 target_link_options(unitrand PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_LINK_OPTIONS}>")
 target_compile_options(unitrand PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:SHELL:${MY_REL_DEB_OPTIONS}>")
