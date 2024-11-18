@@ -422,9 +422,9 @@ txballoc_terminate(
 	void
 ) {
 	assert(active);
+	active = false;
 	if (flags & txballoc_f_full) {
 		fprintf(report, "\n***txballoc termination memory leak report***\n");
-		active = false;
 		int leaked = 0;
 		size_t size = 0;
 		for (int i = 0; i < capacity; i++)
