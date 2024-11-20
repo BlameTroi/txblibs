@@ -74,7 +74,7 @@ singly_add_first(
 	one_singly *me,
 	void *payload
 ) {
-	sgl_item *next = tmalloc(sizeof(*next));
+	sgl_item *next = tsmalloc(sizeof(*next));
 	memset(next, 0, sizeof(*next));
 	next->payload = payload;
 	next->next = me->first;
@@ -104,7 +104,7 @@ singly_get_first(
 	me->first = first->next;
 	void *res = first->payload;
 	memset(first, 253, sizeof(*first));
-	tfree(first);
+	tsfree(first);
 	return res;
 }
 
@@ -114,7 +114,7 @@ singly_add_last(
 	one_singly *me,
 	void *payload
 ) {
-	sgl_item *next = tmalloc(sizeof(*next));
+	sgl_item *next = tsmalloc(sizeof(*next));
 	memset(next, 0, sizeof(*next));
 	next->payload = payload;
 
@@ -173,7 +173,7 @@ singly_get_last(
 	/* extract payload, clear and free old item */
 	void *res = curr->payload;
 	memset(curr, 253, sizeof(*curr));
-	tfree(curr);
+	tsfree(curr);
 	return res;
 }
 
@@ -204,7 +204,7 @@ singly_purge(
 		sgl_item *del = curr;
 		curr = curr->next;
 		memset(del, 253, sizeof(*del));
-		tfree(del);
+		tsfree(del);
 	}
 	return count;
 }
@@ -220,7 +220,7 @@ doubly_add_first(
 	one_doubly *me,
 	void *payload
 ) {
-	dbl_item *first = tmalloc(sizeof(*first));
+	dbl_item *first = tsmalloc(sizeof(*first));
 	memset(first, 0, sizeof(*first));
 	first->payload = payload;
 	first->next = me->first;
@@ -262,7 +262,7 @@ doubly_get_first(
 
 	void *res = first->payload;
 	memset(first, 253, sizeof(*first));
-	tfree(first);
+	tsfree(first);
 	return res;
 }
 
@@ -272,7 +272,7 @@ doubly_add_last(
 	one_doubly *me,
 	void *payload
 ) {
-	dbl_item *last = tmalloc(sizeof(*last));
+	dbl_item *last = tsmalloc(sizeof(*last));
 	memset(last, 0, sizeof(*last));
 	last->payload = payload;
 	last->previous = me->last;
@@ -316,7 +316,7 @@ doubly_get_last(
 	}
 	void *res = last->payload;
 	memset(last, 253, sizeof(*last));
-	tfree(last);
+	tsfree(last);
 	return res;
 }
 
@@ -348,7 +348,7 @@ doubly_purge(
 		dbl_item *del = curr;
 		curr = curr->next;
 		memset(del, 253, sizeof(*del));
-		tfree(del);
+		tsfree(del);
 	}
 	return count;
 }
@@ -392,7 +392,7 @@ one_block *
 make_one(
 	enum one_type isa
 ) {
-	one_block *ob = tmalloc(sizeof(*ob));
+	one_block *ob = tsmalloc(sizeof(*ob));
 	memset(ob, 0, sizeof(*ob));
 	ob->isa = isa;
 	if (isa <= ONE_TYPE_MAX && isa > 0)
@@ -416,7 +416,7 @@ make_one(
 	case dynarray:
 		ob->u.dyn.length = -1;
 		ob->u.dyn.capacity = DYNARRAY_DEFAULT_CAPACITY;
-		ob->u.dyn.array = tmalloc(DYNARRAY_DEFAULT_CAPACITY * sizeof(void *));
+		ob->u.dyn.array = tsmalloc(DYNARRAY_DEFAULT_CAPACITY * sizeof(void *));
 		memset(ob->u.dyn.array, 0, DYNARRAY_DEFAULT_CAPACITY * sizeof(void *));
 		return ob;
 
@@ -425,7 +425,7 @@ make_one(
 			"\nTXBONE error make_one: unknown or not yet implemented type %d %s\n",
 			isa, ob->tag);
 		memset(ob, 253, sizeof(*ob));
-		tfree(ob);
+		tsfree(ob);
 		return NULL;
 	}
 }
@@ -459,21 +459,21 @@ free_one(
 		case deque:
 			purge(me);
 			memset(me, 253, sizeof(*me));
-			tfree(me);
+			tsfree(me);
 			return me;
 
 		case dynarray:
 			memset(me->u.dyn.array, 253, me->u.dyn.capacity * sizeof(void *));
-			tfree(me->u.dyn.array);
+			tsfree(me->u.dyn.array);
 			memset(me, 253, sizeof(*me));
-			tfree(me);
+			tsfree(me);
 			return me;
 
 		default:
 			fprintf(stderr, "\nTXBONE error free_one: unknown or unsupported type %d %s\n",
 				me->isa, me->tag);
 			memset(me, 253, sizeof(*me));
-			tfree(me);
+			tsfree(me);
 			return NULL;
 		}
 
@@ -1081,11 +1081,11 @@ put_at(
 	}
 	while (n >= me->u.dyn.capacity) {
 		void *old = me->u.dyn.array;
-		me->u.dyn.array = tmalloc(2 * me->u.dyn.capacity * sizeof(void *));
+		me->u.dyn.array = tsmalloc(2 * me->u.dyn.capacity * sizeof(void *));
 		memset(me->u.dyn.array, 0, 2 * me->u.dyn.capacity * sizeof(void *));
 		memcpy(me->u.dyn.array, old, me->u.dyn.capacity * sizeof(void *));
 		memset(old, 253, me->u.dyn.capacity * sizeof(void *));
-		tfree(old);
+		tsfree(old);
 		me->u.dyn.capacity *= 2;
 	}
 	me->u.dyn.array[n] = payload;

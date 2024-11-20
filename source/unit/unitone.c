@@ -28,12 +28,12 @@ test_setup(void) {
 	 */
 
 	/* log to stderr to better segregate output */
-	txballoc_initialize(4000, txballoc_f_errors, stderr);
+	tsinitialize(4000, txballoc_f_errors, stderr);
 }
 
 void
 test_teardown(void) {
-	txballoc_terminate();
+	tsterminate();
 }
 
 /*

@@ -27,8 +27,12 @@
 extern "C" {
 #endif /* __cplusplus */
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+
+#define TXBALLOC_USER        true
+#define TXBALLOC_LIBRARY     false
 
 #define txballoc_f_allocs    (1 << 0)
 #define txballoc_f_frees     (1 << 1)
@@ -43,12 +47,14 @@ void
 txballoc_initialize(
 	size_t pool,    /* max number of active allocates to track */
 	uint16_t flags, /* configuration */
+	bool user_or_libs,
 	FILE *f         /* file stream to log on */
 );
 
 void *
 txballoc_malloc(        /* *** do not call directly, use tmalloc *** */
 	size_t n,       /* as in malloc # bytes */
+	bool user_or_libs,
 	char *f,        /* __FILE__ */
 	int l           /* __LINE__ */
 );
@@ -57,6 +63,7 @@ void *
 txballoc_calloc(        /* *** do not call directly, use tcalloc *** */
 	int c,          /* as in calloc, # cells */
 	size_t n,       /* as in calloc, # bytes */
+	bool user_or_libs,
 	char *f,        /* __FILE__ */
 	int l           /* __LINE__ */
 );
@@ -64,23 +71,45 @@ txballoc_calloc(        /* *** do not call directly, use tcalloc *** */
 void
 txballoc_free(          /* *** do not call directly, use tfree *** */
 	void *p,        /* as in free, @ block */
+	bool user_or_libs,
 	char *f,        /* __FILE__ */
 	int l           /* __LINE__ */
 );
 
 void
 txballoc_terminate(
-	void
+	bool user_or_libs
 );
 
+#define tinitialize(n, r, f) \
+	txballoc_initialize((n), (r), TXBALLOC_USER, (f))
+
+#define tterminate() \
+	txballoc_terminate(TXBALLOC_USER)
+
 #define tmalloc(n) \
-	txballoc_malloc((n), __FILE__, __LINE__)
+	txballoc_malloc((n), TXBALLOC_USER, __FILE__, __LINE__)
 
 #define tcalloc(c, n) \
-	txballoc_calloc((c), (n), __FILE__, __LINE__)
+	txballoc_calloc((c), (n), TXBALLOC_USER, __FILE__, __LINE__)
 
 #define tfree(p) \
-	txballoc_free((p), __FILE__, __LINE__)
+	txballoc_free((p), TXBALLOC_USER, __FILE__, __LINE__)
+
+#define tsinitialize(n, r, f) \
+	txballoc_initialize((n), (r), TXBALLOC_LIBRARY, (f))
+
+#define tsterminate() \
+	txballoc_terminate(TXBALLOC_LIBRARY)
+
+#define tsmalloc(n) \
+	txballoc_malloc((n), TXBALLOC_LIBRARY, __FILE__, __LINE__)
+
+#define tscalloc(c, n) \
+	txballoc_calloc((c), (n), TXBALLOC_LIBRARY, __FILE__, __LINE__)
+
+#define tsfree(p) \
+	txballoc_free((p), TXBALLOC_LIBRARY, __FILE__, __LINE__)
 
 #ifdef __cplusplus
 }
@@ -167,13 +196,19 @@ struct trace {
  * globals here, only one tracer can be active at a time.
  */
 
-static trace *table = NULL;
-static bool active = false;   /* initialized and running? */
-static int odometer = 0;      /* an indication of how many allocations */
-static int capacity = 0;      /* number of trace table entries */
-static int high = 0;          /* high water mark for active allocations */
-static uint16_t flags;        /* bit flags txballoc_f_... */
-static FILE *report;          /* file to report on, defaults to stderr */
+typedef struct pool pool;
+struct pool {
+	trace *table;
+	bool active;           /* initialized and running? */
+	int odometer;          /* an indication of how many allocations */
+	int capacity;          /* number of trace table entries */
+	int high;              /* high water mark for active allocations */
+	uint16_t flags;        /* bit flags txballoc_f_... */
+	FILE *report;          /* file to report on, defaults to stderr */
+};
+
+static pool user_pool;
+static pool library_pool;
 
 /*
  * txballoc_initialize
@@ -197,22 +232,25 @@ static FILE *report;          /* file to report on, defaults to stderr */
  * deal with creeping leaks.
  */
 
+
 void
 txballoc_initialize(
 	size_t n,
 	uint16_t request,
+	bool user_or_libs,
 	FILE *f
 ) {
-	assert(!active);
-	active = true;
+	pool *pool = user_or_libs ? &user_pool : &library_pool;
+	assert(!pool->active);
+	pool->active = true;
 
-	odometer = 0;
-	capacity = n;
-	table = calloc(capacity, sizeof(trace));
-	assert(table);
-	high = 0;
-	flags = request;
-	report = f == NULL ? stderr : f;
+	pool->odometer = 0;
+	pool->capacity = n;
+	pool->table = calloc(pool->capacity, sizeof(trace));
+	assert(pool->table);
+	pool->high = 0;
+	pool->flags = request;
+	pool->report = f == NULL ? stderr : f;
 }
 
 /*
@@ -242,12 +280,14 @@ void *
 txballoc_calloc(
 	int c,
 	size_t len,
+	bool user_or_libs,
 	char *f,
 	int l
 ) {
-	if (!active) return calloc(c, len);
+	pool *pool = user_or_libs ? &user_pool : &library_pool;
+	if (!pool->active) return calloc(c, len);
 
-	return memset(txballoc_malloc(c * len, f, l), c, len);
+	return memset(txballoc_malloc(c * len, user_or_libs, f, l), c, len);
 }
 
 /*
@@ -290,49 +330,51 @@ file_basename(
 void *
 txballoc_malloc(
 	size_t n,
+	bool user_or_libs,
 	char *f,
 	int l
 ) {
-	if (!active) return malloc(n);
+	pool *pool = user_or_libs ? &user_pool : &library_pool;
+	if (!pool->active) return malloc(n);
 
-	odometer += 1;
+	pool->odometer += 1;
 
-	if (high >= capacity)
+	if (pool->high >= pool->capacity)
 		assert(false); /* TODO: grow table or not? */
 
 	/* find free trace table entry */
 	int i;
-	for (i = 0; i < capacity; i++)
-		if (table[i].number == 0)
+	for (i = 0; i < pool->capacity; i++)
+		if (pool->table[i].number == 0)
 			break;
 
 	/* no free entry found, abort */
-	assert(i < capacity);
+	assert(i < pool->capacity);
 
 	/* track high water mark */
-	if (i > high)
-		high = i;
+	if (i > pool->high)
+		pool->high = i;
 
 	/* fill in table entry */
-	table[i].number = odometer;
-	table[i].size = n;
+	pool->table[i].number = pool->odometer;
+	pool->table[i].size = n;
 	char *ft = file_basename(f);
 	int c = strlen(ft);
-	if (c > sizeof(table[i].file) - 1)
-		c = sizeof(table[i].file) - 1;
-	strncpy(table[i].file, ft, c);
-	table[i].line = l;
+	if (c > sizeof(pool->table[i].file) - 1)
+		c = sizeof(pool->table[i].file) - 1;
+	strncpy(pool->table[i].file, ft, c);
+	pool->table[i].line = l;
 
 	/* get the memory */
-	table[i].addr = malloc(n);
+	pool->table[i].addr = malloc(n);
 
 	/* report if enabled */
-	if (flags & txballoc_f_allocs)
-		fprintf(report, "alloc: %5d %p len %lu for %s %d\n",
-			table[i].number, table[i].addr, table[i].size,
-			table[i].file, table[i].line);
+	if (pool->flags & txballoc_f_allocs)
+		fprintf(pool->report, "alloc: %5d %p len %lu for %s %d\n",
+			pool->table[i].number, pool->table[i].addr, pool->table[i].size,
+			pool->table[i].file, pool->table[i].line);
 
-	return table[i].addr;
+	return pool->table[i].addr;
 }
 
 /*
@@ -361,10 +403,12 @@ txballoc_malloc(
 void
 txballoc_free(
 	void *p,
+	bool user_or_libs,
 	char *f,
 	int l
 ) {
-	if (!active) {
+	pool *pool = user_or_libs ? &user_pool : &library_pool;
+	if (!pool->active) {
 		free(p);
 		return;
 	}
@@ -372,30 +416,32 @@ txballoc_free(
 	/* find the entry for this allocation in the trace table.
 	 * allocation address is the key. */
 	int i;
-	for (i = 0; i < capacity; i++)
-		if (table[i].addr == p)
+	for (i = 0; i < pool->capacity; i++)
+		if (pool->table[i].addr == p)
 			break;
 
 	/* no entry found. if the memory is already freed, calling
 	 * free again will abort. i've decided to log the event and
 	 * and return. */
-	if (i >= capacity) {
+	if (i >= pool->capacity) {
 		char *ft = file_basename(f);
-		if (flags & txballoc_f_errors)
-			fprintf(report, "error: %5d %p for %s %d -- free not in trace, dup free?\n",
-				odometer, p, ft, l);
+		if (pool->flags & txballoc_f_errors)
+			fprintf(pool->report,
+				"error: %5d %p for %s %d -- free not in trace, dup free?\n",
+				pool->odometer, p, ft, l);
 		return;
 	}
 
 	/* log the free. */
-	if (flags & txballoc_f_frees) {
+	if (pool->flags & txballoc_f_frees) {
 		char *ft = file_basename(f);
-		fprintf(report, "free : %5d %p len %lu for %s %d\n", table[i].number, p,
-			table[i].size, ft, l);
+		fprintf(pool->report, "free : %5d %p len %lu for %s %d\n",
+			pool->table[i].number, p,
+			pool->table[i].size, ft, l);
 	}
 
 	/* clear table entry and release the requested storage. */
-	memset(&table[i], 0, sizeof(table[i]));
+	memset(&pool->table[i], 0, sizeof(pool->table[i]));
 	free(p);
 }
 
@@ -419,32 +465,34 @@ txballoc_free(
 
 void
 txballoc_terminate(
-	void
+	bool user_or_libs
 ) {
-	assert(active);
-	active = false;
-	if (flags & txballoc_f_full) {
-		fprintf(report, "\n***txballoc termination memory leak report***\n");
+	pool *pool = user_or_libs ? &user_pool : &library_pool;
+	assert(pool->active);
+	pool->active = false;
+	if (pool->flags & txballoc_f_full) {
+		fprintf(pool->report, "\n***txballoc termination memory leak report***\n");
+		fprintf(pool->report, "%s pool\n", user_or_libs ? "user" : "library");
 		int leaked = 0;
 		size_t size = 0;
-		for (int i = 0; i < capacity; i++)
-			if (table[i].number > 0) {
+		for (int i = 0; i < pool->capacity; i++)
+			if (pool->table[i].number > 0) {
 				leaked += 1;
-				size += table[i].size;
-				fprintf(report, "%d @ %5d %p len %lu %s %d\n",
-					leaked, table[i].number, table[i].addr,
-					table[i].size, table[i].file, table[i].line);
+				size += pool->table[i].size;
+				fprintf(pool->report, "%d @ %5d %p len %lu %s %d\n",
+					leaked, pool->table[i].number, pool->table[i].addr,
+					pool->table[i].size, pool->table[i].file, pool->table[i].line);
 			}
-		fprintf(report,
+		fprintf(pool->report,
 			"\ntxballoc termination summary:\n[high %d][odometer %d][leaked %d][size %lu]\n",
-			high+1, odometer, leaked, size);
+			pool->high+1, pool->odometer, leaked, size);
 	}
-	free(table);
-	table = NULL;
-	high = 0;
-	odometer = 0;
-	capacity = 0;
-	flags = 0;
+	free(pool->table);
+	pool->table = NULL;
+	pool->high = 0;
+	pool->odometer = 0;
+	pool->capacity = 0;
+	pool->flags = 0;
 }
 
 #endif /* TXBALLOC_IMPLEMENTATION */
