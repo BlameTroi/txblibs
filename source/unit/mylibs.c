@@ -9,6 +9,12 @@
 #define TXBALLOC_IMPLEMENTATION
 #include "txballoc.h"
 
+#define TXBALIST_IMPLEMENTATION
+#include "txbalist.h"
+
+#define TXBLOG2_IMPLEMENTATION
+#include "txblog2.h"
+
 #define TXBDL_IMPLEMENTATION
 #include "txbdl.h"
 

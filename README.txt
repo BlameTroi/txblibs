@@ -142,10 +142,12 @@ These are the headers:
 | File       | Description                                        |
 |------------+----------------------------------------------------|
 | txbabort.h | common test and abort macro                        |
+| txbalist.h | an arraylist like collection                       |
 | txballoc.h | a c/malloc-free trace to help find leaks           |
 | txbdl.h    | doubly linked list                                 |
 | txbkl.h    | keyed doubly linked list                           |
 | txbkv.h    | key:value store that can have various backing      |
+| txblog2.h  | a 32 bit unsigned integer log base 2 function      |
 | txbmd5.h   | md-5 hash (credit to Bryce Wilson)                 |
 | txbmisc.h  | "missing" functions such as min/max                |
 | txbone.h   | unified data structure header library              |
@@ -321,6 +323,14 @@ TXBALLOC.H
 Library memory management.
 
 
+TXBALIST.H
+----------
+
+An array list like collection, initially intended as a
+recursion accumulator as one would do with lists in
+Lisp/Scheme/SML.
+
+
 TXBDL.H
 -------
 
@@ -340,6 +350,13 @@ TXBKV.H
 An initial pass at a key:value store that doesn't expose its
 underlying data structures. The goal is to specify an appropriate
 store based on application behavior.
+
+
+TXBLOG2.H
+---------
+
+A fast integer log2 function lifted from Bit Twiddling Hacks by Sean
+Eron Anderson (seander@cs.stanford.edu).
 
 
 TXBMD5.H
