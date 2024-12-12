@@ -158,7 +158,7 @@ These are the headers:
 | txbrs.h    | string read stream                                 |
 | txbsb.h    | string builder                                     |
 | txbstr.h   | split/tokenize and compare strings                 |
-
+| txbwarn.h  | macro template for debugging traces                |
 
 Some of these reference each other. You may need to define the
 implementation trigger for a header that you don't explicitly
@@ -467,6 +467,13 @@ TXBSTR.H
 
 Various character string functions that work the way I think they
 should.
+
+
+TXBWARN.H
+---------
+
+Some macros for tracing/logging, usually for function arguments.
+Intended more as a template.
 
 			  =================
 			  Oddities and Bugs

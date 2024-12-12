@@ -31,7 +31,6 @@ uint32_log2(
 	uint32_t v
 );
 
-
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
@@ -61,7 +60,7 @@ uint32_log2(
  * implementation notes:
  *
  * see the following url for the original plus much more:
-
+ *
  * http://graphics.stanford.edu/~seander/bithacks.html#IntegerLogLookup
  *
  * i had to make three changes, after which i felt free to do some
