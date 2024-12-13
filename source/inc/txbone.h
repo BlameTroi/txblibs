@@ -18,8 +18,8 @@
  * to copy, modify, publish, and distribute this file as you see fit.
  */
 
-#ifndef _TXBONE_H_
-#define _TXBONE_H_
+#ifndef TXBONE_H
+#define TXBONE_H
 
 #ifdef __cplusplus
 extern "C" {
