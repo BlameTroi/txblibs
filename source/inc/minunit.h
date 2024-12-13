@@ -120,16 +120,16 @@ minunit_real_timer = mu_timer_real();\
 }\
 if (minunit_setup) (*minunit_setup)();\
 minunit_status = 0;\
-printf("\n%s:\n", #test);\
+fprintf(stderr, "\n%s:\n", #test);\
 (void)fflush(stdout);\
 test();\
 minunit_run++;\
 if (minunit_status) {\
 	minunit_fail++;\
-	printf("F");\
-		printf("\n%s\n", minunit_last_message);\
+	fprintf(stderr, "F");\
+		fprintf(stderr, "\n%s\n", minunit_last_message);\
 	} else {\
-		printf("\n");\
+		fprintf(stderr, "\n");\
 	}\
 (void)fflush(stdout);\
 if (minunit_teardown) (*minunit_teardown)();\
@@ -139,10 +139,10 @@ if (minunit_teardown) (*minunit_teardown)();\
 #define MU_REPORT() MU__SAFE_BLOCK(\
 	double minunit_end_real_timer;\
 	double minunit_end_proc_timer;\
-	printf("\n\n%d tests, %d assertions, %d failures\n", minunit_run, minunit_assert, minunit_fail);\
+	fprintf(stderr, "\n\n%d tests, %d assertions, %d failures\n", minunit_run, minunit_assert, minunit_fail);\
 	minunit_end_real_timer = mu_timer_real();\
 	minunit_end_proc_timer = mu_timer_cpu();\
-	printf("\nFinished in %.8f seconds (real) %.8f seconds (proc)\n\n",\
+	fprintf(stderr, "\nFinished in %.8f seconds (real) %.8f seconds (proc)\n\n",\
 	minunit_end_real_timer - minunit_real_timer,\
 	minunit_end_proc_timer - minunit_proc_timer);\
 )
@@ -156,7 +156,7 @@ if (!(test)) {\
 	minunit_status = 1;\
 	return;\
 } else {\
-	printf(".");\
+	fprintf(stderr, ".");\
 }\
 )
 
@@ -167,7 +167,7 @@ if ((test)) {\
 	minunit_status = 1;\
 	return;\
 } else {\
-	printf(".");\
+	fprintf(stderr, ".");\
 }\
 )
 
@@ -179,7 +179,7 @@ if (!(test)) {\
 	minunit_status = 1;\
 	return;\
 } else {\
-	printf(".");\
+	fprintf(stderr, ".");\
 }\
 )
 
@@ -197,7 +197,7 @@ if (!(test)) {\
 	minunit_status = 1;\
 	return;\
 } else {\
-	printf(".");\
+	fprintf(stderr, ".");\
 }\
 )
 
@@ -212,7 +212,7 @@ if (minunit_tmp_e != minunit_tmp_r) {\
 	minunit_status = 1;\
 	return;\
 } else {\
-	printf(".");\
+	fprintf(stderr, ".");\
 }\
 )
 
@@ -228,7 +228,7 @@ int minunit_significant_figures = 1 - log10(MINUNIT_EPSILON);\
 	minunit_status = 1;\
 	return;\
 } else {\
-	printf(".");\
+	fprintf(stderr, ".");\
 }\
 )
 
@@ -247,7 +247,7 @@ if(strcmp(minunit_tmp_e, minunit_tmp_r) != 0) {\
 	minunit_status = 1;\
 	return;\
 } else {\
-	printf(".");\
+	fprintf(stderr, ".");\
 }\
 )
 
