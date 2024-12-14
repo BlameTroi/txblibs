@@ -1,4 +1,4 @@
-/* unitnew.c -- consolidated unit tests for scapegoat tree */
+/* unitbtree.c -- consolidated unit tests for scapegoat tree */
 
 /* system includes here */
 #include <stdbool.h>
@@ -683,19 +683,33 @@ MU_TEST(test_api_string) {
 
 }
 
+
 MU_TEST(test_api_custom) {
-
+	Tree *t = NULL;
+	alist *xs = NULL;
+	t = small_custom_tree();
+	/* 50, 40, 60, then 0->40 by 5 and 100->60 by 5 */
+	/* so one end is 100, the other is 0 */
+	xs = make_alist();
+	t->transient1 = xs;
+	in_order_traversal(t, xs, traverse_peek_depth);
+	xs = t->transient1;
+	traversal_print(xs, "in order, custom key w/depth\n");
+	free_alist(xs);
+	rebalance_Tree(t);
+	xs = make_alist();
+	t->transient1 = xs;
+	in_order_traversal(t, xs, traverse_peek_depth);
+	xs = t->transient1;
+	traversal_print(xs, "in order, after rebalance, custome key w/depth\n");
+	free_alist(xs);
+	free_Tree(t);
 }
 
-void
-breakpoint(void) {
-	fprintf(stderr, "breakpoint");
-}
 
 MU_TEST(test_volume) {
 	Tree *t = make_Tree(INTEGER_KEY, NULL);
 	for (int i = 0; i < 10000; i++) {
-		if (i == 7161) breakpoint();
 		insert(t, as_key(random_between(1, 99999)), "random");
 	}
 	/* mu_shouldnt(true); */

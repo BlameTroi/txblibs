@@ -30,7 +30,7 @@ char **argv;
 void
 test_setup(void) {
 	srand(6803); /* predictable but different sequence when using the bad generator. */
-	tsinitialize(4000, txballoc_f_full, stderr);
+	tsinitialize(4000, txballoc_f_errors, stderr);
 }
 
 void
@@ -83,12 +83,12 @@ MU_TEST(test_add_three) {
 	xs = free_alist(xs);
 	ys = cons_to_alist(ys, (uintptr_t)2);
 	ys = cons_to_alist(ys, (uintptr_t)3);
-	fprintf(stdout, "\nexamining a list\n");
-	fprintf(stdout, "ys: %p  capacity: %d  used: %d\n",
+	fprintf(stderr, "\nexamining a list\n");
+	fprintf(stderr, "ys: %p  capacity: %d  used: %d\n",
 		(void*)ys, ys->capacity, ys->used);
-	fprintf(stdout, "ys[0] %lu\n", ys->list[0]);
-	fprintf(stdout, "ys[1] %lu\n", ys->list[1]);
-	fprintf(stdout, "ys[2] %lu\n", ys->list[2]);
+	fprintf(stderr, "ys[0] %lu\n", ys->list[0]);
+	fprintf(stderr, "ys[1] %lu\n", ys->list[1]);
+	fprintf(stderr, "ys[2] %lu\n", ys->list[2]);
 	ys = free_alist(ys);
 	mu_shouldnt(xs || ys);
 }
@@ -104,16 +104,16 @@ MU_TEST(test_expansion) {
 	mu_should(xs->used == 0);
 	alist *original_xs_pointer = xs;
 	bool split_seen = false;
-	fprintf(stdout, "\ngrowing a list\n");
+	fprintf(stderr, "\ngrowing a list\n");
 	int original_capacity = xs->capacity;
 	for (int p = 0; p < original_capacity + 4; p += 1) {
 		if (xs != original_xs_pointer) {
-			fprintf(stdout, "alist split detected after %d\n", p-1);
+			fprintf(stderr, "alist split detected after %d\n", p-1);
 			original_xs_pointer = xs;
 			split_seen = true;
 		}
 		xs = cons_to_alist(xs, p);
-		fprintf(stdout, "iter: %d  xs: %p  cap: %d  used: %d  holds: %lu\n",
+		fprintf(stderr, "iter: %d  xs: %p  cap: %d  used: %d  holds: %lu\n",
 			p, (void*)xs, xs->capacity, xs->used, xs->list[p]);
 	}
 	mu_should(split_seen);
@@ -131,27 +131,27 @@ MU_TEST(test_iterator) {
 	mu_should(xs->used == 0);
 	alist *original_xs_pointer = xs;
 	bool split_seen = false;
-	fprintf(stdout, "\ncreating expanded list\n");
+	fprintf(stderr, "\ncreating expanded list\n");
 	int original_capacity = xs->capacity;
 	for (int p = 0; p < original_capacity + 4; p += 1) {
 		if (xs != original_xs_pointer) {
-			fprintf(stdout, "alist split confirmed at %d\n", p-1);
+			fprintf(stderr, "alist split confirmed at %d\n", p-1);
 			original_xs_pointer = xs;
 			split_seen = true;
 		}
 		xs = cons_to_alist(xs, p);
-		fprintf(stdout, "consed %d\n", p);
+		fprintf(stderr, "consed %d\n", p);
 	}
 	mu_should(split_seen);
 	int iterator = 0;
 	while (iterator > -1) {
 		uintptr_t p = iterate_alist(xs, &iterator);
-		fprintf(stdout, "iterator counter %d  retrieved %lu\n", iterator, p);
+		fprintf(stderr, "iterator counter %d  retrieved %lu\n", iterator, p);
 	}
 	mu_should(iterator == -1);
 	for (int i = 0; i < xs->used; i++) {
 		uintptr_t p = xs->list[i];
-		fprintf(stdout, "via for %d = %lu\n", i, p);
+		fprintf(stderr, "via for %d = %lu\n", i, p);
 	}
 	xs = free_alist(xs);
 	mu_shouldnt(xs);

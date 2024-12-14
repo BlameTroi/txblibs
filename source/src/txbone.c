@@ -71,23 +71,23 @@ one_tags[] = {
 static
 one_singly *
 singly_add_first(
-	one_singly *me,
+	one_singly *self,
 	void *payload
 ) {
 	sgl_item *next = tsmalloc(sizeof(*next));
 	memset(next, 0, sizeof(*next));
 	next->payload = payload;
-	next->next = me->first;
-	me->first = next;
-	return me;
+	next->next = self->first;
+	self->first = next;
+	return self;
 }
 
 static
 void *
 singly_peek_first(
-	one_singly *me
+	one_singly *self
 ) {
-	sgl_item *first = me->first;
+	sgl_item *first = self->first;
 	if (first == NULL) return NULL;
 
 	return first->payload;
@@ -96,12 +96,12 @@ singly_peek_first(
 static
 void *
 singly_get_first(
-	one_singly *me
+	one_singly *self
 ) {
-	sgl_item *first = me->first;
+	sgl_item *first = self->first;
 	if (first == NULL) return NULL;
 
-	me->first = first->next;
+	self->first = first->next;
 	void *res = first->payload;
 	memset(first, 253, sizeof(*first));
 	tsfree(first);
@@ -111,7 +111,7 @@ singly_get_first(
 static
 one_singly *
 singly_add_last(
-	one_singly *me,
+	one_singly *self,
 	void *payload
 ) {
 	sgl_item *next = tsmalloc(sizeof(*next));
@@ -119,25 +119,25 @@ singly_add_last(
 	next->payload = payload;
 
 	/* empty list is dead simple */
-	if (me->first == NULL) {
-		me->first = next;
-		return me;
+	if (self->first == NULL) {
+		self->first = next;
+		return self;
 	}
 
 	/* find current end and link */
-	sgl_item *curr = me->first;
+	sgl_item *curr = self->first;
 	while (curr->next)
 		curr = curr->next;
 	curr->next = next;
-	return me;
+	return self;
 }
 
 static
 void *
 singly_peek_last(
-	one_singly *me
+	one_singly *self
 ) {
-	sgl_item *curr = me->first;
+	sgl_item *curr = self->first;
 	if (curr == NULL) return NULL;
 
 	/* chase to end. */
@@ -151,9 +151,9 @@ singly_peek_last(
 static
 void *
 singly_get_last(
-	one_singly *me
+	one_singly *self
 ) {
-	sgl_item *curr = me->first;
+	sgl_item *curr = self->first;
 	if (curr == NULL) return NULL;
 
 	/* chase to end, remembering preceeding */
@@ -168,7 +168,7 @@ singly_get_last(
 	if (previous)
 		previous->next = NULL;
 	else
-		me->first = NULL;
+		self->first = NULL;
 
 	/* extract payload, clear and free old item */
 	void *res = curr->payload;
@@ -180,10 +180,10 @@ singly_get_last(
 static
 int
 singly_count(
-	one_singly *me
+	one_singly *self
 ) {
 	int count = 0;
-	sgl_item *curr = me->first;
+	sgl_item *curr = self->first;
 	while (curr) {
 		count += 1;
 		curr = curr->next;
@@ -194,11 +194,11 @@ singly_count(
 static
 int
 singly_purge(
-	one_singly *me
+	one_singly *self
 ) {
 	int count = 0;
-	sgl_item *curr = me->first;
-	me->first = NULL;
+	sgl_item *curr = self->first;
+	self->first = NULL;
 	while (curr) {
 		count += 1;
 		sgl_item *del = curr;
@@ -217,48 +217,48 @@ singly_purge(
 static
 one_doubly *
 doubly_add_first(
-	one_doubly *me,
+	one_doubly *self,
 	void *payload
 ) {
 	dbl_item *first = tsmalloc(sizeof(*first));
 	memset(first, 0, sizeof(*first));
 	first->payload = payload;
-	first->next = me->first;
+	first->next = self->first;
 	first->previous = NULL;
 
-	if (me->first == NULL) {
-		me->first = first;
-		me->last = first;
-		return me;
+	if (self->first == NULL) {
+		self->first = first;
+		self->last = first;
+		return self;
 	}
 
-	me->first->previous = first;
-	me->first = first;
-	return me;
+	self->first->previous = first;
+	self->first = first;
+	return self;
 }
 
 static
 void *
 doubly_peek_first(
-	one_doubly *me
+	one_doubly *self
 ) {
-	if (me->first == NULL) return NULL;
+	if (self->first == NULL) return NULL;
 
-	return me->first->payload;
+	return self->first->payload;
 }
 
 static
 void *
 doubly_get_first(
-	one_doubly *me
+	one_doubly *self
 ) {
-	if (me->first == NULL) return NULL;
+	if (self->first == NULL) return NULL;
 
-	dbl_item *first = me->first;
-	me->first = first->next;
+	dbl_item *first = self->first;
+	self->first = first->next;
 
 	if (first->next) first->next->previous = NULL;
-	else me->last = NULL;
+	else self->last = NULL;
 
 	void *res = first->payload;
 	memset(first, 253, sizeof(*first));
@@ -269,50 +269,50 @@ doubly_get_first(
 static
 one_doubly *
 doubly_add_last(
-	one_doubly *me,
+	one_doubly *self,
 	void *payload
 ) {
 	dbl_item *last = tsmalloc(sizeof(*last));
 	memset(last, 0, sizeof(*last));
 	last->payload = payload;
-	last->previous = me->last;
+	last->previous = self->last;
 	last->next = NULL;
 
-	if (me->first == NULL) {
-		me->first = last;
-		me->last = last;
-		return me;
+	if (self->first == NULL) {
+		self->first = last;
+		self->last = last;
+		return self;
 	}
 
-	me->last->next = last;
-	me->last = last;
-	return me;
+	self->last->next = last;
+	self->last = last;
+	return self;
 }
 
 static
 void *
 doubly_peek_last(
-	one_doubly *me
+	one_doubly *self
 ) {
-	if (me->last == NULL) return NULL;
+	if (self->last == NULL) return NULL;
 
-	return me->last->payload;
+	return self->last->payload;
 }
 
 static
 void *
 doubly_get_last(
-	one_doubly *me
+	one_doubly *self
 ) {
-	if (me->last == NULL) return NULL;
+	if (self->last == NULL) return NULL;
 
-	dbl_item *last = me->last;
-	me->last = last->previous;
+	dbl_item *last = self->last;
+	self->last = last->previous;
 	if (last->previous)
 		last->previous->next = NULL;
 	else {
-		me->first = NULL;
-		me->last = NULL;
+		self->first = NULL;
+		self->last = NULL;
 	}
 	void *res = last->payload;
 	memset(last, 253, sizeof(*last));
@@ -323,10 +323,10 @@ doubly_get_last(
 static
 int
 doubly_count(
-	one_doubly *me
+	one_doubly *self
 ) {
 	int count = 0;
-	dbl_item *curr = me->first;
+	dbl_item *curr = self->first;
 	while (curr) {
 		count += 1;
 		curr = curr->next;
@@ -337,12 +337,12 @@ doubly_count(
 static
 int
 doubly_purge(
-	one_doubly *me
+	one_doubly *self
 ) {
 	int count = 0;
-	dbl_item *curr = me->first;
-	me->first = NULL;
-	me->last = NULL;
+	dbl_item *curr = self->first;
+	self->first = NULL;
+	self->last = NULL;
 	while (curr) {
 		count += 1;
 		dbl_item *del = curr;
@@ -446,34 +446,34 @@ make_one(
 
 one_block *
 free_one(
-	one_block *me
+	one_block *self
 ) {
 
-	if (me)
-		switch (me->isa) {
+	if (self)
+		switch (self->isa) {
 
 		case singly:
 		case stack:
 		case doubly:
 		case queue:
 		case deque:
-			purge(me);
-			memset(me, 253, sizeof(*me));
-			tsfree(me);
-			return me;
+			purge(self);
+			memset(self, 253, sizeof(*self));
+			tsfree(self);
+			return self;
 
 		case dynarray:
-			memset(me->u.dyn.array, 253, me->u.dyn.capacity * sizeof(void *));
-			tsfree(me->u.dyn.array);
-			memset(me, 253, sizeof(*me));
-			tsfree(me);
-			return me;
+			memset(self->u.dyn.array, 253, self->u.dyn.capacity * sizeof(void *));
+			tsfree(self->u.dyn.array);
+			memset(self, 253, sizeof(*self));
+			tsfree(self);
+			return self;
 
 		default:
 			fprintf(stderr, "\nTXBONE error free_one: unknown or unsupported type %d %s\n",
-				me->isa, me->tag);
-			memset(me, 253, sizeof(*me));
-			tsfree(me);
+				self->isa, self->tag);
+			memset(self, 253, sizeof(*self));
+			tsfree(self);
 			return NULL;
 		}
 
@@ -497,24 +497,24 @@ free_one(
 
 one_block *
 add_first(
-	one_block *me,
+	one_block *self,
 	void *payload
 ) {
 	if (payload == NULL)
-		return me;
-	switch (me->isa) {
+		return self;
+	switch (self->isa) {
 
 	case singly:
-		singly_add_first(&me->u.sgl, payload);
-		return me;
+		singly_add_first(&self->u.sgl, payload);
+		return self;
 
 	case doubly:
-		doubly_add_first(&me->u.dbl, payload);
-		return me;
+		doubly_add_first(&self->u.dbl, payload);
+		return self;
 
 	default:
 		fprintf(stderr, "\nTXBONE error add_first: unknown or unsupported type %d %s\n",
-			me->isa, me->tag);
+			self->isa, self->tag);
 		return NULL;
 	}
 }
@@ -533,24 +533,24 @@ add_first(
 
 one_block *
 add_last(
-	one_block *me,
+	one_block *self,
 	void *payload
 ) {
 	if (payload == NULL)
-		return me;
-	switch (me->isa) {
+		return self;
+	switch (self->isa) {
 
 	case singly:
-		singly_add_last(&me->u.sgl, payload);
-		return me;
+		singly_add_last(&self->u.sgl, payload);
+		return self;
 
 	case doubly:
-		doubly_add_last(&me->u.dbl, payload);
-		return me;
+		doubly_add_last(&self->u.dbl, payload);
+		return self;
 
 	default:
 		fprintf(stderr, "\nTXBONE error add_last: unknown or unsupported type %d %s\n",
-			me->isa, me->tag);
+			self->isa, self->tag);
 		return NULL;
 	}
 }
@@ -568,20 +568,20 @@ add_last(
 
 void *
 peek_first(
-	one_block *me
+	one_block *self
 ) {
-	switch (me->isa) {
+	switch (self->isa) {
 
 	case singly:
-		return singly_peek_first(&me->u.sgl);
+		return singly_peek_first(&self->u.sgl);
 
 	case doubly:
-		return doubly_peek_first(&me->u.dbl);
+		return doubly_peek_first(&self->u.dbl);
 
 	default:
 		fprintf(stderr,
 			"\nTXBONE error peek_first: unknown or unsupported type %d %s\n",
-			me->isa, me->tag);
+			self->isa, self->tag);
 		return NULL;
 	}
 }
@@ -599,19 +599,19 @@ peek_first(
 
 void *
 peek_last(
-	one_block *me
+	one_block *self
 ) {
-	switch (me->isa) {
+	switch (self->isa) {
 
 	case singly:
-		return singly_peek_last(&me->u.sgl);
+		return singly_peek_last(&self->u.sgl);
 
 	case doubly:
-		return doubly_peek_last(&me->u.dbl);
+		return doubly_peek_last(&self->u.dbl);
 
 	default:
 		fprintf(stderr, "\nTXBONE error peek_last: unknown or unsupported type %d %s\n",
-			me->isa, me->tag);
+			self->isa, self->tag);
 		return NULL;
 	}
 }
@@ -628,19 +628,19 @@ peek_last(
 
 void *
 get_first(
-	one_block *me
+	one_block *self
 ) {
-	switch (me->isa) {
+	switch (self->isa) {
 
 	case singly:
-		return singly_get_first(&me->u.sgl);
+		return singly_get_first(&self->u.sgl);
 
 	case doubly:
-		return doubly_get_first(&me->u.dbl);
+		return doubly_get_first(&self->u.dbl);
 
 	default:
 		fprintf(stderr, "\nTXBONE error get_first: unknown or unsupported type %d %s\n",
-			me->isa, me->tag);
+			self->isa, self->tag);
 		return NULL;
 	}
 }
@@ -657,19 +657,19 @@ get_first(
 
 void *
 get_last(
-	one_block *me
+	one_block *self
 ) {
-	switch (me->isa) {
+	switch (self->isa) {
 
 	case singly:
-		return singly_get_last(&me->u.sgl);
+		return singly_get_last(&self->u.sgl);
 
 	case doubly:
-		return doubly_get_last(&me->u.dbl);
+		return doubly_get_last(&self->u.dbl);
 
 	default:
 		fprintf(stderr, "\nTXBONE error get_last: unknown or unsupported type %d %s\n",
-			me->isa, me->tag);
+			self->isa, self->tag);
 		return NULL;
 	}
 }
@@ -687,21 +687,21 @@ get_last(
 
 int
 count(
-	one_block *me
+	one_block *self
 ) {
-	switch (me->isa) {
+	switch (self->isa) {
 
 	case singly:
-		return singly_count(&me->u.sgl);
+		return singly_count(&self->u.sgl);
 
 	case doubly:
 	case queue:
 	case deque:
-		return doubly_count(&me->u.dbl);
+		return doubly_count(&self->u.dbl);
 
 	default:
 		fprintf(stderr, "\nTXBONE error count: unknown or unsupported type %d %s\n",
-			me->isa, me->tag);
+			self->isa, self->tag);
 		return -1;
 	}
 }
@@ -718,22 +718,22 @@ count(
 
 bool
 empty(
-	one_block *me
+	one_block *self
 ) {
-	switch (me->isa) {
+	switch (self->isa) {
 
 	case singly:
 	case stack:
-		return me->u.sgl.first == NULL;
+		return self->u.sgl.first == NULL;
 
 	case doubly:
 	case queue:
 	case deque:
-		return me->u.dbl.first == NULL;
+		return self->u.dbl.first == NULL;
 
 	default:
 		fprintf(stderr, "\nTXBONE error empty: unknown or unsupported type %d %s\n",
-			me->isa, me->tag);
+			self->isa, self->tag);
 		return false;
 	}
 }
@@ -752,22 +752,22 @@ empty(
 
 int
 purge(
-	one_block *me
+	one_block *self
 ) {
-	switch (me->isa) {
+	switch (self->isa) {
 
 	case singly:
 	case stack:
-		return singly_purge(&me->u.sgl);
+		return singly_purge(&self->u.sgl);
 
 	case doubly:
 	case queue:
 	case deque:
-		return doubly_purge(&me->u.dbl);
+		return doubly_purge(&self->u.dbl);
 
 	default:
 		fprintf(stderr, "\nTXBONE error purge: unknown or unsupported type %d %s\n",
-			me->isa, me->tag);
+			self->isa, self->tag);
 		return -1;
 	}
 }
@@ -780,36 +780,36 @@ purge(
 
 one_block *
 push(
-	one_block *me,
+	one_block *self,
 	void *payload
 ) {
-	switch (me->isa) {
+	switch (self->isa) {
 
 	case stack:
-		singly_add_first(&me->u.sgl, payload);
-		return me;
+		singly_add_first(&self->u.sgl, payload);
+		return self;
 
 	default:
 		fprintf(stderr,
 			"\nTXBONE error push: unknown or unsupported type %d %s, expected stack\n",
-			me->isa, me->tag);
+			self->isa, self->tag);
 		return NULL;
 	}
 }
 
 void *
 pop(
-	one_block *me
+	one_block *self
 ) {
-	switch (me->isa) {
+	switch (self->isa) {
 
 	case stack:
-		return singly_get_first(&me->u.sgl);
+		return singly_get_first(&self->u.sgl);
 
 	default:
 		fprintf(stderr,
 			"\nTXBONE error pop: unknown or unsupported type %d %s, expected stack\n",
-			me->isa, me->tag);
+			self->isa, self->tag);
 		return NULL;
 	}
 }
@@ -822,36 +822,36 @@ pop(
 
 one_block *
 enqueue(
-	one_block *me,
+	one_block *self,
 	void *payload
 ) {
-	switch (me->isa) {
+	switch (self->isa) {
 
 	case queue:
-		doubly_add_last(&me->u.dbl, payload);
-		return me;
+		doubly_add_last(&self->u.dbl, payload);
+		return self;
 
 	default:
 		fprintf(stderr,
 			"\nTXBONE error enqueue: unknown or unsupported type %d %s, expected queue\n",
-			me->isa, me->tag);
+			self->isa, self->tag);
 		return NULL;
 	}
 }
 
 void *
 dequeue(
-	one_block *me
+	one_block *self
 ) {
-	switch (me->isa) {
+	switch (self->isa) {
 
 	case queue:
-		return doubly_get_first(&me->u.dbl);
+		return doubly_get_first(&self->u.dbl);
 
 	default:
 		fprintf(stderr,
 			"\nTXBONE error dequeue: unknown or unsupported type %d %s, expected queue\n",
-			me->isa, me->tag);
+			self->isa, self->tag);
 		return NULL;
 	}
 }
@@ -862,20 +862,20 @@ dequeue(
 
 void *
 peek(
-	one_block *me
+	one_block *self
 ) {
-	switch (me->isa) {
+	switch (self->isa) {
 
 	case stack:
-		return singly_peek_first(&me->u.sgl);
+		return singly_peek_first(&self->u.sgl);
 
 	case queue:
-		return doubly_peek_first(&me->u.dbl);
+		return doubly_peek_first(&self->u.dbl);
 
 	default:
 		fprintf(stderr,
 			"\nTXBONE error peek: unknown or unsupported type %d %s, expected stack or queue\n",
-			me->isa, me->tag);
+			self->isa, self->tag);
 		return NULL;
 	}
 }
@@ -888,17 +888,17 @@ peek(
 
 int
 depth(
-	one_block *me
+	one_block *self
 ) {
-	switch (me->isa) {
+	switch (self->isa) {
 
 	case stack:
-		return singly_count(&me->u.sgl);
+		return singly_count(&self->u.sgl);
 
 	default:
 		fprintf(stderr,
 			"\nTXBONE error depth: unknown or unsupported type %d %s, expected stack\n",
-			me->isa, me->tag);
+			self->isa, self->tag);
 		return -1;
 	}
 }
@@ -911,106 +911,106 @@ depth(
 
 one_block *
 push_front(
-	one_block *me,
+	one_block *self,
 	void *payload
 ) {
-	switch (me->isa) {
+	switch (self->isa) {
 
 	case deque:
-		doubly_add_first(&me->u.dbl, payload);
-		return me;
+		doubly_add_first(&self->u.dbl, payload);
+		return self;
 
 	default:
 		fprintf(stderr,
 			"\nTXBONE error push_front: unknown or unsupported type %d %s, expected deque\n",
-			me->isa, me->tag);
+			self->isa, self->tag);
 		return NULL;
 	}
 }
 
 one_block *
 push_back(
-	one_block *me,
+	one_block *self,
 	void *payload
 ) {
-	switch (me->isa) {
+	switch (self->isa) {
 
 	case deque:
-		doubly_add_last(&me->u.dbl, payload);
-		return me;
+		doubly_add_last(&self->u.dbl, payload);
+		return self;
 
 	default:
 		fprintf(stderr,
 			"\nTXBONE error push_back: unknown or unsupported type %d %s, expected deque\n",
-			me->isa, me->tag);
+			self->isa, self->tag);
 		return NULL;
 	}
 }
 
 void *
 pop_front(
-	one_block *me
+	one_block *self
 ) {
-	switch (me->isa) {
+	switch (self->isa) {
 
 	case deque:
-		return doubly_get_first(&me->u.dbl);
+		return doubly_get_first(&self->u.dbl);
 
 	default:
 		fprintf(stderr,
 			"\nTXBONE error pop_front: unknown or unsupported type %d %s, expected deque\n",
-			me->isa, me->tag);
+			self->isa, self->tag);
 		return NULL;
 	}
 }
 
 void *
 pop_back(
-	one_block *me
+	one_block *seslf
 ) {
-	switch (me->isa) {
+	switch (seslf->isa) {
 
 	case deque:
-		return doubly_get_last(&me->u.dbl);
+		return doubly_get_last(&seslf->u.dbl);
 
 	default:
 		fprintf(stderr,
 			"\nTXBONE error pop_back: unknown or unsupported type %d %s, expected deque\n",
-			me->isa, me->tag);
+			seslf->isa, seslf->tag);
 		return NULL;
 	}
 }
 
 void *
 peek_front(
-	one_block *me
+	one_block *self
 ) {
-	switch (me->isa) {
+	switch (self->isa) {
 
 	case deque:
-		return doubly_peek_first(&me->u.dbl);
+		return doubly_peek_first(&self->u.dbl);
 
 	default:
 		fprintf(stderr,
 			"\nTXBONE error peek_front: unknown or unsupported type %d %s, expected deque\n",
-			me->isa, me->tag);
+			self->isa, self->tag);
 		return NULL;
 	}
 }
 
 void *
 peek_back(
-	one_block *me
+	one_block *self
 ) {
-	switch (me->isa) {
+	switch (self->isa) {
 
 	case deque:
-		return doubly_peek_last(&me->u.dbl);
+		return doubly_peek_last(&self->u.dbl);
 
 	default:
 		fprintf(stderr,
 			"\nTXBONE error peek_back: unknown or unsupported type %d %s, expected deque\n",
-			me->isa, me->tag);
+			self->isa, self->tag);
 		return NULL;
 	}
 }
@@ -1035,15 +1035,15 @@ peek_back(
 
 int
 high_index(
-	one_block *me
+	one_block *self
 ) {
-	if (me->isa != dynarray) {
+	if (self->isa != dynarray) {
 		fprintf(stderr,
 			"\nTXBONE error high_index: unknown or unsupported type %d %s, expected dynarray\n",
-			me->isa, me->tag);
+			self->isa, self->tag);
 		return -1;
 	}
-	return me->u.dyn.length;
+	return self->u.dyn.length;
 }
 
 /*
@@ -1064,14 +1064,14 @@ high_index(
 
 one_block *
 put_at(
-	one_block *me,
+	one_block *self,
 	void *payload,
 	int n
 ) {
-	if (me->isa != dynarray) {
+	if (self->isa != dynarray) {
 		fprintf(stderr,
 			"\nTXBONE error put_at: unknown or unsupported type %d %s, expected dynarray\n",
-			me->isa, me->tag);
+			self->isa, self->tag);
 		return NULL;
 	}
 	if (n < 0) {
@@ -1079,19 +1079,19 @@ put_at(
 			"\nTXBONE error put_at: index may not be negative %d\n", n);
 		return NULL;
 	}
-	while (n >= me->u.dyn.capacity) {
-		void *old = me->u.dyn.array;
-		me->u.dyn.array = tsmalloc(2 * me->u.dyn.capacity * sizeof(void *));
-		memset(me->u.dyn.array, 0, 2 * me->u.dyn.capacity * sizeof(void *));
-		memcpy(me->u.dyn.array, old, me->u.dyn.capacity * sizeof(void *));
-		memset(old, 253, me->u.dyn.capacity * sizeof(void *));
+	while (n >= self->u.dyn.capacity) {
+		void *old = self->u.dyn.array;
+		self->u.dyn.array = tsmalloc(2 * self->u.dyn.capacity * sizeof(void *));
+		memset(self->u.dyn.array, 0, 2 * self->u.dyn.capacity * sizeof(void *));
+		memcpy(self->u.dyn.array, old, self->u.dyn.capacity * sizeof(void *));
+		memset(old, 253, self->u.dyn.capacity * sizeof(void *));
 		tsfree(old);
-		me->u.dyn.capacity *= 2;
+		self->u.dyn.capacity *= 2;
 	}
-	me->u.dyn.array[n] = payload;
-	if (n > me->u.dyn.length)
-		me->u.dyn.length = n;
-	return me;
+	self->u.dyn.array[n] = payload;
+	if (n > self->u.dyn.length)
+		self->u.dyn.length = n;
+	return self;
 }
 
 /*
@@ -1112,22 +1112,22 @@ put_at(
 
 void *
 get_from(
-	one_block *me,
+	one_block *self,
 	int n
 ) {
-	if (me->isa != dynarray) {
+	if (self->isa != dynarray) {
 		fprintf(stderr,
 			"\nTXBONE error get_at: unknown or unsupported type %d %s, expected dynarray\n",
-			me->isa, me->tag);
+			self->isa, self->tag);
 		return NULL;
 	}
-	if (n > me->u.dyn.length || n < 0) {
+	if (n > self->u.dyn.length || n < 0) {
 		fprintf(stderr,
 			"\nTXBONE error get_at: index out of bounds %d not in range [0..%d]\n", n,
-			me->u.dyn.length);
+			self->u.dyn.length);
 		return NULL;
 	}
-	return (me->u.dyn.array)[n];
+	return (self->u.dyn.array)[n];
 }
 
 /* txbone.c ends here */
