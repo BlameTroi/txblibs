@@ -26,6 +26,7 @@ extern "C" {
 #endif /* __cplusplus */
 
 #include <stdbool.h>
+#include <stdint.h>
 
 /*
  * supported types so far are singly and doubly linked lists, queues,
@@ -52,6 +53,7 @@ enum one_type {
 	stack,
 	singly, /* linked list */
 	doubly, /* linked list */
+	alist,  /* accumulator list */
 	dynarray,
 	bst,
 	tree,
@@ -69,11 +71,16 @@ enum one_type {
 #define ONE_TAG_LEN 24
 
 /*
- * this is completely arbitrary. some implementations actually start
+ * these is completely arbitrary. some implementations actually start
  * at 1 or 2.
  */
 
+#ifndef DYNARRAY_DEFAULT_CAPACITY
 #define DYNARRAY_DEFAULT_CAPACITY 512
+#endif
+#ifndef ALIST_DEFAULT_CAPACITY
+#define ALIST_DEFAULT_CAPACITY 100
+#endif
 
 /*
  * i prefer working with typedefs of structs. the one_block carries
@@ -130,6 +137,49 @@ typedef struct one_doubly one_doubly;
 struct one_doubly {
 	dbl_item *first;
 	dbl_item *last;
+};
+
+/*
+ * an accumulator list is a small subset of an array
+ * list. it's lighter than a dynamic array even though
+ * they are similar. it's intended use is as an accumulator
+ * during recursion, as you might see in lisp or sml.
+ *
+ * a quick array list for pointer sized objects (uintptr_t).
+ * its intent is for easy collection of things (often pointers)
+ * during recursive processing. using uintptr_t instead of void *
+ * worked out better here.
+ *
+ * the api convention is the returned list is meant to replace the
+ * primary list in arguments. if the list has been significantly
+ * mutated, the original primary list is freed and an updated
+ * copy is returned.
+ *
+ * always use the array list you get back from an api call, not the
+ * one you sent in. for example, in the following, the assert will
+ * succeed as the ALIST_DEFAULT_CAP'th pass through the for loop will
+ * require an expansion of the array list.
+ *
+ * one_block *xs = make_one(alist);
+ * one_block *remember = xs;
+ * for (int i = 0; i > ALIST_DEFAULT_CAPACITY * 2; i++)
+ *         xs = cons_alist(xs, (uintptr_t)i);
+ * assert(remember != xs);
+ * xs = free_one(xs);
+ * assert(xs == NULL);
+ *
+ * 'remember' holds the original address of 'xs', but that storage was
+ * released when 'xs' was expanded.
+ *
+ * some of the api is inspired by the java arraylist, and the rest
+ * from lisp. it's pseudo lisp lists with fake garbage collection.
+ */
+
+typedef struct one_alist one_alist;
+struct one_alist {
+	int capacity;                /* starts at ALIST_DEFAULT_CAP */
+	int used;                    /* how many things are there   */
+	uintptr_t *list;             /* open eneded array to anchor */
 };
 
 /*
@@ -211,6 +261,7 @@ union one_details {
 	one_stack stk;               /* actually a singly linked list under the covers */
 	one_singly sgl;              /* singly linked list */
 	one_doubly dbl;              /* doubly linked list */
+	one_alist acc;               /* accumulator list */
 	one_dynarray dyn;            /* dynamically resizing array */
 	one_bst bst;                 /* binary search tree */
 	one_tree tree;               /* a general tree */
@@ -528,6 +579,55 @@ peek_back(
 void *
 peek_front(
 	one_block *me
+);
+
+/*
+ * accumulator lists are self expanding lists of uintptr_t sized
+ * things. its api and intended use are as accumulators for
+ * recursions, as you might see in lisp or sml.
+ */
+
+one_block *
+cons_to_alist(
+	one_block *xs,
+	uintptr_t atom
+);
+
+one_block *
+append_to_alist(
+	one_block *xs,
+	one_block *ys
+);
+
+one_block *
+slice_alist(
+	one_block *xs,
+	int from_inclusive,
+	int to_exclusive
+);
+
+bool
+put_alist(
+	one_block *xs,
+	int n,
+	uintptr_t atom
+);
+
+uintptr_t
+get_alist(
+	one_block *xs,
+	int n
+);
+
+one_block *
+clone_alist(
+	one_block *xs
+);
+
+uintptr_t
+iterate_alist(
+	one_block *xs,
+	int *curr
 );
 
 /*

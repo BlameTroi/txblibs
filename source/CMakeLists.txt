@@ -82,7 +82,9 @@ target_compile_options(unitbtree PUBLIC "$<$<CONFIG:RELEASE>:SHELL:${MY_RELEASE_
 
 add_executable(unitalist "${CMAKE_CURRENT_SOURCE_DIR}/unit/unitalist.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/lib_txballoc.c"
-  "${CMAKE_CURRENT_SOURCE_DIR}/src/lib_txbalist.c")
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/lib_txbmisc.c"
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/lib_txbrand.c"
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/txbone.c")
 target_include_directories(unitalist PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/inc")
 target_include_directories(unitalist PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/txblibs")
 target_link_options(unitalist PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_LINK_OPTIONS}>")

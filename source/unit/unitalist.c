@@ -10,7 +10,7 @@
 #include "txbmisc.h"
 #include "txbrand.h"
 
-#include "txbalist.h"
+#include "txbone.h"
 
 /*
  * main() drops these here for anyone who wants them, keeping the code
@@ -45,9 +45,9 @@ test_teardown(void) {
 MU_TEST(test_create) {
 	mu_should(true);
 	mu_shouldnt(false);
-	alist *xs = make_alist();
-	mu_should(alist_length(xs) == 0);
-	xs = free_alist(xs);
+	one_block *xs = make_one(alist);
+	mu_should(count(xs) == 0);
+	xs = free_one(xs);
 	mu_shouldnt(xs);
 }
 
@@ -57,14 +57,14 @@ MU_TEST(test_create) {
  */
 
 MU_TEST(test_add_one) {
-	alist *xs = make_alist();
+	one_block *xs = make_one(alist);
 	xs = cons_to_alist(xs, (uintptr_t)1);
-	mu_should(alist_length(xs) == 1);
-	alist *ys = clone_alist(xs);
-	mu_should(alist_length(ys) == 1);
+	mu_should(count(xs) == 1);
+	one_block *ys = clone_alist(xs);
+	mu_should(count(ys) == 1);
 	mu_shouldnt(xs == ys);
-	xs = free_alist(xs);
-	ys = free_alist(ys);
+	xs = free_one(xs);
+	ys = free_one(ys);
 	mu_shouldnt(xs || ys);
 }
 
@@ -74,50 +74,50 @@ MU_TEST(test_add_one) {
  */
 
 MU_TEST(test_add_three) {
-	alist *xs = make_alist();
+	one_block *xs = make_one(alist);
 	xs = cons_to_alist(xs, (uintptr_t)1);
-	mu_should(alist_length(xs) == 1);
-	alist *ys = clone_alist(xs);
-	mu_should(alist_length(ys) == 1);
+	mu_should(count(xs) == 1);
+	one_block *ys = clone_alist(xs);
+	mu_should(count(ys) == 1);
 	mu_shouldnt(xs == ys);
-	xs = free_alist(xs);
+	xs = free_one(xs);
 	ys = cons_to_alist(ys, (uintptr_t)2);
 	ys = cons_to_alist(ys, (uintptr_t)3);
 	fprintf(stderr, "\nexamining a list\n");
 	fprintf(stderr, "ys: %p  capacity: %d  used: %d\n",
-		(void*)ys, ys->capacity, ys->used);
-	fprintf(stderr, "ys[0] %lu\n", ys->list[0]);
-	fprintf(stderr, "ys[1] %lu\n", ys->list[1]);
-	fprintf(stderr, "ys[2] %lu\n", ys->list[2]);
-	ys = free_alist(ys);
+		(void*)ys, ys->u.acc.capacity, ys->u.acc.used);
+	fprintf(stderr, "ys[0] %lu\n", ys->u.acc.list[0]);
+	fprintf(stderr, "ys[1] %lu\n", ys->u.acc.list[1]);
+	fprintf(stderr, "ys[2] %lu\n", ys->u.acc.list[2]);
+	ys = free_one(ys);
 	mu_shouldnt(xs || ys);
 }
 
 /*
  * add enough items to a list to force it to expand. catch
- * it doing so. ALIST_DEFAULT_CAP sets the initial size.
+ * it doing so. ONE_BLOCK_DEFAULT_CAP sets the initial size.
  */
 
 MU_TEST(test_expansion) {
-	alist *xs = make_alist();
-	mu_should(xs->capacity == ALIST_DEFAULT_CAP);
-	mu_should(xs->used == 0);
-	alist *original_xs_pointer = xs;
+	one_block *xs = make_one(alist);
+	mu_should(xs->u.acc.capacity == ALIST_DEFAULT_CAPACITY);
+	mu_should(xs->u.acc.used == 0);
+	one_block *original_xs_pointer = xs;
 	bool split_seen = false;
 	fprintf(stderr, "\ngrowing a list\n");
-	int original_capacity = xs->capacity;
+	int original_capacity = xs->u.acc.capacity;
 	for (int p = 0; p < original_capacity + 4; p += 1) {
 		if (xs != original_xs_pointer) {
-			fprintf(stderr, "alist split detected after %d\n", p-1);
+			fprintf(stderr, "one_block split detected after %d\n", p-1);
 			original_xs_pointer = xs;
 			split_seen = true;
 		}
 		xs = cons_to_alist(xs, p);
 		fprintf(stderr, "iter: %d  xs: %p  cap: %d  used: %d  holds: %lu\n",
-			p, (void*)xs, xs->capacity, xs->used, xs->list[p]);
+			p, (void*)xs, xs->u.acc.capacity, xs->u.acc.used, xs->u.acc.list[p]);
 	}
 	mu_should(split_seen);
-	xs = free_alist(xs);
+	xs = free_one(xs);
 	mu_shouldnt(xs);
 }
 
@@ -126,16 +126,16 @@ MU_TEST(test_expansion) {
  */
 
 MU_TEST(test_iterator) {
-	alist *xs = make_alist();
-	mu_should(xs->capacity == ALIST_DEFAULT_CAP);
-	mu_should(xs->used == 0);
-	alist *original_xs_pointer = xs;
+	one_block *xs = make_one(alist);
+	mu_should(xs->u.acc.capacity == ALIST_DEFAULT_CAPACITY);
+	mu_should(xs->u.acc.used == 0);
+	one_block *original_xs_pointer = xs;
 	bool split_seen = false;
 	fprintf(stderr, "\ncreating expanded list\n");
-	int original_capacity = xs->capacity;
+	int original_capacity = xs->u.acc.capacity;
 	for (int p = 0; p < original_capacity + 4; p += 1) {
 		if (xs != original_xs_pointer) {
-			fprintf(stderr, "alist split confirmed at %d\n", p-1);
+			fprintf(stderr, "one_block split confirmed at %d\n", p-1);
 			original_xs_pointer = xs;
 			split_seen = true;
 		}
@@ -149,11 +149,11 @@ MU_TEST(test_iterator) {
 		fprintf(stderr, "iterator counter %d  retrieved %lu\n", iterator, p);
 	}
 	mu_should(iterator == -1);
-	for (int i = 0; i < xs->used; i++) {
-		uintptr_t p = xs->list[i];
+	for (int i = 0; i < xs->u.acc.used; i++) {
+		uintptr_t p = xs->u.acc.list[i];
 		fprintf(stderr, "via for %d = %lu\n", i, p);
 	}
-	xs = free_alist(xs);
+	xs = free_one(xs);
 	mu_shouldnt(xs);
 }
 

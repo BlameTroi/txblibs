@@ -50,6 +50,7 @@ one_tags[] = {
 	"stack",                 /* stack */
 	"singly linked list",    /* singly */
 	"doubly linked list",    /* doubly */
+	"accumulator list",      /* alist */
 	"dynamic array",         /* dynarray */
 	"binary search tree",    /* bst */
 	"key:value store",       /* keyval */
@@ -413,6 +414,13 @@ make_one(
 		ob->u.dbl.last = NULL;
 		return ob;
 
+	case alist:
+		ob->u.acc.used = 0;
+		ob->u.acc.capacity = ALIST_DEFAULT_CAPACITY;
+		ob->u.acc.list = tsmalloc(ALIST_DEFAULT_CAPACITY * sizeof(uintptr_t));
+		memset(ob->u.acc.list, 0, ob->u.acc.capacity * sizeof(uintptr_t));
+		return ob;
+
 	case dynarray:
 		ob->u.dyn.length = -1;
 		ob->u.dyn.capacity = DYNARRAY_DEFAULT_CAPACITY;
@@ -460,14 +468,21 @@ free_one(
 			purge(self);
 			memset(self, 253, sizeof(*self));
 			tsfree(self);
-			return self;
+			return NULL;
+
+		case alist:
+			memset(self->u.acc.list, 253, self->u.acc.capacity * sizeof(uintptr_t));
+			tsfree(self->u.acc.list);
+			memset(self, 253, sizeof(*self));
+			tsfree(self);
+			return NULL;
 
 		case dynarray:
 			memset(self->u.dyn.array, 253, self->u.dyn.capacity * sizeof(void *));
 			tsfree(self->u.dyn.array);
 			memset(self, 253, sizeof(*self));
 			tsfree(self);
-			return self;
+			return NULL;
 
 		default:
 			fprintf(stderr, "\nTXBONE error free_one: unknown or unsupported type %d %s\n",
@@ -699,6 +714,9 @@ count(
 	case deque:
 		return doubly_count(&self->u.dbl);
 
+	case alist:
+		return self->u.acc.used;
+
 	default:
 		fprintf(stderr, "\nTXBONE error count: unknown or unsupported type %d %s\n",
 			self->isa, self->tag);
@@ -730,6 +748,9 @@ empty(
 	case queue:
 	case deque:
 		return self->u.dbl.first == NULL;
+
+	case alist:
+		return self->u.acc.used = 0;
 
 	default:
 		fprintf(stderr, "\nTXBONE error empty: unknown or unsupported type %d %s\n",
@@ -1128,6 +1149,144 @@ get_from(
 		return NULL;
 	}
 	return (self->u.dyn.array)[n];
+}
+
+
+/*
+ * accumulator list specific
+ */
+
+/*
+ * add something that fits in a unintprt_t (currently 8 bytes) to the
+ * end of the array list.
+ */
+
+one_block *
+cons_to_alist(
+	one_block *xs,
+	uintptr_t p
+) {
+	if (xs->u.acc.used == xs->u.acc.capacity) {
+		int lena = xs->u.acc.capacity * sizeof(uintptr_t);
+		one_block *new = tsmalloc(sizeof(*xs));
+		memcpy(new, xs, sizeof(*xs));
+		uintptr_t *acc = tsmalloc(lena * 2);
+		memset(acc, 0, lena * 2);
+		memcpy(acc, xs->u.acc.list, lena);
+		new->u.acc.capacity = xs->u.acc.capacity * 2;
+		new->u.acc.list = acc;
+		free_one(xs);
+		xs = new;
+	}
+	xs->u.acc.list[xs->u.acc.used] = p;
+	xs->u.acc.used += 1;
+	return xs;
+}
+
+/*
+ * an iterator of sorts over the array list. call with repeatedly,
+ * *index is updated. reaching the end of the array list is signalled
+ * by *index == -1.
+ *
+ * it's just as easy to use array access, but that won't survive a
+ * change in the underlying storage approach.
+ */
+
+uintptr_t
+iterate_alist(one_block *xs, int *curr) {
+	if (*curr < 0)
+		return 0;
+	if (*curr >= xs->u.acc.used) {
+		*curr = -1;  /* as a null might be valid, use a negative count to also signal end */
+		return 0;
+	}
+	uintptr_t res = xs->u.acc.list[*curr];
+	*curr += 1;
+	return res;
+}
+
+/*
+ * creates a shallow copy of an array list.
+ */
+
+one_block *
+clone_alist(
+	one_block *xs
+) {
+	int lenu = sizeof(*xs);
+	one_block *resu = tsmalloc(lenu);
+	memset(resu, 0, lenu);
+	memcpy(resu, xs, lenu);
+
+	int lena = xs->u.acc.capacity * sizeof(uintptr_t);
+	memcpy(resu->u.acc.list, xs->u.acc.list, lena);
+	resu->u.acc.list = tsmalloc(lena);
+	memset(resu->u.acc.list, 0, lena);
+	memcpy(resu->u.acc.list, xs->u.acc.list, lena);
+	return resu;
+}
+
+/*
+ * append one array list to the end of another.
+ */
+
+one_block *
+append_to_alist(one_block *xs, one_block *ys) {
+
+	/* be rational if list to append is empty */
+	if (!ys || ys->u.acc.used < 1)
+		return xs;
+
+	/* if the 'append to' list is empty, return a copy of the
+	 * append list. this is consistent with the idea that only the
+	 * primary list will be mutated. */
+	if (xs->u.acc.used < 1) {
+		free_one(xs);
+		return clone_alist(ys);
+	}
+
+	/* be lazy and just use the iterator for now. we should always
+	 * pass through the append loop at least once. */
+	one_block *new = clone_alist(xs);
+	free_one(xs);
+	int index = 0;
+	while (true) {
+		if (index < 0) break;
+		uintptr_t got = iterate_alist(ys, &index);
+		new = cons_to_alist(new, got);
+	}
+
+	return new;
+}
+
+/*
+ * create a new alist of the contents from inclusive->to exclusive.
+ *
+ * ie, [from, to) in standard mathematic notation.
+ *
+ * this does not have the same semantics as the java arraylist
+ * sublist. here we create an entirely new list holding only the
+ * elements requested. i've gone with 'slice' as more intention
+ * revealing.
+ *
+ * the original list is preserved.
+ */
+
+one_block *
+slice_alist(
+	one_block *xs,
+	int from_inclusive,
+	int to_exclusive
+) {
+	one_block *res = make_one(alist);
+
+	/* to be explicit about this. */
+	if (from_inclusive >= to_exclusive)
+		return res;
+
+	for (int i = from_inclusive; i < to_exclusive; i++)
+		res = cons_to_alist(res, xs->u.acc.list[i]);
+	return res;
 }
 
 /* txbone.c ends here */

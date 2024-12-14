@@ -398,7 +398,7 @@ append_to_alist(alist *xs, alist *ys) {
 	int index = 0;
 	while (true) {
 		if (index < 0) break;
-		uintptr_t got = iterate_alist(xs, &index);
+		uintptr_t got = iterate_alist(ys, &index);
 		new = cons_to_alist(new, got);
 	}
 
