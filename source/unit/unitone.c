@@ -50,11 +50,12 @@ test_teardown(void) {
 MU_TEST(test_api_singly) {
 	/* make_one, add_first, add_last, peek_, get_, count, empty, purge, free_ */
 	one_block *ob = make_one(singly);
-	mu_should(empty(ob));
+	mu_should(is_empty(ob));
 	mu_shouldnt(count(ob));
 	mu_should(ob == add_first(ob, "first"));
 	mu_should(ob == add_last(ob, "last"));
-	mu_should(ob == free_one(ob));
+	ob = free_one(ob);
+	mu_should(ob == NULL);
 	ob = NULL;
 	ob = make_one(singly);
 	char *p = "this is a test ...";
@@ -83,12 +84,12 @@ MU_TEST(test_api_singly) {
 MU_TEST(test_api_doubly) {
 	/* make_one, add_first, add_last, peek_, get_, count, empty, purge, free_ */
 	one_block *ob = make_one(doubly);
-	mu_should(empty(ob));
+	mu_should(is_empty(ob));
 	mu_shouldnt(count(ob));
 	mu_should(ob == add_first(ob, "first"));
 	mu_should(ob == add_last(ob, "last"));
-	mu_should(ob == free_one(ob));
-	ob = NULL;
+	ob = free_one(ob);
+	mu_shouldnt(ob);
 	ob = make_one(singly);
 	char *p = "this is a test ...";
 	for (int i = 0; i < strlen(p); i++) {
@@ -117,7 +118,7 @@ MU_TEST(test_api_stack) {
 	/* make, peek, depth, empty, purge, push, pop, free */
 	one_block *ob = make_one(stack);
 	mu_should(depth(ob) == 0);
-	mu_should(empty(ob));
+	mu_should(is_empty(ob));
 	mu_shouldnt(add_first(ob, "test"));
 	mu_should(push(ob, "one"));
 	mu_should(push(ob, "two"));
@@ -140,7 +141,7 @@ MU_TEST(test_api_queue) {
 	mu_shouldnt(push_front(ob, "three"));
 	mu_shouldnt(pop_back(ob));
 	mu_should(count(ob) == 2);
-	mu_shouldnt(empty(ob));
+	mu_shouldnt(is_empty(ob));
 	mu_should(equal_string(dequeue(ob), "one"));
 	mu_should(equal_string(peek(ob), "two"));
 	mu_shouldnt(peek_last(ob));
@@ -176,7 +177,8 @@ MU_TEST(test_api_dynarray) {
 	mu_shouldnt(get_from(ob, 10));
 	mu_shouldnt(get_first(ob));      /* illegal op */
 	mu_should(purge(ob) < 0);        /* illegal op */
-	mu_should(free_one(ob));
+	ob = free_one(ob);
+	mu_shouldnt(ob);
 }
 
 MU_TEST(test_api_keyval) {
@@ -185,18 +187,6 @@ MU_TEST(test_api_keyval) {
 	/* tbd */
 }
 
-MU_TEST(test_api_bst) {
-	one_block *ob = make_one(bst);
-	mu_shouldnt(ob);
-	/* tbd */
-}
-
-MU_TEST(test_api_hash) {
-	one_block *ob = make_one(hash);
-	mu_shouldnt(ob);
-	/* determine insert/delete/find or put/reove/get */
-	/* make, free, purge, count, insert/put, delete/remove, find/get, keys, values */
-}
 
 /*
  * singly linked lists are also the basis for stacks (until i get
@@ -223,7 +213,7 @@ MU_TEST(test_singly_count_purge) {
 
 	mu_should(count(ob) == 0);
 	mu_should(purge(ob) == 0);
-	mu_should(empty(ob));
+	mu_should(is_empty(ob));
 	add_first(ob, "free");
 	mu_should(count(ob) == 1);
 	add_first(ob, "beer");
@@ -237,9 +227,9 @@ MU_TEST(test_singly_count_purge) {
 	add_first(ob, "wine");
 	add_first(ob, "scotch");
 	mu_should(count(ob) == 4);
-	mu_shouldnt(empty(ob));
+	mu_shouldnt(is_empty(ob));
 	mu_should(purge(ob) == 4);
-	mu_should(empty(ob));
+	mu_should(is_empty(ob));
 
 	free_one(ob);
 }
@@ -247,7 +237,7 @@ MU_TEST(test_singly_count_purge) {
 MU_TEST(test_singly_lasts) {
 	one_block *ob = make_one(singly);
 
-	mu_should(empty(ob));
+	mu_should(is_empty(ob));
 	add_first(ob, "one");
 	add_first(ob, "two");
 	add_first(ob, "three");
@@ -262,7 +252,7 @@ MU_TEST(test_singly_lasts) {
 	mu_shouldnt(get_first(ob));
 	mu_shouldnt(get_last(ob));
 
-	mu_should(empty(ob));
+	mu_should(is_empty(ob));
 	add_last(ob, "one");
 	add_last(ob, "two");
 	add_last(ob, "three");
@@ -277,7 +267,7 @@ MU_TEST(test_singly_lasts) {
 	mu_shouldnt(get_first(ob));
 	mu_shouldnt(get_last(ob));
 
-	mu_should(empty(ob));
+	mu_should(is_empty(ob));
 	add_first(ob, "one");             /* 1 */
 	add_last(ob, "two");              /* 1 2 */
 	mu_should(count(ob) == 2);
@@ -301,7 +291,7 @@ MU_TEST(test_singly_lasts) {
 	mu_should(equal_string(get_last(ob), "one"));
 	mu_should(equal_string(get_last(ob), "two"));
 	mu_should(equal_string(get_last(ob), "three"));
-	mu_should(empty(ob));
+	mu_should(is_empty(ob));
 
 	free_one(ob);
 }
@@ -313,7 +303,7 @@ MU_TEST(test_singly_lasts) {
 
 MU_TEST(test_stack) {
 	one_block *ob = make_one(stack);
-	mu_should(empty(ob));
+	mu_should(is_empty(ob));
 
 	char *testing[] = { "one", "two", "three", "four", "five", NULL};
 	int i = 0;
@@ -331,7 +321,7 @@ MU_TEST(test_stack) {
 	mu_should(equal_string(pop(ob), "two"));
 	mu_should(equal_string(pop(ob), "one"));
 	mu_shouldnt(pop(ob));
-	mu_should(empty(ob));
+	mu_should(is_empty(ob));
 
 	free_one(ob);
 }
@@ -359,7 +349,7 @@ MU_TEST(test_doubly_count_purge) {
 
 	mu_should(count(ob) == 0);
 	mu_should(purge(ob) == 0);
-	mu_should(empty(ob));
+	mu_should(is_empty(ob));
 	add_first(ob, "free");
 	mu_should(count(ob) == 1);
 	add_first(ob, "beer");
@@ -373,9 +363,9 @@ MU_TEST(test_doubly_count_purge) {
 	add_first(ob, "wine");
 	add_first(ob, "scotch");
 	mu_should(count(ob) == 4);
-	mu_shouldnt(empty(ob));
+	mu_shouldnt(is_empty(ob));
 	mu_should(purge(ob) == 4);
-	mu_should(empty(ob));
+	mu_should(is_empty(ob));
 
 	free_one(ob);
 }
@@ -383,7 +373,7 @@ MU_TEST(test_doubly_count_purge) {
 MU_TEST(test_doubly_lasts) {
 	one_block *ob = make_one(doubly);
 
-	mu_should(empty(ob));
+	mu_should(is_empty(ob));
 	add_first(ob, "one");
 	add_first(ob, "two");
 	add_first(ob, "three");
@@ -398,7 +388,7 @@ MU_TEST(test_doubly_lasts) {
 	mu_shouldnt(get_first(ob));
 	mu_shouldnt(get_last(ob));
 
-	mu_should(empty(ob));
+	mu_should(is_empty(ob));
 	add_last(ob, "one");
 	add_last(ob, "two");
 	add_last(ob, "three");
@@ -413,7 +403,7 @@ MU_TEST(test_doubly_lasts) {
 	mu_shouldnt(get_first(ob));
 	mu_shouldnt(get_last(ob));
 
-	mu_should(empty(ob));
+	mu_should(is_empty(ob));
 	add_first(ob, "one");             /* 1 */
 	add_last(ob, "two");              /* 1 2 */
 	mu_should(count(ob) == 2);
@@ -437,7 +427,7 @@ MU_TEST(test_doubly_lasts) {
 	mu_should(equal_string(get_last(ob), "one"));
 	mu_should(equal_string(get_last(ob), "two"));
 	mu_should(equal_string(get_last(ob), "three"));
-	mu_should(empty(ob));
+	mu_should(is_empty(ob));
 
 
 	free_one(ob);
@@ -464,7 +454,7 @@ MU_TEST(test_trailing_links) {
 	mu_should(count(ob) == 26);
 
 	i = 0;
-	while (!empty(ob)) {
+	while (!is_empty(ob)) {
 		char *p = get_last(ob);
 		/* printf("%s\n", p); */
 		mu_should(equal_string(td[i], p));
@@ -480,7 +470,7 @@ MU_TEST(test_trailing_links) {
 	mu_should(count(ob) == 26);
 
 	i = 0;
-	while (!empty(ob)) {
+	while (!is_empty(ob)) {
 		char *p = get_first(ob);
 		/* printf("%s\n", p); */
 		mu_should(equal_string(td[i], p));
@@ -564,10 +554,16 @@ MU_TEST(test_deque) {
 	push_back(ob, "four");
 
 	mu_should(count(ob) == 4);
-	mu_shouldnt(empty(ob));
+	mu_shouldnt(is_empty(ob));
 	mu_should(purge(ob) == 4);
-	mu_should(empty(ob));
+	mu_should(is_empty(ob));
 
+	free_one(ob);
+}
+
+MU_TEST(test_keyval) {
+	one_block *ob = make_one(keyval);
+	mu_shouldnt(ob);
 	free_one(ob);
 }
 
@@ -609,8 +605,6 @@ MU_TEST_SUITE(test_suite) {
 	MU_RUN_TEST(test_api_deque);
 	MU_RUN_TEST(test_api_dynarray);
 	MU_RUN_TEST(test_api_keyval);
-	MU_RUN_TEST(test_api_bst);
-	MU_RUN_TEST(test_api_hash);
 
 	/* deeper functionality tests, starting with the underpinning
 	 * linked lists. */
@@ -631,6 +625,7 @@ MU_TEST_SUITE(test_suite) {
 
 	MU_RUN_TEST(test_dynarray);
 
+	MU_RUN_TEST(test_keyval);
 	/* throw a little volume at link chaining */
 
 	MU_RUN_TEST(test_trailing_links);

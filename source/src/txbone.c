@@ -37,7 +37,8 @@
  */
 
 /*
- * keep these in synch with the isa types in txbone.h:
+ * keep these in synch with the one_type enum in the client
+ * header.
  */
 
 static
@@ -52,12 +53,9 @@ one_tags[] = {
 	"doubly linked list",    /* doubly */
 	"accumulator list",      /* alist */
 	"dynamic array",         /* dynarray */
-	"binary search tree",    /* bst */
 	"key:value store",       /* keyval */
-	"hash table",            /* hash */
-	"dictionary",           /* dictionary */
-	"bag",                  /* bag */
-	"ordered collection",   /* ordered */
+	"priority queue",        /* pqueue */
+	"unknowable",         /* -- end of list -- */
 	NULL
 };
 
@@ -471,7 +469,7 @@ alist_slice(
 ) {
 	if (to_exclusive > xs->u.acc.used || from_inclusive < 0) {
 		fprintf(stderr,
-			"\nTXBONE error slice: range out of bounds holds [0..%d) requested [%d..%d)\n",
+			"\nERROR txbone-slice: range out of bounds holds [0..%d) requested [%d..%d)\n",
 			xs->u.acc.used, from_inclusive, to_exclusive);
 		return NULL;
 	}
@@ -704,7 +702,7 @@ make_one(
 
 	default:
 		fprintf(stderr,
-			"\nTXBONE error make_one: unknown or not yet implemented type %d %s\n",
+			"\nERROR txbone-make_one: unknown or not yet implemented type %d %s\n",
 			isa, ob->tag);
 		memset(ob, 253, sizeof(*ob));
 		tsfree(ob);
@@ -759,20 +757,20 @@ free_one(
 			return NULL;
 
 		default:
-			fprintf(stderr, "\nTXBONE error free_one: unknown or unsupported type %d %s\n",
+			fprintf(stderr, "\nERROR txbone-free_one: unknown or unsupported type %d %s\n",
 				ob->isa, ob->tag);
 			memset(ob, 253, sizeof(*ob));
 			tsfree(ob);
 			return NULL;
 		}
 
-	fprintf(stderr, "\nTXBONE error free_on: called with NULL one block\n");
+	fprintf(stderr, "\nERROR txbone-free_one: called with NULL one block\n");
 	return NULL;
 }
 
 
 
-/*
+/**
  * add_first
  *
  * add an item to the front/top of all items held.
@@ -802,13 +800,13 @@ add_first(
 		return ob;
 
 	default:
-		fprintf(stderr, "\nTXBONE error add_first: unknown or unsupported type %d %s\n",
+		fprintf(stderr, "\nERROR txbone-add_first: unknown or unsupported type %d %s\n",
 			ob->isa, ob->tag);
 		return NULL;
 	}
 }
 
-/*
+/**
  * add_last
  *
  * add an item to the back/bottom of all items held.
@@ -838,13 +836,13 @@ add_last(
 		return ob;
 
 	default:
-		fprintf(stderr, "\nTXBONE error add_last: unknown or unsupported type %d %s\n",
+		fprintf(stderr, "\nERROR txbone-add_last: unknown or unsupported type %d %s\n",
 			ob->isa, ob->tag);
 		return NULL;
 	}
 }
 
-/*
+/**
  * peek_first
  *
  * return but do not remove the item at the front/top of all
@@ -869,13 +867,13 @@ peek_first(
 
 	default:
 		fprintf(stderr,
-			"\nTXBONE error peek_first: unknown or unsupported type %d %s\n",
+			"\nERROR txbone-peek_first: unknown or unsupported type %d %s\n",
 			ob->isa, ob->tag);
 		return NULL;
 	}
 }
 
-/*
+/**
  * peek_last
  *
  * return but do not remove the item at the back/bottom of all
@@ -899,13 +897,13 @@ peek_last(
 		return doubly_peek_last(&ob->u.dbl);
 
 	default:
-		fprintf(stderr, "\nTXBONE error peek_last: unknown or unsupported type %d %s\n",
+		fprintf(stderr, "\nERROR txbone-peek_last: unknown or unsupported type %d %s\n",
 			ob->isa, ob->tag);
 		return NULL;
 	}
 }
 
-/*
+/**
  * get_first
  *
  * remove and return the item at the front/top of all items held.
@@ -928,13 +926,13 @@ get_first(
 		return doubly_get_first(&ob->u.dbl);
 
 	default:
-		fprintf(stderr, "\nTXBONE error get_first: unknown or unsupported type %d %s\n",
+		fprintf(stderr, "\nERROR txbone-get_first: unknown or unsupported type %d %s\n",
 			ob->isa, ob->tag);
 		return NULL;
 	}
 }
 
-/*
+/**
  * get_last
  *
  * remove and return the item at the back/bottom of all items held.
@@ -957,13 +955,13 @@ get_last(
 		return doubly_get_last(&ob->u.dbl);
 
 	default:
-		fprintf(stderr, "\nTXBONE error get_last: unknown or unsupported type %d %s\n",
+		fprintf(stderr, "\nERROR txbone-get_last: unknown or unsupported type %d %s\n",
 			ob->isa, ob->tag);
 		return NULL;
 	}
 }
 
-/*
+/**
  * count
  *
  * how many things are managed by the data structure. for a stack, use
@@ -992,14 +990,14 @@ count(
 		return ob->u.acc.used;
 
 	default:
-		fprintf(stderr, "\nTXBONE error count: unknown or unsupported type %d %s\n",
+		fprintf(stderr, "\nERROR txbone-count: unknown or unsupported type %d %s\n",
 			ob->isa, ob->tag);
 		return -1;
 	}
 }
 
-/*
- * empty
+/**
+ * is_empty
  *
  * predicate is this data structure empty (count/depth == 0)?
  *
@@ -1009,7 +1007,7 @@ count(
  */
 
 bool
-empty(
+is_empty(
 	one_block *ob
 ) {
 	switch (ob->isa) {
@@ -1027,13 +1025,13 @@ empty(
 		return ob->u.acc.used = 0;
 
 	default:
-		fprintf(stderr, "\nTXBONE error empty: unknown or unsupported type %d %s\n",
+		fprintf(stderr, "\nERROR txbone-empty: unknown or unsupported type %d %s\n",
 			ob->isa, ob->tag);
 		return false;
 	}
 }
 
-/*
+/**
  * purge
  *
  * empty the data structure. deletes all storage for items/nodes
@@ -1064,17 +1062,40 @@ purge(
 		return alist_purge(ob);
 
 	default:
-		fprintf(stderr, "\nTXBONE error purge: unknown or unsupported type %d %s\n",
+		fprintf(stderr, "\nERROR txbone-purge: unknown or unsupported type %d %s\n",
 			ob->isa, ob->tag);
 		return -1;
 	}
 }
 
-/*
+/**
  * a stack is implemented on a singly linked list, but use the
- * following entry points in addition to make_one, free_one, empty,
+ * following entry points in addition to make_one, free_one, is_empty,
  * peek, and purge.
  */
+
+/**
+ * depth
+ *
+ * stacks don't have counts, they have depth.
+ */
+
+int
+depth(
+	one_block *ob
+) {
+	switch (ob->isa) {
+
+	case stack:
+		return singly_count(&ob->u.sgl);
+
+	default:
+		fprintf(stderr,
+			"\nERROR txbone-depth: unknown or unsupported type %d %s, expected stack\n",
+			ob->isa, ob->tag);
+		return -1;
+	}
+}
 
 one_block *
 push(
@@ -1089,7 +1110,7 @@ push(
 
 	default:
 		fprintf(stderr,
-			"\nTXBONE error push: unknown or unsupported type %d %s, expected stack\n",
+			"\nERROR txbone-push: unknown or unsupported type %d %s, expected stack\n",
 			ob->isa, ob->tag);
 		return NULL;
 	}
@@ -1106,15 +1127,15 @@ pop(
 
 	default:
 		fprintf(stderr,
-			"\nTXBONE error pop: unknown or unsupported type %d %s, expected stack\n",
+			"\nERROR txbone-pop: unknown or unsupported type %d %s, expected stack\n",
 			ob->isa, ob->tag);
 		return NULL;
 	}
 }
 
-/*
+/**
  * a queue (fifo) is implemented on a doubly linked list, but use the
- * following entry points in addition to make_one, free_one, empty,
+ * following entry points in addition to make_one, free_one, is_empty,
  * count, peek, and purge.
  */
 
@@ -1131,7 +1152,7 @@ enqueue(
 
 	default:
 		fprintf(stderr,
-			"\nTXBONE error enqueue: unknown or unsupported type %d %s, expected queue\n",
+			"\nERROR txbone-enqueue: unknown or unsupported type %d %s, expected queue\n",
 			ob->isa, ob->tag);
 		return NULL;
 	}
@@ -1148,13 +1169,13 @@ dequeue(
 
 	default:
 		fprintf(stderr,
-			"\nTXBONE error dequeue: unknown or unsupported type %d %s, expected queue\n",
+			"\nERROR txbone-dequeue: unknown or unsupported type %d %s, expected queue\n",
 			ob->isa, ob->tag);
 		return NULL;
 	}
 }
 
-/*
+/**
  * peek is common to stack and queue.
  */
 
@@ -1172,36 +1193,14 @@ peek(
 
 	default:
 		fprintf(stderr,
-			"\nTXBONE error peek: unknown or unsupported type %d %s, expected stack or queue\n",
+			"\nERROR txbone-peek: unknown or unsupported type %d %s, expected stack or queue\n",
 			ob->isa, ob->tag);
 		return NULL;
 	}
 }
 
-/*
- * depth
- *
- * stacks don't have counts, they have depth.
- */
-
-int
-depth(
-	one_block *ob
-) {
-	switch (ob->isa) {
-
-	case stack:
-		return singly_count(&ob->u.sgl);
-
-	default:
-		fprintf(stderr,
-			"\nTXBONE error depth: unknown or unsupported type %d %s, expected stack\n",
-			ob->isa, ob->tag);
-		return -1;
-	}
-}
 
-/*
+/**
  * a deque (f/l-ifo)is built on a doubly linked list, but use the
  * following entry points in addition to make_one, free_one, empty,
  * count, and purge.
@@ -1220,7 +1219,7 @@ push_front(
 
 	default:
 		fprintf(stderr,
-			"\nTXBONE error push_front: unknown or unsupported type %d %s, expected deque\n",
+			"\nERROR txbone-push_front: unknown or unsupported type %d %s, expected deque\n",
 			ob->isa, ob->tag);
 		return NULL;
 	}
@@ -1239,7 +1238,7 @@ push_back(
 
 	default:
 		fprintf(stderr,
-			"\nTXBONE error push_back: unknown or unsupported type %d %s, expected deque\n",
+			"\nERROR txbone-push_back: unknown or unsupported type %d %s, expected deque\n",
 			ob->isa, ob->tag);
 		return NULL;
 	}
@@ -1256,7 +1255,7 @@ pop_front(
 
 	default:
 		fprintf(stderr,
-			"\nTXBONE error pop_front: unknown or unsupported type %d %s, expected deque\n",
+			"\nERROR txbone-pop_front: unknown or unsupported type %d %s, expected deque\n",
 			ob->isa, ob->tag);
 		return NULL;
 	}
@@ -1273,7 +1272,7 @@ pop_back(
 
 	default:
 		fprintf(stderr,
-			"\nTXBONE error pop_back: unknown or unsupported type %d %s, expected deque\n",
+			"\nERROR txbone-pop_back: unknown or unsupported type %d %s, expected deque\n",
 			ob->isa, ob->tag);
 		return NULL;
 	}
@@ -1290,7 +1289,7 @@ peek_front(
 
 	default:
 		fprintf(stderr,
-			"\nTXBONE error peek_front: unknown or unsupported type %d %s, expected deque\n",
+			"\nERROR txbone-peek_front: unknown or unsupported type %d %s, expected deque\n",
 			ob->isa, ob->tag);
 		return NULL;
 	}
@@ -1307,7 +1306,7 @@ peek_back(
 
 	default:
 		fprintf(stderr,
-			"\nTXBONE error peek_back: unknown or unsupported type %d %s, expected deque\n",
+			"\nERROR txbone-peek_back: unknown or unsupported type %d %s, expected deque\n",
 			ob->isa, ob->tag);
 		return NULL;
 	}
@@ -1318,7 +1317,7 @@ peek_back(
  * free, they support hbound via high_index, get, and put.
  */
 
-/*
+/**
  * high_index
  *
  * the highest used (via put_at) index in the array. while a payload
@@ -1336,14 +1335,14 @@ high_index(
 ) {
 	if (self->isa != dynarray) {
 		fprintf(stderr,
-			"\nTXBONE error high_index: unknown or unsupported type %d %s, expected dynarray\n",
+			"\nERROR txbone-high_index: unknown or unsupported type %d %s, expected dynarray\n",
 			self->isa, self->tag);
 		return -1;
 	}
 	return self->u.dyn.length;
 }
 
-/*
+/**
  * put_at
  *
  * place a payload at a particular index in the array. if the array's
@@ -1367,13 +1366,13 @@ put_at(
 ) {
 	if (self->isa != dynarray) {
 		fprintf(stderr,
-			"\nTXBONE error put_at: unknown or unsupported type %d %s, expected dynarray\n",
+			"\nERROR txbone-put_at: unknown or unsupported type %d %s, expected dynarray\n",
 			self->isa, self->tag);
 		return NULL;
 	}
 	if (n < 0) {
 		fprintf(stderr,
-			"\nTXBONE error put_at: index may not be negative %d\n", n);
+			"\nERROR txbone-put_at: index may not be negative %d\n", n);
 		return NULL;
 	}
 	while (n >= self->u.dyn.capacity) {
@@ -1391,7 +1390,7 @@ put_at(
 	return self;
 }
 
-/*
+/**
  * get_from
  *
  * return the payload from a particular index in the array. if the index
@@ -1414,13 +1413,13 @@ get_from(
 ) {
 	if (self->isa != dynarray) {
 		fprintf(stderr,
-			"\nTXBONE error get_at: unknown or unsupported type %d %s, expected dynarray\n",
+			"\nERROR txbone-get_at: unknown or unsupported type %d %s, expected dynarray\n",
 			self->isa, self->tag);
 		return NULL;
 	}
 	if (n > self->u.dyn.length || n < 0) {
 		fprintf(stderr,
-			"\nTXBONE error get_at: index out of bounds %d not in range [0..%d]\n", n,
+			"\nERROR txbone-get_at: index out of bounds %d not in range [0..%d]\n", n,
 			self->u.dyn.length);
 		return NULL;
 	}
@@ -1438,7 +1437,7 @@ cons(
 	uintptr_t atom
 ) {
 	if (ob->isa != alist) {
-		fprintf(stderr, "\nTXBONE error cons: unknown or unsupported type %d %s\n",
+		fprintf(stderr, "\nERROR txbone-cons: unknown or unsupported type %d %s\n",
 			ob->isa, ob->tag);
 	}
 	return alist_cons(ob, atom);
@@ -1449,7 +1448,7 @@ car(
 	one_block *ob
 ) {
 	if (ob->isa != alist) {
-		fprintf(stderr, "\nTXBONE error car: unknown or unsupported type %d %s\n",
+		fprintf(stderr, "\nERROR txbone-car: unknown or unsupported type %d %s\n",
 			ob->isa, ob->tag);
 	}
 	return alist_car(ob);
@@ -1460,7 +1459,7 @@ cdr(
 	one_block *ob
 ) {
 	if (ob->isa != alist) {
-		fprintf(stderr, "\nTXBONE error cdr: unknown or unsupported type %d %s\n",
+		fprintf(stderr, "\nERROR txbone-cdr: unknown or unsupported type %d %s\n",
 			ob->isa, ob->tag);
 	}
 	return alist_cdr(ob);
@@ -1472,11 +1471,11 @@ append(
 	one_block *right
 ) {
 	if (left->isa != alist) {
-		fprintf(stderr, "\nTXBONE error append: unknown or unsupported type %d %s\n",
+		fprintf(stderr, "\nERROR txbone-append: unknown or unsupported type %d %s\n",
 			left->isa, left->tag);
 	}
 	if (right->isa != alist) {
-		fprintf(stderr, "\nTXBONE error append: unknown or unsupported type %d %s\n",
+		fprintf(stderr, "\nERROR txbone-append: unknown or unsupported type %d %s\n",
 			right->isa, right->tag);
 	}
 	return alist_append(left, right);
@@ -1489,7 +1488,7 @@ slice(
 	int to_exclusive
 ) {
 	if (ob->isa != alist) {
-		fprintf(stderr, "\nTXBONE error slice: unknown or unsupported type %d %s\n",
+		fprintf(stderr, "\nERROR txbone-slice: unknown or unsupported type %d %s\n",
 			ob->isa, ob->tag);
 	}
 	return alist_slice(ob, from_inclusive, to_exclusive);
@@ -1502,7 +1501,7 @@ setnth(
 	uintptr_t atom
 ) {
 	if (ob->isa != alist) {
-		fprintf(stderr, "\nTXBONE error setnth: unknown or unsupported type %d %s\n",
+		fprintf(stderr, "\nERROR txbone-setnth: unknown or unsupported type %d %s\n",
 			ob->isa, ob->tag);
 	}
 	return alist_setnth(ob, n, atom);
@@ -1514,7 +1513,7 @@ nth(
 	int n
 ) {
 	if (ob->isa != alist) {
-		fprintf(stderr, "\nTXBONE error nth: unknown or unsupported type %d %s\n",
+		fprintf(stderr, "\nERROR txbone-nth: unknown or unsupported type %d %s\n",
 			ob->isa, ob->tag);
 	}
 	return alist_nth(ob, n);
@@ -1525,7 +1524,7 @@ clone(
 	one_block *ob
 ) {
 	if (ob->isa != alist) {
-		fprintf(stderr, "\nTXBONE error clone: unknown or unsupported type %d %s\n",
+		fprintf(stderr, "\nERROR txbone-clone: unknown or unsupported type %d %s\n",
 			ob->isa, ob->tag);
 	}
 	return alist_clone(ob);
@@ -1537,7 +1536,7 @@ iterate(
 	int *curr
 ) {
 	if (ob->isa != alist) {
-		fprintf(stderr, "\nTXBONE error iterate: unknown or unsupported type %d %s\n",
+		fprintf(stderr, "\nERROR txbone-iterate: unknown or unsupported type %d %s\n",
 			ob->isa, ob->tag);
 	}
 	return alist_iterate(ob, curr);

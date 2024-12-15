@@ -34,7 +34,7 @@ MU_TEST(test_qu) {
 
 	qu = make_one(queue);
 	mu_should(qu);
-	mu_should(empty(qu));
+	mu_should(is_empty(qu));
 	enqueue(qu, "one");
 	enqueue(qu, "two");
 	mu_should(count(qu) == 2);
@@ -44,17 +44,17 @@ MU_TEST(test_qu) {
 	mu_should(count(qu) == 2);
 	mu_should(equal_string("two", dequeue(qu)));
 	mu_should(count(qu) == 1);
-	mu_shouldnt(empty(qu));
+	mu_shouldnt(is_empty(qu));
 	mu_should(equal_string("three", dequeue(qu)));
 	mu_should(count(qu) == 0);
 	mu_shouldnt(dequeue(qu));
-	mu_should(free_one(qu));
+	free_one(qu);
 
 	qu = make_one(queue);
 	enqueue(qu, "one");
 	enqueue(qu, "two");
 	mu_should(purge(qu) == 2);
-	mu_should(free_one(qu));
+	free_one(qu);
 
 }
 

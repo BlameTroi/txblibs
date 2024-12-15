@@ -47,6 +47,7 @@ MU_TEST(test_create) {
 	mu_shouldnt(false);
 	one_block *xs = make_one(alist);
 	mu_should(count(xs) == 0);
+	mu_should(is_empty(xs));
 	xs = free_one(xs);
 	mu_shouldnt(xs);
 }

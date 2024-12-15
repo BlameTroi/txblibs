@@ -26,7 +26,7 @@ MU_TEST(test) {
 
 	one_block *st = make_one(stack);
 	mu_should(st);
-	mu_should(empty(st));
+	mu_should(is_empty(st));
 	for (int i = 1; i < 5; i++) {
 		push(st, (void *)(long)i);
 		printf("%ld\n", (long)peek(st));
@@ -36,27 +36,27 @@ MU_TEST(test) {
 		long x = (long)pop(st);
 		printf("%ld\n", x);
 	}
-	mu_should(free_one(st));
+	free_one(st);
 	st = NULL;
 
 	st = make_one(stack);
 	mu_should(st);
-	mu_should(empty(st));
+	mu_should(is_empty(st));
 	push(st, "a");
 	push(st, "b");
 	mu_should(pop(st));
 	mu_should(pop(st));
-	mu_should(empty(st));
-	mu_should(free_one(st));
+	mu_should(is_empty(st));
+	free_one(st);
 	st = NULL;
 
 	st = make_one(stack);
-	mu_should(st && empty(st));
+	mu_should(st && is_empty(st));
 	push(st, "a");
 	push(st, "b");
-	mu_shouldnt(empty(st));
+	mu_shouldnt(is_empty(st));
 	mu_should(purge(st) == 2);
-	mu_should(free_one(st));
+	free_one(st);
 	st = NULL;
 }
 

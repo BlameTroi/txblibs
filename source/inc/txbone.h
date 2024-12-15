@@ -30,11 +30,18 @@ extern "C" {
 
 /*
  * supported types so far are singly and doubly linked lists, queues,
- * deques, stacks, and dynamic arrays. binary search trees, key:value
- * stores, hashes, dictionaries, and bags, are planned.
+ * deques, stacks, dynamic arrays, something i call an accumulator
+ * list, and a key:value store.
  *
- * all types store client payloads, as void * pointers. memory
- * management of client payloads are the responsibility of the client.
+ * the backing structures for these are singly linked lists, doubly
+ * linked lists, dynamic arrays, and a self balancing binary search
+ * tree (scapegoat stratgey).
+ *
+ * if needed, hashes, bags and sets could be added.
+ *
+ * all types store client payloads, as void * pointer sized values.
+ * memory management of client payloads are the responsibility of the
+ * client.
  *
  * errors return invalid values (negatives or NULLs, see each
  * function) and can print a diagnostic message on stderr.
@@ -47,31 +54,26 @@ extern "C" {
  */
 
 enum one_type {
-	unknown = 0,
-	deque,
-	queue,
-	stack,
-	singly, /* linked list */
-	doubly, /* linked list */
-	alist,  /* accumulator list */
-	dynarray,
-	bst,
-	tree,
-	keyval,
-	hash,
-	heap,
-	dictionary,
-	bag,
-	set,
-	ordered /* collection */
+	unknown = 0,   /* notes on backing: */
+	deque,         /* linked list */
+	queue,         /* linked list */
+	stack,         /* linked list */
+	singly,        /* linked list */
+	doubly,        /* linked list */
+	alist,         /* accumulator list */
+	dynarray,      /* array */
+	keyval,        /* scapegoat tree */
+	pqueue,        /* priority queue */
+	unknowable
 };
+typedef enum one_type one_type;
 
-#define ONE_TYPE_MAX ordered
+#define ONE_TYPE_MAX unknowable
 
 #define ONE_TAG_LEN 24
 
 /*
- * these is completely arbitrary. some implementations actually start
+ * these are completely arbitrary. some implementations actually start
  * at 1 or 2.
  */
 
@@ -230,27 +232,25 @@ struct one_tree {
  * a key value store.
  */
 
-typedef struct one_keyval one_keyval;
+typedef struct one_tree one_keyval;
 
-struct one_keyval {
-	void *not_implemented_yet;
-};
+typedef struct one_dynarray one_pqueue;
 
 /* not yet implemented place holders */
-typedef struct one_hash one_hash;
-struct one_hash { void *not_implemented_yet;};
-typedef struct one_heap one_heap;
-struct one_heap { void *not_implemented_yet;};
-typedef struct one_dictionary one_dictionary;
-struct one_dictionary { void *not_implemented_yet;};
-typedef struct one_bag one_bag;
-struct one_bag { void *not_implemented_yet;};
-typedef struct one_set one_set;
-struct one_set { void *not_implemented_yet;};
-typedef struct one_ordered one_ordered;
-struct one_ordered { void *not_implemented_yet;};
+/* typedef struct one_hash one_hash; */
+/* struct one_hash { void *not_implemented_yet;}; */
+/* typedef struct one_heap one_heap; */
+/* struct one_heap { void *not_implemented_yet;}; */
+/* typedef struct one_dictionary one_dictionary; */
+/* struct one_dictionary { void *not_implemented_yet;}; */
+/* typedef struct one_bag one_bag; */
+/* struct one_bag { void *not_implemented_yet;}; */
+/* typedef struct one_set one_set; */
+/* struct one_set { void *not_implemented_yet;}; */
+/* typedef struct one_ordered one_ordered; */
+/* struct one_ordered { void *not_implemented_yet;}; */
 
-/*
+/***
  * rather than have separate high level control blocks, this union
  * approach allows for a cleaner interface and less redundancy.
  */
@@ -263,31 +263,25 @@ union one_details {
 	one_doubly dbl;              /* doubly linked list */
 	one_alist acc;               /* accumulator list */
 	one_dynarray dyn;            /* dynamically resizing array */
-	one_bst bst;                 /* binary search tree */
-	one_tree tree;               /* a general tree */
 	one_keyval kvl;              /* key:value store */
-	one_hash hash;               /* a hash */
-	one_heap heap;               /* a heap */
-	one_dictionary dict;         /* dictionary */
-	one_bag bag;                 /* multi-set */
-	one_set set;                 /* a set */
-	one_ordered ordered;         /* ordered collection */
+	one_pqueue pqu;              /* priority queue */
 };
 
 /*
  * the 'one_block' is a control block used as a handle for the client
- * code. it is kept small and the details of each specific data
- * structure are kept here in common via a union.
+ * code. think of it as 'an instance of a <whatever>'. it is kept
+ * small and the details of each specific data structure are hidden
+ * behind a union.
  */
 
 struct one_block {
-	enum one_type isa;           /* this is-a what? */
-	int odometer;                /* call odometer */
+	one_type isa;                /* this is-a what? */
+	//      int odometer;                /* call odometer */
 	char tag[ONE_TAG_LEN];       /* eye catcher for those of us who remember core dumps */
 	one_details u;               /* what data structure sits under this instance? */
 };
 
-/*
+/**
  * create, destroy, and functions global to all data structures. all
  * entry points other than make_one and free_one tend to delegate to
  * other functions that don't have external scope.
@@ -305,7 +299,7 @@ struct one_block {
  * return.
  */
 
-/*
+/**
  * make_one
  *
  * create an instance of one of the data structure types. allocates and
@@ -324,7 +318,7 @@ make_one(
 	enum one_type isa
 );
 
-/*
+/**
  * free_one
  *
  * destroy an instance of a data structure, releasing library managed
@@ -340,10 +334,10 @@ make_one(
 
 one_block *
 free_one(
-	one_block *me
+	one_block *ob
 );
 
-/*
+/**
  * count
  *
  * how many things are managed by the data structure. for a stack, use
@@ -356,11 +350,11 @@ free_one(
 
 int
 count(
-	one_block *me
+	one_block *ob
 );
 
-/*
- * empty
+/**
+ * is_empty
  *
  * predicate is this data structure empty (count/depth == 0)?
  *
@@ -370,11 +364,11 @@ count(
  */
 
 bool
-empty(
-	one_block *me
+is_empty(
+	one_block *ob
 );
 
-/*
+/**
  * purge
  *
  * empty the data structure. deletes all storage for items/nodes
@@ -388,20 +382,35 @@ empty(
 
 int
 purge(
-	one_block *me
+	one_block *ob
 );
+
+/**
+ * clone
+ *
+ * return a copy of the current structure. the original is
+ * unchanged.
+ */
+
+one_block *
+clone(
+	one_block *ob
+);
+
+
+
 
-/*
- * these are possibly likely entry points for all the data structure.
- * they are definitely the entry points for singly and doubly linked
- * lists.
+/**
+ * these are possibly likely entry points for many of the data
+ * structure. they are definitely the entry points for singly and
+ * doubly linked lists.
  *
  * these will be rescoped to static if i detrmine that the singly and
  * doubly linked lists provide no value on their own outside of of
  * backing the other structures.
  */
 
-/*
+/**
  * add_first
  *
  * add an item to the front/top of all items held.
@@ -415,11 +424,11 @@ purge(
 
 one_block *
 add_first(
-	one_block *me,
+	one_block *ob,
 	void *payload
 );
 
-/*
+/**
  * add_last
  *
  * add an item to the back/bottom of all items held.
@@ -433,11 +442,11 @@ add_first(
 
 one_block *
 add_last(
-	one_block *me,
+	one_block *ob,
 	void *payload
 );
 
-/*
+/**
  * peek_first
  *
  * return but do not remove the item at the front/top of all
@@ -450,10 +459,10 @@ add_last(
 
 void *
 peek_first(
-	one_block *me
+	one_block *ob
 );
 
-/*
+/**
  * peek_last
  *
  * return but do not remove the item at the back/bottom of all
@@ -466,10 +475,10 @@ peek_first(
 
 void *
 peek_last(
-	one_block *me
+	one_block *ob
 );
 
-/*
+/**
  * get_first
  *
  * remove and return the item at the front/top of all items held.
@@ -481,10 +490,10 @@ peek_last(
 
 void *
 get_first(
-	one_block *me
+	one_block *ob
 );
 
-/*
+/**
  * get_last
  *
  * remove and return the item at the back/bottom of all items held.
@@ -496,158 +505,267 @@ get_first(
 
 void *
 get_last(
-	one_block *me
+	one_block *ob
 );
 
-/*
+/**
  * a stack is implemented on a singly linked list, but use the
- * following entry points in addition to make_one, free_one, empty,
- * peek, and purge.
+ * following entry points in addition to make_one, free_one, is_empty,
+ * and purge.
+ */
+
+/**
+ * push
+ *
+ * an item onto the stack.
  */
 
 one_block *
 push(
-	one_block *me,
+	one_block *ob,
 	void *payload
 );
 
+/**
+ * pop
+ *
+ * an item off of the stack.
+ */
+
 void *
 pop(
-	one_block *me
+	one_block *ob
 );
+
+/**
+ * peek
+ *
+ * return but do hot remove the top item on the stack.
+ */
 
 void *
 peek(
-	one_block *me
+	one_block *ob
 );
+
+/**
+ * depth
+ *
+ * an idiomatic count.
+ */
 
 int
 depth(
-	one_block *me
+	one_block *ob
 );
 
-/*
+/**
  * a queue (fifo) is implemented on a doubly linked list, but use the
- * following entry points in addition to make_one, free_one, empty,
- * count, peek, and purge.
+ * following entry points in addition to make_one, free_one, is_empty,
+ * count, and purge.
+ *
+ * peek is available and pulls from the top of the queue.
+ */
+
+/**
+ * enqueue
+ *
+ * add an item to the back of the queue.
  */
 
 one_block *
 enqueue(
-	one_block *me,
+	one_block *ob,
 	void *payload
 );
 
+/**
+ * dequeue
+ *
+ * remove an item from the front of the queue.
+ */
+
 void *
 dequeue(
-	one_block *me
+	one_block *ob
 );
 
-/*
+/**
  * a deque (f/l-ifo)is built on a doubly linked list, but use the
- * following entry points in addition to make_one, free_one, empty,
+ * following entry points in addition to make_one, free_one, is_empty,
  * count, and purge.
+ *
+ * a deque allows you to work from either end of the queue.
+ */
+
+/**
+ * push_back, _front
+ *
+ * add an item to either end of the deque.
  */
 
 one_block *
 push_back(
-	one_block *me,
+	one_block *ob,
 	void *payload
 );
 
 one_block *
 push_front(
-	one_block *me,
+	one_block *ob,
 	void *payload
 );
 
+/**
+ * pop_back, _front
+ *
+ * pull an item from either end of the deque.
+ */
+
 void *
 pop_back(
-	one_block *me
+	one_block *ob
 );
 
 void *
 pop_front(
-	one_block *me
+	one_block *ob
 );
+
+/**
+ * peek_back, _front
+ *
+ * also from either end.
+ */
 
 void *
 peek_back(
-	one_block *me
+	one_block *ob
 );
 
 void *
 peek_front(
-	one_block *me
+	one_block *ob
 );
 
-/*
+/**
  * accumulator lists are self expanding lists of uintptr_t sized
  * things. its api and intended use are as accumulators for
  * recursions, as you might see in lisp or sml.
+ *
+ * uintptr_t made more sense that void *, but it's all the same
+ * under the covers. cast as you need to.
  */
 
 one_block *
 cons(
-	one_block *xs,
+	one_block *ob,
 	uintptr_t atom
 );
 
+/**
+ * car
+ *
+ * return the first (0th) item from the list. does not alter the
+ * list.
+ *
+ * equivalent to nth(list, 0);
+ */
+
 uintptr_t
 car(
-	one_block *xs
+	one_block *ob
 );
+
+/**
+ * cdr
+ *
+ * 'coulder', return a new alist with all the items except the first
+ * one. the original list is unchanged.
+ *
+ * equivalent to slice(list, 1, count(list));
+ */
 
 one_block *
 cdr(
-	one_block *xs
+	one_block *ob
 );
 
+/**
+ * append
+ *
+ * append the contents of one structure to another. the structures
+ * must be of the same type. this returns a new copy of the holding all
+ * the items of both structures.
+ */
 
 one_block *
 append(
-	one_block *xs,
-	one_block *ys
+	one_block *ob,
+	one_block *other
 );
+
+/**
+ * slice
+ *
+ * return a copy of the list holding the items [from, to) (0 based).
+ *
+ * the original list is unchanged, the slice is a proper alist.
+ */
 
 one_block *
 slice(
-	one_block *xs,
+	one_block *ob,
 	int from_inclusive,
 	int to_exclusive
 );
 
+/**
+ * setnth
+ *
+ * replace the 'n'th item (0 based) in the list with this
+ * new item. the list is otherwise unchanged.
+ */
+
 bool
 setnth(
-	one_block *xs,
+	one_block *ob,
 	int n,
 	uintptr_t atom
 );
 
+/**
+ * nth
+ *
+ * return the 'n'th item (0 based) from the list. does not
+ * alter the list.
+ */
+
 uintptr_t
 nth(
-	one_block *xs,
+	one_block *ob,
 	int n
 );
 
-one_block *
-clone(
-	one_block *xs
-);
+/**
+ * iterate
+ *
+ * a simple iterator. set the starting index and call repeatedly.
+ * sets the index to -1 when all items have been passed.
+ */
 
 uintptr_t
 iterate(
-	one_block *xs,
-	int *curr
+	one_block *ob,
+	int *idx
 );
 
-/*
+/**
  * dynamic arrays are self expanding arrays. in addition to make and
- * free, they support hbound via high_index, get, and put. TODO: sort
- * and func for sort.
+ * free, they support hbound via high_index, get, and put.
  */
 
-/*
+/**
  * high_index
  *
  * the highest used (via put_at) index in the array. while a payload
@@ -661,10 +779,10 @@ iterate(
 
 int
 high_index(
-	one_block *me
+	one_block *ob
 );
 
-/*
+/**
  * put_at
  *
  * place a payload at a particular index in the array. if the array's
@@ -682,12 +800,12 @@ high_index(
 
 one_block *
 put_at(
-	one_block *me,
+	one_block *ob,
 	void *payload,
 	int n
 );
 
-/*
+/**
  * get_from
  *
  * return the payload from a particular index in the array. if the index
@@ -705,44 +823,17 @@ put_at(
 
 void *
 get_from(
-	one_block *me,
+	one_block *ob,
 	int n
 );
-
-/*
- * tree/bst -- some of thee are key:value based, and some are node based.
+
+/**
+ * key:value -- this is built on a tree
  */
-
-one_block *
-insert(
-	one_block *me,
-	void *key,
-	void *value
-);
-
-one_block *
-delete (
-	one_block *me,
-	void *key
-);
-
-void *
-get_value_for(
-	one_block *me,
-	void *key
-);
-
-void *
-smallest_key(
-	one_block *me
-);
-
-void *
-largest_key(
-	one_block *me
-);
-
-/* traversal is going to need callbacks */
+
+/**
+ * priority queue -- not sure what this will be built upon
+ */
 
 #ifdef __cplusplus
 }
