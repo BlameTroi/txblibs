@@ -588,44 +588,55 @@ peek_front(
  */
 
 one_block *
-cons_to_alist(
+cons(
 	one_block *xs,
 	uintptr_t atom
 );
 
+uintptr_t
+car(
+	one_block *xs
+);
+
 one_block *
-append_to_alist(
+cdr(
+	one_block *xs
+);
+
+
+one_block *
+append(
 	one_block *xs,
 	one_block *ys
 );
 
 one_block *
-slice_alist(
+slice(
 	one_block *xs,
 	int from_inclusive,
 	int to_exclusive
 );
 
 bool
-put_alist(
+setnth(
 	one_block *xs,
 	int n,
 	uintptr_t atom
 );
 
 uintptr_t
-get_alist(
+nth(
 	one_block *xs,
 	int n
 );
 
 one_block *
-clone_alist(
+clone(
 	one_block *xs
 );
 
 uintptr_t
-iterate_alist(
+iterate(
 	one_block *xs,
 	int *curr
 );

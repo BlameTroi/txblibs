@@ -58,9 +58,9 @@ MU_TEST(test_create) {
 
 MU_TEST(test_add_one) {
 	one_block *xs = make_one(alist);
-	xs = cons_to_alist(xs, (uintptr_t)1);
+	xs = cons(xs, (uintptr_t)1);
 	mu_should(count(xs) == 1);
-	one_block *ys = clone_alist(xs);
+	one_block *ys = clone(xs);
 	mu_should(count(ys) == 1);
 	mu_shouldnt(xs == ys);
 	xs = free_one(xs);
@@ -75,14 +75,14 @@ MU_TEST(test_add_one) {
 
 MU_TEST(test_add_three) {
 	one_block *xs = make_one(alist);
-	xs = cons_to_alist(xs, (uintptr_t)1);
+	xs = cons(xs, (uintptr_t)1);
 	mu_should(count(xs) == 1);
-	one_block *ys = clone_alist(xs);
+	one_block *ys = clone(xs);
 	mu_should(count(ys) == 1);
 	mu_shouldnt(xs == ys);
 	xs = free_one(xs);
-	ys = cons_to_alist(ys, (uintptr_t)2);
-	ys = cons_to_alist(ys, (uintptr_t)3);
+	ys = cons(ys, (uintptr_t)2);
+	ys = cons(ys, (uintptr_t)3);
 	fprintf(stderr, "\nexamining a list\n");
 	fprintf(stderr, "ys: %p  capacity: %d  used: %d\n",
 		(void*)ys, ys->u.acc.capacity, ys->u.acc.used);
@@ -112,7 +112,7 @@ MU_TEST(test_expansion) {
 			original_xs_pointer = xs;
 			split_seen = true;
 		}
-		xs = cons_to_alist(xs, p);
+		xs = cons(xs, p);
 		fprintf(stderr, "iter: %d  xs: %p  cap: %d  used: %d  holds: %lu\n",
 			p, (void*)xs, xs->u.acc.capacity, xs->u.acc.used, xs->u.acc.list[p]);
 	}
@@ -139,13 +139,13 @@ MU_TEST(test_iterator) {
 			original_xs_pointer = xs;
 			split_seen = true;
 		}
-		xs = cons_to_alist(xs, p);
+		xs = cons(xs, p);
 		fprintf(stderr, "consed %d\n", p);
 	}
 	mu_should(split_seen);
 	int iterator = 0;
 	while (iterator > -1) {
-		uintptr_t p = iterate_alist(xs, &iterator);
+		uintptr_t p = iterate(xs, &iterator);
 		fprintf(stderr, "iterator counter %d  retrieved %lu\n", iterator, p);
 	}
 	mu_should(iterator == -1);

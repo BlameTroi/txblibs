@@ -61,12 +61,18 @@ one_tags[] = {
 	NULL
 };
 
-/*
- * singly linked list implementations. these are called to service
- * external requests. see those functions for more detailed
- * documentation.
+/**
+ * a singly linked list (singly) behaves as one would expect, and
+ * the parameters of it functions should all be obvious. this
+ * library does not expose the 'listness' or any other structural
+ * information to the client. it's all pointers or pointer sized
+ * objects (payloads).
  *
- * generally the arguments are all what you would expect them to be.
+ * as no realloocation of the main control block are made, the
+ * one_singly is passed directly to these functions.
+ *
+ * generally the other arguments are all what you would expect them to
+ * be.
  */
 
 static
@@ -89,9 +95,7 @@ singly_peek_first(
 	one_singly *self
 ) {
 	sgl_item *first = self->first;
-	if (first == NULL) return NULL;
-
-	return first->payload;
+	return first ? first->payload : NULL;
 }
 
 static
@@ -100,8 +104,8 @@ singly_get_first(
 	one_singly *self
 ) {
 	sgl_item *first = self->first;
-	if (first == NULL) return NULL;
-
+	if (!first)
+		return NULL;
 	self->first = first->next;
 	void *res = first->payload;
 	memset(first, 253, sizeof(*first));
@@ -120,7 +124,7 @@ singly_add_last(
 	next->payload = payload;
 
 	/* empty list is dead simple */
-	if (self->first == NULL) {
+	if (!self->first) {
 		self->first = next;
 		return self;
 	}
@@ -139,7 +143,8 @@ singly_peek_last(
 	one_singly *self
 ) {
 	sgl_item *curr = self->first;
-	if (curr == NULL) return NULL;
+	if (!curr)
+		return NULL;
 
 	/* chase to end. */
 	while (curr->next)
@@ -155,7 +160,8 @@ singly_get_last(
 	one_singly *self
 ) {
 	sgl_item *curr = self->first;
-	if (curr == NULL) return NULL;
+	if (!curr)
+		return NULL;
 
 	/* chase to end, remembering preceeding */
 	sgl_item *previous = NULL;
@@ -210,9 +216,9 @@ singly_purge(
 	return count;
 }
 
-/*
- * doubly linked list implementations. the comments on singly linked
- * list implementations apply.
+/**
+ * a doubly linked list (doubly) is the typical doubly linked list.
+ * the comments for the singly linked list list implementations apply.
  */
 
 static
@@ -227,7 +233,8 @@ doubly_add_first(
 	first->next = self->first;
 	first->previous = NULL;
 
-	if (self->first == NULL) {
+	/* empty list, easy peasy */
+	if (!self->first) {
 		self->first = first;
 		self->last = first;
 		return self;
@@ -243,9 +250,7 @@ void *
 doubly_peek_first(
 	one_doubly *self
 ) {
-	if (self->first == NULL) return NULL;
-
-	return self->first->payload;
+	return self->first ? self->first->payload : NULL;
 }
 
 static
@@ -253,12 +258,14 @@ void *
 doubly_get_first(
 	one_doubly *self
 ) {
-	if (self->first == NULL) return NULL;
+	if (!self->first)
+		return NULL;
 
 	dbl_item *first = self->first;
 	self->first = first->next;
 
-	if (first->next) first->next->previous = NULL;
+	if (first->next)
+		first->next->previous = NULL;
 	else self->last = NULL;
 
 	void *res = first->payload;
@@ -279,7 +286,8 @@ doubly_add_last(
 	last->previous = self->last;
 	last->next = NULL;
 
-	if (self->first == NULL) {
+	/* empty list is easy peasy */
+	if (!self->first) {
 		self->first = last;
 		self->last = last;
 		return self;
@@ -295,9 +303,7 @@ void *
 doubly_peek_last(
 	one_doubly *self
 ) {
-	if (self->last == NULL) return NULL;
-
-	return self->last->payload;
+	return self->last ? self->last->payload : NULL;
 }
 
 static
@@ -305,16 +311,20 @@ void *
 doubly_get_last(
 	one_doubly *self
 ) {
-	if (self->last == NULL) return NULL;
+	if (!self->last)
+		return NULL;
 
 	dbl_item *last = self->last;
 	self->last = last->previous;
+
+	/* watch for the only item on the list */
 	if (last->previous)
 		last->previous->next = NULL;
 	else {
 		self->first = NULL;
 		self->last = NULL;
 	}
+
 	void *res = last->payload;
 	memset(last, 253, sizeof(*last));
 	tsfree(last);
@@ -354,9 +364,258 @@ doubly_purge(
 	return count;
 }
 
+/**
+ * the accumulator list (alist) is a cross between a java array list and a
+ * lisp or sml list. while it has some similarities to the dynamic array
+ * i kept the implementations separate to avoid special subtype specific
+ * conditionals from cruding up the code.
+ *
+ * the motivation for the alist as that it provide the functionality of
+ * lists in recursions.
+ *
+ * as the list is stored separately from it's controlling self block,
+ * the external api passes the whole one_block.
+ *
+ * some operations (slice) create copies of a portion of the alist. in
+ * a java array list, this would just be a view over the array list.
+ *
+ * the api convention is the returned list is meant to replace the
+ * primary list in arguments. if the list has been significantly
+ * mutated, the original primary list is freed and an updated
+ * copy is returned.
+ *
+ * always use the array list you get back from an api call, not the
+ * one you sent in.
+ *
+ * repeat: ALWAYS USE THE ARRAY LIST YOU GET BACK FROM AN API CALL,
+ * NOT THE ONE YOU SENT IN.
+ *
+ * for illustration, here is an example where consing repeatedly
+ * will force the alist to grow, creating a new list and destroying
+ * the old list. the default allocation is ALIST_DEFAULT_CAPACITY.
+ *
+ * one_block *xs = make_one(alist);
+ * one_block *remember = xs;
+ * for (int i = 0; i > ALIST_DEFAULT_CAP * 2; i++)
+ *         xs = cons_to_alist(xs, (uintptr_t)i);
+ * assert(remember != xs);
+ * xs = free_one(xs);
+ * assert(xs == NULL);
+ *
+ * 'remember' holds the original address of 'xs', but that storage was
+ * released when 'xs' was expanded.
+ *
+ * some of the api is inspired by the java arraylist, and the rest
+ * from lisp. it's pseudo lisp lists with fake garbage collection.
+ */
+
+static
+int
+alist_purge(
+	one_block *xs
+) {
+	int ret = xs->u.acc.used;
+	xs->u.acc.used = 0;
+	memset(xs->u.acc.list, 0, ret * sizeof(uintptr_t));
+	return ret;
+}
+
 /*
- * generic entries, most of these route control to detailed
- * implementations for each advanced data type.
+ * add something that fits in a unintprt_t (currently 8 bytes) to the
+ * end of the array list.
+ */
+
+static
+one_block *
+alist_cons(
+	one_block *xs,
+	uintptr_t p
+) {
+	if (xs->u.acc.used == xs->u.acc.capacity) {
+		int lena = xs->u.acc.capacity * sizeof(uintptr_t);
+		one_block *new = tsmalloc(sizeof(*xs));
+		memcpy(new, xs, sizeof(*xs));
+		uintptr_t *acc = tsmalloc(lena * 2);
+		memset(acc, 0, lena * 2);
+		memcpy(acc, xs->u.acc.list, lena);
+		new->u.acc.capacity = xs->u.acc.capacity * 2;
+		new->u.acc.list = acc;
+		free_one(xs);
+		xs = new;
+	}
+	xs->u.acc.list[xs->u.acc.used] = p;
+	xs->u.acc.used += 1;
+	return xs;
+}
+
+
+/*
+ * create a new alist of the contents from inclusive->to exclusive.
+ *
+ * ie, [from, to) in standard mathematic notation.
+ *
+ * this does not have the same semantics as the java arraylist
+ * sublist. here we create an entirely new list holding only the
+ * elements requested. i've gone with 'slice' as more intention
+ * revealing.
+ *
+ * the original list is preserved.
+ */
+
+static
+one_block *
+alist_slice(
+	one_block *xs,
+	int from_inclusive,
+	int to_exclusive
+) {
+	if (to_exclusive > xs->u.acc.used || from_inclusive < 0) {
+		fprintf(stderr,
+			"\nTXBONE error slice: range out of bounds holds [0..%d) requested [%d..%d)\n",
+			xs->u.acc.used, from_inclusive, to_exclusive);
+		return NULL;
+	}
+	one_block *res = make_one(alist);
+	/* to be explicit about this. */
+	if (from_inclusive >= to_exclusive)
+		return res;
+
+	for (int i = from_inclusive; i < to_exclusive; i++)
+		res = alist_cons(res, xs->u.acc.list[i]);
+	return res;
+}
+
+/*
+ * an iterator of sorts over the alist. call it repeatedly and *index
+ * *index is updated. reaching the end of the array list is signalled
+ * by *index == -1.
+ */
+
+static
+uintptr_t
+alist_iterate(one_block *xs, int *curr) {
+	if (*curr < 0)
+		return 0;
+	if (*curr >= xs->u.acc.used) {
+		*curr = -1;  /* as a null might be valid, use a negative count to also signal end */
+		return 0;
+	}
+	uintptr_t res = xs->u.acc.list[*curr];
+	*curr += 1;
+	return res;
+}
+
+static
+one_block *
+alist_cdr(one_block *xs) {
+	return alist_slice(xs, 1, xs->u.acc.used);;
+}
+
+/*
+ * creates a shallow copy of an array list.
+ */
+
+static
+one_block *
+alist_clone(
+	one_block *xs
+) {
+	int lenu = sizeof(*xs);
+	one_block *resu = tsmalloc(lenu);
+	memset(resu, 0, lenu);
+	memcpy(resu, xs, lenu);
+
+	int lena = xs->u.acc.capacity * sizeof(uintptr_t);
+	memcpy(resu->u.acc.list, xs->u.acc.list, lena);
+	resu->u.acc.list = tsmalloc(lena);
+	memset(resu->u.acc.list, 0, lena);
+	memcpy(resu->u.acc.list, xs->u.acc.list, lena);
+	return resu;
+}
+
+/*
+ * append one array list to the end of another.
+ */
+
+static
+one_block *
+alist_append(one_block *xs, one_block *ys) {
+
+	/* be rational if list to append is empty */
+	if (!ys || ys->u.acc.used < 1)
+		return xs;
+
+	/* if the 'append to' list is empty, return a copy of the
+	 * append list. this is consistent with the idea that only the
+	 * primary list will be mutated. */
+	if (xs->u.acc.used < 1) {
+		free_one(xs);
+		return alist_clone(ys);
+	}
+
+	/* be lazy and just use the iterator for now. we should always
+	 * pass through the append loop at least once. */
+	one_block *new = alist_clone(xs);
+	free_one(xs);
+	int index = 0;
+	while (true) {
+		if (index < 0) break;
+		uintptr_t got = alist_iterate(ys, &index);
+		new = alist_cons(new, got);
+	}
+
+	return new;
+}
+
+/*
+ * return the first element in the alist.
+ */
+
+static
+uintptr_t
+alist_car(
+	one_block *xs
+) {
+	if (xs->u.acc.used > 0)
+		return xs->u.acc.list[0];
+	else return 0;
+}
+
+/*
+ * return the nth element in the alist.
+ */
+
+static
+uintptr_t
+alist_nth(
+	one_block *xs,
+	int n
+) {
+	if (n >= xs->u.acc.used || n < 0)
+		return 0;
+	return xs->u.acc.list[n];
+}
+
+/*
+ * set the nth element in the alist.
+ */
+
+static
+bool
+alist_setnth(
+	one_block *xs,
+	int n,
+	uintptr_t atom
+) {
+	if (n >= xs->u.acc.used || n < 0)
+		return false;
+	xs->u.acc.list[n] = atom;
+	return true;
+}
+
+
+/**
+ * the unified or generic api.
  *
  * create, destroy, and functions global to all data structures. all
  * entry points other than make_one and free_one tend to delegate to
@@ -365,7 +624,9 @@ doubly_purge(
  * conventions:
  *
  * functions that don't really need to return a payload or count
- * return their first argument, which allows for chaining calls.
+ * return their first argument, which allows for chaining calls and
+ * (in the case of an alist) the replacement of one copy of the
+ * structure with a new updated copy.
  *
  * functions that return an integer (count) return -1 for any error.
  * functions that return the one_block will return a NULL for any
@@ -373,6 +634,19 @@ doubly_purge(
  *
  * of course 'read' functions will return NULL if there is nothing to
  * return.
+ *
+ * the `one_block` holds all the various subtype control blocks in a
+ * union. this is the instance of the datatype in question
+ *
+ * generally, the whole `one_block` is not passed to detailed
+ * implementations. all of these datatypes started out as separate
+ * libraries. as most of those libraries do not create a new control
+ * block in flight, the union member is passed to lower level
+ * functions instead of the whole one block.
+ *
+ * the noteable exception to this is the alist, which can create and
+ * dispose of the alist control block in flight. there the whole
+ * `one_block` is passed.
  */
 
 /*
@@ -454,41 +728,41 @@ make_one(
 
 one_block *
 free_one(
-	one_block *self
+	one_block *ob
 ) {
 
-	if (self)
-		switch (self->isa) {
+	if (ob)
+		switch (ob->isa) {
 
 		case singly:
 		case stack:
 		case doubly:
 		case queue:
 		case deque:
-			purge(self);
-			memset(self, 253, sizeof(*self));
-			tsfree(self);
+			purge(ob);
+			memset(ob, 253, sizeof(*ob));
+			tsfree(ob);
 			return NULL;
 
 		case alist:
-			memset(self->u.acc.list, 253, self->u.acc.capacity * sizeof(uintptr_t));
-			tsfree(self->u.acc.list);
-			memset(self, 253, sizeof(*self));
-			tsfree(self);
+			memset(ob->u.acc.list, 253, ob->u.acc.capacity * sizeof(uintptr_t));
+			tsfree(ob->u.acc.list);
+			memset(ob, 253, sizeof(*ob));
+			tsfree(ob);
 			return NULL;
 
 		case dynarray:
-			memset(self->u.dyn.array, 253, self->u.dyn.capacity * sizeof(void *));
-			tsfree(self->u.dyn.array);
-			memset(self, 253, sizeof(*self));
-			tsfree(self);
+			memset(ob->u.dyn.array, 253, ob->u.dyn.capacity * sizeof(void *));
+			tsfree(ob->u.dyn.array);
+			memset(ob, 253, sizeof(*ob));
+			tsfree(ob);
 			return NULL;
 
 		default:
 			fprintf(stderr, "\nTXBONE error free_one: unknown or unsupported type %d %s\n",
-				self->isa, self->tag);
-			memset(self, 253, sizeof(*self));
-			tsfree(self);
+				ob->isa, ob->tag);
+			memset(ob, 253, sizeof(*ob));
+			tsfree(ob);
 			return NULL;
 		}
 
@@ -512,24 +786,24 @@ free_one(
 
 one_block *
 add_first(
-	one_block *self,
+	one_block *ob,
 	void *payload
 ) {
 	if (payload == NULL)
-		return self;
-	switch (self->isa) {
+		return ob;
+	switch (ob->isa) {
 
 	case singly:
-		singly_add_first(&self->u.sgl, payload);
-		return self;
+		singly_add_first(&ob->u.sgl, payload);
+		return ob;
 
 	case doubly:
-		doubly_add_first(&self->u.dbl, payload);
-		return self;
+		doubly_add_first(&ob->u.dbl, payload);
+		return ob;
 
 	default:
 		fprintf(stderr, "\nTXBONE error add_first: unknown or unsupported type %d %s\n",
-			self->isa, self->tag);
+			ob->isa, ob->tag);
 		return NULL;
 	}
 }
@@ -548,24 +822,24 @@ add_first(
 
 one_block *
 add_last(
-	one_block *self,
+	one_block *ob,
 	void *payload
 ) {
 	if (payload == NULL)
-		return self;
-	switch (self->isa) {
+		return ob;
+	switch (ob->isa) {
 
 	case singly:
-		singly_add_last(&self->u.sgl, payload);
-		return self;
+		singly_add_last(&ob->u.sgl, payload);
+		return ob;
 
 	case doubly:
-		doubly_add_last(&self->u.dbl, payload);
-		return self;
+		doubly_add_last(&ob->u.dbl, payload);
+		return ob;
 
 	default:
 		fprintf(stderr, "\nTXBONE error add_last: unknown or unsupported type %d %s\n",
-			self->isa, self->tag);
+			ob->isa, ob->tag);
 		return NULL;
 	}
 }
@@ -583,20 +857,20 @@ add_last(
 
 void *
 peek_first(
-	one_block *self
+	one_block *ob
 ) {
-	switch (self->isa) {
+	switch (ob->isa) {
 
 	case singly:
-		return singly_peek_first(&self->u.sgl);
+		return singly_peek_first(&ob->u.sgl);
 
 	case doubly:
-		return doubly_peek_first(&self->u.dbl);
+		return doubly_peek_first(&ob->u.dbl);
 
 	default:
 		fprintf(stderr,
 			"\nTXBONE error peek_first: unknown or unsupported type %d %s\n",
-			self->isa, self->tag);
+			ob->isa, ob->tag);
 		return NULL;
 	}
 }
@@ -614,19 +888,19 @@ peek_first(
 
 void *
 peek_last(
-	one_block *self
+	one_block *ob
 ) {
-	switch (self->isa) {
+	switch (ob->isa) {
 
 	case singly:
-		return singly_peek_last(&self->u.sgl);
+		return singly_peek_last(&ob->u.sgl);
 
 	case doubly:
-		return doubly_peek_last(&self->u.dbl);
+		return doubly_peek_last(&ob->u.dbl);
 
 	default:
 		fprintf(stderr, "\nTXBONE error peek_last: unknown or unsupported type %d %s\n",
-			self->isa, self->tag);
+			ob->isa, ob->tag);
 		return NULL;
 	}
 }
@@ -643,19 +917,19 @@ peek_last(
 
 void *
 get_first(
-	one_block *self
+	one_block *ob
 ) {
-	switch (self->isa) {
+	switch (ob->isa) {
 
 	case singly:
-		return singly_get_first(&self->u.sgl);
+		return singly_get_first(&ob->u.sgl);
 
 	case doubly:
-		return doubly_get_first(&self->u.dbl);
+		return doubly_get_first(&ob->u.dbl);
 
 	default:
 		fprintf(stderr, "\nTXBONE error get_first: unknown or unsupported type %d %s\n",
-			self->isa, self->tag);
+			ob->isa, ob->tag);
 		return NULL;
 	}
 }
@@ -672,19 +946,19 @@ get_first(
 
 void *
 get_last(
-	one_block *self
+	one_block *ob
 ) {
-	switch (self->isa) {
+	switch (ob->isa) {
 
 	case singly:
-		return singly_get_last(&self->u.sgl);
+		return singly_get_last(&ob->u.sgl);
 
 	case doubly:
-		return doubly_get_last(&self->u.dbl);
+		return doubly_get_last(&ob->u.dbl);
 
 	default:
 		fprintf(stderr, "\nTXBONE error get_last: unknown or unsupported type %d %s\n",
-			self->isa, self->tag);
+			ob->isa, ob->tag);
 		return NULL;
 	}
 }
@@ -702,24 +976,24 @@ get_last(
 
 int
 count(
-	one_block *self
+	one_block *ob
 ) {
-	switch (self->isa) {
+	switch (ob->isa) {
 
 	case singly:
-		return singly_count(&self->u.sgl);
+		return singly_count(&ob->u.sgl);
 
 	case doubly:
 	case queue:
 	case deque:
-		return doubly_count(&self->u.dbl);
+		return doubly_count(&ob->u.dbl);
 
 	case alist:
-		return self->u.acc.used;
+		return ob->u.acc.used;
 
 	default:
 		fprintf(stderr, "\nTXBONE error count: unknown or unsupported type %d %s\n",
-			self->isa, self->tag);
+			ob->isa, ob->tag);
 		return -1;
 	}
 }
@@ -736,25 +1010,25 @@ count(
 
 bool
 empty(
-	one_block *self
+	one_block *ob
 ) {
-	switch (self->isa) {
+	switch (ob->isa) {
 
 	case singly:
 	case stack:
-		return self->u.sgl.first == NULL;
+		return ob->u.sgl.first == NULL;
 
 	case doubly:
 	case queue:
 	case deque:
-		return self->u.dbl.first == NULL;
+		return ob->u.dbl.first == NULL;
 
 	case alist:
-		return self->u.acc.used = 0;
+		return ob->u.acc.used = 0;
 
 	default:
 		fprintf(stderr, "\nTXBONE error empty: unknown or unsupported type %d %s\n",
-			self->isa, self->tag);
+			ob->isa, ob->tag);
 		return false;
 	}
 }
@@ -773,22 +1047,25 @@ empty(
 
 int
 purge(
-	one_block *self
+	one_block *ob
 ) {
-	switch (self->isa) {
+	switch (ob->isa) {
 
 	case singly:
 	case stack:
-		return singly_purge(&self->u.sgl);
+		return singly_purge(&ob->u.sgl);
 
 	case doubly:
 	case queue:
 	case deque:
-		return doubly_purge(&self->u.dbl);
+		return doubly_purge(&ob->u.dbl);
+
+	case alist:
+		return alist_purge(ob);
 
 	default:
 		fprintf(stderr, "\nTXBONE error purge: unknown or unsupported type %d %s\n",
-			self->isa, self->tag);
+			ob->isa, ob->tag);
 		return -1;
 	}
 }
@@ -801,36 +1078,36 @@ purge(
 
 one_block *
 push(
-	one_block *self,
+	one_block *ob,
 	void *payload
 ) {
-	switch (self->isa) {
+	switch (ob->isa) {
 
 	case stack:
-		singly_add_first(&self->u.sgl, payload);
-		return self;
+		singly_add_first(&ob->u.sgl, payload);
+		return ob;
 
 	default:
 		fprintf(stderr,
 			"\nTXBONE error push: unknown or unsupported type %d %s, expected stack\n",
-			self->isa, self->tag);
+			ob->isa, ob->tag);
 		return NULL;
 	}
 }
 
 void *
 pop(
-	one_block *self
+	one_block *ob
 ) {
-	switch (self->isa) {
+	switch (ob->isa) {
 
 	case stack:
-		return singly_get_first(&self->u.sgl);
+		return singly_get_first(&ob->u.sgl);
 
 	default:
 		fprintf(stderr,
 			"\nTXBONE error pop: unknown or unsupported type %d %s, expected stack\n",
-			self->isa, self->tag);
+			ob->isa, ob->tag);
 		return NULL;
 	}
 }
@@ -843,36 +1120,36 @@ pop(
 
 one_block *
 enqueue(
-	one_block *self,
+	one_block *ob,
 	void *payload
 ) {
-	switch (self->isa) {
+	switch (ob->isa) {
 
 	case queue:
-		doubly_add_last(&self->u.dbl, payload);
-		return self;
+		doubly_add_last(&ob->u.dbl, payload);
+		return ob;
 
 	default:
 		fprintf(stderr,
 			"\nTXBONE error enqueue: unknown or unsupported type %d %s, expected queue\n",
-			self->isa, self->tag);
+			ob->isa, ob->tag);
 		return NULL;
 	}
 }
 
 void *
 dequeue(
-	one_block *self
+	one_block *ob
 ) {
-	switch (self->isa) {
+	switch (ob->isa) {
 
 	case queue:
-		return doubly_get_first(&self->u.dbl);
+		return doubly_get_first(&ob->u.dbl);
 
 	default:
 		fprintf(stderr,
 			"\nTXBONE error dequeue: unknown or unsupported type %d %s, expected queue\n",
-			self->isa, self->tag);
+			ob->isa, ob->tag);
 		return NULL;
 	}
 }
@@ -883,20 +1160,20 @@ dequeue(
 
 void *
 peek(
-	one_block *self
+	one_block *ob
 ) {
-	switch (self->isa) {
+	switch (ob->isa) {
 
 	case stack:
-		return singly_peek_first(&self->u.sgl);
+		return singly_peek_first(&ob->u.sgl);
 
 	case queue:
-		return doubly_peek_first(&self->u.dbl);
+		return doubly_peek_first(&ob->u.dbl);
 
 	default:
 		fprintf(stderr,
 			"\nTXBONE error peek: unknown or unsupported type %d %s, expected stack or queue\n",
-			self->isa, self->tag);
+			ob->isa, ob->tag);
 		return NULL;
 	}
 }
@@ -909,17 +1186,17 @@ peek(
 
 int
 depth(
-	one_block *self
+	one_block *ob
 ) {
-	switch (self->isa) {
+	switch (ob->isa) {
 
 	case stack:
-		return singly_count(&self->u.sgl);
+		return singly_count(&ob->u.sgl);
 
 	default:
 		fprintf(stderr,
 			"\nTXBONE error depth: unknown or unsupported type %d %s, expected stack\n",
-			self->isa, self->tag);
+			ob->isa, ob->tag);
 		return -1;
 	}
 }
@@ -932,114 +1209,113 @@ depth(
 
 one_block *
 push_front(
-	one_block *self,
+	one_block *ob,
 	void *payload
 ) {
-	switch (self->isa) {
+	switch (ob->isa) {
 
 	case deque:
-		doubly_add_first(&self->u.dbl, payload);
-		return self;
+		doubly_add_first(&ob->u.dbl, payload);
+		return ob;
 
 	default:
 		fprintf(stderr,
 			"\nTXBONE error push_front: unknown or unsupported type %d %s, expected deque\n",
-			self->isa, self->tag);
+			ob->isa, ob->tag);
 		return NULL;
 	}
 }
 
 one_block *
 push_back(
-	one_block *self,
+	one_block *ob,
 	void *payload
 ) {
-	switch (self->isa) {
+	switch (ob->isa) {
 
 	case deque:
-		doubly_add_last(&self->u.dbl, payload);
-		return self;
+		doubly_add_last(&ob->u.dbl, payload);
+		return ob;
 
 	default:
 		fprintf(stderr,
 			"\nTXBONE error push_back: unknown or unsupported type %d %s, expected deque\n",
-			self->isa, self->tag);
+			ob->isa, ob->tag);
 		return NULL;
 	}
 }
 
 void *
 pop_front(
-	one_block *self
+	one_block *ob
 ) {
-	switch (self->isa) {
+	switch (ob->isa) {
 
 	case deque:
-		return doubly_get_first(&self->u.dbl);
+		return doubly_get_first(&ob->u.dbl);
 
 	default:
 		fprintf(stderr,
 			"\nTXBONE error pop_front: unknown or unsupported type %d %s, expected deque\n",
-			self->isa, self->tag);
+			ob->isa, ob->tag);
 		return NULL;
 	}
 }
 
 void *
 pop_back(
-	one_block *seslf
+	one_block *ob
 ) {
-	switch (seslf->isa) {
+	switch (ob->isa) {
 
 	case deque:
-		return doubly_get_last(&seslf->u.dbl);
+		return doubly_get_last(&ob->u.dbl);
 
 	default:
 		fprintf(stderr,
 			"\nTXBONE error pop_back: unknown or unsupported type %d %s, expected deque\n",
-			seslf->isa, seslf->tag);
+			ob->isa, ob->tag);
 		return NULL;
 	}
 }
 
 void *
 peek_front(
-	one_block *self
+	one_block *ob
 ) {
-	switch (self->isa) {
+	switch (ob->isa) {
 
 	case deque:
-		return doubly_peek_first(&self->u.dbl);
+		return doubly_peek_first(&ob->u.dbl);
 
 	default:
 		fprintf(stderr,
 			"\nTXBONE error peek_front: unknown or unsupported type %d %s, expected deque\n",
-			self->isa, self->tag);
+			ob->isa, ob->tag);
 		return NULL;
 	}
 }
 
 void *
 peek_back(
-	one_block *self
+	one_block *ob
 ) {
-	switch (self->isa) {
+	switch (ob->isa) {
 
 	case deque:
-		return doubly_peek_last(&self->u.dbl);
+		return doubly_peek_last(&ob->u.dbl);
 
 	default:
 		fprintf(stderr,
 			"\nTXBONE error peek_back: unknown or unsupported type %d %s, expected deque\n",
-			self->isa, self->tag);
+			ob->isa, ob->tag);
 		return NULL;
 	}
 }
 
-/*
+/**
  * dynamic arrays are self expanding arrays. in addition to make and
- * free, they support hbound via high_index, get, and put. TODO: sort
- * and func for sort.
+ * free, they support hbound via high_index, get, and put.
  */
 
 /*
@@ -1150,143 +1426,121 @@ get_from(
 	}
 	return (self->u.dyn.array)[n];
 }
-
 
-/*
- * accumulator list specific
- */
-
-/*
- * add something that fits in a unintprt_t (currently 8 bytes) to the
- * end of the array list.
+/**
+ * functions specific to accumulator lists (alists). the naming is somewhat
+ * lisp inspired.
  */
 
 one_block *
-cons_to_alist(
-	one_block *xs,
-	uintptr_t p
+cons(
+	one_block *ob,
+	uintptr_t atom
 ) {
-	if (xs->u.acc.used == xs->u.acc.capacity) {
-		int lena = xs->u.acc.capacity * sizeof(uintptr_t);
-		one_block *new = tsmalloc(sizeof(*xs));
-		memcpy(new, xs, sizeof(*xs));
-		uintptr_t *acc = tsmalloc(lena * 2);
-		memset(acc, 0, lena * 2);
-		memcpy(acc, xs->u.acc.list, lena);
-		new->u.acc.capacity = xs->u.acc.capacity * 2;
-		new->u.acc.list = acc;
-		free_one(xs);
-		xs = new;
+	if (ob->isa != alist) {
+		fprintf(stderr, "\nTXBONE error cons: unknown or unsupported type %d %s\n",
+			ob->isa, ob->tag);
 	}
-	xs->u.acc.list[xs->u.acc.used] = p;
-	xs->u.acc.used += 1;
-	return xs;
+	return alist_cons(ob, atom);
 }
-
-/*
- * an iterator of sorts over the array list. call with repeatedly,
- * *index is updated. reaching the end of the array list is signalled
- * by *index == -1.
- *
- * it's just as easy to use array access, but that won't survive a
- * change in the underlying storage approach.
- */
 
 uintptr_t
-iterate_alist(one_block *xs, int *curr) {
-	if (*curr < 0)
-		return 0;
-	if (*curr >= xs->u.acc.used) {
-		*curr = -1;  /* as a null might be valid, use a negative count to also signal end */
-		return 0;
-	}
-	uintptr_t res = xs->u.acc.list[*curr];
-	*curr += 1;
-	return res;
-}
-
-/*
- * creates a shallow copy of an array list.
- */
-
-one_block *
-clone_alist(
-	one_block *xs
+car(
+	one_block *ob
 ) {
-	int lenu = sizeof(*xs);
-	one_block *resu = tsmalloc(lenu);
-	memset(resu, 0, lenu);
-	memcpy(resu, xs, lenu);
-
-	int lena = xs->u.acc.capacity * sizeof(uintptr_t);
-	memcpy(resu->u.acc.list, xs->u.acc.list, lena);
-	resu->u.acc.list = tsmalloc(lena);
-	memset(resu->u.acc.list, 0, lena);
-	memcpy(resu->u.acc.list, xs->u.acc.list, lena);
-	return resu;
+	if (ob->isa != alist) {
+		fprintf(stderr, "\nTXBONE error car: unknown or unsupported type %d %s\n",
+			ob->isa, ob->tag);
+	}
+	return alist_car(ob);
 }
 
-/*
- * append one array list to the end of another.
- */
-
 one_block *
-append_to_alist(one_block *xs, one_block *ys) {
-
-	/* be rational if list to append is empty */
-	if (!ys || ys->u.acc.used < 1)
-		return xs;
-
-	/* if the 'append to' list is empty, return a copy of the
-	 * append list. this is consistent with the idea that only the
-	 * primary list will be mutated. */
-	if (xs->u.acc.used < 1) {
-		free_one(xs);
-		return clone_alist(ys);
+cdr(
+	one_block *ob
+) {
+	if (ob->isa != alist) {
+		fprintf(stderr, "\nTXBONE error cdr: unknown or unsupported type %d %s\n",
+			ob->isa, ob->tag);
 	}
-
-	/* be lazy and just use the iterator for now. we should always
-	 * pass through the append loop at least once. */
-	one_block *new = clone_alist(xs);
-	free_one(xs);
-	int index = 0;
-	while (true) {
-		if (index < 0) break;
-		uintptr_t got = iterate_alist(ys, &index);
-		new = cons_to_alist(new, got);
-	}
-
-	return new;
+	return alist_cdr(ob);
 }
 
-/*
- * create a new alist of the contents from inclusive->to exclusive.
- *
- * ie, [from, to) in standard mathematic notation.
- *
- * this does not have the same semantics as the java arraylist
- * sublist. here we create an entirely new list holding only the
- * elements requested. i've gone with 'slice' as more intention
- * revealing.
- *
- * the original list is preserved.
- */
+one_block *
+append(
+	one_block *left,
+	one_block *right
+) {
+	if (left->isa != alist) {
+		fprintf(stderr, "\nTXBONE error append: unknown or unsupported type %d %s\n",
+			left->isa, left->tag);
+	}
+	if (right->isa != alist) {
+		fprintf(stderr, "\nTXBONE error append: unknown or unsupported type %d %s\n",
+			right->isa, right->tag);
+	}
+	return alist_append(left, right);
+}
 
 one_block *
-slice_alist(
-	one_block *xs,
+slice(
+	one_block *ob,
 	int from_inclusive,
 	int to_exclusive
 ) {
-	one_block *res = make_one(alist);
+	if (ob->isa != alist) {
+		fprintf(stderr, "\nTXBONE error slice: unknown or unsupported type %d %s\n",
+			ob->isa, ob->tag);
+	}
+	return alist_slice(ob, from_inclusive, to_exclusive);
+}
 
-	/* to be explicit about this. */
-	if (from_inclusive >= to_exclusive)
-		return res;
+bool
+setnth(
+	one_block *ob,
+	int n,
+	uintptr_t atom
+) {
+	if (ob->isa != alist) {
+		fprintf(stderr, "\nTXBONE error setnth: unknown or unsupported type %d %s\n",
+			ob->isa, ob->tag);
+	}
+	return alist_setnth(ob, n, atom);
+}
 
-	for (int i = from_inclusive; i < to_exclusive; i++)
-		res = cons_to_alist(res, xs->u.acc.list[i]);
-	return res;
+uintptr_t
+nth(
+	one_block *ob,
+	int n
+) {
+	if (ob->isa != alist) {
+		fprintf(stderr, "\nTXBONE error nth: unknown or unsupported type %d %s\n",
+			ob->isa, ob->tag);
+	}
+	return alist_nth(ob, n);
+}
+
+one_block *
+clone(
+	one_block *ob
+) {
+	if (ob->isa != alist) {
+		fprintf(stderr, "\nTXBONE error clone: unknown or unsupported type %d %s\n",
+			ob->isa, ob->tag);
+	}
+	return alist_clone(ob);
+}
+
+uintptr_t
+iterate(
+	one_block *ob,
+	int *curr
+) {
+	if (ob->isa != alist) {
+		fprintf(stderr, "\nTXBONE error iterate: unknown or unsupported type %d %s\n",
+			ob->isa, ob->tag);
+	}
+	return alist_iterate(ob, curr);
 }
 
 /* txbone.c ends here */
