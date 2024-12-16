@@ -687,6 +687,89 @@ keycmp(
 	else if (cmp > 0) return GREATER;
 	else return EQUAL;
 }
+/********************************************************************
+ ********************************************************************
+ *
+ * difficult to avoid forward references
+ *
+ * these should be all of the internal functions and they are
+ * meant to be static.
+ *
+ ********************************************************************
+ ********************************************************************/
+
+static
+void
+node_free(Tree *, Node *);
+
+static
+int
+node_children_free(Tree *, Node *);
+
+static
+Node *
+get_Node_or_parent(Tree *, void *);
+
+static
+Node *
+get_Node_or_NULL(Tree *, void *);
+
+static
+Node *
+make_Node(Tree *, void *, void *);
+
+static
+int
+pre_order_traversal_r(Tree *, Node *, void *, fn_traversal_cb);
+
+static
+int
+in_order_traversal_r(Tree *, Node *, void *, fn_traversal_cb);
+
+static
+int
+post_order_traversal_r(Tree *, Node *, void *, fn_traversal_cb);
+
+static
+int
+btree_height(Tree *, Node *);
+
+static
+int
+btree_size(Tree *, Node *);
+
+static
+bool
+is_unbalanced(Tree *, Node *);
+
+static
+bool
+is_scapegoat(Tree *, Node *);
+
+static
+bool
+btree_insert_r(Tree *, Node *, Node *);
+
+static
+Node *
+rebalance_r(Tree *, Node *);
+
+static
+void
+reset_subtree_r(Tree *, Node *);
+
+static
+Node *
+make_subtree_r(Tree *, one_block *);
+
+static
+one_block *
+internal_collector_r(Tree *, Node *, one_block *);
+
+Tree *
+free_Tree(
+	Tree *self
+);
 
 
 
@@ -894,6 +977,13 @@ free_one(
 		case dynarray:
 			memset(ob->u.dyn.array, 253, ob->u.dyn.capacity * sizeof(void *));
 			tsfree(ob->u.dyn.array);
+			memset(ob, 253, sizeof(*ob));
+			tsfree(ob);
+			return NULL;
+
+		case keyval:
+			// TODO: fix to use purge as for others ...
+			free_Tree(&ob->u.kvl);
 			memset(ob, 253, sizeof(*ob));
 			tsfree(ob);
 			return NULL;
@@ -1109,6 +1199,9 @@ count(
 	case alist:
 		return ob->u.acc.used;
 
+	case keyval:
+		return btree_size(&ob->u.kvl, ob->u.kvl.root);
+
 	default:
 		fprintf(stderr, "\nERROR txbone-count: unknown or unsupported type %d %s\n",
 			ob->isa, ob->tag);
@@ -1141,6 +1234,9 @@ is_empty(
 
 	case alist:
 		return ob->u.acc.used == 0;
+
+	case keyval:
+		return ob->u.kvl.root == NULL;
 
 	default:
 		fprintf(stderr, "\nERROR txbone-empty: unknown or unsupported type %d %s\n",
@@ -1877,85 +1973,6 @@ iterate(
  */
 
 
-/********************************************************************
- ********************************************************************
- *
- * difficult to avoid forward references
- *
- * these should be all of the internal functions and they are
- * meant to be static.
- *
- ********************************************************************
- ********************************************************************/
-
-static
-void
-node_free(Tree *, Node *);
-
-static
-int
-node_children_free(Tree *, Node *);
-
-static
-Node *
-get_Node_or_parent(Tree *, void *);
-
-static
-Node *
-get_Node_or_NULL(Tree *, void *);
-
-static
-Node *
-make_Node(Tree *, void *, void *);
-
-static
-int
-pre_order_traversal_r(Tree *, Node *, void *, fn_traversal_cb);
-
-static
-int
-in_order_traversal_r(Tree *, Node *, void *, fn_traversal_cb);
-
-static
-int
-post_order_traversal_r(Tree *, Node *, void *, fn_traversal_cb);
-
-static
-int
-height(Tree *, Node *);
-
-static
-int
-size(Tree *, Node *);
-
-static
-bool
-is_unbalanced(Tree *, Node *);
-
-static
-bool
-is_scapegoat(Tree *, Node *);
-
-static
-bool
-btree_insert_r(Tree *, Node *, Node *);
-
-static
-Node *
-rebalance_r(Tree *, Node *);
-
-static
-void
-reset_subtree_r(Tree *, Node *);
-
-static
-Node *
-make_subtree_r(Tree *, one_block *);
-
-static
-one_block *
-internal_collector_r(Tree *, Node *, one_block *);
-
 
 /********************************************************************
  ********************************************************************
@@ -2005,7 +2022,7 @@ free_Tree(
 		freed += 1;
 	}
 	memset(self, 253, sizeof(*self));
-	tsfree(self);
+	// tsfree(self);
 	FPRINTF_INFO fprintf(stderr, "INFO free_Tree %d nodes freed\n", freed);
 	return self;
 }
@@ -2063,7 +2080,7 @@ get_Node_or_NULL(
 }
 
 int
-height(Tree *self, Node *n) {
+btree_height(Tree *self, Node *n) {
 	int height = 0;
 	while (n->parent) {
 		height += 1;
@@ -2073,21 +2090,21 @@ height(Tree *self, Node *n) {
 }
 
 int
-size(Tree *self, Node *n) {
+btree_size(Tree *self, Node *n) {
 	if (!n) return 0;
-	return 1 + size(self, n->left) + size(self, n->right);
+	return 1 + btree_size(self, n->left) + btree_size(self, n->right);
 }
 
 bool
 is_unbalanced(Tree *self, Node *n) {
-	int h = height(self, n);
-	int s = size(self, self->root);
+	int h = btree_height(self, n);
+	int s = btree_size(self, self->root);
 	return (h > ALPHA * uint32_log2(s));
 }
 
 bool
 is_scapegoat(Tree *self, Node *n) {
-	return n && (3*size(self, n) > 2*size(self, n->parent));
+	return n && (3*btree_size(self, n) > 2*btree_size(self, n->parent));
 }
 
 /*
@@ -2163,7 +2180,7 @@ btree_insert(
 		if (self->rebalance_allowed && is_unbalanced(self, n)) {
 			FPRINTF_INFO fprintf(stderr, "INFO insert: unbalanced@ %d %d %d %d %ld\n",
 				self->nodes, self->inserts,
-				size(self, self->root), height(self, n), (uintptr_t)key);
+				btree_size(self, self->root), btree_height(self, n), (uintptr_t)key);
 			Node *s = n->parent;
 			while (s) {
 				if (!is_scapegoat(self, s)) {
@@ -2172,7 +2189,7 @@ btree_insert(
 				}
 				FPRINTF_INFO fprintf(stderr, "INFO insert:  scapegoat@ %d %d %d %d %ld\n",
 					self->nodes, self->inserts,
-					size(self, self->root), height(self, s), (uintptr_t)s->key);
+					btree_size(self, self->root), btree_height(self, s), (uintptr_t)s->key);
 				s = rebalance_r(self, s);
 				break;
 			}
@@ -2182,11 +2199,10 @@ btree_insert(
 	return did;
 }
 
-one_block *
+bool
 insert(one_block *ob, void *key, void *value) {
 	// todo validate call
-	btree_insert(&ob->u.kvl, key, value);
-	return ob;
+	return btree_insert(&ob->u.kvl, key, value);
 }
 
 /********************************************************************

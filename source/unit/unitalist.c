@@ -9,7 +9,6 @@
 #include "txballoc.h"
 #include "txbmisc.h"
 #include "txbrand.h"
-
 #include "txbone.h"
 
 /*
@@ -146,8 +145,9 @@ MU_TEST(test_iterator) {
 	mu_should(split_seen);
 	int iterator = 0;
 	while (iterator > -1) {
+		/* remember the iterate is increments so it points to next */
 		uintptr_t p = iterate(xs, &iterator);
-		fprintf(stderr, "iterator counter %d  retrieved %lu\n", iterator, p);
+		fprintf(stderr, "iterator counter %d  retrieved %lu\n", iterator - 1, p);
 	}
 	mu_should(iterator == -1);
 	for (int i = 0; i < xs->u.acc.used; i++) {

@@ -912,7 +912,7 @@ get_from(
  * key:value -- this is built on a tree
  */
 
-one_block *
+bool
 insert(one_block *, void *, void *);
 
 void *
