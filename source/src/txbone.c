@@ -599,9 +599,14 @@ alist_nth(
 	one_block *xs,
 	int n
 ) {
+	uintptr_t atom = 0;
 	if (n >= xs->u.acc.used || n < 0)
-		return 0;
-	return xs->u.acc.list[n];
+		fprintf(stderr,
+			"\nERROR txbone-nth: index out of range %d lies outside [0..%d)\n",
+			n, xs->u.acc.used);
+	else
+		atom =  xs->u.acc.list[n];
+	return atom;
 }
 
 /*
@@ -609,29 +614,36 @@ alist_nth(
  */
 
 static
-bool
+one_block *
 alist_setnth(
 	one_block *xs,
 	int n,
 	uintptr_t atom
 ) {
 	if (n >= xs->u.acc.used || n < 0)
-		return false;
-	xs->u.acc.list[n] = atom;
-	return true;
+		fprintf(stderr,
+			"\nERROR txbone-setnth: index out of range %d lies outside [0..%d)\n",
+			n, xs->u.acc.used);
+	else
+		xs->u.acc.list[n] = atom;
+	return xs;
 }
-
-
+
 /********************************************************************
  * key comparison
  ********************************************************************/
 
 /*
+ * some structures use keys to uniquely identify an item. so far
+ * the externally visible structure is the key:value store, which
+ * is internally a binary search tree.
+ *
  * as keys and values are most usually passed as `void *` pointers, the
  * client must let us know how to compare the keys. the comparator
  * function has the same basic interface as the standard `strcmp`.
  *
- * the key's type and comparator function are set at tree creation.
+ * the key's type and comparator function are set when a structure is
+ * created via `make_one_keyed()`.
  *
  * integral and string compares are set automatically to either
  * `integral_comp` or `strcmp`.
@@ -648,7 +660,6 @@ integral_comp(
 ) {
 	return (long)left - (long)right;
 }
-
 
 /*
  * the key comparison happens often enough that it was worth factoring
@@ -714,23 +725,20 @@ keycmp(
  * `one_block` is passed.
  */
 
-/*
+/**
  * make_one
  *
  * create an instance of one of the data structure types. allocates and
  * initializes the 'one block' and returns it to the client. the client
  * passes this back on subsequent calls as a handle.
- *
  * a constructor, if you will.
  *
- *     in: what to instantiate, see enum one_type for values
- *
- * return: the new instance or NULL on error
+ * returns the instance handle or NULL on error.
  */
 
 one_block *
 make_one(
-	enum one_type isa
+	one_type isa
 ) {
 	one_block *ob = tsmalloc(sizeof(*ob));
 	memset(ob, 0, sizeof(*ob));
@@ -777,9 +785,14 @@ make_one(
 	}
 }
 
-/*
- * create a new empty keyed instance. a tree under the covers, but
- * externally it's a key value list.
+/**
+ * create a new empty keyed instance. this will usually be a backed by
+ * a binary search tree, but it may present an different api.
+ *
+ * at this time, dictionary like or symbol table like access via the
+ * key to some value is available.
+ *
+ * as with make_one, the returns the instance handle or NULL.
  */
 
 one_block *
@@ -844,18 +857,13 @@ make_one_keyed(
 	}
 }
 
-/*
+/**
  * free_one
  *
  * destroy an instance of a data structure, releasing library managed
- * memory.
+ * memory, a destructor.
  *
- * a destructor.
- *
- *     in: the instance to destroy
- *
- * return: the now invalid handle (pointer) to the instance or NULL on
- *         error
+ * returns NULL.
  */
 
 one_block *
@@ -901,19 +909,13 @@ free_one(
 	fprintf(stderr, "\nERROR txbone-free_one: called with NULL one block\n");
 	return NULL;
 }
-
-
 
 /**
- * add_first
+ * add_first -- singly, doubly.
  *
- * add an item to the front/top of all items held.
+ * add an item to the front of all items held.
  *
- *     in: the instance
- *
- *     in: void * payload
- *
- * return: the one block or NULL if error
+ * returns the instance handle or NULL on error.
  */
 
 one_block *
@@ -941,15 +943,11 @@ add_first(
 }
 
 /**
- * add_last
+ * add_last -- singly, doubly
  *
- * add an item to the back/bottom of all items held.
+ * add an item to the end of all items held.
  *
- *     in: the instance
- *
- *     in: void * payload
- *
- * return: the one block or NULL if error
+ * returns the instance handle or NULL.
  */
 
 one_block *
@@ -977,14 +975,11 @@ add_last(
 }
 
 /**
- * peek_first
+ * peek_first -- singly, doubly
  *
- * return but do not remove the item at the front/top of all
- * items held.
+ * return but do not remove the item at the front of all items held.
  *
- *     in: the instance
- *
- * return: the item payload or NULL on either an error or empty
+ * returns the item or NULL on either error or empty.
  */
 
 void *
@@ -1008,14 +1003,11 @@ peek_first(
 }
 
 /**
- * peek_last
+ * peek_last -- singly, doubly
  *
- * return but do not remove the item at the back/bottom of all
- * items held.
+ * return but do not remove the item at the end of all items held.
  *
- *     in: the instance
- *
- * return: the item payload or NULL on either an error or empty
+ * returns the item or NULL on either an error or empty.
  */
 
 void *
@@ -1038,13 +1030,11 @@ peek_last(
 }
 
 /**
- * get_first
+ * get_first -- singly, doubly
  *
- * remove and return the item at the front/top of all items held.
+ * remove and return the item at the front of all items held.
  *
- *     in: the instance
- *
- * return: the item payload or NULL on either an error or empty
+ * returns the item or NULL on either an error or empty.
  */
 
 void *
@@ -1067,13 +1057,11 @@ get_first(
 }
 
 /**
- * get_last
+ * get_last -- singly, doubly
  *
- * remove and return the item at the back/bottom of all items held.
+ * remove and return the item at the end of all items held.
  *
- *     in: the instance
- *
- * return: the item payload or NULL on either an error or empty
+ * returns the item or NULL on either an error or empty.
  */
 
 void *
@@ -1096,14 +1084,12 @@ get_last(
 }
 
 /**
- * count
+ * count -- singly, doubly, queue, deque, alist
  *
  * how many things are managed by the data structure. for a stack, use
  * depth. has no meaning for a dynamic array.
  *
- *      in: the instance
- *
- * return: integer number of items or -1 on error
+ * returns the number of items or -1 on error.
  */
 
 int
@@ -1131,13 +1117,11 @@ count(
 }
 
 /**
- * is_empty
+ * is_empty -- singly, stack, doubly, queue, deque, alist
  *
  * predicate is this data structure empty (count/depth == 0)?
  *
- *     in: the instance
- *
- * return: boolean, any errors come back as false
+ * returns a boolean, any detected errors return false.
  */
 
 bool
@@ -1156,7 +1140,7 @@ is_empty(
 		return ob->u.dbl.first == NULL;
 
 	case alist:
-		return ob->u.acc.used = 0;
+		return ob->u.acc.used == 0;
 
 	default:
 		fprintf(stderr, "\nERROR txbone-empty: unknown or unsupported type %d %s\n",
@@ -1166,15 +1150,13 @@ is_empty(
 }
 
 /**
- * purge
+ * purge -- singly, stack, doubly, queue, deque, alist
  *
- * empty the data structure. deletes all storage for items/nodes
+ * empty the data structure. frees internal resources for all items
  * managed by the structure. client data is left alone. this has no
  * meaning for a dynamic array.
  *
- *     in: the instance
- *
- * return: integer how many things were purged or -1 on error
+ * returns the number of items purged or -1 on any detected error.
  */
 
 int
@@ -1209,7 +1191,7 @@ purge(
  */
 
 /**
- * depth
+ * depth -- stack
  *
  * stacks don't have counts, they have depth.
  */
@@ -1231,6 +1213,14 @@ depth(
 	}
 }
 
+/**
+ * push -- stack
+ *
+ * add an item to the top of the stack.
+ *
+ * returns the stack instance.
+ */
+
 one_block *
 push(
 	one_block *ob,
@@ -1250,6 +1240,14 @@ push(
 	}
 }
 
+/**
+ * pop -- stack
+ *
+ * remove an item from the top of the stack.
+ *
+ * returns the item.
+ */
+
 void *
 pop(
 	one_block *ob
@@ -1266,51 +1264,12 @@ pop(
 		return NULL;
 	}
 }
-
+
 /**
- * a queue (fifo) is implemented on a doubly linked list, but use the
- * following entry points in addition to make_one, free_one, is_empty,
- * count, peek, and purge.
- */
-
-one_block *
-enqueue(
-	one_block *ob,
-	void *payload
-) {
-	switch (ob->isa) {
-
-	case queue:
-		doubly_add_last(&ob->u.dbl, payload);
-		return ob;
-
-	default:
-		fprintf(stderr,
-			"\nERROR txbone-enqueue: unknown or unsupported type %d %s, expected queue\n",
-			ob->isa, ob->tag);
-		return NULL;
-	}
-}
-
-void *
-dequeue(
-	one_block *ob
-) {
-	switch (ob->isa) {
-
-	case queue:
-		return doubly_get_first(&ob->u.dbl);
-
-	default:
-		fprintf(stderr,
-			"\nERROR txbone-dequeue: unknown or unsupported type %d %s, expected queue\n",
-			ob->isa, ob->tag);
-		return NULL;
-	}
-}
-
-/**
- * peek is common to stack and queue.
+ * peek -- stack, queue
+ *
+ * return but do not remove the top (stack) or oldest (queue) item.
+ *
  */
 
 void *
@@ -1332,12 +1291,84 @@ peek(
 		return NULL;
 	}
 }
+
+/**
+ * a queue (fifo) is implemented on a doubly linked list, but use the
+ * following entry points in addition to make_one, free_one, is_empty,
+ * count, peek, and purge.
+ */
 
+/**
+ * enqueue -- queue
+ *
+ * add an item to the queue.
+ *
+ * returns the queue instance.
+ */
+
+one_block *
+enqueue(
+	one_block *ob,
+	void *payload
+) {
+	switch (ob->isa) {
+
+	case queue:
+		doubly_add_last(&ob->u.dbl, payload);
+		return ob;
+
+	default:
+		fprintf(stderr,
+			"\nERROR txbone-enqueue: unknown or unsupported type %d %s, expected queue\n",
+			ob->isa, ob->tag);
+		return NULL;
+	}
+}
+
+/**
+ * dequeue -- queue
+ *
+ * remove and return the oldest item from the queue.
+ *
+ * returns the item.
+ */
+
+void *
+dequeue(
+	one_block *ob
+) {
+	switch (ob->isa) {
+
+	case queue:
+		return doubly_get_first(&ob->u.dbl);
+
+	default:
+		fprintf(stderr,
+			"\nERROR txbone-dequeue: unknown or unsupported type %d %s, expected queue\n",
+			ob->isa, ob->tag);
+		return NULL;
+	}
+}
 
 /**
  * a deque (f/l-ifo)is built on a doubly linked list, but use the
  * following entry points in addition to make_one, free_one, empty,
  * count, and purge.
+ *
+ * items can be removed from either end of the deque. one end is
+ * arbitrarily considered to be the 'front', while the other end is
+ * considered to be the 'back'.
+ *
+ * 'left' and 'right' would be just as valid, but 'top' or 'bottom'
+ * would collide with stack terminology.
+ */
+
+/**
+ * push_front -- deque
+ *
+ * add an item to the front of the deque.
+ *
+ * returns the deque instance.
  */
 
 one_block *
@@ -1359,6 +1390,14 @@ push_front(
 	}
 }
 
+/**
+ * push_back -- deque
+ *
+ * add an item to the back of the deque.
+ *
+ * returns the deque instance.
+ */
+
 one_block *
 push_back(
 	one_block *ob,
@@ -1378,6 +1417,12 @@ push_back(
 	}
 }
 
+/**
+ * pop_front -- deque
+ *
+ * remove and return the item at the front of the deque.
+ */
+
 void *
 pop_front(
 	one_block *ob
@@ -1394,6 +1439,12 @@ pop_front(
 		return NULL;
 	}
 }
+
+/**
+ * pop_back -- deque
+ *
+ * remove and return the item at the back of the deque.
+ */
 
 void *
 pop_back(
@@ -1412,6 +1463,12 @@ pop_back(
 	}
 }
 
+/**
+ * peek_front -- deque
+ *
+ * return but do not remove the item at the front of the deque.
+ */
+
 void *
 peek_front(
 	one_block *ob
@@ -1428,6 +1485,12 @@ peek_front(
 		return NULL;
 	}
 }
+
+/**
+ * peek_back -- deque
+ *
+ * return but do not remove the item at the back of the deque.
+ */
 
 void *
 peek_back(
@@ -1448,19 +1511,17 @@ peek_back(
 
 /**
  * dynamic arrays are self expanding arrays. in addition to make and
- * free, they support hbound via high_index, get, and put.
+ * free, they support hbound via high_index, get_from, and put_at.
  */
 
 /**
- * high_index
+ * high_index -- dynarray
  *
  * the highest used (via put_at) index in the array. while a payload
- * may be put anywhere with a non-negative index, a get is only
- * valid for an index in the range 0->high index.
+ * may be put anywhere with a non-negative index, a get_from is only
+ * valid for an index in the range (0, high index).
  *
- *     in: the instance
- *
- * return: integer index or -1 on error.
+ * returns the index or -1 on error.
  */
 
 int
@@ -1477,19 +1538,13 @@ high_index(
 }
 
 /**
- * put_at
+ * put_at -- dynarray
  *
- * place a payload at a particular index in the array. if the array's
+ * store a value at a particular index in the array. if the array's
  * capacity is less than the index, double the capacity until the
  * index is valid.
  *
- *     in: the instance
- *
- *     in: the payload to store
- *
- *     in: integer index to store the payload at
- *
- * return: the one block or NULL on error
+ * returns the array instance or NULL on error.
  */
 
 one_block *
@@ -1525,19 +1580,12 @@ put_at(
 }
 
 /**
- * get_from
+ * get_from -- dynarray
  *
- * return the payload from a particular index in the array. if the index
- * is either negative or greater than high_index, it is an error. if
- * the index is between 0 .. high_index (inclusive) but nothing has been
- * put_at that index yet, return NULL.
+ * returns the item from a particular index in the array.
  *
- *     in: the instance
- *
- *     in: integer index to retrieve payload from
- *
- * return: the payload or NULL on error, but note that NULL could also
- *         be the payload.
+ * if the index lies outside [0..high_index) but nothing has been
+ * put_at that location, return NULL.
  */
 
 void *
@@ -1553,7 +1601,7 @@ get_from(
 	}
 	if (n > self->u.dyn.length || n < 0) {
 		fprintf(stderr,
-			"\nERROR txbone-get_at: index out of bounds %d not in range [0..%d]\n", n,
+			"\nERROR txbone-get_at: index out of bounds %d not in range [0..%d)\n", n,
 			self->u.dyn.length);
 		return NULL;
 	}
@@ -1561,8 +1609,21 @@ get_from(
 }
 
 /**
- * functions specific to accumulator lists (alists). the naming is somewhat
- * lisp inspired.
+ * accumulator list functions. the alist has a subset of array list
+ * and lisp/sml list semantics. it is meant to ease accumulating
+ * discrete values in recursions. the function naming is lisp
+ * inspired.
+ *
+ * see the comment block at the head of the alist_* functions for
+ * a more detailed description of behaviors.
+ */
+
+/**
+ * cons -- alist
+ *
+ * add an item to the end of an alist.
+ *
+ * returns the instance.
  */
 
 one_block *
@@ -1577,6 +1638,14 @@ cons(
 	return alist_cons(ob, atom);
 }
 
+/**
+ * car -- alist
+ *
+ * return but do not remove the item at the front of the alist.
+ *
+ * returns the item.
+ */
+
 uintptr_t
 car(
 	one_block *ob
@@ -1588,6 +1657,12 @@ car(
 	return alist_car(ob);
 }
 
+/**
+ * cdr -- alist
+ *
+ * return a copy of the alist with the first item (car) removed.
+ */
+
 one_block *
 cdr(
 	one_block *ob
@@ -1598,6 +1673,17 @@ cdr(
 	}
 	return alist_cdr(ob);
 }
+
+/**
+ * append -- alist
+ *
+ * concatenate two lists, adding a copy of the items from the second
+ * or 'right' list to the first or 'left' list. behaves sensibly when
+ * either list is empty.
+ *
+ * returns a new handle to the left list. the old handle should be
+ * considered invalid.
+ */
 
 one_block *
 append(
@@ -1615,6 +1701,16 @@ append(
 	return alist_append(left, right);
 }
 
+/**
+ * slice -- alist
+ *
+ * return a new alist containing only the elements selected by the slice.
+ *
+ * the range is [from_inclusive..to_exclusive).
+ *
+ * the result is distinct from the original list, which is unchanged.
+ */
+
 one_block *
 slice(
 	one_block *ob,
@@ -1628,7 +1724,15 @@ slice(
 	return alist_slice(ob, from_inclusive, to_exclusive);
 }
 
-bool
+/**
+ * setnth -- alist
+ *
+ * store an item in the nth slot of the list (counting from 0). if the
+ * index is out of bounds, a warning is issued to the log and the
+ * operation is ignored.
+ */
+
+one_block *
 setnth(
 	one_block *ob,
 	int n,
@@ -1640,6 +1744,14 @@ setnth(
 	}
 	return alist_setnth(ob, n, atom);
 }
+
+/**
+ * nth -- alist
+ *
+ * return the item from the nth slot of the list (counting from 0). if
+ * the index is out of bounds, a warning is issued to the log and 0 is
+ * returned.
+ */
 
 uintptr_t
 nth(
@@ -1653,6 +1765,12 @@ nth(
 	return alist_nth(ob, n);
 }
 
+/**
+ * clone -- alist
+ *
+ * returns a new copy of alist.
+ */
+
 one_block *
 clone(
 	one_block *ob
@@ -1663,6 +1781,15 @@ clone(
 	}
 	return alist_clone(ob);
 }
+
+/**
+ * iterate -- alist
+ *
+ * return the item at index curr and increments the index. when the
+ * index is out of bounds, it is set to -1 and 0 is returned.
+ *
+ * no warning is issued if the initial index is out of bounds.
+ */
 
 uintptr_t
 iterate(
@@ -1675,9 +1802,8 @@ iterate(
 	}
 	return alist_iterate(ob, curr);
 }
-/* btree.c -- code for btree experiments -- */
-
-/*
+
+/**
  * a self balancing binary search tree.
  *
  * i originally tried to use sedgewick's left-leaning red-black tree

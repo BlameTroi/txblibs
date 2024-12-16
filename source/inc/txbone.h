@@ -808,7 +808,7 @@ slice(
  * new item. the list is otherwise unchanged.
  */
 
-bool
+one_block *
 setnth(
 	one_block *ob,
 	int n,
