@@ -209,30 +209,107 @@ struct one_dynarray {
  * a binary search tree.
  */
 
+enum key_type {
+	kt_unknown,
+	integral,
+	string,
+	custom
+};
+typedef enum key_type key_type;
+
 typedef struct one_bst one_bst;
 
 struct one_bst {
 	void *not_implemented_yet;
 };
 
-typedef struct tree_node tree_node;
-struct tree_node {
-	tree_node *left;
-	tree_node *right;
-	void *key;
-	void *value;
+typedef int (*key_comparator)(
+	const void *left,           /* usually the key argument to api  */
+	const void *right           /* usually the key of a `Tree` item */
+);
+
+/********************************************************************
+ * tree traversal (iteration)
+ ********************************************************************/
+
+/*
+ * for iteration the usual pre_, in_, and post_ order traversal
+ * functions are available. the client provides a callback function
+ * and optionally a pointer to some context. in the api it's a `void *`,
+ * so if the data will fit in `sizeof(void *)`, it can be used directly
+ * by the client.
+ *
+ * the callback function receives the key, value, and client context
+ * field once for each key in the Tree.
+ *
+ * the key, value, and context fields may be updated. the context value
+ * persists across node callbacks. key and value are not explicitly
+ * posted back to the tree but as it's all in memory changes are immediate.
+ *
+ * all that said, you really *really* shouldn't update the key.
+ *
+ * the callback function should return a boolean. `true` to continue
+ * the traversal or `false` to terminate it.
+ */
+
+typedef bool (*fn_traversal_cb)(
+	void *key,
+	void *value,
+	void *context,
+	void *reserved1,
+	void *reserved2
+);
+
+typedef struct Node Node;
+typedef struct Tree Tree;
+
+/********************************************************************
+ * detailed node and tree declarations
+ ********************************************************************/
+
+/*
+ * all you really need for a scapegoat tree are keys, values, and
+ * child pointers. the red-black tree would add a bit for color.
+ * for tree walking i find having a parent pointer helpful.
+ */
+
+struct Node {
+	Node *left;                 /* these four fields are all you */
+	Node *right;                /* really need for a sgt.        */
+	void *key;                  /* ..                            */
+	void *value;                /* ..                            */
+	Node *parent;               /* not required but helpful      */
+	bool deleted;               /* defer deletes to rebalance    */
 };
-typedef struct one_tree one_tree;
-struct one_tree {
-	tree_node *root;
-	void *comparator;
+
+/*
+ * controling information and instrumentation for an instance are
+ * stored here.
+ */
+
+#define ALPHA 1.5
+struct Tree {
+	Node *root;                 /* a tree grows here             */
+	key_comparator fn_cmp;      /* comparator function and type  */
+	key_type kt;                /* are provided at creation      */
+	bool rebalance_allowed;     /* mosty for testing             */
+	int odometer;               /* actual api call count         */
+	int nodes;                  /* logical node count            */
+	int inserts;                /* count of specific api calls,  */
+	int deletes;                /* used to decide when to        */
+	int updates;                /* rebalance                     */
+	int marked_deleted;         /* actual node removal deferred  */
+	int rebalances;             /* how many?                     */
+	void *transient1;           /* pointers for transient tasks  */
+	void *transient2;           /* ..                            */
+	void *transient3;           /* ..                            */
 };
 
 /*
  * a key value store.
  */
 
-typedef struct one_tree one_keyval;
+typedef Tree one_keyval;
 
 typedef struct one_dynarray one_pqueue;
 
@@ -317,6 +394,10 @@ one_block *
 make_one(
 	enum one_type isa
 );
+
+
+one_block *
+make_one_keyed(one_type isa, key_type kt, key_comparator fncb);
 
 /**
  * free_one
@@ -830,10 +911,68 @@ get_from(
 /**
  * key:value -- this is built on a tree
  */
+
+one_block *
+insert(one_block *, void *, void *);
+
+void *
+get(one_block *, void *);
+
+bool
+update(one_block *, void *, void *);
+
+one_block *
+delete (one_block *, void *);
+
+void *
+min_key(one_block *);
+
+void *
+max_key(one_block *);
+
+int
+in_order_keyed(one_block *ob, void *context, fn_traversal_cb fn);
+
+one_block *
+keys(one_block *);
+
+one_block *
+values(one_block *);
+
+bool
+exists(one_block *, void *);
 
 /**
- * priority queue -- not sure what this will be built upon
+ * priority queue -- probably built on a double linked list with a key.
  */
+// is_empty
+
+one_block *
+add_with_priority(one_block *, long, void *);
+
+one_block *
+add_with_max(one_block *, void *);
+
+one_block *
+add_with_min(one_block *, void *);
+
+long
+max_priority(one_block *);
+
+long
+min_priority(one_block *);
+
+bool
+get_max(one_block *, long *, void *);
+
+bool
+get_min(one_block *, long *, void *);
+
+bool
+peek_max(one_block *, long *, void *);
+
+bool
+peek_min(one_block *, long *, void *);
 
 #ifdef __cplusplus
 }

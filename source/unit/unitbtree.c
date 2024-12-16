@@ -13,9 +13,11 @@
 #include "txbrand.h"
 #include "txblog2.h"
 
-/* what we are testing */
-#define TXBTREE_INTERNAL_H
-#include "txbtree.h"
+#include "txbone.h"
+
+/* /\* what we are testing *\/ */
+/* #define TXBTREE_INTERNAL_H */
+/* #include "txbtree.h" */
 
 /**
  * global variables go here if they are needed.
@@ -68,7 +70,7 @@ int randomized_keys[] = {
  */
 
 int
-load_keys(Tree *t, int *keys) {
+load_keys(one_block *t, int *keys) {
 	int i = 0;
 	while (keys[i] > 0) {
 		insert(t, as_key(keys[i]), &keys[i]);
@@ -101,9 +103,9 @@ random_strings(int n) {
  * integer key test tree. it has a right lean before balancing.
  */
 
-Tree *
+one_block *
 small_right_leaning_integral(void) {
-	Tree *t = make_Tree(INTEGER_KEY, NULL);
+	one_block *t = make_one_keyed(keyval, integral, NULL);
 	insert(t, as_key(5), "5");
 	insert(t, as_key(3), "3");
 	insert(t, as_key(7), "7");
@@ -126,9 +128,9 @@ small_right_leaning_integral(void) {
  * string key test tree. it zig zags a bit.
  */
 
-Tree *
+one_block *
 small_zag_left_string(void) {
-	Tree *t = make_Tree(STRING_KEY, NULL);
+	one_block *t = make_one_keyed(keyval, string, NULL);
 	insert(t, "5", "5");
 	insert(t, "3", "3");
 	insert(t, "7", "7");
@@ -161,9 +163,9 @@ custom_cmp(
 	return -res;
 }
 
-Tree *
+one_block *
 small_custom_tree(void) {
-	Tree *t = make_Tree(CUSTOM_KEY, custom_cmp);
+	one_block *t = make_one_keyed(keyval, custom, custom_cmp);
 
 	insert(t, as_key(50), "root");
 	insert(t, as_key(40), "actually right");
@@ -179,9 +181,18 @@ small_custom_tree(void) {
  * traversal callbacks for tree analysis
  */
 
+/* typedef struct node Node; */
+/* struct node { */
+/*      Node *parent; */
+/*      Node *left; */
+/*      Node *right; */
+/*      void *key; */
+/*      void *value; */
+/* }; */
+
 /* actual depth, counts deleted nodes in path */
 int
-depth_of(Tree *self, Node *n) {
+depth_of(one_block *self, Node *n) {
 	int d = 0;
 	while (n->parent) {
 		d += 1;
@@ -191,7 +202,7 @@ depth_of(Tree *self, Node *n) {
 }
 
 int
-children_of(Tree *self, Node *n) {
+children_of(one_block *self, Node *n) {
 	if (!n) return 0;
 	return 1 + children_of(self, n->left) + children_of(self, n->right);
 }
@@ -217,12 +228,12 @@ union wrapped {
 };
 
 void
-traversal_print(alist *xs, char *desc) {
+traversal_print(one_block *xs, char *desc) {
 	fprintf(stderr, "\n\n%s\n\n", desc);
 	fprintf(stderr, "row   key  whatever\n");
-	for (int i = 0; i < xs->used; i++) {
+	for (int i = 0; i < count(xs); i++) {
 		wrapped w;
-		w.u = xs->list[i];
+		w.u = nth(xs, i);
 		fprintf(stderr, "%3d  %4d  %4d\n", i, w.pd.key, w.pd.depth);
 	}
 	fprintf(stderr, "\n\n");
@@ -232,18 +243,18 @@ bool
 traverse_peek_depth(
 	void *key,        /* from the node */
 	void *value,      /* from the node */
-	void *context,    /* pointer to an alist */
-	void *reserved1,  /* Tree * */
+	void *context,    /* pointer to an one_block */
+	void *reserved1,  /* one_block * */
 	void *reserved2   /* Node * */
 ) {
-	Tree *t = reserved1;
+	one_block *t = reserved1;
 	Node *n = reserved2;
 	int depth = depth_of(t, n);
 	wrapped w;
 	w.pd = (packed_depth) {(uintptr_t)key, depth};
-	alist *xs = t->transient1;
-	xs = cons_to_alist(xs, w.u);
-	t->transient1 = xs;
+	one_block *xs = context;
+	xs = cons(xs, w.u);
+	context = xs;
 	return true;
 }
 
@@ -251,11 +262,11 @@ bool
 traverse_chart_depths(
 	void *key,        /* from the node */
 	void *value,      /* from the node */
-	void *context,    /* pointer to an alist */
-	void *reserved1,  /* Tree * */
+	void *context,    /* pointer to an one_block */
+	void *reserved1,  /* one_block * */
 	void *reserved2   /* Node * */
 ) {
-	Tree *t = reserved1;
+	one_block *t = reserved1;
 	Node *n = reserved2;
 	int depth = depth_of(t, n);
 	int *depths = context;
@@ -268,18 +279,18 @@ bool
 traverse_peek_children(
 	void *key,        /* from the node */
 	void *value,      /* from the node */
-	void *context,    /* pointer to an alist */
-	void *reserved1,  /* Tree * */
+	void *context,    /* pointer to an one_block */
+	void *reserved1,  /* one_block * */
 	void *reserved2   /* Node * */
 ) {
-	Tree *t = reserved1;
+	one_block *t = reserved1;
 	Node *n = reserved2;
 	int children = children_of(t, n);
 	wrapped w;
 	w.pc = (packed_children) {(uintptr_t)key, children};
-	alist *xs = t->transient1;
-	xs = cons_to_alist(xs, w.u);
-	t->transient1 = xs;
+	one_block *xs = context;
+	xs = cons(xs, w.u);
+	context = xs;
 	return true;
 }
 
@@ -306,12 +317,12 @@ traverse_peek_children(
  */
 
 MU_TEST(test_wip) {
-	Tree *t = NULL;
-	alist *xs = NULL;
+	one_block *t = NULL;
+	/* one_block *xs = NULL; */
 
 	/* are deleted terminal nodes really removed? */
 
-	t = make_Tree(INTEGER_KEY, NULL);
+	t = make_one_keyed(keyval, integral, NULL);
 	insert(t, as_key(50), "root");
 	insert(t, as_key(40), "left");
 	insert(t, as_key(45), "not as left");
@@ -319,20 +330,21 @@ MU_TEST(test_wip) {
 	insert(t, as_key(30), "lefter");
 	insert(t, as_key(70), "righter");
 
+
 	delete (t, as_key(30));
 	mu_shouldnt(exists(t, as_key(30)));
 	mu_should(exists(t, as_key(50)));
 	mu_should(exists(t, as_key(40)));
 
-	xs = make_alist();
-	t->transient1 = xs;
-	in_order_traversal(t, xs, traverse_peek_depth);
-	xs = t->transient1;
-	fprintf(stderr, "check tree %p root %p\n", (void *)t, (void *)t->root);
-	traversal_print(xs,
-		"in order traversal w/depth -- 50 40 45 60 37 70 del 50 (root) rebal");
-	free_alist(xs);
-	free_Tree(t);
+	/* xs = make_one(alist); */
+	/* t->transient1 = xs; */
+	/* in_order_traversal(t, xs, traverse_peek_depth); */
+	/* xs = t->transient1; */
+	/* fprintf(stderr, "check tree %p root %p\n", (void *)t, (void *)t->root); */
+	/* traversal_print(xs, */
+	/*      "in order traversal w/depth -- 50 40 45 60 37 70 del 50 (root) rebal"); */
+	/* free_one(xs); */
+	free_one(t);
 
 }
 
@@ -341,10 +353,10 @@ MU_TEST(test_wip) {
  */
 
 MU_TEST(test_rebalance_deleted_root) {
-	Tree *t = NULL;
-	alist *xs = NULL;
+	one_block *t = NULL;
+	one_block *xs = NULL;
 
-	t = make_Tree(INTEGER_KEY, NULL);
+	t = make_one_keyed(keyval, integral, NULL);
 	insert(t, as_key(50), "root");
 	insert(t, as_key(40), "left");
 	insert(t, as_key(60), "right");
@@ -352,16 +364,18 @@ MU_TEST(test_rebalance_deleted_root) {
 	delete (t, as_key(50));
 	mu_shouldnt(exists(t, as_key(50)));
 
-	xs = make_alist();
-	t->transient1 = xs;
-	in_order_traversal(t, xs, traverse_peek_depth);
-	xs = t->transient1;
+	xs = make_one(alist);
+	void *context;
+	context= xs;
+	in_order_keyed(t, context, NULL); //traverse_peek_depth);
+	/* in_order_traversal(t, xs, NULL); //traverse_peek_depth); */
+	xs = context;
 	traversal_print(xs,
 		"in order traversal w/depth -- 50 40 60 del 50 (root) rebal");
-	free_alist(xs);
-	free_Tree(t);
+	free_one(xs);
+	free_one(t);
 
-	t = make_Tree(INTEGER_KEY, NULL);
+	t = make_one_keyed(keyval, integral, NULL);
 	insert(t, as_key(50), "root");
 	insert(t, as_key(40), "left");
 	insert(t, as_key(60), "right");
@@ -374,14 +388,14 @@ MU_TEST(test_rebalance_deleted_root) {
 	mu_should(get(t, as_key(40)));
 	mu_shouldnt(get(t, as_key(50)));
 
-	xs = make_alist();
-	t->transient1 = xs;
-	in_order_traversal(t, xs, traverse_peek_depth);
-	xs = t->transient1;
+	xs = make_one(alist);
+	context = xs;
+	in_order_keyed(t, xs, NULL); // depth
+	xs = context;
 	traversal_print(xs,
 		"in order traversal w/depth -- 50 40 60 30 70 del 50 (root) rebal");
-	free_alist(xs);
-	free_Tree(t);
+	free_one(xs);
+	free_one(t);
 
 }
 
@@ -390,26 +404,27 @@ MU_TEST(test_rebalance_deleted_root) {
  */
 
 MU_TEST(test_simple_rebalance) {
-	Tree *t = NULL;
-	alist *xs = NULL;
+	one_block *t = NULL;
+	one_block *xs = NULL;
 
 	t = small_right_leaning_integral();
-	xs = make_alist();
-	t->transient1 = xs;
-	in_order_traversal(t, xs, traverse_peek_depth);
-	xs = t->transient1;
+	xs = make_one(alist);
+	void *context;
+	context = xs;
+	in_order_keyed(t, context, NULL); // peek depth
+	xs = context;
 	traversal_print(xs, "in order traversal w/depth -- right lean all 15");
 
-	free_alist(xs);
-	xs = make_alist();
-	t->transient1 = xs;
-	in_order_traversal(t, xs, traverse_peek_depth);
-	xs = t->transient1;
+	free_one(xs);
+	xs = make_one(alist);
+	context = xs;
+	in_order_keyed(t, xs, NULL); // depth
+	xs = context;
 	traversal_print(xs,
 		"in order traversal w/depth -- right lean all 15 rebalanced");
 
-	free_alist(xs);
-	free_Tree(t);
+	free_one(xs);
+	free_one(t);
 }
 
 /**
@@ -417,8 +432,8 @@ MU_TEST(test_simple_rebalance) {
  */
 
 MU_TEST(test_traversal_deletes) {
-	Tree *t = NULL;
-	alist *xs = NULL;
+	one_block *t = NULL;
+	one_block *xs = NULL;
 
 	/* keys 1-15, leaning right */
 	t = small_right_leaning_integral();
@@ -426,24 +441,24 @@ MU_TEST(test_traversal_deletes) {
 	delete (t, as_key(5));
 	mu_should(count(t) == 14);
 
-	xs = make_alist();
-	t->transient1 = xs;
-	in_order_traversal(t, xs, traverse_peek_depth);
-	xs = t->transient1;
+	xs = make_one(alist);
+	void *context = xs;
+	in_order_keyed(t, xs, NULL); // depth
+	xs = context;
 	traversal_print(xs, "in order traversal w/depth -- deleted root 5");
-	free_alist(xs);
+	free_one(xs);
 
 	delete (t, as_key(10));
 	mu_should(count(t) == 13);
 
-	xs = make_alist();
-	t->transient1 = xs;
-	in_order_traversal(t, xs, traverse_peek_depth);
-	xs = t->transient1;
+	xs = make_one(alist);
+	context = xs;
+	in_order_keyed(t, xs, NULL); // depth
+	xs = context;
 	traversal_print(xs, "in order traversal w/depth -- deleted key midway down 10");
-	free_alist(xs);
+	free_one(xs);
 
-	free_Tree(t);
+	free_one(t);
 }
 
 /**
@@ -451,35 +466,35 @@ MU_TEST(test_traversal_deletes) {
  */
 
 MU_TEST(test_all_traversals) {
-	Tree *t = NULL;
+	one_block *t = NULL;
 
 	/* keys 1-15, leaning right */
 	t = small_right_leaning_integral();
 
-	alist *xs = make_alist();
-	t->transient1 = xs;
-	in_order_traversal(t, xs, traverse_peek_depth);
-	xs = t->transient1;
+	one_block *xs = make_one(alist);
+	void *context = xs;
+	in_order_keyed(t, xs, NULL); //traverse_peek_depth);
+	xs = context;
 	traversal_print(xs, "in order traversal w/depth");
 
-	mu_should(xs->used == 15);
+	mu_should(count(xs) == 15);
 
-	free_alist(xs);
-	xs = make_alist();
-	t->transient1 = xs;
-	pre_order_traversal(t, xs, traverse_peek_depth);
-	xs = t->transient1;
-	traversal_print(xs, "pre order traversal w/depth");
+	free_one(xs);
+	xs = make_one(alist);
+	/* context = xs; */
+	/* pre_order_traversal(t, xs, traverse_peek_depth); */
+	/* xs = context; */
+	/* traversal_print(xs, "pre order traversal w/depth"); */
+	/*  */
+	/* free_one(xs); */
+	/* xs = make_one(alist); */
+	/* context = xs; */
+	/* post_order_traversal(t, xs, traverse_peek_depth); */
+	/* xs = context; */
+	/* traversal_print(xs, "post order traversal w/depth"); */
 
-	free_alist(xs);
-	xs = make_alist();
-	t->transient1 = xs;
-	post_order_traversal(t, xs, traverse_peek_depth);
-	xs = t->transient1;
-	traversal_print(xs, "post order traversal w/depth");
-
-	free_alist(xs);
-	free_Tree(t);
+	free_one(xs);
+	free_one(t);
 }
 
 /**
@@ -487,47 +502,47 @@ MU_TEST(test_all_traversals) {
  */
 
 MU_TEST(test_delete_cases) {
-	Tree *t = NULL;
+	one_block *t = NULL;
 
 	/* case 1, delete root with no children */
-	t = make_Tree(STRING_KEY, NULL);
+	t = make_one_keyed(keyval, string, NULL);
 	insert(t, "root", "root");
 	mu_should(exists(t, "root") && count(t) == 1);
 	delete (t, "root");
 	mu_should(is_empty(t) && !exists(t, "root") && count(t) == 0);
-	free_Tree(t);
+	free_one(t);
 
 	/* case 2a, delete root right child only */
-	t = make_Tree(STRING_KEY, NULL);
+	t = make_one_keyed(keyval, string, NULL);
 	insert(t, "c", "groot");
 	insert(t, "d", "d > c");
 	delete (t, "c");
 	mu_should(count(t) == 1 && !exists(t, "c") && exists(t, "d"));
-	free_Tree(t);
+	free_one(t);
 
 	/* case 2b, delete root left child only */
-	t = make_Tree(STRING_KEY, NULL);
+	t = make_one_keyed(keyval, string, NULL);
 	insert(t, "c", "groot");
 	insert(t, "b", "b < c");
 	delete (t, "c");
 	mu_should(count(t) == 1 &&
 		!exists(t, "c")
 		&& exists(t, "b"));
-	free_Tree(t);
+	free_one(t);
 
 	/* case 3, root with 2 children */
-	t = make_Tree(STRING_KEY, NULL);
+	t = make_one_keyed(keyval, string, NULL);
 	insert(t, "c", "groot");
 	insert(t, "b", "b < c");
 	insert(t, "d", "d > c");
 	delete (t, "c");
 	mu_should(!is_empty(t) && !exists(t, "c") && count(t) == 2 &&
 		exists(t, "b") && exists(t, "d"));
-	free_Tree(t);
+	free_one(t);
 
 	/* case 4, delete node is an end leaf (neither right or left
 	 * children) */
-	t = make_Tree(STRING_KEY, NULL);
+	t = make_one_keyed(keyval, string, NULL);
 	insert(t, "c", "groot");
 	insert(t, "b", "b < c");
 	insert(t, "a", "a < c < b"); /* terminal no children */
@@ -535,10 +550,10 @@ MU_TEST(test_delete_cases) {
 	delete (t, "a");
 	mu_should(!is_empty(t) && !exists(t, "a") && count(t) == 3 &&
 		exists(t, "b") && exists(t, "d") && exists(t, "c"));
-	free_Tree(t);
+	free_one(t);
 
 	/* case 5a, leaf with only right child */
-	t = make_Tree(STRING_KEY, NULL);
+	t = make_one_keyed(keyval, string, NULL);
 	insert(t, "c", "groot");
 	insert(t, "b", "b < c");
 	insert(t, "a", "a < c < b");
@@ -547,10 +562,10 @@ MU_TEST(test_delete_cases) {
 	delete (t, "d");
 	mu_should(!is_empty(t) && !exists(t, "d") && count(t) == 4 &&
 		exists(t, "b") && exists(t, "e") && exists(t, "c") && exists(t, "a"));
-	free_Tree(t);
+	free_one(t);
 
 	/* case 5b, leaf with only left child */
-	t = make_Tree(STRING_KEY, NULL);
+	t = make_one_keyed(keyval, string, NULL);
 	insert(t, "c", "groot");
 	insert(t, "b", "b < c"); /* leafy with only a right child */
 	insert(t, "a", "a < c < b");
@@ -559,10 +574,10 @@ MU_TEST(test_delete_cases) {
 	delete (t, "b");
 	mu_should(!is_empty(t) && !exists(t, "b") && count(t) == 4 &&
 		exists(t, "a") && exists(t, "c") && exists(t, "d") && exists(t, "e"));
-	free_Tree(t);
+	free_one(t);
 
 	/* case 6, in the middle with two children */
-	t = make_Tree(STRING_KEY, NULL);
+	t = make_one_keyed(keyval, string, NULL);
 	insert(t, "n", "groot");
 	insert(t, "g", "g < n");
 	insert(t, "a", "a < g < n"); /* left child of g */
@@ -570,7 +585,7 @@ MU_TEST(test_delete_cases) {
 	delete (t, "g");
 	mu_should(!is_empty(t) && !exists(t, "g") && count(t) == 3 &&
 		exists(t, "n") && exists(t, "a") && exists(t, "k"));
-	free_Tree(t);
+	free_one(t);
 
 }
 
@@ -582,7 +597,7 @@ MU_TEST(test_delete_cases) {
 
 MU_TEST(test_api_integral) {
 
-	Tree *t = NULL;
+	one_block *t = NULL;
 
 	t = small_right_leaning_integral();
 	mu_should(t);
@@ -635,11 +650,11 @@ MU_TEST(test_api_integral) {
 	mu_should(exists(t, as_key(14)));
 
 	/* and done */
-	free_Tree(t);
+	free_one(t);
 }
 
 MU_TEST(test_api_string) {
-	Tree *t = NULL;
+	one_block *t = NULL;
 
 	t = small_zag_left_string();
 	mu_should(t);
@@ -679,36 +694,36 @@ MU_TEST(test_api_string) {
 	/* TODO: delete */
 
 	/* and done */
-	free_Tree(t);
+	free_one(t);
 
 }
 
 
 MU_TEST(test_api_custom) {
-	Tree *t = NULL;
-	alist *xs = NULL;
+	one_block *t = NULL;
+	one_block *xs = NULL;
 	t = small_custom_tree();
 	/* 50, 40, 60, then 0->40 by 5 and 100->60 by 5 */
 	/* so one end is 100, the other is 0 */
-	xs = make_alist();
-	t->transient1 = xs;
-	in_order_traversal(t, xs, traverse_peek_depth);
-	xs = t->transient1;
+	xs = make_one(alist);
+	void *context = xs;
+	in_order_keyed(t, xs, NULL); //traverse_peek_depth);
+	xs = context;
 	traversal_print(xs, "in order, custom key w/depth\n");
-	free_alist(xs);
-	rebalance_Tree(t);
-	xs = make_alist();
-	t->transient1 = xs;
-	in_order_traversal(t, xs, traverse_peek_depth);
-	xs = t->transient1;
+	free_one(xs);
+	//rebalance_one_block(t);
+	xs = make_one(alist);
+	context = xs;
+	in_order_keyed(t, xs, NULL); //traverse_peek_depth);
+	xs = context;
 	traversal_print(xs, "in order, after rebalance, custome key w/depth\n");
-	free_alist(xs);
-	free_Tree(t);
+	free_one(xs);
+	free_one(t);
 }
 
 
 MU_TEST(test_volume) {
-	Tree *t = make_Tree(INTEGER_KEY, NULL);
+	one_block *t = make_one_keyed(keyval, integral, NULL);
 	for (int i = 0; i < 10000; i++) {
 		insert(t, as_key(random_between(1, 99999)), "random");
 	}
@@ -716,39 +731,40 @@ MU_TEST(test_volume) {
 	int depths[50] = {0};
 	for (int i = 0; i < 50; i++)
 		depths[i] = 0;
-	in_order_traversal(t, &depths, traverse_chart_depths);
+	in_order_keyed(t, &depths, NULL); //traverse_chart_depths);
 	fprintf(stderr, "\ndistribution by depth before rebalance\n");
 	fprintf(stderr, "depth     count\n");
 	for (int i = 0; i < 50; i++) {
 		if (depths[i]) fprintf(stderr, "%5d %8d\n", i, depths[i]);
 	}
 	fprintf(stderr, "\n");
-	/* alist *xs = make_alist(); */
-	/* t->transient1 = xs; */
-	/* in_order_traversal(t, xs, traverse_peek_depth); */
-	/* xs = t->transient1; */
+	/* one_block *xs = make_one(alist); */
+	/* context = xs; */
+	/* in_order_keyed(t, xs, NULL); //traverse_peek_depth); */
+	/* xs = context; */
 	/* traversal_print(xs, */
 	/*      "in order traversal w/depth -- abusive"); */
-	/* free_alist(xs); */
-	//analyze_Tree(bt, "abusive loaded...");
+	/* free_one(xs); */
+	//analyze_one_block(bt, "abusive loaded...");
 	for (int i = 0; i < 50; i++)
 		depths[i] = 0;
-	in_order_traversal(t, &depths, traverse_chart_depths);
+	in_order_keyed(t, &depths,
+		NULL); //traversal(t, &depths, traverse_chart_depths);
 	fprintf(stderr, "\ndistribution by depth after rebalance\n");
 	fprintf(stderr, "depth     count\n");
 	for (int i = 0; i < 50; i++) {
 		if (depths[i]) fprintf(stderr, "%5d %8d\n", i, depths[i]);
 	}
 	fprintf(stderr, "\n");
-	/* xs = make_alist(); */
-	/* t->transient1 = xs; */
-	/* in_order_traversal(t, xs, traverse_peek_depth); */
-	/* xs = t->transient1; */
+	/* xs = make_one(alist); */
+	/* context = xs; */
+	/* in_order_keyed(t, xs, NULL); //traverse_peek_depth); */
+	/* xs = context; */
 	/* traversal_print(xs, */
 	/*      "in order traversal w/depth -- rebalanced abusive"); */
-	/* free_alist(xs); */
-	//analyze_Tree(bt, "rebalanced...");
-	free_Tree(t);
+	/* free_one(xs); */
+	//analyze_one_block(bt, "rebalanced...");
+	free_one(t);
 }
 
 /**

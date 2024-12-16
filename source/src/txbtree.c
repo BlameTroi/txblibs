@@ -8,7 +8,8 @@
 #include "txballoc.h"
 #include "txbmisc.h"
 #include "txblog2.h"
-#include "txbalist.h"
+// #include "txbalist.h"
+#include "txbone.h"
 
 #define TXBTREE_INTERNAL_H
 #include "txbtree.h"
@@ -105,11 +106,11 @@
 
 static
 void
-free_Node(Tree *, Node *);
+node_free(Tree *, Node *);
 
 static
 int
-free_children(Tree *, Node *);
+node_children_free(Tree *, Node *);
 
 static
 Node *
@@ -153,7 +154,7 @@ is_scapegoat(Tree *, Node *);
 
 static
 bool
-insert_r(Tree *, Node *, Node *);
+btree_insert_r(Tree *, Node *, Node *);
 
 static
 Node *
@@ -165,11 +166,11 @@ reset_subtree_r(Tree *, Node *);
 
 static
 Node *
-make_subtree_r(Tree *, alist *);
+make_subtree_r(Tree *, one_block *);
 
 static
-alist *
-internal_collector_r(Tree *, Node *, alist *);
+one_block *
+internal_collector_r(Tree *, Node *, one_block *);
 
 
 /********************************************************************
@@ -313,8 +314,8 @@ free_Tree(
 ) {
 	int freed = 0;
 	if (self->root) {
-		freed += free_children(self, self->root);
-		free_Node(self, self->root);
+		freed += node_children_free(self, self->root);
+		node_free(self, self->root);
 		freed += 1;
 	}
 	memset(self, 253, sizeof(*self));
@@ -414,7 +415,7 @@ is_scapegoat(Tree *self, Node *n) {
  */
 
 bool
-insert_r(
+btree_insert_r(
 	Tree *self,
 	Node *parent,
 	Node *new
@@ -434,10 +435,10 @@ insert_r(
 		if (parent->deleted) {
 			parent->deleted = false;
 			parent->value = new->value;
-			free_Node(self, new);
+			node_free(self, new);
 			return true;
 		}
-		free_Node(self, new);
+		node_free(self, new);
 		/* fprintf(stderr, "ERROR insert: attempt to insert an existing key\n"); */
 		return false;
 	}
@@ -453,7 +454,7 @@ insert_r(
 	else {
 		fprintf(stderr, "ERROR insert: attempting to overlay existing node %p %p\n",
 			(void *)new, (void *)parent);
-		free_Node(self, new);
+		node_free(self, new);
 		return false;
 	}
 
@@ -461,7 +462,7 @@ insert_r(
 }
 
 bool
-insert(
+btree_insert(
 	Tree *self,
 	void *key,
 	void *value
@@ -469,7 +470,7 @@ insert(
 	self->odometer += 1;
 	Node *parent = get_Node_or_parent(self, key);
 	Node *n = make_Node(self, key, value);
-	bool did = insert_r(self, parent, n);
+	bool did = btree_insert_r(self, parent, n);
 	if (did) {
 		self->nodes += 1;
 		self->inserts += 1;
@@ -506,7 +507,7 @@ insert(
  */
 
 bool
-delete (
+btree_delete(
 	Tree *self,
 	void *key
 ) {
@@ -527,7 +528,7 @@ delete (
 		if (n->parent == NULL && self->root == n)
 			self->root = NULL;
 		n->parent = NULL;
-		free_Node(self, n);
+		node_free(self, n);
 		self->deletes += 1;
 		self->nodes -= 1;
 		return true;
@@ -574,7 +575,7 @@ delete (
  */
 
 void *
-get(
+btree_get(
 	Tree *self,
 	void *key
 ) {
@@ -594,7 +595,7 @@ get(
  */
 
 bool
-update(
+btree_update(
 	Tree *self,
 	void *key,
 	void *value
@@ -613,7 +614,7 @@ update(
  ********************************************************************/
 
 bool
-is_empty(
+tree_is_empty(
 	Tree *self
 ) {
 	self->odometer += 1;
@@ -621,7 +622,7 @@ is_empty(
 }
 
 int
-count(
+tree_count(
 	Tree* self
 ) {
 	self->odometer += 1;
@@ -629,7 +630,7 @@ count(
 }
 
 bool
-exists(
+btree_exists(
 	Tree *self,
 	void *key
 ) {
@@ -764,7 +765,7 @@ make_Node(
  */
 
 void
-free_Node(
+node_free(
 	Tree *self,
 	Node *n
 ) {
@@ -788,25 +789,25 @@ free_Node(
  */
 
 int
-free_children(
+node_children_free(
 	Tree *self,
 	Node *n
 ) {
 	if (!n) return 0;
 	int freed = 0;
 	if (n->left) {
-		freed += free_children(self, n->left);
+		freed += node_children_free(self, n->left);
 		n->left->left = NULL;
 		n->left->right =NULL;
 		freed += 1;
-		free_Node(self, n->left);
+		node_free(self, n->left);
 	}
 	if (n->right) {
-		freed += free_children(self, n->right);
+		freed += node_children_free(self, n->right);
 		n->right->left = NULL;
 		n->right->right =NULL;
 		freed += 1;
-		free_Node(self, n->right);
+		node_free(self, n->right);
 	}
 	return freed + 1;
 }
@@ -846,7 +847,7 @@ reset_subtree_r(Tree *self, Node *subtree) {
 		subtree->parent = NULL;
 	}
 
-	free_Node(self, subtree);
+	node_free(self, subtree);
 }
 
 /*
@@ -867,30 +868,30 @@ reset_subtree_r(Tree *self, Node *subtree) {
 Node *
 make_subtree_r(
 	Tree *self,
-	alist *nodes
+	one_block *nodes
 ) {
-	int k = alist_length(nodes);
+	int k = count(nodes);
 	if (k == 0)
 		return NULL;
 
 	/* next subtree root */
 	int j = k/2;
-	Node *old = (Node *)nodes->list[j];
+	Node *old = (Node *)nth(nodes, j);
 	Node *new = make_Node(self, old->key, old->value);
 
 	/* and to either side of the root, we have further subtrees */
-	alist *left_side = slice_alist(nodes, 0, j);
-	alist *right_side = slice_alist(nodes, j+1, k);
+	one_block *left_side = slice(nodes, 0, j);
+	one_block *right_side = slice(nodes, j+1, k);
 
 	/* so do the left children */
 	new->left = make_subtree_r(self, left_side);
-	free_alist(left_side);
+	free_one(left_side);
 	if (new->left)
 		new->left->parent = new;
 
 	/* and the right children */
 	new->right = make_subtree_r(self, right_side);
-	free_alist(right_side);
+	free_one(right_side);
 	if (new->right)
 		new->right->parent = new;
 
@@ -904,17 +905,17 @@ make_subtree_r(
  * are not collected, but their children are.
  */
 
-alist *
+one_block *
 internal_collector_r(
 	Tree *self,
 	Node *n,
-	alist *xs
+	one_block *xs
 ) {
 	if (!n)
 		return xs;
 	xs = internal_collector_r(self, n->left, xs);
 	if (!n->deleted)
-		xs = cons_to_alist(xs, (uintptr_t)n);
+		xs = cons(xs, (uintptr_t)n);
 	xs = internal_collector_r(self, n->right, xs);
 	return xs;
 }
@@ -956,7 +957,7 @@ rebalance_r(
 	 * to start deleting once we're done with a node.
 	 */
 
-	alist *xs = make_alist();
+	one_block *xs = make_one(alist);
 	xs = internal_collector_r(self, subtree, xs);
 
 	/* build a new subtree by going over the node list in the
@@ -964,9 +965,9 @@ rebalance_r(
 	 * the list to create the ordered list and then linking the
 	 * nodes into a subtree. */
 
-	FPRINTF_INFO fprintf(stderr, "INFO rebalance nodes in subtree %d\n", xs->used);
+	FPRINTF_INFO fprintf(stderr, "INFO rebalance nodes in subtree %d\n", count(xs));
 	Node *new_subtree = make_subtree_r(self, xs);
-	free_alist(xs);
+	free_one(xs);
 
 	/* destroy the old nodes and replace them with the new
 	 * nodes. */

@@ -19,7 +19,7 @@
  */
 
 #include <stdbool.h>
-#include "txbalist.h"
+// #include "txbone.h"
 
 #ifndef TXBTREE_H
 #define TXBTREE_H
@@ -102,7 +102,7 @@ typedef int (*key_comparator)(
 );
 
 enum Key_Type {
-	kt_unknown = 0,             /* always have an invalid value  */
+	KT_unknown = 0,             /* always have an invalid value  */
 	INTEGER_KEY,                /* an integer cast to a (void *) */
 	STRING_KEY,                 /* a (char *)                    */
 	CUSTOM_KEY                  /* user provides function        */
@@ -156,7 +156,7 @@ rebalance_Tree(
  */
 
 bool
-is_empty(
+tree_is_empty(
 	Tree *tree
 );
 
@@ -165,7 +165,7 @@ is_empty(
  */
 
 int
-count(
+tree_count(
 	Tree *tree
 );
 
@@ -174,7 +174,7 @@ count(
  */
 
 bool
-exists(
+btree_exists(
 	Tree *tree,
 	void *key
 );
@@ -196,27 +196,27 @@ exists(
  */
 
 bool
-insert(
+btree_insert(
 	Tree *self,
 	void *key,
 	void *value
 );
 
 void *
-get(
+btree_get(
 	Tree *tree,
 	void *key
 );
 
 bool
-update(
+btree_update(
 	Tree *tree,
 	void *key,
 	void *value
 );
 
 bool
-delete (
+btree_delete(
 	Tree *tree,
 	void *key
 );
