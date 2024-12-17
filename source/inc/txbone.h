@@ -293,16 +293,12 @@ struct Tree {
 	key_comparator fn_cmp;      /* comparator function and type  */
 	key_type kt;                /* are provided at creation      */
 	bool rebalance_allowed;     /* mosty for testing             */
-	int odometer;               /* actual api call count         */
 	int nodes;                  /* logical node count            */
 	int inserts;                /* count of specific api calls,  */
 	int deletes;                /* used to decide when to        */
 	int updates;                /* rebalance                     */
 	int marked_deleted;         /* actual node removal deferred  */
 	int rebalances;             /* how many?                     */
-	void *transient1;           /* pointers for transient tasks  */
-	void *transient2;           /* ..                            */
-	void *transient3;           /* ..                            */
 };
 
 /*
