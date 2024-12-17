@@ -100,7 +100,7 @@ MU_TEST(test_add_three) {
 
 MU_TEST(test_expansion) {
 	one_block *xs = make_one(alist);
-	mu_should(xs->u.acc.capacity == ALIST_DEFAULT_CAPACITY);
+	mu_should(xs->u.acc.capacity == ONE_ALIST_DEFAULT_CAPACITY);
 	mu_should(xs->u.acc.used == 0);
 	one_block *original_xs_pointer = xs;
 	bool split_seen = false;
@@ -127,7 +127,7 @@ MU_TEST(test_expansion) {
 
 MU_TEST(test_iterator) {
 	one_block *xs = make_one(alist);
-	mu_should(xs->u.acc.capacity == ALIST_DEFAULT_CAPACITY);
+	mu_should(xs->u.acc.capacity == ONE_ALIST_DEFAULT_CAPACITY);
 	mu_should(xs->u.acc.used == 0);
 	one_block *original_xs_pointer = xs;
 	bool split_seen = false;

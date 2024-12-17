@@ -187,7 +187,7 @@ small_custom_tree(void) {
 
 /* actual depth, counts deleted nodes in path */
 int
-depth_of(one_block *self, Node *n) {
+depth_of(one_block *self, one_node *n) {
 	int d = 0;
 	while (n->parent) {
 		d += 1;
@@ -197,7 +197,7 @@ depth_of(one_block *self, Node *n) {
 }
 
 int
-children_of(one_block *self, Node *n) {
+children_of(one_block *self, one_node *n) {
 	if (!n) return 0;
 	return 1 + children_of(self, n->left) + children_of(self, n->right);
 }
@@ -243,7 +243,7 @@ traverse_peek_depth(
 	void *reserved2   /* Node * */
 ) {
 	one_block *t = reserved1;
-	Node *n = reserved2;
+	one_node *n = reserved2;
 	int depth = depth_of(t, n);
 	wrapped w;
 	w.pd = (packed_depth) {(uintptr_t)key, depth};
@@ -262,7 +262,7 @@ traverse_chart_depths(
 	void *reserved2   /* Node * */
 ) {
 	one_block *t = reserved1;
-	Node *n = reserved2;
+	one_node *n = reserved2;
 	int depth = depth_of(t, n);
 	int *depths = context;
 	if (depth > 49) depth = 49;
@@ -279,7 +279,7 @@ traverse_peek_children(
 	void *reserved2   /* Node * */
 ) {
 	one_block *t = reserved1;
-	Node *n = reserved2;
+	one_node *n = reserved2;
 	int children = children_of(t, n);
 	wrapped w;
 	w.pc = (packed_children) {(uintptr_t)key, children};

@@ -21,7 +21,6 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include "txblog2.h"
 #include "txballoc.h"
 #include "txbone.h"
 
@@ -29,18 +28,78 @@
 /* #include "txbtree.h" */
 
 /* a helpful macro for infrequently needed traces */
+#define FPRINTF_INTO
 #ifndef FPRINTF_INFO
 #define FPRINTF_INFO if (false)
 #endif
-
 
-/*
- * supported types so far are singly and doubly linked lists, queues,
- * deques, stacks, and dynamic arrays. binary search trees, key:value
- * stores, hashes, dictionaries, and bags, are planned.
+
+/**
+ * this is a copy paste from my txblog2 header, which implements a
+ * fast integer log base 2 function for 32 bit integers. it originally
+ * comes from:
  *
- * all types store client payloads, as void * pointers. memory
- * management of client payloads are the responsibility of the client.
+ * http://graphics.stanford.edu/~seander/bithacks.html#IntegerLogLookup
+ *
+ * but i've tweaked some naming and formatting. i don't claim the
+ * algorithm, just this particular implementation, which as always
+ * i have --
+ *
+ * released to the public domain by Troy Brumley blametroi@gmail.com
+ *
+ * this software is dual-licensed to the public domain and under the
+ * following license: you are granted a perpetual, irrevocable license
+ * to copy, modify, publish, and distribute this file as you see fit.
+ *
+ * implementation notes:
+ *
+ * i had to make a few changes, after which i felt free to do some
+ * reformatting of the original code to match my sense of esthetics.
+ */
+
+#define LT(n) n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n
+
+static const uint8_t
+log_table_256[256] = {
+	-1, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3,
+	LT(4),
+	LT(5),
+	LT(5),
+	LT(6),
+	LT(6),
+	LT(6),
+	LT(6),
+	LT(7),
+	LT(7),
+	LT(7),
+	LT(7),
+	LT(7),
+	LT(7),
+	LT(7),
+	LT(7)
+};
+
+uint32_t
+uint32_log2(uint32_t v) {
+	uint32_t r;
+	register uint32_t t, tt;
+	if ((tt = v >> 16))
+		r = (t = tt >> 8) ? 24 + log_table_256[t] : 16 + log_table_256[tt];
+	else
+		r = (t = v >> 8) ? 8 + log_table_256[t] : log_table_256[v];
+	return r;
+}
+
+/**
+ * supported types so far are singly and doubly linked lists, queues,
+ * deques, stacks, dynamic arrays, key:value stores (on binary search
+ * trees), and priority queues. as need arises, hashes, dictionaries,
+ * bags, and sets could be added, but i think the key:value store will
+ * fill most of those needs.
+ *
+ * all types store client data as pointer sized items, either `void *`
+ * or uintptr_t. management of client payloads are the responsibility
+ * of the client.
  *
  * errors return invalid values (negatives or NULLs, see each
  * function) and can print a diagnostic message on stderr.
@@ -87,11 +146,11 @@ static
 one_singly *
 singly_add_first(
 	one_singly *self,
-	void *payload
+	void *item
 ) {
 	sgl_item *next = tsmalloc(sizeof(*next));
 	memset(next, 0, sizeof(*next));
-	next->payload = payload;
+	next->item = item;
 	next->next = self->first;
 	self->first = next;
 	return self;
@@ -103,7 +162,7 @@ singly_peek_first(
 	one_singly *self
 ) {
 	sgl_item *first = self->first;
-	return first ? first->payload : NULL;
+	return first ? first->item : NULL;
 }
 
 static
@@ -115,7 +174,7 @@ singly_get_first(
 	if (!first)
 		return NULL;
 	self->first = first->next;
-	void *res = first->payload;
+	void *res = first->item;
 	memset(first, 253, sizeof(*first));
 	tsfree(first);
 	return res;
@@ -125,11 +184,11 @@ static
 one_singly *
 singly_add_last(
 	one_singly *self,
-	void *payload
+	void *item
 ) {
 	sgl_item *next = tsmalloc(sizeof(*next));
 	memset(next, 0, sizeof(*next));
-	next->payload = payload;
+	next->item = item;
 
 	/* empty list is dead simple */
 	if (!self->first) {
@@ -158,8 +217,8 @@ singly_peek_last(
 	while (curr->next)
 		curr = curr->next;
 
-	/* and payload back */
-	return curr->payload;
+	/* and item back */
+	return curr->item;
 }
 
 static
@@ -185,8 +244,8 @@ singly_get_last(
 	else
 		self->first = NULL;
 
-	/* extract payload, clear and free old item */
-	void *res = curr->payload;
+	/* extract item, clear and free old item */
+	void *res = curr->item;
 	memset(curr, 253, sizeof(*curr));
 	tsfree(curr);
 	return res;
@@ -233,11 +292,11 @@ static
 one_doubly *
 doubly_add_first(
 	one_doubly *self,
-	void *payload
+	void *item
 ) {
 	dbl_item *first = tsmalloc(sizeof(*first));
 	memset(first, 0, sizeof(*first));
-	first->payload = payload;
+	first->item = item;
 	first->next = self->first;
 	first->previous = NULL;
 
@@ -258,7 +317,7 @@ void *
 doubly_peek_first(
 	one_doubly *self
 ) {
-	return self->first ? self->first->payload : NULL;
+	return self->first ? self->first->item : NULL;
 }
 
 static
@@ -276,7 +335,7 @@ doubly_get_first(
 		first->next->previous = NULL;
 	else self->last = NULL;
 
-	void *res = first->payload;
+	void *res = first->item;
 	memset(first, 253, sizeof(*first));
 	tsfree(first);
 	return res;
@@ -286,11 +345,11 @@ static
 one_doubly *
 doubly_add_last(
 	one_doubly *self,
-	void *payload
+	void *item
 ) {
 	dbl_item *last = tsmalloc(sizeof(*last));
 	memset(last, 0, sizeof(*last));
-	last->payload = payload;
+	last->item = item;
 	last->previous = self->last;
 	last->next = NULL;
 
@@ -311,7 +370,7 @@ void *
 doubly_peek_last(
 	one_doubly *self
 ) {
-	return self->last ? self->last->payload : NULL;
+	return self->last ? self->last->item : NULL;
 }
 
 static
@@ -333,7 +392,7 @@ doubly_get_last(
 		self->last = NULL;
 	}
 
-	void *res = last->payload;
+	void *res = last->item;
 	memset(last, 253, sizeof(*last));
 	tsfree(last);
 	return res;
@@ -678,7 +737,7 @@ typedef enum keycmp_result keycmp_result;
 static
 keycmp_result
 keycmp(
-	Tree *self,
+	one_tree *self,
 	void *left,
 	void *right
 ) {
@@ -701,75 +760,75 @@ keycmp(
 
 static
 void
-btree_node_free(Tree *, Node *);
+btree_node_free(one_tree *, one_node *);
 
 static
 int
-btree_node_children_free(Tree *, Node *);
+btree_node_children_free(one_tree *, one_node *);
 
 static
-Node *
-btree_get_Node_or_parent(Tree *, void *);
+one_node *
+btree_get_Node_or_parent(one_tree *, void *);
 
 static
-Node *
-btree_get_Node_or_NULL(Tree *, void *);
+one_node *
+btree_get_Node_or_NULL(one_tree *, void *);
 
 static
-Node *
-btree_make_Node(Tree *, void *, void *);
-
-static
-int
-btree_pre_order_traversal_r(Tree *, Node *, void *, fn_traversal_cb);
+one_node *
+btree_make_Node(one_tree *, void *, void *);
 
 static
 int
-btree_in_order_traversal_r(Tree *, Node *, void *, fn_traversal_cb);
+btree_pre_order_traversal_r(one_tree *, one_node *, void *, fn_traversal_cb);
 
 static
 int
-btree_post_order_traversal_r(Tree *, Node *, void *, fn_traversal_cb);
+btree_in_order_traversal_r(one_tree *, one_node *, void *, fn_traversal_cb);
 
 static
 int
-btree_height(Tree *, Node *);
+btree_post_order_traversal_r(one_tree *, one_node *, void *, fn_traversal_cb);
 
 static
 int
-btree_size(Tree *, Node *);
+btree_height(one_tree *, one_node *);
+
+static
+int
+btree_size(one_tree *, one_node *);
 
 static
 bool
-btree_is_unbalanced(Tree *, Node *);
+btree_is_unbalanced(one_tree *, one_node *);
 
 static
 bool
-btree_is_scapegoat(Tree *, Node *);
+btree_is_scapegoat(one_tree *, one_node *);
 
 static
 bool
-btree_insert_r(Tree *, Node *, Node *);
+btree_insert_r(one_tree *, one_node *, one_node *);
 
 static
-Node *
-btree_rebalance_r(Tree *, Node *);
+one_node *
+btree_rebalance_r(one_tree *, one_node *);
 
 static
 void
-btree_reset_subtree_r(Tree *, Node *);
+btree_reset_subtree_r(one_tree *, one_node *);
 
 static
-Node *
-btree_make_subtree_r(Tree *, one_block *);
+one_node *
+btree_make_subtree_r(one_tree *, one_block *);
 
 static
 one_block *
-btree_internal_collector_r(Tree *, Node *, one_block *);
+btree_internal_collector_r(one_tree *, one_node *, one_block *);
 
-Tree *
+one_tree *
 btree_free(
-	Tree *self
+	one_tree *self
 );
 
 /**
@@ -853,9 +912,9 @@ btree_free(
  * full Tree rebalance.
  */
 
-Tree *
+one_tree *
 btree_rebalance(
-	Tree *self
+	one_tree *self
 ) {
 	if (!self || !self->root)
 		return self;
@@ -868,9 +927,9 @@ btree_rebalance(
  * pointer to the old tree.
  */
 
-Tree *
+one_tree *
 btree_free(
-	Tree *self
+	one_tree *self
 ) {
 	int freed = 0;
 	if (self->root) {
@@ -889,9 +948,9 @@ btree_free(
  * insert a new Node into a Tree
  ********************************************************************/
 
-Node *
+one_node *
 btree_get_Node_or_parent(
-	Tree *self,
+	one_tree *self,
 	void *key
 ) {
 	/* we can only return a NULL if the tree is empty */
@@ -899,8 +958,8 @@ btree_get_Node_or_parent(
 		return NULL;
 
 	/* walk to find node or parent */
-	Node *prior = NULL;
-	Node *curr = self->root;
+	one_node *prior = NULL;
+	one_node *curr = self->root;
 	while (curr) {
 		keycmp_result cmp = keycmp(self, key, curr->key);
 		prior = curr;
@@ -924,20 +983,20 @@ btree_get_Node_or_parent(
 		: prior;
 }
 
-Node *
+one_node *
 btree_get_Node_or_NULL(
-	Tree *self,
+	one_tree *self,
 	void *key
 
 ) {
-	Node *n = btree_get_Node_or_parent(self, key);
+	one_node *n = btree_get_Node_or_parent(self, key);
 	if (!n) return NULL;
 	if (keycmp(self, key, n->key) != EQUAL) return NULL;
 	return n;
 }
 
 int
-btree_height(Tree *self, Node *n) {
+btree_height(one_tree *self, one_node *n) {
 	int height = 0;
 	while (n->parent) {
 		height += 1;
@@ -947,20 +1006,20 @@ btree_height(Tree *self, Node *n) {
 }
 
 int
-btree_size(Tree *self, Node *n) {
+btree_size(one_tree *self, one_node *n) {
 	if (!n) return 0;
 	return 1 + btree_size(self, n->left) + btree_size(self, n->right);
 }
 
 bool
-btree_is_unbalanced(Tree *self, Node *n) {
+btree_is_unbalanced(one_tree *self, one_node *n) {
 	int h = btree_height(self, n);
 	int s = btree_size(self, self->root);
-	return (h > ALPHA * uint32_log2(s));
+	return (h > ONE_REBALANCE_ALPHA * uint32_log2(s));
 }
 
 bool
-btree_is_scapegoat(Tree *self, Node *n) {
+btree_is_scapegoat(one_tree *self, one_node *n) {
 	return n && (3*btree_size(self, n) > 2*btree_size(self, n->parent));
 }
 
@@ -976,9 +1035,9 @@ btree_is_scapegoat(Tree *self, Node *n) {
 
 bool
 btree_insert_r(
-	Tree *self,
-	Node *parent,
-	Node *new
+	one_tree *self,
+	one_node *parent,
+	one_node *new
 ) {
 
 	/* tree is empty */
@@ -1023,12 +1082,12 @@ btree_insert_r(
 
 bool
 btree_insert(
-	Tree *self,
+	one_tree *self,
 	void *key,
 	void *value
 ) {
-	Node *parent = btree_get_Node_or_parent(self, key);
-	Node *n = btree_make_Node(self, key, value);
+	one_node *parent = btree_get_Node_or_parent(self, key);
+	one_node *n = btree_make_Node(self, key, value);
 	bool did = btree_insert_r(self, parent, n);
 	if (did) {
 		self->nodes += 1;
@@ -1037,7 +1096,7 @@ btree_insert(
 			FPRINTF_INFO fprintf(stderr, "INFO insert: unbalanced@ %d %d %d %d %ld\n",
 				self->nodes, self->inserts,
 				btree_size(self, self->root), btree_height(self, n), (uintptr_t)key);
-			Node *s = n->parent;
+			one_node *s = n->parent;
 			while (s) {
 				if (!btree_is_scapegoat(self, s)) {
 					s = s->parent;
@@ -1066,10 +1125,10 @@ btree_insert(
 
 bool
 btree_delete(
-	Tree *self,
+	one_tree *self,
 	void *key
 ) {
-	Node *n = btree_get_Node_or_NULL(self, key);
+	one_node *n = btree_get_Node_or_NULL(self, key);
 	if (n && n->deleted) {
 		fprintf(stderr, "WARNING delete: key not found in tree.\n");
 		return false;
@@ -1133,10 +1192,10 @@ btree_delete(
 
 void *
 btree_get(
-	Tree *self,
+	one_tree *self,
 	void *key
 ) {
-	Node *n = btree_get_Node_or_NULL(self, key);
+	one_node *n = btree_get_Node_or_NULL(self, key);
 	if (!n || n->deleted) return NULL;
 	return n->value;
 }
@@ -1152,11 +1211,11 @@ btree_get(
 
 bool
 btree_update(
-	Tree *self,
+	one_tree *self,
 	void *key,
 	void *value
 ) {
-	Node *n = btree_get_Node_or_NULL(self, key);
+	one_node *n = btree_get_Node_or_NULL(self, key);
 	if (n == NULL) return false;
 	n->value = value;
 	self->updates += 1;
@@ -1169,24 +1228,24 @@ btree_update(
 
 bool
 btree_is_empty(
-	Tree *self
+	one_tree *self
 ) {
 	return self->nodes == 0;
 }
 
 int
 btree_count(
-	Tree* self
+	one_tree* self
 ) {
 	return self->nodes;
 }
 
 bool
 btree_exists(
-	Tree *self,
+	one_tree *self,
 	void *key
 ) {
-	Node *n = btree_get_Node_or_NULL(self, key);
+	one_node *n = btree_get_Node_or_NULL(self, key);
 	if (!n || n->deleted) return NULL;
 	return n;
 }
@@ -1200,7 +1259,7 @@ btree_exists(
 
 int
 pre_order_traversal(
-	Tree *self,
+	one_tree *self,
 	void *context,
 	fn_traversal_cb fn
 ) {
@@ -1214,7 +1273,7 @@ pre_order_traversal(
 
 int
 in_order_traversal(
-	Tree *self,
+	one_tree *self,
 	void *context,
 	fn_traversal_cb fn
 ) {
@@ -1223,7 +1282,7 @@ in_order_traversal(
 
 int
 post_order_traversal(
-	Tree *self,
+	one_tree *self,
 	void *context,
 	fn_traversal_cb fn
 ) {
@@ -1241,8 +1300,8 @@ post_order_traversal(
 
 int
 btree_pre_order_traversal_r(
-	Tree *self,
-	Node *node,
+	one_tree *self,
+	one_node *node,
 	void *context,
 	fn_traversal_cb fn
 ) {
@@ -1255,8 +1314,8 @@ btree_pre_order_traversal_r(
 
 int
 btree_in_order_traversal_r(
-	Tree *self,
-	Node *n,
+	one_tree *self,
+	one_node *n,
 	void *context,
 	fn_traversal_cb fn
 ) {
@@ -1269,8 +1328,8 @@ btree_in_order_traversal_r(
 
 int
 btree_post_order_traversal_r(
-	Tree *self,
-	Node *n,
+	one_tree *self,
+	one_node *n,
 	void *context,
 	fn_traversal_cb fn
 ) {
@@ -1294,13 +1353,13 @@ btree_post_order_traversal_r(
  * create a new unlinked Node
  */
 
-Node *
+one_node *
 btree_make_Node(
-	Tree *self,
+	one_tree *self,
 	void *key,
 	void *value
 ) {
-	Node *n = tsmalloc(sizeof(*n));
+	one_node *n = tsmalloc(sizeof(*n));
 	memset(n, 0, sizeof(*n));
 	n->key = key;
 	n->value = value;
@@ -1314,8 +1373,8 @@ btree_make_Node(
 
 void
 btree_node_free(
-	Tree *self,
-	Node *n
+	one_tree *self,
+	one_node *n
 ) {
 	/* warn on linked children but allow it through for now */
 	if (n->left || n->right) {
@@ -1337,8 +1396,8 @@ btree_node_free(
 
 int
 btree_node_children_free(
-	Tree *self,
-	Node *n
+	one_tree *self,
+	one_node *n
 ) {
 	if (!n) return 0;
 	int freed = 0;
@@ -1374,7 +1433,7 @@ btree_node_children_free(
  */
 
 void
-btree_reset_subtree_r(Tree *self, Node *subtree) {
+btree_reset_subtree_r(one_tree *self, one_node *subtree) {
 	if (!subtree)
 		return;
 
@@ -1412,9 +1471,9 @@ btree_reset_subtree_r(Tree *self, Node *subtree) {
  * later in balancing, but for now we'll leave them alone.
  */
 
-Node *
+one_node *
 btree_make_subtree_r(
-	Tree *self,
+	one_tree *self,
 	one_block *nodes
 ) {
 	int k = count(nodes);
@@ -1423,8 +1482,8 @@ btree_make_subtree_r(
 
 	/* next subtree root */
 	int j = k/2;
-	Node *old = (Node *)nth(nodes, j);
-	Node *new = btree_make_Node(self, old->key, old->value);
+	one_node *old = (one_node *)nth(nodes, j);
+	one_node *new = btree_make_Node(self, old->key, old->value);
 
 	/* and to either side of the root, we have further subtrees */
 	one_block *left_side = slice(nodes, 0, j);
@@ -1454,8 +1513,8 @@ btree_make_subtree_r(
 
 one_block *
 btree_internal_collector_r(
-	Tree *self,
-	Node *n,
+	one_tree *self,
+	one_node *n,
 	one_block *xs
 ) {
 	if (!n)
@@ -1474,10 +1533,10 @@ btree_internal_collector_r(
  * to rebalance the whole Tree, pass self->root as the subtree.
  */
 
-Node *
+one_node *
 btree_rebalance_r(
-	Tree *self,
-	Node *subtree
+	one_tree *self,
+	one_node *subtree
 ) {
 	/* if (!self->rebalance_allowed) { */
 	/*      fprintf(stderr, "\n*** REBALANCE SUPPRESSED ***\n"); */
@@ -1490,7 +1549,7 @@ btree_rebalance_r(
 	 * this is root. if it isn't remember if the subtree was
 	 * on the left or right. */
 
-	Node *parent = subtree->parent;
+	one_node *parent = subtree->parent;
 	bool left_side = (parent && parent->left == subtree);
 
 	/* do an in_order traversal to get an alist of all non-deleted
@@ -1513,7 +1572,7 @@ btree_rebalance_r(
 	 * nodes into a subtree. */
 
 	FPRINTF_INFO fprintf(stderr, "INFO rebalance nodes in subtree %d\n", count(xs));
-	Node *new_subtree = btree_make_subtree_r(self, xs);
+	one_node *new_subtree = btree_make_subtree_r(self, xs);
 	free_one(xs);
 
 	/* destroy the old nodes and replace them with the new
@@ -1532,9 +1591,6 @@ btree_rebalance_r(
 	return new_subtree;
 }
 
-
-
-
 /**
  * the unified or generic api.
  *
@@ -1544,7 +1600,7 @@ btree_rebalance_r(
  *
  * conventions:
  *
- * functions that don't really need to return a payload or count
+ * functions that don't really need to return a item or count
  * return their first argument, which allows for chaining calls and
  * (in the case of an alist) the replacement of one copy of the
  * structure with a new updated copy.
@@ -1608,16 +1664,16 @@ make_one(
 
 	case alist:
 		ob->u.acc.used = 0;
-		ob->u.acc.capacity = ALIST_DEFAULT_CAPACITY;
-		ob->u.acc.list = tsmalloc(ALIST_DEFAULT_CAPACITY * sizeof(uintptr_t));
+		ob->u.acc.capacity = ONE_ALIST_DEFAULT_CAPACITY;
+		ob->u.acc.list = tsmalloc(ONE_ALIST_DEFAULT_CAPACITY * sizeof(uintptr_t));
 		memset(ob->u.acc.list, 0, ob->u.acc.capacity * sizeof(uintptr_t));
 		return ob;
 
 	case dynarray:
 		ob->u.dyn.length = -1;
-		ob->u.dyn.capacity = DYNARRAY_DEFAULT_CAPACITY;
-		ob->u.dyn.array = tsmalloc(DYNARRAY_DEFAULT_CAPACITY * sizeof(void *));
-		memset(ob->u.dyn.array, 0, DYNARRAY_DEFAULT_CAPACITY * sizeof(void *));
+		ob->u.dyn.capacity = ONE_DYNARRAY_DEFAULT_CAPACITY;
+		ob->u.dyn.array = tsmalloc(ONE_DYNARRAY_DEFAULT_CAPACITY * sizeof(void *));
+		memset(ob->u.dyn.array, 0, ONE_DYNARRAY_DEFAULT_CAPACITY * sizeof(void *));
 		return ob;
 
 	default:
@@ -1643,8 +1699,8 @@ make_one(
 one_block *
 make_one_keyed(
 	one_type isa,
-	key_type kt,
-	key_comparator func_or_NULL
+	one_key_type kt,
+	one_key_comparator func_or_NULL
 ) {
 	one_block *ob = tsmalloc(sizeof(*ob));
 	memset(ob, 0, sizeof(*ob));
@@ -1664,14 +1720,14 @@ make_one_keyed(
 		switch (kt) {
 
 		case integral:     /* treat the key as a void * sized integer, a long */
-			ob->u.kvl.fn_cmp = (key_comparator)integral_comp;
+			ob->u.kvl.fn_cmp = (one_key_comparator)integral_comp;
 			if (func_or_NULL)
 				fprintf(stderr,
 					"WARNING make_Tree: client provided comparator function for integral keys ignored.\n");
 			break;
 
 		case string:      /* strings are standard char * bytestrings */
-			ob->u.kvl.fn_cmp = (key_comparator)strcmp;
+			ob->u.kvl.fn_cmp = (one_key_comparator)strcmp;
 			if (func_or_NULL)
 				fprintf(stderr,
 					"WARNING make_Tree: client provided comparator function for string keys ignored.\n");
@@ -1773,18 +1829,18 @@ free_one(
 one_block *
 add_first(
 	one_block *ob,
-	void *payload
+	void *item
 ) {
-	if (payload == NULL)
+	if (item == NULL)
 		return ob;
 	switch (ob->isa) {
 
 	case singly:
-		singly_add_first(&ob->u.sgl, payload);
+		singly_add_first(&ob->u.sgl, item);
 		return ob;
 
 	case doubly:
-		doubly_add_first(&ob->u.dbl, payload);
+		doubly_add_first(&ob->u.dbl, item);
 		return ob;
 
 	default:
@@ -1805,18 +1861,18 @@ add_first(
 one_block *
 add_last(
 	one_block *ob,
-	void *payload
+	void *item
 ) {
-	if (payload == NULL)
+	if (item == NULL)
 		return ob;
 	switch (ob->isa) {
 
 	case singly:
-		singly_add_last(&ob->u.sgl, payload);
+		singly_add_last(&ob->u.sgl, item);
 		return ob;
 
 	case doubly:
-		doubly_add_last(&ob->u.dbl, payload);
+		doubly_add_last(&ob->u.dbl, item);
 		return ob;
 
 	default:
@@ -2082,12 +2138,12 @@ depth(
 one_block *
 push(
 	one_block *ob,
-	void *payload
+	void *item
 ) {
 	switch (ob->isa) {
 
 	case stack:
-		singly_add_first(&ob->u.sgl, payload);
+		singly_add_first(&ob->u.sgl, item);
 		return ob;
 
 	default:
@@ -2167,12 +2223,12 @@ peek(
 one_block *
 enqueue(
 	one_block *ob,
-	void *payload
+	void *item
 ) {
 	switch (ob->isa) {
 
 	case queue:
-		doubly_add_last(&ob->u.dbl, payload);
+		doubly_add_last(&ob->u.dbl, item);
 		return ob;
 
 	default:
@@ -2232,12 +2288,12 @@ dequeue(
 one_block *
 push_front(
 	one_block *ob,
-	void *payload
+	void *item
 ) {
 	switch (ob->isa) {
 
 	case deque:
-		doubly_add_first(&ob->u.dbl, payload);
+		doubly_add_first(&ob->u.dbl, item);
 		return ob;
 
 	default:
@@ -2259,12 +2315,12 @@ push_front(
 one_block *
 push_back(
 	one_block *ob,
-	void *payload
+	void *item
 ) {
 	switch (ob->isa) {
 
 	case deque:
-		doubly_add_last(&ob->u.dbl, payload);
+		doubly_add_last(&ob->u.dbl, item);
 		return ob;
 
 	default:
@@ -2375,7 +2431,7 @@ peek_back(
 /**
  * high_index -- dynarray
  *
- * the highest used (via put_at) index in the array. while a payload
+ * the highest used (via put_at) index in the array. while a item
  * may be put anywhere with a non-negative index, a get_from is only
  * valid for an index in the range (0, high index).
  *
@@ -2408,7 +2464,7 @@ high_index(
 one_block *
 put_at(
 	one_block *self,
-	void *payload,
+	void *item,
 	int n
 ) {
 	if (self->isa != dynarray) {
@@ -2431,7 +2487,7 @@ put_at(
 		tsfree(old);
 		self->u.dyn.capacity *= 2;
 	}
-	self->u.dyn.array[n] = payload;
+	self->u.dyn.array[n] = item;
 	if (n > self->u.dyn.length)
 		self->u.dyn.length = n;
 	return self;
@@ -2676,7 +2732,7 @@ one_block *
 add_with_priority(
 	one_block *ob,
 	long pri,
-	void *payload
+	void *item
 ) {
 	return NULL;
 }
@@ -2684,7 +2740,7 @@ add_with_priority(
 one_block *
 add_with_max(
 	one_block *ob,
-	void *payload
+	void *item
 ) {
 	return NULL;
 }
@@ -2692,7 +2748,7 @@ add_with_max(
 one_block *
 add_with_min(
 	one_block *ob,
-	void *payload
+	void *item
 ) {
 	return NULL;
 }
@@ -2715,7 +2771,7 @@ bool
 get_max(
 	one_block *ob,
 	long *pri,
-	void *payload
+	void *item
 ) {
 	return NULL;
 }
@@ -2724,7 +2780,7 @@ bool
 get_min(
 	one_block *ob,
 	long *pri,
-	void *payload
+	void *item
 ) {
 	return NULL;
 }
@@ -2733,7 +2789,7 @@ bool
 peek_max(
 	one_block *ob,
 	long *pri,
-	void *payload
+	void *item
 ) {
 	return NULL;
 }
@@ -2742,7 +2798,7 @@ bool
 peek_min(
 	one_block *ob,
 	long *pri,
-	void *payload
+	void *item
 ) {
 	return NULL;
 }

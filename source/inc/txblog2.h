@@ -73,7 +73,7 @@ uint32_log2(
  *    'iso c requires that a translation unit have at least one
  *    declaration' but there is a declaration.
  *
- *    while in 'wtf' mode, i put an #incldue between the #define
+ *    while in 'wtf' mode, i put an #include between the #define
  *    and the table the error goes away.
  *
  * 2) in order to avoid the 'include not directly used' pedantic
