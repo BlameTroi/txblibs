@@ -28,7 +28,8 @@
 /* #include "txbtree.h" */
 
 /* a helpful macro for infrequently needed traces */
-#define FPRINTF_INTO
+// #define FPRINTF_INFO
+// todo --- is free double counting tree nodes?
 #ifndef FPRINTF_INFO
 #define FPRINTF_INFO if (false)
 #endif
@@ -892,18 +893,6 @@ btree_free(
  * of the nodes and relinking them.
  */
 
-/*
- * implementation notes -- error handling for broken or 'impossible'
- * link sequences
- *
- * i'm leaving 'holes in the bucket' and not erroring on situations
- * that should not or can not occur. these are things like impossible
- * sequences of links (eg., root node has a parent, non-root node
- * doesn't, etc.).
- *
- * we'll deal with those cases as bugs to be fixed elswhere.
- */
-
 /********************************************************************
  * create and destroy a tree
  ********************************************************************/
@@ -919,6 +908,21 @@ btree_rebalance(
 	if (!self || !self->root)
 		return self;
 	btree_rebalance_r(self, self->root);
+	FPRINTF_INFO fprintf(stderr, "Rebalance:\n");
+	FPRINTF_INFO fprintf(stderr, "  nodes: %d\n", self->nodes);
+	FPRINTF_INFO fprintf(stderr, "inserts: %d\n", self->inserts);
+	FPRINTF_INFO fprintf(stderr, "deletes: %d\n", self->deletes);
+	FPRINTF_INFO fprintf(stderr, "updates: %d\n", self->updates);
+	FPRINTF_INFO fprintf(stderr, " marked: %d\n", self->marked_deleted);
+	FPRINTF_INFO fprintf(stderr, "partial: %d\n", self->partial_rebalances);
+
+	self->inserts = 0;
+	self->deletes = 0;
+	self->updates = 0;
+	self->marked_deleted = 0;
+	self->full_rebalances += 1;
+
+	FPRINTF_INFO fprintf(stderr, "   full: %d\n", self->full_rebalances);
 	return self;
 }
 
@@ -1003,6 +1007,14 @@ btree_height(one_tree *self, one_node *n) {
 		n = n->parent;
 	}
 	return height;
+}
+
+int
+btree_height_for_key(one_tree *self, void *key) {
+	if (!key) return -1;
+	one_node *n = btree_get_Node_or_NULL(self, key);
+	if (!n) return -1;
+	return btree_height(self, n);
 }
 
 int
@@ -1117,7 +1129,8 @@ btree_insert(
 /********************************************************************
  * delete a Node from the Tree
  ********************************************************************/
-
+bool
+btree_should_full_rebalance(one_tree *self);
 /*
  * most deletes are deferred. rather than juggle pointers we'll drop the
  * deleted Nodes during a rebalance.
@@ -1139,6 +1152,7 @@ btree_delete(
 	 */
 
 	if (!n->left && !n->right) {
+		FPRINTF_INFO fprintf(stderr, "INFO deleting leaf: %p\n", (void *)n->key);
 		if (n->parent && n->parent->left == n) n->parent->left = NULL;
 		if (n->parent && n->parent->right == n) n->parent->right = NULL;
 		if (n->parent == NULL && self->root == n)
@@ -1153,6 +1167,8 @@ btree_delete(
 	/*
 	 * flag the Node as deleted, it will be removed during rebalancing.
 	 */
+	FPRINTF_INFO fprintf(stderr, "INFO marking deleted non-leaf: %p\n",
+		(void *)n->key);
 
 	n->deleted = true;
 	n->value = NULL;
@@ -1160,16 +1176,19 @@ btree_delete(
 	self->deletes += 1;
 	self->nodes -= 1;
 
-	/*
-	 * experiment, just rebalance on every delete, but only under node's
-	 * parent.
-	 */
+	/* /\* */
+	/*  * experiment, just rebalance on every delete, but only under node's */
+	/*  * parent. */
+	/*  *\/ */
+	/*  */
+	/* if (n->parent) { */
+	/*      btree_rebalance_r(self, n); */
+	/* } else { */
+	/*      btree_rebalance_r(self, self->root); */
+	/* } */
 
-	if (n->parent) {
-		btree_rebalance_r(self, n);
-	} else {
-		btree_rebalance_r(self, self->root);
-	}
+	if (btree_should_full_rebalance(self))
+		btree_rebalance(self);
 
 	return true;
 }
@@ -1306,7 +1325,7 @@ btree_pre_order_traversal_r(
 	fn_traversal_cb fn
 ) {
 	if (!node) return 0;
-	if (!node->deleted) fn(node->key, node->value, context, self, node);
+	if (!node->deleted) fn(node->key, node->value, context, self);
 	btree_pre_order_traversal_r(self, node->left, context, fn);
 	btree_pre_order_traversal_r(self, node->right, context, fn);
 	return 1;
@@ -1321,7 +1340,7 @@ btree_in_order_traversal_r(
 ) {
 	if (!n) return 0;
 	btree_in_order_traversal_r(self, n->left, context, fn);
-	if (!n->deleted) fn(n->key, n->value, context, self, n);
+	if (!n->deleted) fn(n->key, n->value, context, self);
 	btree_in_order_traversal_r(self, n->right, context, fn);
 	return 1;
 }
@@ -1336,8 +1355,8 @@ btree_post_order_traversal_r(
 	if (!n) return 0;
 	btree_post_order_traversal_r(self, n->left, context, fn);
 	btree_post_order_traversal_r(self, n->right, context, fn);
-	if (!n->deleted) fn(n->key, n->value, context, self, n);
-	return 0;
+	if (!n->deleted) fn(n->key, n->value, context, self);
+	return 1;
 }
 
 
@@ -1585,11 +1604,40 @@ btree_rebalance_r(
 	} else {
 		if (left_side) parent->left = new_subtree;
 		else           parent->right = new_subtree;
+		self->partial_rebalances += 1;
 	}
 
 	FPRINTF_INFO fprintf(stderr, "INFO rebalance end rebalancing\n");
 	return new_subtree;
 }
+
+/**
+ * a full tree rebalance is triggered by deletes exceeding some percenta
+ * of total nodes or inserts being currently double nodes. post
+ * insert depth checks are done on insert.
+ */
+
+bool
+btree_should_full_rebalance(one_tree *self) {
+	/* empty tree or less than (arbitrarily) 64 nodes, don't bother */
+	if (!self->root || self->nodes < 64)
+		return false;
+
+	/* have we done enough deletes? */
+	if (100*((float)self->marked_deleted/self->nodes) >
+		ONE_REBALANCE_DELETE_PERCENT)
+		return true;
+
+	/* too much churn */
+	if (self->inserts > 2 * self->nodes)
+		return true;
+
+	return false;
+}
+
+
+
+
 
 /**
  * the unified or generic api.
@@ -2018,7 +2066,8 @@ count(
 		return ob->u.acc.used;
 
 	case keyval:
-		return btree_size(&ob->u.kvl, ob->u.kvl.root);
+		return ob->u.kvl.nodes;
+	// btree_size(&ob->u.kvl, ob->u.kvl.root);
 
 	default:
 		fprintf(stderr, "\nERROR txbone-count: unknown or unsupported type %d %s\n",
@@ -2803,6 +2852,9 @@ peek_min(
 	return NULL;
 }
 
+/**
+ * key:value store
+ */
 
 bool
 insert(

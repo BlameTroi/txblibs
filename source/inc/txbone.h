@@ -96,7 +96,7 @@ extern "C" {
  * rebalance of the tree. deletes are deferred and deleted nodes are
  * not removed until a full rebalance is done.
  *
- * garbage collection.
+ * it's a garbage collection.
  */
 
 #ifndef ONE_REBALANCE_ALPHA
@@ -105,6 +105,10 @@ extern "C" {
 
 #ifndef ONE_REBALANCE_DELETE_PERCENT
 #define ONE_REBALANCE_DELETE_PERCENT 10
+#endif
+
+#ifndef ONE_REBALANCE_MINIMUM
+#define ONE_REBALANCE_MINIMUM 64
 #endif
 
 /**
@@ -275,7 +279,8 @@ struct one_tree {
 	int deletes;                /* used to decide when to        */
 	int updates;                /* rebalance                     */
 	int marked_deleted;         /* actual node removal deferred  */
-	int rebalances;             /* how many?                     */
+	int full_rebalances;        /* how many?                     */
+	int partial_rebalances;     /* just for fun                  */
 };
 
 /*
@@ -914,8 +919,7 @@ typedef bool (*fn_traversal_cb)(
 	void *key,
 	void *value,
 	void *context,
-	void *reserved1,
-	void *reserved2
+	one_tree *self
 );
 
 /**

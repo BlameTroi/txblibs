@@ -11,7 +11,6 @@
 /* other library functions */
 #include "txballoc.h"
 #include "txbrand.h"
-#include "txblog2.h"
 #include "txbone.h"
 
 /**
@@ -305,6 +304,10 @@ traverse_peek_children(
  * and inserting an early return after the last test i'm interested
  * in.
  */
+one_tree *
+btree_rebalance(
+	one_tree *self
+);
 
 /**
  * use this test for breakpointing. copy a failure here and dive
@@ -398,26 +401,60 @@ MU_TEST(test_rebalance_deleted_root) {
  * rebalance after load
  */
 
+int depths[50] = {0};
+
+void
+clear_depths(void) {
+	for (int i = 0; i < 50; i++)
+		depths[i] = 0;
+}
+
+void
+print_depths(void) {
+	int total = 0;
+	for (int i = 0; i < 50; i++) {
+		if (depths[i] == 0) continue;
+		total += depths[i];
+		fprintf(stderr, "at depth %4d there are %6d\n", i, depths[i]);
+	}
+	fprintf(stderr, "nodes in tree %d\n", total);
+}
+
+int
+btree_height_for_key(one_tree *self, void *key);
+
+bool
+in_order_cb_list(void *key, void *value, void *context, one_tree *self) {
+	fprintf(stderr, "key: %6ld   height: %6d\n", (long)key,
+		btree_height_for_key(self, key));
+	return true;
+}
+
+bool
+in_order_cb_depth(void *key, void *value, void *context, one_tree *self) {
+	int d = btree_height_for_key(self, key);
+	if (d > 49) d = 49;
+	depths[d] += 1;
+	return true;
+}
+
 MU_TEST(test_simple_rebalance) {
 	one_block *t = NULL;
 	one_block *xs = NULL;
 
 	t = small_right_leaning_integral();
 	xs = make_one(alist);
-	void *context;
-	context = xs;
-	in_order_keyed(t, context, NULL); // peek depth
-	xs = context;
-	traversal_print(xs, "in order traversal w/depth -- right lean all 15");
-
+	clear_depths();
+	in_order_keyed(t, xs, in_order_cb_list);
+	in_order_keyed(t, xs, in_order_cb_depth);
+	print_depths();
+	btree_rebalance(&t->u.kvl);
 	free_one(xs);
 	xs = make_one(alist);
-	context = xs;
-	in_order_keyed(t, xs, NULL); // depth
-	xs = context;
-	traversal_print(xs,
-		"in order traversal w/depth -- right lean all 15 rebalanced");
-
+	clear_depths();
+	in_order_keyed(t, xs, in_order_cb_list);
+	in_order_keyed(t, xs, in_order_cb_depth);
+	print_depths();
 	free_one(xs);
 	free_one(t);
 }
@@ -438,9 +475,10 @@ MU_TEST(test_traversal_deletes) {
 
 	xs = make_one(alist);
 	void *context = xs;
-	in_order_keyed(t, xs, NULL); // depth
+	clear_depths();
+	in_order_keyed(t, xs, in_order_cb_depth);
+	print_depths();
 	xs = context;
-	traversal_print(xs, "in order traversal w/depth -- deleted root 5");
 	free_one(xs);
 
 	delete (t, as_key(10));
@@ -448,49 +486,15 @@ MU_TEST(test_traversal_deletes) {
 
 	xs = make_one(alist);
 	context = xs;
-	in_order_keyed(t, xs, NULL); // depth
+	clear_depths();
+	in_order_keyed(t, xs, in_order_cb_depth);
+	print_depths();
 	xs = context;
-	traversal_print(xs, "in order traversal w/depth -- deleted key midway down 10");
 	free_one(xs);
 
 	free_one(t);
 }
 
-/**
- * hit all three traversals
- */
-
-MU_TEST(test_all_traversals) {
-	one_block *t = NULL;
-
-	/* keys 1-15, leaning right */
-	t = small_right_leaning_integral();
-
-	one_block *xs = make_one(alist);
-	void *context = xs;
-	in_order_keyed(t, xs, NULL); //traverse_peek_depth);
-	xs = context;
-	traversal_print(xs, "in order traversal w/depth");
-
-	mu_should(count(xs) == 15);
-
-	free_one(xs);
-	xs = make_one(alist);
-	/* context = xs; */
-	/* pre_order_traversal(t, xs, traverse_peek_depth); */
-	/* xs = context; */
-	/* traversal_print(xs, "pre order traversal w/depth"); */
-	/*  */
-	/* free_one(xs); */
-	/* xs = make_one(alist); */
-	/* context = xs; */
-	/* post_order_traversal(t, xs, traverse_peek_depth); */
-	/* xs = context; */
-	/* traversal_print(xs, "post order traversal w/depth"); */
-
-	free_one(xs);
-	free_one(t);
-}
 
 /**
  * the various delete cases
@@ -702,16 +706,18 @@ MU_TEST(test_api_custom) {
 	/* so one end is 100, the other is 0 */
 	xs = make_one(alist);
 	void *context = xs;
-	in_order_keyed(t, xs, NULL); //traverse_peek_depth);
 	xs = context;
-	traversal_print(xs, "in order, custom key w/depth\n");
+	clear_depths();
+	in_order_keyed(t, xs, in_order_cb_depth);
+	print_depths();
 	free_one(xs);
-	//rebalance_one_block(t);
+	btree_rebalance(&t->u.kvl);
 	xs = make_one(alist);
 	context = xs;
-	in_order_keyed(t, xs, NULL); //traverse_peek_depth);
+	clear_depths();
+	in_order_keyed(t, xs, in_order_cb_depth);
+	print_depths();
 	xs = context;
-	traversal_print(xs, "in order, after rebalance, custome key w/depth\n");
 	free_one(xs);
 	free_one(t);
 }
@@ -719,46 +725,33 @@ MU_TEST(test_api_custom) {
 
 MU_TEST(test_volume) {
 	one_block *t = make_one_keyed(keyval, integral, NULL);
-	for (int i = 0; i < 10000; i++) {
-		insert(t, as_key(random_between(1, 99999)), "random");
+	for (int i = 0; i < 100000; i++) {
+		insert(t, as_key(random_between(1, 999999)), "random");
 	}
 	/* mu_shouldnt(true); */
-	int depths[50] = {0};
-	for (int i = 0; i < 50; i++)
-		depths[i] = 0;
-	in_order_keyed(t, &depths, NULL); //traverse_chart_depths);
-	fprintf(stderr, "\ndistribution by depth before rebalance\n");
-	fprintf(stderr, "depth     count\n");
-	for (int i = 0; i < 50; i++) {
-		if (depths[i]) fprintf(stderr, "%5d %8d\n", i, depths[i]);
+	clear_depths();
+	in_order_keyed(t, NULL, in_order_cb_depth);
+	print_depths();
+	fprintf(stderr, "attempting full rebalance!\n");
+	btree_rebalance(&t->u.kvl);
+	clear_depths();
+	in_order_keyed(t, NULL, in_order_cb_depth);
+	print_depths();
+
+	int deleted = 0;
+	while (deleted < 10000) {
+		long k = random_between(1, 999999);
+		if (exists(t, (void *)k)) {
+			delete (t, (void *)k);
+			deleted += 1;
+		}
 	}
-	fprintf(stderr, "\n");
-	/* one_block *xs = make_one(alist); */
-	/* context = xs; */
-	/* in_order_keyed(t, xs, NULL); //traverse_peek_depth); */
-	/* xs = context; */
-	/* traversal_print(xs, */
-	/*      "in order traversal w/depth -- abusive"); */
-	/* free_one(xs); */
-	//analyze_one_block(bt, "abusive loaded...");
-	for (int i = 0; i < 50; i++)
-		depths[i] = 0;
-	in_order_keyed(t, &depths,
-		NULL); //traversal(t, &depths, traverse_chart_depths);
-	fprintf(stderr, "\ndistribution by depth after rebalance\n");
-	fprintf(stderr, "depth     count\n");
-	for (int i = 0; i < 50; i++) {
-		if (depths[i]) fprintf(stderr, "%5d %8d\n", i, depths[i]);
-	}
-	fprintf(stderr, "\n");
-	/* xs = make_one(alist); */
-	/* context = xs; */
-	/* in_order_keyed(t, xs, NULL); //traverse_peek_depth); */
-	/* xs = context; */
-	/* traversal_print(xs, */
-	/*      "in order traversal w/depth -- rebalanced abusive"); */
-	/* free_one(xs); */
-	//analyze_one_block(bt, "rebalanced...");
+
+	btree_rebalance(&t->u.kvl);
+	clear_depths();
+	in_order_keyed(t, NULL, in_order_cb_depth);
+	print_depths();
+
 	free_one(t);
 }
 
@@ -770,13 +763,13 @@ static
 void
 test_setup(void) {
 	seed_random_generator(6803);
-	tsinitialize(55000, txballoc_f_errors, stderr);
+	//tsinitialize(55000, txballoc_f_errors, stderr);
 }
 
 static
 void
 test_teardown(void) {
-	tsterminate();
+	//tsterminate();
 }
 
 /**
@@ -787,22 +780,22 @@ test_teardown(void) {
 MU_TEST_SUITE(test_suite) {
 
 	MU_SUITE_CONFIGURE(test_setup, test_teardown);
+	MU_RUN_TEST(test_simple_rebalance);
 
 	MU_RUN_TEST(test_api_integral);
 	MU_RUN_TEST(test_api_string);
-	MU_RUN_TEST(test_delete_cases);
-
-	return;
 	MU_RUN_TEST(test_api_custom);
 
-	MU_RUN_TEST(test_all_traversals);
+	MU_RUN_TEST(test_delete_cases);
 
-	MU_RUN_TEST(test_traversal_deletes);
+	MU_RUN_TEST(test_volume);
+	return;
+
+	MU_RUN_TEST(test_rebalance_deleted_root);
 
 	MU_RUN_TEST(test_wip);
-	MU_RUN_TEST(test_simple_rebalance);
-	MU_RUN_TEST(test_rebalance_deleted_root);
-	MU_RUN_TEST(test_volume);
+
+	MU_RUN_TEST(test_traversal_deletes);
 
 }
 
