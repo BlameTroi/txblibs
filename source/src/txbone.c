@@ -1466,6 +1466,58 @@ btree_exists(one_tree *self, void *key) {
 }
 
 /**
+ * the priority queue (pqueue) is a non-uniquely keyed doubly
+ * linked list. many of the functions look redundant with their
+ * doubly counterparts, but i prefer duplication to a bunch of
+ * special case if/else blocks.
+ */
+
+static
+int
+pq_count(
+	one_block *pq
+) {
+	int i = 0;
+	pq_item *qi = pq->u.pqu.first;
+	while (qi) {
+		i += 1;
+		qi = qi->next;
+	}
+	return i;
+}
+
+static
+pq_item *
+pq_create_item(
+	long priority,
+	void * payload
+) {
+	pq_item *qi = tmalloc(sizeof(*qi));
+	memset(qi, 0, sizeof(*qi));
+	qi->priority = priority;
+	qi->item = payload;
+	qi->next = NULL;
+	qi->previous = NULL;
+	return qi;
+}
+
+static
+int
+pq_purge(
+	one_block *pq
+) {
+	int i = 0;
+	pq_item *qi = NULL;
+	while (qi = pq->u.pqu.first, qi) {
+		i += 1;
+		pq->u.pqu.first = qi->next;
+		memset(qi, 253, sizeof(*qi));
+		tfree(qi);
+	}
+	return i;
+}
+
+/**
  * the unified or generic api.
  *
  * create, destroy, and functions global to all data structures. all
@@ -1538,6 +1590,11 @@ make_one(
 	case deque:
 		ob->u.dbl.first = NULL;
 		ob->u.dbl.last = NULL;
+		return ob;
+
+	case pqueue:
+		ob->u.pqu.first = NULL;
+		ob->u.pqu.last = NULL;
 		return ob;
 
 	case alist:
@@ -1681,6 +1738,9 @@ purge(
 	case alist:
 		return alist_purge(ob);
 
+	case pqueue:
+		return pq_purge(ob);
+
 	default:
 		fprintf(stderr, "\nERROR txbone-purge: unknown or unsupported type %d %s\n",
 			ob->isa, ob->tag);
@@ -1732,6 +1792,11 @@ free_one(
 		case keyval:
 			// TODO: fix to use purge as for others ...
 			btree_free(&ob->u.kvl);
+			memset(ob, 253, sizeof(*ob));
+			tsfree(ob);
+			return NULL;
+
+		case pqueue:
 			memset(ob, 253, sizeof(*ob));
 			tsfree(ob);
 			return NULL;
@@ -1960,6 +2025,9 @@ count(
 		return ob->u.kvl.nodes;
 	// btree_size(&ob->u.kvl, ob->u.kvl.root);
 
+	case pqueue:
+		return pq_count(ob);
+
 	default:
 		fprintf(stderr, "\nERROR txbone-count: unknown or unsupported type %d %s\n",
 			ob->isa, ob->tag);
@@ -1995,6 +2063,9 @@ is_empty(
 
 	case keyval:
 		return ob->u.kvl.root == NULL;
+
+	case pqueue:
+		return ob->u.pqu.first == NULL;
 
 	default:
 		fprintf(stderr, "\nERROR txbone-empty: unknown or unsupported type %d %s\n",
@@ -2593,21 +2664,6 @@ nth(
  */
 
 /**
- * add_with_priority -- pqueue
- *
- * add the item to its spot in the queue based on its priority.
- */
-
-one_block *
-add_with_priority(
-	one_block *ob,
-	long pri,
-	void *item
-) {
-	return NULL;
-}
-
-/**
  * add_with_max -- pqueue
  *
  * add the item as the maximum item in the queue. this means priority
@@ -2620,7 +2676,7 @@ add_with_max(
 	one_block *ob,
 	void *item
 ) {
-	return NULL;
+	return add_with_priority(ob, max_priority(ob), item);
 }
 
 /**
@@ -2635,7 +2691,122 @@ add_with_min(
 	one_block *ob,
 	void *item
 ) {
+	return add_with_priority(ob, min_priority(ob), item);
+}
+
+/**
+ * add_with_priority -- pqueue
+ *
+ * add the item to its spot in the queue based on its priority.
+ */
+
+one_block *
+add_with_priority(
+	one_block *ob,
+	long priority,
+	void *item
+) {
+	pq_item *qi = pq_create_item(priority, item);
+
+	/* empty is easy.  */
+	if (ob->u.pqu.first == NULL) {
+		ob->u.pqu.first = qi;
+		ob->u.pqu.last = qi;
+		return ob;
+	}
+
+	if (qi->priority <= ob->u.pqu.first->priority) {
+		qi->next = ob->u.pqu.first;
+		qi->next->previous = qi;
+		ob->u.pqu.first = qi;
+		return ob;
+	} else if (qi->priority > ob->u.pqu.last->priority) {
+		qi->previous = ob->u.pqu.last;
+		qi->previous->next = qi;
+		ob->u.pqu.last = qi;
+		return ob;
+	}
+
+	/* find an insertion point. */
+	pq_item *p = ob->u.pqu.first;
+	while (p) {
+		if (p->priority < qi->priority) {
+			p = p->next;
+			continue;
+		}
+		qi->previous = p->previous;
+		p->previous = qi;
+		qi->previous->next = qi;
+		qi->next = p;
+		return ob;
+	}
+
+	/* if we get here, the queue is broken. */
 	return NULL;
+}
+
+/**
+ * get_ and peek_max -- pqueue
+ *
+ * return the oldest item at the highest priority in the pqueue. peek
+ * leaves the item in place.
+ */
+
+void *
+get_max(
+	one_block *ob
+) {
+	if (ob->u.pqu.first == NULL)
+		return NULL;
+	pq_item *qi = ob->u.pqu.last;
+	void *ret = qi->item;
+	ob->u.pqu.last = qi->previous;
+	memset(qi, 253, sizeof(*qi));
+	tfree(qi);
+	if (ob->u.pqu.last == NULL)
+		ob->u.pqu.first = NULL;
+	else
+		ob->u.pqu.last->next = NULL;
+	return ret;
+}
+
+void *
+peek_max(
+	one_block *ob
+) {
+	return ob->u.pqu.last ? ob->u.pqu.last->item : NULL;
+}
+
+/**
+ * get_ and peek_min -- pqueue
+ *
+ * return the oldest item at the lowest priority in the pqueue. peek
+ * leaves the item in place.
+ */
+
+void *
+get_min(
+	one_block *ob
+) {
+	if (ob->u.pqu.first == NULL)
+		return NULL;
+	pq_item *qi = ob->u.pqu.first;
+	void *ret = qi->item;
+	ob->u.pqu.first = qi->next;
+	memset(qi, 253, sizeof(*qi));
+	tfree(qi);
+	if (ob->u.pqu.last == NULL)
+		ob->u.pqu.first = NULL;
+	else
+		ob->u.pqu.last->next = NULL;
+	return ret;
+}
+
+void *
+peek_min(
+	one_block *ob
+) {
+	return ob->u.pqu.first ? ob->u.pqu.first->item : NULL;
 }
 
 /**
@@ -2648,7 +2819,7 @@ long
 max_priority(
 	one_block *ob
 ) {
-	return 0;
+	return ob->u.pqu.last ? ob->u.pqu.last->priority : 0;
 }
 
 /**
@@ -2661,71 +2832,7 @@ long
 min_priority(
 	one_block *ob
 ) {
-	return 0;
-}
-
-/**
- * get_ and peek_max -- pqueue
- *
- * return the oldest item at the highest priority in the pqueue. peek
- * leaves the item in place.
- *
- * the interface is a bit different than usual as the priority and
- * item fields are pass by reference. ie:
- *
- * get_max(pq, &pri, &item);
- *
- * returns a boolean false if the queue was empty.
- */
-
-bool
-get_max(
-	one_block *ob,
-	long *pri,
-	void *item
-) {
-	return NULL;
-}
-
-bool
-peek_max(
-	one_block *ob,
-	long *pri,
-	void *item
-) {
-	return NULL;
-}
-
-/**
- * get_ and peek_min -- pqueue
- *
- * return the oldest item at the lowest priority in the pqueue. peek
- * leaves the item in place.
- *
- * the interface is a bit different than usual as the priority and
- * item fields are pass by reference. ie:
- *
- * get_min(pq, &pri, &item);
- *
- * returns a boolean false if the queue was empty.
- */
-
-bool
-get_min(
-	one_block *ob,
-	long *pri,
-	void *item
-) {
-	return NULL;
-}
-
-bool
-peek_min(
-	one_block *ob,
-	long *pri,
-	void *item
-) {
-	return NULL;
+	return ob->u.pqu.first ? ob->u.pqu.first->priority : 0;
 }
 
 /**

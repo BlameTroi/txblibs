@@ -3,12 +3,12 @@
 /* released to the public domain, troy brumley, may 2024 */
 
 #include <stdbool.h>
-#include <stdint.h>
 #include <stdio.h>
 #include "minunit.h"
 #include "txbmisc.h"
 #include "txbrand.h"
 #include "txbstr.h"
+#include "txballoc.h"
 #include "txbone.h"
 
 /*
@@ -21,11 +21,12 @@ void
 test_setup(void) {
 	set_random_generator(RAND_DEFAULT);
 	seed_random_generator(RAND_SEED);
-
+	tsinitialize(25000, txballoc_f_errors, stderr);
 }
 
 void
 test_teardown(void) {
+	tsterminate();
 }
 
 /*
@@ -35,25 +36,23 @@ test_teardown(void) {
 MU_TEST(test_create) {
 	one_block *pq = make_one(pqueue);
 	mu_should(pq);
-	mu_should(free_one(pq));
+	free_one(pq);
 }
 
 MU_TEST(test_is_empty) {
 	one_block *pq = make_one(pqueue);
 	mu_should(is_empty(pq));
 	mu_should(count(pq) == 0);
-	mu_should(free_one(pq));
+	free_one(pq);
 }
 
 MU_TEST(test_access_is_empty) {
 	one_block *pq = make_one(pqueue);
-	long priority;
-	uintptr_t payload;
-	mu_shouldnt(peek_max(pq, &priority, &payload));
-	mu_shouldnt(peek_min(pq, &priority, &payload));
-	mu_shouldnt(get_max(pq, &priority, &payload));
-	mu_shouldnt(get_min(pq, &priority, &payload));
-	mu_should(free_one(pq));
+	mu_shouldnt(peek_max(pq));
+	mu_shouldnt(peek_min(pq));
+	mu_shouldnt(get_max(pq));
+	mu_shouldnt(get_min(pq));
+	free_one(pq);
 }
 
 MU_TEST(test_add_with_priority) {
@@ -61,14 +60,11 @@ MU_TEST(test_add_with_priority) {
 	add_with_priority(pq, 100, "100");
 	mu_shouldnt(is_empty(pq));
 	mu_should(count(pq) == 1);
-	mu_shouldnt(free_one(pq));
-	long priority;
-	uintptr_t payload;
-	mu_should(get_max(pq, &priority, &payload));
+	void *payload = get_max(pq);
 	mu_should(equal_string((char *)payload, "100"));
 	mu_should(is_empty(pq));
 	mu_should(count(pq) == 0);
-	mu_should(free_one(pq));
+	free_one(pq);
 }
 
 MU_TEST(test_read_loop) {
@@ -77,13 +73,12 @@ MU_TEST(test_read_loop) {
 	add_with_priority(pq, 99, "99");
 	add_with_priority(pq, 101, "101");
 	int i = 0;
-	long priority;
-	uintptr_t payload;
-	while (get_max(pq, &priority, &payload))
+	void *payload;
+	while (payload = get_max(pq), payload)
 		i += 1;
 	mu_should(i == 3);
 	mu_should(is_empty(pq));
-	mu_should(free_one(pq));
+	free_one(pq);
 }
 
 MU_TEST(test_peek_high_low) {
@@ -91,24 +86,28 @@ MU_TEST(test_peek_high_low) {
 	add_with_priority(pq, 100, "100");
 	add_with_priority(pq, 99, "99");
 	add_with_priority(pq, 101, "101");
+	mu_should(count(pq) == 3);
 
 	long priority;
-	uintptr_t payload;
+	void *payload;
 
-	peek_max(pq, &priority, &payload);
-	mu_should(priority = 101);
+	payload = peek_max(pq);
+	priority = max_priority(pq);
+	mu_should(priority == 101);
 	mu_should(equal_string((char *)payload, "101"));
+	mu_should(count(pq) == 3);
 
-	peek_min(pq, &priority, &payload);
-	mu_should(priority = 99);
+	payload = peek_min(pq);
+	priority = min_priority(pq);
+	mu_should(priority == 99);
 	mu_should(equal_string((char *)payload, "99"));
 
 	int i = 0;
-	while (get_max(pq, &priority, &payload))
+	while (get_max(pq))
 		i += 1;
 	mu_should(i == 3);
 	mu_should(is_empty(pq));
-	mu_should(free_one(pq));
+	free_one(pq);
 }
 
 MU_TEST(test_random_volume) {
@@ -126,11 +125,11 @@ MU_TEST(test_random_volume) {
 	mu_should(count(pq) == 10003);
 	long last_pri;
 	long priority;
-	uintptr_t payload;
-	mu_should(peek_max(pq, &priority, &payload));
-	last_pri = priority;
+	mu_should(peek_max(pq));
+	last_pri = max_priority(pq);
 	while (!is_empty(pq)) {
-		get_max(pq, &priority, &payload);
+		priority = max_priority(pq);
+		get_max(pq);
 		if (priority > last_pri)
 			mu_should((priority <= last_pri));
 		last_pri = priority;
@@ -138,6 +137,7 @@ MU_TEST(test_random_volume) {
 	printf("\n");
 	mu_should(is_empty(pq));
 	mu_should(count(pq) == 0);
+	free_one(pq);
 }
 
 MU_TEST_SUITE(test_suite) {

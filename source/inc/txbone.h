@@ -290,9 +290,12 @@ struct one_tree {
  */
 
 /*
- * a priority queue. it relies on some of the key comparison suppport
- * in the binary search tree. the keys don't have to be unique, but
- * we do want to properly order them.
+ * a priority queue. keys are signed longs. the keys don't have to be
+ * unique, but we do want to properly order them.
+ *
+ * some of the code for the pqueue is redundant with doubly, but
+ * i'd rather have two copies of stable code than a bunch of if/else
+ * blocks in one copy.
  */
 
 /*
@@ -302,17 +305,14 @@ struct one_tree {
 struct pq_item {
 	pq_item *next;
 	pq_item *previous;
-	void *key;
+	long priority;
 	void *item;
 };
 
 struct one_pqueue {
 	pq_item *first;
 	pq_item *last;
-	one_key_comparator fn_cmp;  /* comparator function and type  */
-	one_key_type kt;            /* are provided at creation      */
 };
-
 
 /***
  * rather than have separate high level control blocks, this union
@@ -1098,31 +1098,24 @@ min_priority(
 	one_block *ob
 );
 
-bool
+void *
 get_max(
-	one_block *ob,
-	long *priority,
-	void *item
+	one_block *ob
 );
 
-bool
+void *
 get_min(
-	one_block *ob,
-	long *priority,
-	void *item
+	one_block *ob
 );
 
-bool
+void *
 peek_max(
-	one_block *ob,
-	long *priority,
-	void *item);
+	one_block *ob
+);
 
-bool
+void *
 peek_min(
-	one_block *ob,
-	long *priority,
-	void *item
+	one_block *ob
 );
 
 #ifdef __cplusplus
