@@ -111,9 +111,7 @@ uint32_log2(uint32_t v) {
  * header.
  */
 
-static
-const
-char *
+static const char *
 one_tags[] = {
 	"unknown",            /* -- enum names -- */
 	"deque",                 /* deque */
@@ -128,6 +126,21 @@ one_tags[] = {
 	"unknowable",         /* -- end of list -- */
 	NULL
 };
+
+/**
+ * difficult to avoid forward references
+ *
+ * these should be all of the internal functions and they are
+ * meant to be static.
+ */
+
+static
+void
+btree_node_free(one_tree *, one_node *);
+
+static
+int
+btree_node_children_free(one_tree *, one_node *);
 
 /**
  * a singly linked list (singly) behaves as one would expect, and
@@ -145,10 +158,7 @@ one_tags[] = {
 
 static
 one_singly *
-singly_add_first(
-	one_singly *self,
-	void *item
-) {
+singly_add_first(one_singly *self, void *item) {
 	sgl_item *next = tsmalloc(sizeof(*next));
 	memset(next, 0, sizeof(*next));
 	next->item = item;
@@ -159,18 +169,14 @@ singly_add_first(
 
 static
 void *
-singly_peek_first(
-	one_singly *self
-) {
+singly_peek_first(one_singly *self) {
 	sgl_item *first = self->first;
 	return first ? first->item : NULL;
 }
 
 static
 void *
-singly_get_first(
-	one_singly *self
-) {
+singly_get_first(one_singly *self) {
 	sgl_item *first = self->first;
 	if (!first)
 		return NULL;
@@ -183,10 +189,7 @@ singly_get_first(
 
 static
 one_singly *
-singly_add_last(
-	one_singly *self,
-	void *item
-) {
+singly_add_last(one_singly *self, void *item) {
 	sgl_item *next = tsmalloc(sizeof(*next));
 	memset(next, 0, sizeof(*next));
 	next->item = item;
@@ -207,9 +210,7 @@ singly_add_last(
 
 static
 void *
-singly_peek_last(
-	one_singly *self
-) {
+singly_peek_last(one_singly *self) {
 	sgl_item *curr = self->first;
 	if (!curr)
 		return NULL;
@@ -224,9 +225,7 @@ singly_peek_last(
 
 static
 void *
-singly_get_last(
-	one_singly *self
-) {
+singly_get_last(one_singly *self) {
 	sgl_item *curr = self->first;
 	if (!curr)
 		return NULL;
@@ -254,9 +253,7 @@ singly_get_last(
 
 static
 int
-singly_count(
-	one_singly *self
-) {
+singly_count(one_singly *self) {
 	int count = 0;
 	sgl_item *curr = self->first;
 	while (curr) {
@@ -268,9 +265,7 @@ singly_count(
 
 static
 int
-singly_purge(
-	one_singly *self
-) {
+singly_purge(one_singly *self) {
 	int count = 0;
 	sgl_item *curr = self->first;
 	self->first = NULL;
@@ -291,10 +286,7 @@ singly_purge(
 
 static
 one_doubly *
-doubly_add_first(
-	one_doubly *self,
-	void *item
-) {
+doubly_add_first(one_doubly *self, void *item) {
 	dbl_item *first = tsmalloc(sizeof(*first));
 	memset(first, 0, sizeof(*first));
 	first->item = item;
@@ -315,17 +307,13 @@ doubly_add_first(
 
 static
 void *
-doubly_peek_first(
-	one_doubly *self
-) {
+doubly_peek_first(one_doubly *self) {
 	return self->first ? self->first->item : NULL;
 }
 
 static
 void *
-doubly_get_first(
-	one_doubly *self
-) {
+doubly_get_first(one_doubly *self) {
 	if (!self->first)
 		return NULL;
 
@@ -344,10 +332,7 @@ doubly_get_first(
 
 static
 one_doubly *
-doubly_add_last(
-	one_doubly *self,
-	void *item
-) {
+doubly_add_last(one_doubly *self, void *item) {
 	dbl_item *last = tsmalloc(sizeof(*last));
 	memset(last, 0, sizeof(*last));
 	last->item = item;
@@ -368,17 +353,13 @@ doubly_add_last(
 
 static
 void *
-doubly_peek_last(
-	one_doubly *self
-) {
+doubly_peek_last(one_doubly *self) {
 	return self->last ? self->last->item : NULL;
 }
 
 static
 void *
-doubly_get_last(
-	one_doubly *self
-) {
+doubly_get_last(one_doubly *self) {
 	if (!self->last)
 		return NULL;
 
@@ -401,9 +382,7 @@ doubly_get_last(
 
 static
 int
-doubly_count(
-	one_doubly *self
-) {
+doubly_count(one_doubly *self) {
 	int count = 0;
 	dbl_item *curr = self->first;
 	while (curr) {
@@ -415,9 +394,7 @@ doubly_count(
 
 static
 int
-doubly_purge(
-	one_doubly *self
-) {
+doubly_purge(one_doubly *self) {
 	int count = 0;
 	dbl_item *curr = self->first;
 	self->first = NULL;
@@ -479,9 +456,7 @@ doubly_purge(
 
 static
 int
-alist_purge(
-	one_block *xs
-) {
+alist_purge(one_block *xs) {
 	int ret = xs->u.acc.used;
 	xs->u.acc.used = 0;
 	memset(xs->u.acc.list, 0, ret * sizeof(uintptr_t));
@@ -495,10 +470,7 @@ alist_purge(
 
 static
 one_block *
-alist_cons(
-	one_block *xs,
-	uintptr_t p
-) {
+alist_cons(one_block *xs, uintptr_t p) {
 	if (xs->u.acc.used == xs->u.acc.capacity) {
 		int lena = xs->u.acc.capacity * sizeof(uintptr_t);
 		one_block *new = tsmalloc(sizeof(*xs));
@@ -516,7 +488,6 @@ alist_cons(
 	return xs;
 }
 
-
 /*
  * create a new alist of the contents from inclusive->to exclusive.
  *
@@ -532,11 +503,7 @@ alist_cons(
 
 static
 one_block *
-alist_slice(
-	one_block *xs,
-	int from_inclusive,
-	int to_exclusive
-) {
+alist_slice(one_block *xs, int from_inclusive, int to_exclusive) {
 	if (to_exclusive > xs->u.acc.used || from_inclusive < 0) {
 		fprintf(stderr,
 			"\nERROR txbone-slice: range out of bounds holds [0..%d) requested [%d..%d)\n",
@@ -641,9 +608,7 @@ alist_append(one_block *xs, one_block *ys) {
 
 static
 uintptr_t
-alist_car(
-	one_block *xs
-) {
+alist_car(one_block *xs) {
 	if (xs->u.acc.used > 0)
 		return xs->u.acc.list[0];
 	else return 0;
@@ -655,10 +620,7 @@ alist_car(
 
 static
 uintptr_t
-alist_nth(
-	one_block *xs,
-	int n
-) {
+alist_nth(one_block *xs, int n) {
 	uintptr_t atom = 0;
 	if (n >= xs->u.acc.used || n < 0)
 		fprintf(stderr,
@@ -675,11 +637,7 @@ alist_nth(
 
 static
 one_block *
-alist_setnth(
-	one_block *xs,
-	int n,
-	uintptr_t atom
-) {
+alist_setnth(one_block *xs, int n, uintptr_t atom) {
 	if (n >= xs->u.acc.used || n < 0)
 		fprintf(stderr,
 			"\nERROR txbone-setnth: index out of range %d lies outside [0..%d)\n",
@@ -689,9 +647,9 @@ alist_setnth(
 	return xs;
 }
 
-/********************************************************************
+/**
  * key comparison
- ********************************************************************/
+ */
 
 /*
  * some structures use keys to uniquely identify an item. so far
@@ -714,10 +672,7 @@ alist_setnth(
 
 static
 int
-integral_comp(
-	void *left,
-	void *right
-) {
+integral_comp(void *left, void *right) {
 	return (long)left - (long)right;
 }
 
@@ -737,103 +692,425 @@ typedef enum keycmp_result keycmp_result;
 
 static
 keycmp_result
-keycmp(
-	one_tree *self,
-	void *left,
-	void *right
-) {
+keycmp(one_tree *self, void *left, void *right) {
 	int cmp = self->fn_cmp(left, right);
 	if (cmp < 0) return LESS;
 	else if (cmp > 0) return GREATER;
 	else return EQUAL;
 }
 
-/********************************************************************
- ********************************************************************
- *
- * difficult to avoid forward references
- *
- * these should be all of the internal functions and they are
- * meant to be static.
- *
- ********************************************************************
- ********************************************************************/
 
-static
-void
-btree_node_free(one_tree *, one_node *);
-
-static
-int
-btree_node_children_free(one_tree *, one_node *);
-
-static
-one_node *
-btree_get_Node_or_parent(one_tree *, void *);
-
-static
-one_node *
-btree_get_Node_or_NULL(one_tree *, void *);
-
-static
-one_node *
-btree_make_Node(one_tree *, void *, void *);
-
-static
-int
-btree_pre_order_traversal_r(one_tree *, one_node *, void *, fn_traversal_cb);
-
-static
-int
-btree_in_order_traversal_r(one_tree *, one_node *, void *, fn_traversal_cb);
-
-static
-int
-btree_post_order_traversal_r(one_tree *, one_node *, void *, fn_traversal_cb);
-
-static
-int
-btree_height(one_tree *, one_node *);
-
-static
-int
-btree_size(one_tree *, one_node *);
-
-static
-bool
-btree_is_unbalanced(one_tree *, one_node *);
-
-static
-bool
-btree_is_scapegoat(one_tree *, one_node *);
-
-static
-bool
-btree_insert_r(one_tree *, one_node *, one_node *);
-
-static
-one_node *
-btree_rebalance_r(one_tree *, one_node *);
-
-static
-void
-btree_reset_subtree_r(one_tree *, one_node *);
-
-static
-one_node *
-btree_make_subtree_r(one_tree *, one_block *);
-
-static
-one_block *
-btree_internal_collector_r(one_tree *, one_node *, one_block *);
+/*
+ * free memory for the tree and its Nodes. returns the now invalid
+ * pointer to the old tree.
+ */
 
 one_tree *
-btree_free(
-	one_tree *self
-);
+btree_free(one_tree *self) {
+	int freed = 0;
+	if (self->root) {
+		freed += btree_node_children_free(self, self->root);
+		btree_node_free(self, self->root);
+		freed += 1;
+	}
+	memset(self, 253, sizeof(*self));
+	// tsfree(self);
+	FPRINTF_INFO fprintf(stderr, "INFO free_Tree %d nodes freed\n", freed);
+	return self;
+}
+
+/*
+ * get a node or its parent (for insertion).
+ */
+
+one_node *
+btree_get_Node_or_parent(one_tree *self, void *key) {
+	/* we can only return a NULL if the tree is empty */
+	if (!self->root)
+		return NULL;
+
+	/* walk to find node or parent */
+	one_node *prior = NULL;
+	one_node *curr = self->root;
+	while (curr) {
+		keycmp_result cmp = keycmp(self, key, curr->key);
+		prior = curr;
+		switch (cmp) {
+		case LESS:
+			curr = curr->left;
+			break;
+		case EQUAL:
+			return curr;
+		case GREATER:
+			curr = curr->right;
+			break;
+		default:
+			fprintf(stderr, "ERROR keycmp invalid key comparison result\n");
+		}
+	}
+
+	/* if NULL here then Node with key not found, pass parent back */
+	return curr
+		? curr
+		: prior;
+}
+
+/*
+ * get a node or return NULL if the key is not found. this
+ * is a wrapper over btree_get_Node_or_parent for the times
+ * we aren't wanting to insert.
+ */
+
+one_node *
+btree_get_Node_or_NULL(one_tree *self, void *key) {
+	one_node *n = btree_get_Node_or_parent(self, key);
+	if (!n) return NULL;
+	if (keycmp(self, key, n->key) != EQUAL) return NULL;
+	return n;
+}
+
+/*
+ * height (or depth) of a node in the tree. this is distance
+ * from root.
+ */
+
+int
+btree_height(one_tree *self, one_node *n) {
+	int height = 0;
+	while (n->parent) {
+		height += 1;
+		n = n->parent;
+	}
+	return height;
+}
+
+/*
+ * for analysis functions, what is the height of the node
+ * holding a key? returns -1 if the key is not found.
+ */
+
+int
+btree_height_for_key(one_tree *self, void *key) {
+	if (!key) return -1;
+	one_node *n = btree_get_Node_or_NULL(self, key);
+	if (!n) return -1;
+	return btree_height(self, n);
+}
+
+/*
+ * the number of items in the tree (or subtree).
+ */
+
+int
+btree_size(one_tree *self, one_node *n) {
+	if (!n) return 0;
+	return 1 + btree_size(self, n->left) + btree_size(self, n->right);
+}
+
+/*
+ * is the tree out of balance? determined by checking the height of
+ * the current node against the optimal size (log2(N)).
+ */
+
+bool
+btree_is_unbalanced(one_tree *self, one_node *n) {
+	int h = btree_height(self, n);
+	int s = btree_size(self, self->root);
+	return (h > ONE_REBALANCE_ALPHA * uint32_log2(s));
+}
+
+/*
+ * if the node high enough to trigger a rebalance (see
+ * btree_is_unbalanced), walk back toward root to find a node that
+ * holds more than 3/2 of its parent's children.
+ */
+
+bool
+btree_is_scapegoat(one_tree *self, one_node *n) {
+	return n && (3*btree_size(self, n) > 2*btree_size(self, n->parent));
+}
 
 /**
- * a self balancing binary search tree.
+ * tree trversal. the standard tree traversal functions. these require
+ * a client provided callback function. that function's api is
+ * documented in the library header.
+ *
+ * these are currently marked static, and and three other functions
+ * provide the external api.
+ *
+ * each traversal has a 'cap' function and the actual traversal
+ * recursion function (name suffixed _r).
+ */
+
+static
+int
+btree_pre_order_traversal_r(one_tree *self, one_node *n,
+	void *context, fn_traversal_cb fn) {
+	if (!n) return 0;
+	if (!n->deleted) fn(n->key, n->value, context, self);
+	btree_pre_order_traversal_r(self, n->left, context, fn);
+	btree_pre_order_traversal_r(self, n->right, context, fn);
+	return 1;
+}
+
+static
+int
+btree_in_order_traversal_r(one_tree *self, one_node *n,
+	void *context, fn_traversal_cb fn) {
+	if (!n) return 0;
+	btree_in_order_traversal_r(self, n->left, context, fn);
+	if (!n->deleted) fn(n->key, n->value, context, self);
+	btree_in_order_traversal_r(self, n->right, context, fn);
+	return 1;
+}
+
+static
+int
+btree_post_order_traversal_r(one_tree *self, one_node *n,
+	void *context, fn_traversal_cb fn) {
+	if (!n) return 0;
+	btree_post_order_traversal_r(self, n->left, context, fn);
+	btree_post_order_traversal_r(self, n->right, context, fn);
+	if (!n->deleted) fn(n->key, n->value, context, self);
+	return 1;
+}
+
+static
+int
+pre_order_traversal(one_tree *self, void *context, fn_traversal_cb fn) {
+	return btree_pre_order_traversal_r(self, self->root, context, fn);
+}
+
+static
+int
+in_order_traversal(one_tree *self, void *context, fn_traversal_cb fn) {
+	return btree_in_order_traversal_r(self, self->root, context, fn);
+}
+
+static
+int
+post_order_traversal(one_tree *self, void *context, fn_traversal_cb fn) {
+	return btree_post_order_traversal_r(self, self->root, context, fn);
+}
+
+/**
+ * keys and values are packed into nodes, and the tree is composed of
+ * nodes.
+ */
+
+/*
+ * create a new unlinked Node
+ */
+
+one_node *
+btree_make_Node(one_tree *self, void *key, void *value) {
+	one_node *n = tsmalloc(sizeof(*n));
+	memset(n, 0, sizeof(*n));
+	n->key = key;
+	n->value = value;
+	return n;
+}
+
+/*
+ * free an individual Node, warning if it has children and clearing
+ * the parent's link to it if there is one.
+ */
+
+void
+btree_node_free(one_tree *self, one_node *n) {
+	/* warn on linked children but allow it through for now */
+	if (n->left || n->right) {
+		fprintf(stderr, "WARNING free_Node: freed a Node with linked children\n");
+	}
+	/* unlink from parent */
+	if (n->parent) {
+		if (n->parent->left == n) n->parent->left = NULL;
+		if (n->parent->right == n) n->parent->right = NULL;
+	}
+	/* scrub and free */
+	memset(n, 253, sizeof(*n));
+	tsfree(n);
+}
+
+/*
+ * free child Nodes.
+ */
+
+int
+btree_node_children_free(one_tree *self, one_node *n) {
+	if (!n) return 0;
+	int freed = 0;
+	if (n->left) {
+		freed += btree_node_children_free(self, n->left);
+		n->left->left = NULL;
+		n->left->right =NULL;
+		freed += 1;
+		btree_node_free(self, n->left);
+	}
+	if (n->right) {
+		freed += btree_node_children_free(self, n->right);
+		n->right->left = NULL;
+		n->right->right =NULL;
+		freed += 1;
+		btree_node_free(self, n->right);
+	}
+	return freed + 1;
+}
+
+
+/*
+ * recursively snip off all the branches of a (sub)tree for the
+ * rebuild.
+ */
+
+void
+btree_reset_subtree_r(one_tree *self, one_node *subtree) {
+	if (!subtree)
+		return;
+
+	if (subtree->left) {
+		btree_reset_subtree_r(self, subtree->left);
+		subtree->left = NULL;
+	}
+	if (subtree->right) {
+		btree_reset_subtree_r(self, subtree->right);
+		subtree->right = NULL;
+	}
+	if (subtree->parent) {
+		if (subtree->parent->left && subtree->parent->left == subtree)
+			subtree->parent->left = NULL;
+		if (subtree->parent->right && subtree->parent->right == subtree)
+			subtree->parent->right = NULL;
+		subtree->parent = NULL;
+	}
+
+	btree_node_free(self, subtree);
+}
+
+/*
+ * recursively go through key ordered list of nodes to rebuild the
+ * tree (or subtree) in balance.
+ *
+ * given an ordered list of nodes, create a subtree from the center
+ * node's key & value, building out the left and right child branches
+ * by halving the list repeatedly. this halving via sub_alist creates
+ * a new alist with duplicate node pointers. we delete these new lists
+ * as soon as we are finished with them.
+ *
+ * it would be possible to delete the old node after the new node is
+ * built here instead of doing a sweep over the whole list again
+ * later in balancing, but for now we'll leave them alone.
+ */
+
+one_node *
+btree_make_subtree_r(one_tree *self, one_block *nodes) {
+	int k = count(nodes);
+	if (k == 0)
+		return NULL;
+
+	/* next subtree root */
+	int j = k/2;
+	one_node *old = (one_node *)nth(nodes, j);
+	one_node *new = btree_make_Node(self, old->key, old->value);
+
+	/* and to either side of the root, we have further subtrees */
+	one_block *left_side = slice(nodes, 0, j);
+	one_block *right_side = slice(nodes, j+1, k);
+
+	/* so do the left children */
+	new->left = btree_make_subtree_r(self, left_side);
+	free_one(left_side);
+	if (new->left)
+		new->left->parent = new;
+
+	/* and the right children */
+	new->right = btree_make_subtree_r(self, right_side);
+	free_one(right_side);
+	if (new->right)
+		new->right->parent = new;
+
+	/* and return our subtree root */
+	return new;
+}
+
+/*
+ * an in order traversal recursively collect all the non-deleted
+ * nodes for rebalancing.
+ */
+
+one_block *
+btree_node_collector(one_tree *self, one_node *n, one_block *xs) {
+	if (!n)
+		return xs;
+	xs = btree_node_collector(self, n->left, xs);
+	if (!n->deleted)
+		xs = cons(xs, (uintptr_t)n);
+	xs = btree_node_collector(self, n->right, xs);
+	return xs;
+}
+
+/*
+ * once we know where we need to rebalance from, use the old (sub)tree
+ * to build a balanced (sub)tree and and replace the old (sub)tree.
+ *
+ * to rebalance the whole Tree, pass self->root as the subtree.
+ */
+
+one_node *
+btree_rebalance_r(one_tree *self, one_node *subtree) {
+
+	FPRINTF_INFO fprintf(stderr, "INFO rebalance begin rebalancing\n");
+
+	/* remember where to hang the subtree. if parent is NULL,
+	 * this is root. if it isn't remember if the subtree was
+	 * on the left or right. */
+
+	one_node *parent = subtree->parent;
+	bool left_side = (parent && parent->left == subtree);
+
+	/* do an in_order traversal to get an alist of all non-deleted
+	 * nodes in the (sub)tree rooted at *subtree.
+	 *
+	 * this can be very slow when running with sanitizers and
+	 * debugging help. 10k items over 10 seconds vs 10k items
+	 * over 2 seconds.
+	 *
+	 * and then there's the additinal memory consumed. we need
+	 * to start deleting once we're done with a node.
+	 */
+
+	one_block *xs = make_one(alist);
+	xs = btree_node_collector(self, subtree, xs);
+
+	/* build a new subtree by going over the node list in the
+	 * optimal order for insertion: that is, repeatedly halving
+	 * the list to create the ordered list and then linking the
+	 * nodes into a subtree. */
+
+	FPRINTF_INFO fprintf(stderr, "INFO rebalance nodes in subtree %d\n", count(xs));
+	one_node *new_subtree = btree_make_subtree_r(self, xs);
+	free_one(xs);
+
+	/* destroy the old nodes and replace them with the new
+	 * nodes. */
+
+	btree_reset_subtree_r(self, subtree);
+
+	if (!parent) {
+		self->root = new_subtree;
+	} else {
+		if (left_side) parent->left = new_subtree;
+		else           parent->right = new_subtree;
+		self->partial_rebalances += 1;
+	}
+
+	FPRINTF_INFO fprintf(stderr, "INFO rebalance end rebalancing\n");
+	return new_subtree;
+}
+
+/**
+ * the key:value store is built on a self balancing binary search
+ * tree.
  *
  * i originally tried to use sedgewick's left-leaning red-black tree
  * but even after converting his java to c i can't get a working
@@ -893,18 +1170,12 @@ btree_free(
  * of the nodes and relinking them.
  */
 
-/********************************************************************
- * create and destroy a tree
- ********************************************************************/
-
 /*
  * full Tree rebalance.
  */
 
 one_tree *
-btree_rebalance(
-	one_tree *self
-) {
+btree_rebalance(one_tree *self) {
 	if (!self || !self->root)
 		return self;
 	btree_rebalance_r(self, self->root);
@@ -927,114 +1198,29 @@ btree_rebalance(
 }
 
 /*
- * free memory for the tree and its Nodes. returns the now invalid
- * pointer to the old tree.
+ * a full tree rebalance is triggered by deletes exceeding some percenta
+ * of total nodes or inserts being currently double nodes. post
+ * insert depth checks are done on insert.
  */
 
-one_tree *
-btree_free(
-	one_tree *self
-) {
-	int freed = 0;
-	if (self->root) {
-		freed += btree_node_children_free(self, self->root);
-		btree_node_free(self, self->root);
-		freed += 1;
-	}
-	memset(self, 253, sizeof(*self));
-	// tsfree(self);
-	FPRINTF_INFO fprintf(stderr, "INFO free_Tree %d nodes freed\n", freed);
-	return self;
-}
-
-
-/********************************************************************
- * insert a new Node into a Tree
- ********************************************************************/
-
-one_node *
-btree_get_Node_or_parent(
-	one_tree *self,
-	void *key
-) {
-	/* we can only return a NULL if the tree is empty */
-	if (!self->root)
-		return NULL;
-
-	/* walk to find node or parent */
-	one_node *prior = NULL;
-	one_node *curr = self->root;
-	while (curr) {
-		keycmp_result cmp = keycmp(self, key, curr->key);
-		prior = curr;
-		switch (cmp) {
-		case LESS:
-			curr = curr->left;
-			break;
-		case EQUAL:
-			return curr;
-		case GREATER:
-			curr = curr->right;
-			break;
-		default:
-			fprintf(stderr, "ERROR keycmp invalid key comparison result\n");
-		}
-	}
-
-	/* if NULL here then Node with key not found, pass parent back */
-	return curr
-		? curr
-		: prior;
-}
-
-one_node *
-btree_get_Node_or_NULL(
-	one_tree *self,
-	void *key
-
-) {
-	one_node *n = btree_get_Node_or_parent(self, key);
-	if (!n) return NULL;
-	if (keycmp(self, key, n->key) != EQUAL) return NULL;
-	return n;
-}
-
-int
-btree_height(one_tree *self, one_node *n) {
-	int height = 0;
-	while (n->parent) {
-		height += 1;
-		n = n->parent;
-	}
-	return height;
-}
-
-int
-btree_height_for_key(one_tree *self, void *key) {
-	if (!key) return -1;
-	one_node *n = btree_get_Node_or_NULL(self, key);
-	if (!n) return -1;
-	return btree_height(self, n);
-}
-
-int
-btree_size(one_tree *self, one_node *n) {
-	if (!n) return 0;
-	return 1 + btree_size(self, n->left) + btree_size(self, n->right);
-}
-
 bool
-btree_is_unbalanced(one_tree *self, one_node *n) {
-	int h = btree_height(self, n);
-	int s = btree_size(self, self->root);
-	return (h > ONE_REBALANCE_ALPHA * uint32_log2(s));
-}
+btree_should_full_rebalance(one_tree *self) {
+	/* empty tree or less than (arbitrarily) 64 nodes, don't bother */
+	if (!self->root || self->nodes < 64)
+		return false;
 
-bool
-btree_is_scapegoat(one_tree *self, one_node *n) {
-	return n && (3*btree_size(self, n) > 2*btree_size(self, n->parent));
-}
+	/* have we done enough deletes? */
+	if (100*((float)self->marked_deleted/self->nodes) >
+		ONE_REBALANCE_DELETE_PERCENT)
+		return true;
 
+	/* too much churn */
+	if (self->inserts > 2 * self->nodes)
+		return true;
+
+	return false;
+}
+
 /*
  * keys and values are passed as if they are pointers, but they do not
  * have to be.
@@ -1045,12 +1231,12 @@ btree_is_scapegoat(one_tree *self, one_node *n) {
  * see the comments on get() below for more on pointers.
  */
 
+/**
+ * insert a new node into the tree
+ */
+
 bool
-btree_insert_r(
-	one_tree *self,
-	one_node *parent,
-	one_node *new
-) {
+btree_insert_r(one_tree *self, one_node *parent, one_node *new) {
 
 	/* tree is empty */
 	if (!parent) {
@@ -1093,11 +1279,7 @@ btree_insert_r(
 }
 
 bool
-btree_insert(
-	one_tree *self,
-	void *key,
-	void *value
-) {
+btree_insert(one_tree *self, void *key, void *value) {
 	one_node *parent = btree_get_Node_or_parent(self, key);
 	one_node *n = btree_make_Node(self, key, value);
 	bool did = btree_insert_r(self, parent, n);
@@ -1126,21 +1308,17 @@ btree_insert(
 	return did;
 }
 
-/********************************************************************
- * delete a Node from the Tree
- ********************************************************************/
-bool
-btree_should_full_rebalance(one_tree *self);
+/**
+ * delete a node from the tree.
+ */
+
 /*
  * most deletes are deferred. rather than juggle pointers we'll drop the
  * deleted Nodes during a rebalance.
  */
 
 bool
-btree_delete(
-	one_tree *self,
-	void *key
-) {
+btree_delete(one_tree *self, void *key) {
 	one_node *n = btree_get_Node_or_NULL(self, key);
 	if (n && n->deleted) {
 		fprintf(stderr, "WARNING delete: key not found in tree.\n");
@@ -1193,10 +1371,9 @@ btree_delete(
 	return true;
 }
 
-
-/********************************************************************
+/**
  * get and return the value associated with a key
- ********************************************************************/
+ */
 
 /*
  * while the code reads as if key and value are pointers, that is
@@ -1210,30 +1387,22 @@ btree_delete(
  */
 
 void *
-btree_get(
-	one_tree *self,
-	void *key
-) {
+btree_get(one_tree *self, void *key) {
 	one_node *n = btree_get_Node_or_NULL(self, key);
 	if (!n || n->deleted) return NULL;
 	return n->value;
 }
 
-
-/********************************************************************
+/**
  * update the value associated with a key
- ********************************************************************/
+ */
 
 /*
  * if value is a pointer, this isn't strictly needed.
  */
 
 bool
-btree_update(
-	one_tree *self,
-	void *key,
-	void *value
-) {
+btree_update(one_tree *self, void *key, void *value) {
 	one_node *n = btree_get_Node_or_NULL(self, key);
 	if (n == NULL) return false;
 	n->value = value;
@@ -1241,403 +1410,26 @@ btree_update(
 	return true;
 }
 
-/********************************************************************
+/**
  * predicates and queries on the Tree or its contents
- ********************************************************************/
+ */
 
 bool
-btree_is_empty(
-	one_tree *self
-) {
+btree_is_empty(one_tree *self) {
 	return self->nodes == 0;
 }
 
 int
-btree_count(
-	one_tree* self
-) {
+btree_count(one_tree* self) {
 	return self->nodes;
 }
 
 bool
-btree_exists(
-	one_tree *self,
-	void *key
-) {
+btree_exists(one_tree *self, void *key) {
 	one_node *n = btree_get_Node_or_NULL(self, key);
 	if (!n || n->deleted) return NULL;
 	return n;
 }
-
-
-/********************************************************************
- * the standard tree traversal functions. these require a client
- * provided callback function. that function's api is documented in
- * the library header.
- ********************************************************************/
-
-int
-pre_order_traversal(
-	one_tree *self,
-	void *context,
-	fn_traversal_cb fn
-) {
-
-	return btree_pre_order_traversal_r(self, self->root, context, fn);
-}
-
-/*
- * in_order_traversal is also used during Tree rebalancing.
- */
-
-int
-in_order_traversal(
-	one_tree *self,
-	void *context,
-	fn_traversal_cb fn
-) {
-	return btree_in_order_traversal_r(self, self->root, context, fn);
-}
-
-int
-post_order_traversal(
-	one_tree *self,
-	void *context,
-	fn_traversal_cb fn
-) {
-	return btree_post_order_traversal_r(self, self->root, context, fn);
-}
-
-
-/********************************************************************
- ********************************************************************
- *
- * client traversal recursions
- *
- ********************************************************************
- ********************************************************************/
-
-int
-btree_pre_order_traversal_r(
-	one_tree *self,
-	one_node *node,
-	void *context,
-	fn_traversal_cb fn
-) {
-	if (!node) return 0;
-	if (!node->deleted) fn(node->key, node->value, context, self);
-	btree_pre_order_traversal_r(self, node->left, context, fn);
-	btree_pre_order_traversal_r(self, node->right, context, fn);
-	return 1;
-}
-
-int
-btree_in_order_traversal_r(
-	one_tree *self,
-	one_node *n,
-	void *context,
-	fn_traversal_cb fn
-) {
-	if (!n) return 0;
-	btree_in_order_traversal_r(self, n->left, context, fn);
-	if (!n->deleted) fn(n->key, n->value, context, self);
-	btree_in_order_traversal_r(self, n->right, context, fn);
-	return 1;
-}
-
-int
-btree_post_order_traversal_r(
-	one_tree *self,
-	one_node *n,
-	void *context,
-	fn_traversal_cb fn
-) {
-	if (!n) return 0;
-	btree_post_order_traversal_r(self, n->left, context, fn);
-	btree_post_order_traversal_r(self, n->right, context, fn);
-	if (!n->deleted) fn(n->key, n->value, context, self);
-	return 1;
-}
-
-
-/********************************************************************
- ********************************************************************
- *
- * Node creation and deletion
- *
- ********************************************************************
- ********************************************************************/
-
-/*
- * create a new unlinked Node
- */
-
-one_node *
-btree_make_Node(
-	one_tree *self,
-	void *key,
-	void *value
-) {
-	one_node *n = tsmalloc(sizeof(*n));
-	memset(n, 0, sizeof(*n));
-	n->key = key;
-	n->value = value;
-	return n;
-}
-
-/*
- * free an individual Node, warning if it has children and
- * clearing the parent's link to it if there is one.
- */
-
-void
-btree_node_free(
-	one_tree *self,
-	one_node *n
-) {
-	/* warn on linked children but allow it through for now */
-	if (n->left || n->right) {
-		fprintf(stderr, "WARNING free_Node: freed a Node with linked children\n");
-	}
-	/* unlink from parent */
-	if (n->parent) {
-		if (n->parent->left == n) n->parent->left = NULL;
-		if (n->parent->right == n) n->parent->right = NULL;
-	}
-	/* scrub and free */
-	memset(n, 253, sizeof(*n));
-	tsfree(n);
-}
-
-/*
- * free child Nodes.
- */
-
-int
-btree_node_children_free(
-	one_tree *self,
-	one_node *n
-) {
-	if (!n) return 0;
-	int freed = 0;
-	if (n->left) {
-		freed += btree_node_children_free(self, n->left);
-		n->left->left = NULL;
-		n->left->right =NULL;
-		freed += 1;
-		btree_node_free(self, n->left);
-	}
-	if (n->right) {
-		freed += btree_node_children_free(self, n->right);
-		n->right->left = NULL;
-		n->right->right =NULL;
-		freed += 1;
-		btree_node_free(self, n->right);
-	}
-	return freed + 1;
-}
-
-
-/********************************************************************
- ********************************************************************
- *
- * rebalancing and analysis
- *
- ********************************************************************
- ********************************************************************/
-
-/*
- * recursively snip off all the branches of a (sub)tree for the
- * rebuild.
- */
-
-void
-btree_reset_subtree_r(one_tree *self, one_node *subtree) {
-	if (!subtree)
-		return;
-
-	if (subtree->left) {
-		btree_reset_subtree_r(self, subtree->left);
-		subtree->left = NULL;
-	}
-	if (subtree->right) {
-		btree_reset_subtree_r(self, subtree->right);
-		subtree->right = NULL;
-	}
-	if (subtree->parent) {
-		if (subtree->parent->left && subtree->parent->left == subtree)
-			subtree->parent->left = NULL;
-		if (subtree->parent->right && subtree->parent->right == subtree)
-			subtree->parent->right = NULL;
-		subtree->parent = NULL;
-	}
-
-	btree_node_free(self, subtree);
-}
-
-/*
- * recursively go through key ordered list of nodes to rebuild the
- * tree (or subtree) in balance.
- *
- * given an ordered list of nodes, create a subtree from the center
- * node's key & value, building out the left and right child branches
- * by halving the list repeatedly. this halving via sub_alist creates
- * a new alist with duplicate node pointers. we delete these new lists
- * as soon as we are finished with them.
- *
- * it would be possible to delete the old node after the new node is
- * built here instead of doing a sweep over the whole list again
- * later in balancing, but for now we'll leave them alone.
- */
-
-one_node *
-btree_make_subtree_r(
-	one_tree *self,
-	one_block *nodes
-) {
-	int k = count(nodes);
-	if (k == 0)
-		return NULL;
-
-	/* next subtree root */
-	int j = k/2;
-	one_node *old = (one_node *)nth(nodes, j);
-	one_node *new = btree_make_Node(self, old->key, old->value);
-
-	/* and to either side of the root, we have further subtrees */
-	one_block *left_side = slice(nodes, 0, j);
-	one_block *right_side = slice(nodes, j+1, k);
-
-	/* so do the left children */
-	new->left = btree_make_subtree_r(self, left_side);
-	free_one(left_side);
-	if (new->left)
-		new->left->parent = new;
-
-	/* and the right children */
-	new->right = btree_make_subtree_r(self, right_side);
-	free_one(right_side);
-	if (new->right)
-		new->right->parent = new;
-
-	/* and return our subtree root */
-	return new;
-}
-
-/*
- * an in order traversal that collects an alist of Nodes. this is
- * useful for rebalancing and tree analysis. note that deleted Nodes
- * are not collected, but their children are.
- */
-
-one_block *
-btree_internal_collector_r(
-	one_tree *self,
-	one_node *n,
-	one_block *xs
-) {
-	if (!n)
-		return xs;
-	xs = btree_internal_collector_r(self, n->left, xs);
-	if (!n->deleted)
-		xs = cons(xs, (uintptr_t)n);
-	xs = btree_internal_collector_r(self, n->right, xs);
-	return xs;
-}
-
-/*
- * once we know where we need to rebalance from, use the old (sub)tree
- * to build a balanced (sub)tree and and replace the old (sub)tree.
- *
- * to rebalance the whole Tree, pass self->root as the subtree.
- */
-
-one_node *
-btree_rebalance_r(
-	one_tree *self,
-	one_node *subtree
-) {
-	/* if (!self->rebalance_allowed) { */
-	/*      fprintf(stderr, "\n*** REBALANCE SUPPRESSED ***\n"); */
-	/*      return false; */
-	/* } */
-
-	FPRINTF_INFO fprintf(stderr, "INFO rebalance begin rebalancing\n");
-
-	/* remember where to hang the subtree. if parent is NULL,
-	 * this is root. if it isn't remember if the subtree was
-	 * on the left or right. */
-
-	one_node *parent = subtree->parent;
-	bool left_side = (parent && parent->left == subtree);
-
-	/* do an in_order traversal to get an alist of all non-deleted
-	 * nodes in the (sub)tree rooted at *subtree.
-	 *
-	 * this can be very slow when running with sanitizers and
-	 * debugging help. 10k items over 10 seconds vs 10k items
-	 * over 2 seconds.
-	 *
-	 * and then there's the additinal memory consumed. we need
-	 * to start deleting once we're done with a node.
-	 */
-
-	one_block *xs = make_one(alist);
-	xs = btree_internal_collector_r(self, subtree, xs);
-
-	/* build a new subtree by going over the node list in the
-	 * optimal order for insertion: that is, repeatedly halving
-	 * the list to create the ordered list and then linking the
-	 * nodes into a subtree. */
-
-	FPRINTF_INFO fprintf(stderr, "INFO rebalance nodes in subtree %d\n", count(xs));
-	one_node *new_subtree = btree_make_subtree_r(self, xs);
-	free_one(xs);
-
-	/* destroy the old nodes and replace them with the new
-	 * nodes. */
-
-	btree_reset_subtree_r(self, subtree);
-
-	if (!parent) {
-		self->root = new_subtree;
-	} else {
-		if (left_side) parent->left = new_subtree;
-		else           parent->right = new_subtree;
-		self->partial_rebalances += 1;
-	}
-
-	FPRINTF_INFO fprintf(stderr, "INFO rebalance end rebalancing\n");
-	return new_subtree;
-}
-
-/**
- * a full tree rebalance is triggered by deletes exceeding some percenta
- * of total nodes or inserts being currently double nodes. post
- * insert depth checks are done on insert.
- */
-
-bool
-btree_should_full_rebalance(one_tree *self) {
-	/* empty tree or less than (arbitrarily) 64 nodes, don't bother */
-	if (!self->root || self->nodes < 64)
-		return false;
-
-	/* have we done enough deletes? */
-	if (100*((float)self->marked_deleted/self->nodes) >
-		ONE_REBALANCE_DELETE_PERCENT)
-		return true;
-
-	/* too much churn */
-	if (self->inserts > 2 * self->nodes)
-		return true;
-
-	return false;
-}
-
-
-
-
 
 /**
  * the unified or generic api.
@@ -1674,6 +1466,10 @@ btree_should_full_rebalance(one_tree *self) {
  * `one_block` is passed.
  */
 
+/**
+ * structure creation, duplication, and deletion
+ */
+
 /**
  * make_one
  *
@@ -1807,6 +1603,58 @@ make_one_keyed(
 }
 
 /**
+ * clone -- alist
+ *
+ * returns a new copy of an alist.
+ */
+
+one_block *
+clone(
+	one_block *ob
+) {
+	if (ob->isa != alist) {
+		fprintf(stderr, "\nERROR txbone-clone: unknown or unsupported type %d %s\n",
+			ob->isa, ob->tag);
+	}
+	return alist_clone(ob);
+}
+
+/**
+ * purge -- singly, stack, doubly, queue, deque, alist
+ *
+ * empty the data structure. frees internal resources for all items
+ * managed by the structure. client data is left alone. this has no
+ * meaning for a dynamic array.
+ *
+ * returns the number of items purged or -1 on any detected error.
+ */
+
+int
+purge(
+	one_block *ob
+) {
+	switch (ob->isa) {
+
+	case singly:
+	case stack:
+		return singly_purge(&ob->u.sgl);
+
+	case doubly:
+	case queue:
+	case deque:
+		return doubly_purge(&ob->u.dbl);
+
+	case alist:
+		return alist_purge(ob);
+
+	default:
+		fprintf(stderr, "\nERROR txbone-purge: unknown or unsupported type %d %s\n",
+			ob->isa, ob->tag);
+		return -1;
+	}
+}
+
+/**
  * free_one
  *
  * destroy an instance of a data structure, releasing library managed
@@ -1866,6 +1714,10 @@ free_one(
 	return NULL;
 }
 
+/**
+ * singly and doubly linked list functions
+ */
+
 /**
  * add_first -- singly, doubly.
  *
@@ -2038,6 +1890,11 @@ get_last(
 		return NULL;
 	}
 }
+
+/**
+ * functions common to all (most) structures, for information
+ * about the structure or its state.
+ */
 
 /**
  * count -- singly, doubly, queue, deque, alist
@@ -2109,41 +1966,6 @@ is_empty(
 		fprintf(stderr, "\nERROR txbone-empty: unknown or unsupported type %d %s\n",
 			ob->isa, ob->tag);
 		return false;
-	}
-}
-
-/**
- * purge -- singly, stack, doubly, queue, deque, alist
- *
- * empty the data structure. frees internal resources for all items
- * managed by the structure. client data is left alone. this has no
- * meaning for a dynamic array.
- *
- * returns the number of items purged or -1 on any detected error.
- */
-
-int
-purge(
-	one_block *ob
-) {
-	switch (ob->isa) {
-
-	case singly:
-	case stack:
-		return singly_purge(&ob->u.sgl);
-
-	case doubly:
-	case queue:
-	case deque:
-		return doubly_purge(&ob->u.dbl);
-
-	case alist:
-		return alist_purge(ob);
-
-	default:
-		fprintf(stderr, "\nERROR txbone-purge: unknown or unsupported type %d %s\n",
-			ob->isa, ob->tag);
-		return -1;
 	}
 }
 
@@ -2727,55 +2549,20 @@ nth(
 	}
 	return alist_nth(ob, n);
 }
-
-/**
- * clone -- alist
- *
- * returns a new copy of alist.
- */
-
-one_block *
-clone(
-	one_block *ob
-) {
-	if (ob->isa != alist) {
-		fprintf(stderr, "\nERROR txbone-clone: unknown or unsupported type %d %s\n",
-			ob->isa, ob->tag);
-	}
-	return alist_clone(ob);
-}
-
-/**
- * iterate -- alist
- *
- * return the item at index curr and increments the index. when the
- * index is out of bounds, it is set to -1 and 0 is returned.
- *
- * no warning is issued if the initial index is out of bounds.
- */
-
-uintptr_t
-iterate(
-	one_block *ob,
-	int *curr
-) {
-	if (ob->isa != alist) {
-		fprintf(stderr, "\nERROR txbone-iterate: unknown or unsupported type %d %s\n",
-			ob->isa, ob->tag);
-	}
-	return alist_iterate(ob, curr);
-}
 
-
-
-
-/********************************************************************
- ********************************************************************
+/**
+ * priority queue functions
  *
- * external api and their immediate helpers
+ * priorities are signed longs. the queue is maintained in
+ * order by priority, and then first in first out for items
+ * of equal priority.
+ */
+
+/**
+ * add_with_priority -- pqueue
  *
- ********************************************************************
- ********************************************************************/
+ * add the item to its spot in the queue based on its priority.
+ */
 
 one_block *
 add_with_priority(
@@ -2786,6 +2573,14 @@ add_with_priority(
 	return NULL;
 }
 
+/**
+ * add_with_max -- pqueue
+ *
+ * add the item as the maximum item in the queue. this means priority
+ * equal to the highest priority found, but positioned as the first
+ * item instead of the next item.
+ */
+
 one_block *
 add_with_max(
 	one_block *ob,
@@ -2793,6 +2588,13 @@ add_with_max(
 ) {
 	return NULL;
 }
+
+/**
+ * add_with_min -- pqueue
+ *
+ * as in add_with_max but the priority is equal to the lowest priority
+ * found and positioned as the last item.
+ */
 
 one_block *
 add_with_min(
@@ -2802,6 +2604,12 @@ add_with_min(
 	return NULL;
 }
 
+/**
+ * max_priority -- pqueue
+ *
+ * maximum found or 0 if the queue is empty.
+ */
+
 long
 max_priority(
 	one_block *ob
@@ -2809,12 +2617,32 @@ max_priority(
 	return 0;
 }
 
+/**
+ * min_priority -- pqueue
+ *
+ * minimum found or 0 if the queue is empty.
+ */
+
 long
 min_priority(
 	one_block *ob
 ) {
 	return 0;
 }
+
+/**
+ * get_ and peek_max -- pqueue
+ *
+ * return the oldest item at the highest priority in the pqueue. peek
+ * leaves the item in place.
+ *
+ * the interface is a bit different than usual as the priority and
+ * item fields are pass by reference. ie:
+ *
+ * get_max(pq, &pri, &item);
+ *
+ * returns a boolean false if the queue was empty.
+ */
 
 bool
 get_max(
@@ -2826,7 +2654,7 @@ get_max(
 }
 
 bool
-get_min(
+peek_max(
 	one_block *ob,
 	long *pri,
 	void *item
@@ -2834,8 +2662,22 @@ get_min(
 	return NULL;
 }
 
+/**
+ * get_ and peek_min -- pqueue
+ *
+ * return the oldest item at the lowest priority in the pqueue. peek
+ * leaves the item in place.
+ *
+ * the interface is a bit different than usual as the priority and
+ * item fields are pass by reference. ie:
+ *
+ * get_min(pq, &pri, &item);
+ *
+ * returns a boolean false if the queue was empty.
+ */
+
 bool
-peek_max(
+get_min(
 	one_block *ob,
 	long *pri,
 	void *item
@@ -2856,12 +2698,19 @@ peek_min(
  * key:value store
  */
 
+/**
+ * insert, get, update, delete -- keyval
+ *
+ * these are the standard 'io' functions for any indexed access
+ * method. all except get return a boolean indicating success or
+ * failure.
+ *
+ * delete returns the item or NULL on error. remember that the item
+ * could be NULL as we do no special handling of them.
+ */
+
 bool
-insert(
-	one_block *ob,
-	void *key,
-	void *value
-) {
+insert(one_block *ob, void *key, void *value) {
 	switch (ob->isa) {
 	case keyval:
 		return btree_insert(&ob->u.kvl, key, value);
@@ -2874,10 +2723,7 @@ insert(
 }
 
 void *
-get(
-	one_block *ob,
-	void *key
-) {
+get(one_block *ob, void *key) {
 	switch (ob->isa) {
 	case keyval:
 		return btree_get(&ob->u.kvl, key);
@@ -2889,29 +2735,21 @@ get(
 	}
 }
 
-one_block *
-delete (
-	one_block *ob,
-	void *key
-) {
+bool
+delete (one_block *ob, void *key) {
 	switch (ob->isa) {
 	case keyval:
-		btree_delete(&ob->u.kvl, key);
-		return ob;
+		return btree_delete(&ob->u.kvl, key);
 
 	default:
 		fprintf(stderr, "\nERROR txbone-delete: unknown or unsupported type %d %s\n",
 			ob->isa, ob->tag);
-		return NULL;
+		return false;
 	}
 }
 
 bool
-update(
-	one_block *ob,
-	void *key,
-	void *value
-) {
+update(one_block *ob, void *key, void *value) {
 	switch (ob->isa) {
 	case keyval:
 		return btree_update(&ob->u.kvl, key, value);
@@ -2923,10 +2761,56 @@ update(
 	}
 }
 
+/**
+ * exists -- keyval
+ *
+ * does an item with a particular key exist in the key:value store?
+ */
+
+bool
+exists(one_block *ob, void *key) {
+	switch (ob->isa) {
+	case keyval:
+		return btree_exists(&ob->u.kvl, key);
+
+	default:
+		fprintf(stderr, "\nERROR txbone-exists: unknown or unsupported type %d %s\n",
+			ob->isa, ob->tag);
+		return false;
+	}
+}
+
+/**
+ * functions that collect keys, values, or those that can iterate over the
+ * items in a structure.
+ */
+
+/**
+ * iterate -- alist
+ *
+ * return the item at index curr and increments the index. when the
+ * index is out of bounds, it is set to -1 and 0 is returned.
+ *
+ * no warning is issued if the initial index is out of bounds.
+ */
+
+uintptr_t
+iterate(one_block *ob, int *curr) {
+	if (ob->isa != alist) {
+		fprintf(stderr, "\nERROR txbone-iterate: unknown or unsupported type %d %s\n",
+			ob->isa, ob->tag);
+	}
+	return alist_iterate(ob, curr);
+}
+
+/**
+ * keys -- keyval
+ *
+ * return an alist of all the current keys in order.
+ */
+
 one_block *
-keys(
-	one_block *ob
-) {
+keys(one_block *ob) {
 	switch (ob->isa) {
 	case keyval:
 		return make_one(alist);
@@ -2938,10 +2822,14 @@ keys(
 	}
 }
 
+/**
+ * values -- keyval
+ *
+ * return an alist of all the current values in key order.
+ */
+
 one_block *
-values(
-	one_block *ob
-) {
+values(one_block *ob) {
 	switch (ob->isa) {
 	case keyval:
 		return make_one(alist);
@@ -2953,12 +2841,22 @@ values(
 	}
 }
 
+/**
+ * in_, pre_, and post_order_keyed -- keyval
+ *
+ * these provide the standard tree traversals. the client's callback
+ * function is called once for each item. a context field (pointer
+ * sized) can be provided by the client and is passed unaltered to the
+ * callback.
+ *
+ * the client callback function returns a boolean `true` to continue
+ * the traversal, or `false` to stop it.
+ *
+ * the return value is currently unused.
+ */
+
 int
-in_order_keyed(
-	one_block *ob,
-	void *context,
-	fn_traversal_cb fn
-) {
+in_order_keyed(one_block *ob, void *context, fn_traversal_cb fn) {
 	switch (ob->isa) {
 	case keyval:
 		return in_order_traversal(&ob->u.kvl, context, fn);
@@ -2971,16 +2869,31 @@ in_order_keyed(
 	}
 }
 
-bool
-exists(one_block *ob, void *key) {
+int
+pre_order_keyed(one_block *ob, void *context, fn_traversal_cb fn) {
 	switch (ob->isa) {
 	case keyval:
-		return btree_exists(&ob->u.kvl, key);
+		return pre_order_traversal(&ob->u.kvl, context, fn);
 
 	default:
-		fprintf(stderr, "\nERROR txbone-exists: unknown or unsupported type %d %s\n",
+		fprintf(stderr,
+			"\nERROR txbone-pre-order-keyed: unknown or unsupported type %d %s\n",
 			ob->isa, ob->tag);
-		return false;
+		return -1;
+	}
+}
+int
+
+post_order_keyed(one_block *ob, void *context, fn_traversal_cb fn) {
+	switch (ob->isa) {
+	case keyval:
+		return post_order_traversal(&ob->u.kvl, context, fn);
+
+	default:
+		fprintf(stderr,
+			"\nERROR txbone-in-order-keyed: unknown or unsupported type %d %s\n",
+			ob->isa, ob->tag);
+		return -1;
 	}
 }
 

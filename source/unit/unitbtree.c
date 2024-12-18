@@ -13,6 +13,19 @@
 #include "txbrand.h"
 #include "txbone.h"
 
+/* these are not exposed in txbone.h */
+
+one_tree *
+btree_rebalance(
+	one_tree *self
+);
+
+int
+btree_height_for_key(
+	one_tree *self,
+	void *key
+);
+
 /**
  * global variables go here if they are needed.
  */
@@ -170,124 +183,46 @@ small_custom_tree(void) {
 	}
 	return t;
 }
-
+
 /**
- * traversal callbacks for tree analysis
+ * common analysis functions.
  */
 
-/* typedef struct node Node; */
-/* struct node { */
-/*      Node *parent; */
-/*      Node *left; */
-/*      Node *right; */
-/*      void *key; */
-/*      void *value; */
-/* }; */
-
-/* actual depth, counts deleted nodes in path */
-int
-depth_of(one_block *self, one_node *n) {
-	int d = 0;
-	while (n->parent) {
-		d += 1;
-		n = n->parent;
-	}
-	return d;
-}
-
-int
-children_of(one_block *self, one_node *n) {
-	if (!n) return 0;
-	return 1 + children_of(self, n->left) + children_of(self, n->right);
-}
-
-
-typedef struct packed_depth packed_depth;
-struct packed_depth {
-	int key;
-	int depth;
-};
-
-typedef struct packed_children packed_children;
-struct packed_children {
-	int key;
-	int children;
-};
-
-typedef union wrapped wrapped;
-union wrapped {
-	uintptr_t u;
-	packed_depth pd;
-	packed_children pc;
-};
+int depths[50] = {0};
 
 void
-traversal_print(one_block *xs, char *desc) {
-	fprintf(stderr, "\n\n%s\n\n", desc);
-	fprintf(stderr, "row   key  whatever\n");
-	for (int i = 0; i < count(xs); i++) {
-		wrapped w;
-		w.u = nth(xs, i);
-		fprintf(stderr, "%3d  %4d  %4d\n", i, w.pd.key, w.pd.depth);
+clear_depths(void) {
+	for (int i = 0; i < 50; i++)
+		depths[i] = 0;
+}
+
+void
+print_depths(void) {
+	fprintf(stderr, "\ndepth:count\n");
+	int total = 0;
+	for (int i = 0; i < 50; i++) {
+		if (depths[i] == 0) continue;
+		total += depths[i];
+		fprintf(stderr, "%d:%d\n", i+1, depths[i]);
 	}
-	fprintf(stderr, "\n\n");
+	fprintf(stderr, "nodes:%d\n", total);
 }
 
 bool
-traverse_peek_depth(
-	void *key,        /* from the node */
-	void *value,      /* from the node */
-	void *context,    /* pointer to an one_block */
-	void *reserved1,  /* one_block * */
-	void *reserved2   /* Node * */
-) {
-	one_block *t = reserved1;
-	one_node *n = reserved2;
-	int depth = depth_of(t, n);
-	wrapped w;
-	w.pd = (packed_depth) {(uintptr_t)key, depth};
-	one_block *xs = context;
-	xs = cons(xs, w.u);
-	context = xs;
+in_order_cb_list(void *key, void *value, void *context, one_tree *self) {
+	fprintf(stderr, "key: %6ld   height: %6d\n", (long)key,
+		1+btree_height_for_key(self, key));
 	return true;
 }
 
 bool
-traverse_chart_depths(
-	void *key,        /* from the node */
-	void *value,      /* from the node */
-	void *context,    /* pointer to an one_block */
-	void *reserved1,  /* one_block * */
-	void *reserved2   /* Node * */
-) {
-	one_block *t = reserved1;
-	one_node *n = reserved2;
-	int depth = depth_of(t, n);
-	int *depths = context;
-	if (depth > 49) depth = 49;
-	depths[depth] += 1;
+in_order_cb_depth(void *key, void *value, void *context, one_tree *self) {
+	int d = btree_height_for_key(self, key);
+	if (d > 49) d = 49;
+	depths[d] += 1;
 	return true;
 }
-
-bool
-traverse_peek_children(
-	void *key,        /* from the node */
-	void *value,      /* from the node */
-	void *context,    /* pointer to an one_block */
-	void *reserved1,  /* one_block * */
-	void *reserved2   /* Node * */
-) {
-	one_block *t = reserved1;
-	one_node *n = reserved2;
-	int children = children_of(t, n);
-	wrapped w;
-	w.pc = (packed_children) {(uintptr_t)key, children};
-	one_block *xs = context;
-	xs = cons(xs, w.u);
-	context = xs;
-	return true;
-}
-
+
 /**
  * the bulk of the unit tests. i do both white and black box testing.
  *
@@ -304,11 +239,7 @@ traverse_peek_children(
  * and inserting an early return after the last test i'm interested
  * in.
  */
-one_tree *
-btree_rebalance(
-	one_tree *self
-);
-
+
 /**
  * use this test for breakpointing. copy a failure here and dive
  * right in.
@@ -328,31 +259,21 @@ MU_TEST(test_wip) {
 	insert(t, as_key(30), "lefter");
 	insert(t, as_key(70), "righter");
 
-
 	delete (t, as_key(30));
 	mu_shouldnt(exists(t, as_key(30)));
 	mu_should(exists(t, as_key(50)));
 	mu_should(exists(t, as_key(40)));
 
-	/* xs = make_one(alist); */
-	/* t->transient1 = xs; */
-	/* in_order_traversal(t, xs, traverse_peek_depth); */
-	/* xs = t->transient1; */
-	/* fprintf(stderr, "check tree %p root %p\n", (void *)t, (void *)t->root); */
-	/* traversal_print(xs, */
-	/*      "in order traversal w/depth -- 50 40 45 60 37 70 del 50 (root) rebal"); */
-	/* free_one(xs); */
 	free_one(t);
 
 }
-
+
 /**
  * rebalance after deletes
  */
 
 MU_TEST(test_rebalance_deleted_root) {
 	one_block *t = NULL;
-	one_block *xs = NULL;
 
 	t = make_one_keyed(keyval, integral, NULL);
 	insert(t, as_key(50), "root");
@@ -362,15 +283,10 @@ MU_TEST(test_rebalance_deleted_root) {
 	delete (t, as_key(50));
 	mu_shouldnt(exists(t, as_key(50)));
 
-	xs = make_one(alist);
-	void *context;
-	context= xs;
-	in_order_keyed(t, context, NULL); //traverse_peek_depth);
-	/* in_order_traversal(t, xs, NULL); //traverse_peek_depth); */
-	xs = context;
-	traversal_print(xs,
-		"in order traversal w/depth -- 50 40 60 del 50 (root) rebal");
-	free_one(xs);
+	clear_depths();
+	in_order_keyed(t, NULL, in_order_cb_list);
+	in_order_keyed(t, NULL, in_order_cb_depth);
+	print_depths();
 	free_one(t);
 
 	t = make_one_keyed(keyval, integral, NULL);
@@ -386,86 +302,37 @@ MU_TEST(test_rebalance_deleted_root) {
 	mu_should(get(t, as_key(40)));
 	mu_shouldnt(get(t, as_key(50)));
 
-	xs = make_one(alist);
-	context = xs;
-	in_order_keyed(t, xs, NULL); // depth
-	xs = context;
-	traversal_print(xs,
-		"in order traversal w/depth -- 50 40 60 30 70 del 50 (root) rebal");
-	free_one(xs);
+	clear_depths();
+	in_order_keyed(t, NULL, in_order_cb_list);
+	in_order_keyed(t, NULL, in_order_cb_depth);
+	print_depths();
+
 	free_one(t);
 
-}
-
-/**
- * rebalance after load
- */
-
-int depths[50] = {0};
-
-void
-clear_depths(void) {
-	for (int i = 0; i < 50; i++)
-		depths[i] = 0;
-}
-
-void
-print_depths(void) {
-	int total = 0;
-	for (int i = 0; i < 50; i++) {
-		if (depths[i] == 0) continue;
-		total += depths[i];
-		fprintf(stderr, "at depth %4d there are %6d\n", i, depths[i]);
-	}
-	fprintf(stderr, "nodes in tree %d\n", total);
-}
-
-int
-btree_height_for_key(one_tree *self, void *key);
-
-bool
-in_order_cb_list(void *key, void *value, void *context, one_tree *self) {
-	fprintf(stderr, "key: %6ld   height: %6d\n", (long)key,
-		btree_height_for_key(self, key));
-	return true;
-}
-
-bool
-in_order_cb_depth(void *key, void *value, void *context, one_tree *self) {
-	int d = btree_height_for_key(self, key);
-	if (d > 49) d = 49;
-	depths[d] += 1;
-	return true;
 }
 
 MU_TEST(test_simple_rebalance) {
 	one_block *t = NULL;
-	one_block *xs = NULL;
 
 	t = small_right_leaning_integral();
-	xs = make_one(alist);
 	clear_depths();
-	in_order_keyed(t, xs, in_order_cb_list);
-	in_order_keyed(t, xs, in_order_cb_depth);
+	in_order_keyed(t, NULL, in_order_cb_list);
+	in_order_keyed(t, NULL, in_order_cb_depth);
 	print_depths();
 	btree_rebalance(&t->u.kvl);
-	free_one(xs);
-	xs = make_one(alist);
 	clear_depths();
-	in_order_keyed(t, xs, in_order_cb_list);
-	in_order_keyed(t, xs, in_order_cb_depth);
+	in_order_keyed(t, NULL, in_order_cb_list);
+	in_order_keyed(t, NULL, in_order_cb_depth);
 	print_depths();
-	free_one(xs);
 	free_one(t);
 }
-
+
 /**
  * traversals after delete
  */
 
 MU_TEST(test_traversal_deletes) {
 	one_block *t = NULL;
-	one_block *xs = NULL;
 
 	/* keys 1-15, leaning right */
 	t = small_right_leaning_integral();
@@ -473,29 +340,20 @@ MU_TEST(test_traversal_deletes) {
 	delete (t, as_key(5));
 	mu_should(count(t) == 14);
 
-	xs = make_one(alist);
-	void *context = xs;
 	clear_depths();
-	in_order_keyed(t, xs, in_order_cb_depth);
+	in_order_keyed(t, NULL, in_order_cb_depth);
 	print_depths();
-	xs = context;
-	free_one(xs);
 
 	delete (t, as_key(10));
 	mu_should(count(t) == 13);
 
-	xs = make_one(alist);
-	context = xs;
 	clear_depths();
-	in_order_keyed(t, xs, in_order_cb_depth);
+	in_order_keyed(t, NULL, in_order_cb_depth);
 	print_depths();
-	xs = context;
-	free_one(xs);
 
 	free_one(t);
 }
-
-
+
 /**
  * the various delete cases
  */
@@ -587,7 +445,7 @@ MU_TEST(test_delete_cases) {
 	free_one(t);
 
 }
-
+
 /**
  * we wrap most everything in here in should or shouldnt since we're
  * testing the full api. while it shouldn't matter, we run the tests
@@ -690,56 +548,41 @@ MU_TEST(test_api_string) {
 	mu_should(insert(t, "99", "99"));
 	mu_should(exists(t, "99"));
 
-	/* TODO: delete */
-
 	/* and done */
 	free_one(t);
 
 }
-
-
-MU_TEST(test_api_custom) {
-	one_block *t = NULL;
-	one_block *xs = NULL;
-	t = small_custom_tree();
-	/* 50, 40, 60, then 0->40 by 5 and 100->60 by 5 */
-	/* so one end is 100, the other is 0 */
-	xs = make_one(alist);
-	void *context = xs;
-	xs = context;
-	clear_depths();
-	in_order_keyed(t, xs, in_order_cb_depth);
-	print_depths();
-	free_one(xs);
-	btree_rebalance(&t->u.kvl);
-	xs = make_one(alist);
-	context = xs;
-	clear_depths();
-	in_order_keyed(t, xs, in_order_cb_depth);
-	print_depths();
-	xs = context;
-	free_one(xs);
-	free_one(t);
-}
-
+
+/**
+ * test_volume
+ *
+ * hit it with 50000 random items, check depth distribution and
+ * counts.
+ */
 
 MU_TEST(test_volume) {
 	one_block *t = make_one_keyed(keyval, integral, NULL);
-	for (int i = 0; i < 100000; i++) {
-		insert(t, as_key(random_between(1, 999999)), "random");
+	fprintf(stderr, "loading up to 50000 items\n");
+	int added = 0;
+	for (int i = 0; i < 50000; i++) {
+		if (insert(t, as_key(random_between(1, 999999)), "random"))
+			added += 1;
 	}
 	/* mu_shouldnt(true); */
+	fprintf(stderr, "added %d items\n", added);
 	clear_depths();
 	in_order_keyed(t, NULL, in_order_cb_depth);
 	print_depths();
-	fprintf(stderr, "attempting full rebalance!\n");
+	fprintf(stderr, "rebalancing\n");
 	btree_rebalance(&t->u.kvl);
 	clear_depths();
 	in_order_keyed(t, NULL, in_order_cb_depth);
 	print_depths();
 
+	int target = added * 2 / 10;
+	fprintf(stderr, "deleting ~20%% of the rows...%d\n", target);
 	int deleted = 0;
-	while (deleted < 10000) {
+	while (deleted < target) {
 		long k = random_between(1, 999999);
 		if (exists(t, (void *)k)) {
 			delete (t, (void *)k);
@@ -747,6 +590,7 @@ MU_TEST(test_volume) {
 		}
 	}
 
+	fprintf(stderr, "rebalancing\n");
 	btree_rebalance(&t->u.kvl);
 	clear_depths();
 	in_order_keyed(t, NULL, in_order_cb_depth);
@@ -754,7 +598,7 @@ MU_TEST(test_volume) {
 
 	free_one(t);
 }
-
+
 /**
  * these are run before and after every test function above.
  */
@@ -763,7 +607,7 @@ static
 void
 test_setup(void) {
 	seed_random_generator(6803);
-	//tsinitialize(55000, txballoc_f_errors, stderr);
+	//tsinitialize(125000, txballoc_f_errors, stderr);
 }
 
 static
@@ -780,22 +624,20 @@ test_teardown(void) {
 MU_TEST_SUITE(test_suite) {
 
 	MU_SUITE_CONFIGURE(test_setup, test_teardown);
-	MU_RUN_TEST(test_simple_rebalance);
 
 	MU_RUN_TEST(test_api_integral);
 	MU_RUN_TEST(test_api_string);
-	MU_RUN_TEST(test_api_custom);
 
 	MU_RUN_TEST(test_delete_cases);
 
-	MU_RUN_TEST(test_volume);
-	return;
-
+	MU_RUN_TEST(test_simple_rebalance);
 	MU_RUN_TEST(test_rebalance_deleted_root);
 
-	MU_RUN_TEST(test_wip);
-
 	MU_RUN_TEST(test_traversal_deletes);
+
+	MU_RUN_TEST(test_volume);
+
+	MU_RUN_TEST(test_wip);
 
 }
 

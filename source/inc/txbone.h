@@ -161,7 +161,8 @@ typedef struct  one_dynarray  one_dynarray;
 typedef struct  one_node      one_node;
 typedef struct  one_tree      one_tree;
 typedef         one_tree      one_keyval;
-typedef struct  one_dynarray  one_pqueue;
+typedef struct  pq_item       pq_item;
+typedef struct  one_pqueue    one_pqueue;
 
 /*
  * a singly linked list and its nodes.
@@ -293,6 +294,25 @@ struct one_tree {
  * in the binary search tree. the keys don't have to be unique, but
  * we do want to properly order them.
  */
+
+/*
+ * a doubly linked list and it's nodes.
+ */
+
+struct pq_item {
+	pq_item *next;
+	pq_item *previous;
+	void *key;
+	void *item;
+};
+
+struct one_pqueue {
+	pq_item *first;
+	pq_item *last;
+	one_key_comparator fn_cmp;  /* comparator function and type  */
+	one_key_type kt;            /* are provided at creation      */
+};
+
 
 /***
  * rather than have separate high level control blocks, this union
@@ -891,13 +911,93 @@ get_from(
 	int n
 );
 
-/********************************************************************
- * tree traversal (iteration)
- ********************************************************************/
+/**
+ * a key:value store is one way of thinking of an associative array or
+ * dictionary. this implementation is built on a scapegoat binary
+ * search tree.
+ *
+ * the usual functions for any keyed access method are available, but
+ * i prefer `insert` to `create` and `get` to `read`, so no crud here.
+ */
+
+/**
+ * insert -- keyval
+ *
+ * add a new key and value to the store. returns false if the key
+ * already exists in the store.
+ */
+
+bool
+insert(
+	one_block *ob,
+	void *key,
+	void *value
+);
+
+/**
+ * get -- keyval
+ *
+ * return the value associated with a key. if the key is not found a
+ * NULL is returned, but as values may also be NULL, know your data.
+ *
+ * to check for existence of a key, use `exists`.
+ */
+
+void *
+get(
+	one_block *ob,
+	void *key
+);
+
+/**
+ * update -- keyval
+ *
+ * update the value associated with a key. returns false if the key is
+ * not found.
+ */
+
+bool
+update(
+	one_block *ob,
+	void *key,
+	void *value
+);
+
+/**
+ * delete -- keyval
+ *
+ * delete the key:value pair from the store. returns false if the key
+ * is not found.
+ */
+
+bool
+delete (
+	one_block *ob,
+	void *key
+);
+
+/**
+ * exists -- keyval
+ *
+ * does an item with this key exist in the store?
+ */
+
+bool
+exists(
+	one_block *ob,
+	void *key
+);
+
+/**
+ * in_ pre_ and post_order_keyed -- keyval
+ *
+ * key:value traversal (iteration) requiring a client supplied
+ * callback function.
+ */
 
 /*
  * for iteration the usual pre_, in_, and post_ order traversal
- * functions are available. the client provides a callback function
+ * of trees are available. the client provides a callback function
  * and optionally a pointer to some context. in the api it's a `void *`,
  * so if the data will fit in `sizeof(void *)`, it can be used directly
  * by the client.
@@ -921,54 +1021,6 @@ typedef bool (*fn_traversal_cb)(
 	void *context,
 	one_tree *self
 );
-
-/**
- * key:value -- this is built on the scapegoat binary search tree.
- *
- * returns NULL on error.
- */
-
-bool
-insert(
-	one_block *ob,
-	void *key,
-	void *value
-);
-
-void *
-get(
-	one_block *ob,
-	void *key
-);
-
-bool
-update(
-	one_block *ob,
-	void *key,
-	void *value
-);
-
-one_block *
-delete (
-	one_block *ob,
-	void *key
-);
-
-bool
-exists(
-	one_block *ob,
-	void *key
-);
-
-void *
-min_key(
-	one_block *ob
-);
-
-void *
-max_key(
-	one_block *ob
-);
 
 int
 in_order_keyed(
@@ -976,10 +1028,36 @@ in_order_keyed(
 	void *context,
 	fn_traversal_cb fn);
 
+int
+pre_order_keyed(
+	one_block *ob,
+	void *context,
+	fn_traversal_cb fn
+);
+
+int
+post_order_keyed(
+	one_block *ob,
+	void *context,
+	fn_traversal_cb fn
+);
+
+/**
+ * keys -- keyval
+ *
+ * returns an alist of the keys in the store in ascending order.
+ */
+
 one_block *
 keys(
 	one_block *ob
 );
+
+/**
+ * values -- keyval
+ *
+ * returns an alist of the values in the store in their key order.
+ */
 
 one_block *
 values(
