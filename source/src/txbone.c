@@ -531,6 +531,8 @@ uintptr_t
 alist_iterate(one_block *xs, int *curr) {
 	if (*curr < 0)
 		return 0;
+	if (!xs || xs->u.acc.used < 1)
+		return 0;
 	if (*curr >= xs->u.acc.used) {
 		*curr = -1;  /* as a null might be valid, use a negative count to also signal end */
 		return 0;
