@@ -1052,6 +1052,38 @@ btree_node_collector(one_tree *self, one_node *n, one_block *xs) {
 }
 
 /*
+ * an in order traversal recursively collect the keys of all the
+ * non-deleted nodes for rebalancing.
+ */
+
+one_block *
+btree_key_collector(one_tree *self, one_node *n, one_block *xs) {
+	if (!n)
+		return xs;
+	xs = btree_key_collector(self, n->left, xs);
+	if (!n->deleted)
+		xs = cons(xs, (uintptr_t)n->key);
+	xs = btree_key_collector(self, n->right, xs);
+	return xs;
+}
+
+/*
+ * an in order traversal recursively collect the values of all the
+ * non-deleted nodes for rebalancing.
+ */
+
+one_block *
+btree_value_collector(one_tree *self, one_node *n, one_block *xs) {
+	if (!n)
+		return xs;
+	xs = btree_value_collector(self, n->left, xs);
+	if (!n->deleted)
+		xs = cons(xs, (uintptr_t)n->value);
+	xs = btree_value_collector(self, n->right, xs);
+	return xs;
+}
+
+/*
  * once we know where we need to rebalance from, use the old (sub)tree
  * to build a balanced (sub)tree and and replace the old (sub)tree.
  *
@@ -2814,9 +2846,12 @@ iterate(one_block *ob, int *curr) {
 one_block *
 keys(one_block *ob) {
 	switch (ob->isa) {
-	case keyval:
-		return make_one(alist);
-
+	case keyval: {
+		one_block *xs = make_one(alist);
+		if (ob->u.kvl.root)
+			xs = btree_key_collector(&ob->u.kvl, ob->u.kvl.root, xs);
+		return xs;
+	}
 	default:
 		fprintf(stderr, "\nERROR txbone-keys: unknown or unsupported type %d %s\n",
 			ob->isa, ob->tag);
@@ -2833,9 +2868,12 @@ keys(one_block *ob) {
 one_block *
 values(one_block *ob) {
 	switch (ob->isa) {
-	case keyval:
-		return make_one(alist);
-
+	case keyval: {
+		one_block *xs = make_one(alist);
+		if (ob->u.kvl.root)
+			xs = btree_value_collector(&ob->u.kvl, ob->u.kvl.root, xs);
+		return xs;
+	}
 	default:
 		fprintf(stderr, "\nERROR txbone-values: unknown or unsupported type %d %s\n",
 			ob->isa, ob->tag);

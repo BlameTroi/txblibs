@@ -158,11 +158,22 @@ MU_TEST(test_load) {
 	mu_shouldnt(is_empty(kv));
 	mu_should(count(kv) == i);
 
-	/* pkey *keys = NULL; //keys(kv); */
-	/* pvalue *values = NULL; // values(kv); */
-	/*  */
-	/* mu_should(keys); */
-	/* mu_should(values); */
+	one_block *kxs = keys(kv);
+	one_block *vxs = values(kv);
+	mu_should(kxs);
+	mu_should(vxs);
+	mu_should(count(kv) == count(kxs));
+	mu_should(count(kxs)== count(vxs));
+	fprintf(stderr, "keys\n");
+	for (int i = 0; i < count(kxs); i++) {
+		fprintf(stderr, "%d\n", (int)nth(kxs, i));
+	}
+	fprintf(stderr, "values\n");
+	for (int i = 0; i < count(vxs); i++) {
+		fprintf(stderr, "%d\n", *(int *)nth(vxs, i));
+	}
+	free_one(kxs);
+	free_one(vxs);
 
 	/* do we read back a known loaded row? */
 	fprintf(stderr, "seeking key 1\n");
@@ -189,17 +200,20 @@ MU_TEST(test_update) {
 	one_block *kv = load_ints();
 
 	/* get a list of all the keys in the store */
-	one_block *k = keys(kv);
-	mu_should(k);
-
+	one_block *kxs = keys(kv);
+	mu_should(kxs);
+	one_block *vxs = values(kv);
+	mu_should(vxs);
 	/* print them and their associated values */
 	printf("\n");
 	int i = 0;
-	while (i >= 0 && count(k) > 0) {
-		printf("%d %d %d\n", i, (int)nth(k, i), *(int *)get(kv, (void *)nth(k, i)));
-		iterate(k, &i);
+	for (i = 0; i < count(kxs); i++) {
+		printf("%d %d %d\n", i, (int)nth(kxs, i), *(int *)get(kv, (void *)nth(kxs, i)));
+		mu_should(*(int *)get(kv, (void *)nth(kxs, i)) == *(int *)nth(vxs, i));
+		iterate(kxs, &i);
 	}
-	free_one(k);
+	free_one(kxs);
+	free_one(vxs);
 
 	/* we expect 10 pairs, and keys 4 and 5
 	 * have values of 4 and 5 */
@@ -294,15 +308,15 @@ MU_TEST(test_volume_ascending) {
 
 	mu_should(count(kv) == 10004);
 
-	one_block *kl = keys(kv);
-	/* mu_should(*(int *)nth(kl, 0) == -10); */
-	/* mu_should(*(int *)nth(kl, 1) == 0); */
-	/* mu_should(*(int *)nth(kl, 2) == 1); */
-	/* mu_should(*(int *)nth(kl, 3) == 2); */
-	/* mu_should(*(int *)nth(kl, 10000) == 9999); */
-	/* mu_should(*(int *)nth(kl, 10001) == 10000); */
-	/* mu_should(*(int *)nth(kl, 10002) == 10005); */
-	/* mu_should(*(int *)nth(kl, 10003) == 10010); */
+	one_block *vl = values(kv);
+	mu_should(*(int *)nth(vl, 0) == -10);
+	mu_should(*(int *)nth(vl, 1) == 0);
+	mu_should(*(int *)nth(vl, 2) == 1);
+	mu_should(*(int *)nth(vl, 3) == 2);
+	mu_should(*(int *)nth(vl, 10000) == 9999);
+	mu_should(*(int *)nth(vl, 10001) == 10000);
+	mu_should(*(int *)nth(vl, 10002) == 10005);
+	mu_should(*(int *)nth(vl, 10003) == 10010);
 
 	delete (kv, as_key(*after));
 	delete (kv, as_key(*before));
@@ -311,20 +325,20 @@ MU_TEST(test_volume_ascending) {
 
 	mu_should(count(kv) == 10000);
 
-	free_one(kl);
-	kl = keys(kv);
+	free_one(vl);
+	vl = values(kv);
 
-	/* mu_should(*(int *)nth(kl, 0) == 1); */
-	/* mu_should(*(int *)nth(kl, 1) == 2); */
-	/* mu_should(*(int *)nth(kl, 9998) == 9999); */
-	/* mu_should(*(int *)nth(kl, 9999) == 10000); */
+	mu_should(*(int *)nth(vl, 0) == 1);
+	mu_should(*(int *)nth(vl, 1) == 2);
+	mu_should(*(int *)nth(vl, 9998) == 9999);
+	mu_should(*(int *)nth(vl, 9999) == 10000);
 
-	/* int i = 0; */
-	/* while (nth(kl, i)) { */
-	/*      free((int *)nth(kl, i)); */
-	/*      i += 1; */
-	/* } */
-	free_one(kl);
+	int i = 0;
+	while (nth(vl, i)) {
+		free((int *)nth(vl, i));
+		i += 1;
+	}
+	free_one(vl);
 
 	free_one(kv);
 }
@@ -358,21 +372,21 @@ MU_TEST(test_volume_descending) {
 	*anteoriginal = 0;
 	insert(kv, as_key(*anteoriginal), anteoriginal);
 	mu_should(count(kv) == 10004);
-	one_block *kl = make_one(alist);
-	/* mu_should(*(int *)nth(kl, 0) == -10); */
-	/* mu_should(*(int *)nth(kl, 1) == 0); */
-	/* mu_should(*(int *)nth(kl, 2) == 1); */
-	/* mu_should(*(int *)nth(kl, 3) == 2); */
-	/* mu_should(*(int *)nth(kl, 10000) == 9999); */
-	/* mu_should(*(int *)nth(kl, 10001) == 10000); */
-	/* mu_should(*(int *)nth(kl, 10002) == 10005); */
-	/* mu_should(*(int *)nth(kl, 10003) == 10010); */
-	/* int i = 0; */
-	/* while (nth(kl, i)) { */
-	/*      free((int *)nth(kl, i)); */
-	/*      i += 1; */
-	/* } */
-	free_one(kl);
+	one_block *vl = values(kv);
+	mu_should(*(int *)nth(vl, 0) == -10);
+	mu_should(*(int *)nth(vl, 1) == 0);
+	mu_should(*(int *)nth(vl, 2) == 1);
+	mu_should(*(int *)nth(vl, 3) == 2);
+	mu_should(*(int *)nth(vl, 10000) == 9999);
+	mu_should(*(int *)nth(vl, 10001) == 10000);
+	mu_should(*(int *)nth(vl, 10002) == 10005);
+	mu_should(*(int *)nth(vl, 10003) == 10010);
+	int i = 0;
+	while (nth(vl, i)) {
+		free((int *)nth(vl, i));
+		i += 1;
+	}
+	free_one(vl);
 	//      mu_should(10004 == purge(kv));
 	free_one(kv);
 }
@@ -393,24 +407,24 @@ MU_TEST(test_volume_random) {
 	clock_t e = clock();
 	printf("\ntime random %lu\n", b-e);
 	mu_should(count(kv) == 10000);
-	one_block *kl = keys(kv);
-	/* printf("\n"); */
-	/* for (int i = 0; i < 10; i++) */
-	/*      printf("%d %d\n", i, *(int *)nth(kl, i)); */
-	/* printf("\n"); */
-	/* for (int i = 5000; i < 5010; i++) */
-	/*      printf("%d %d\n", i, *(int *)nth(kl, i)); */
-	/* printf("\n"); */
-	/* for (int i = 9990; i < 10000; i++) */
-	/*      printf("%d %d\n", i, *(int *)nth(kl, i)); */
-	/* printf("\n"); */
+	one_block *vl = values(kv);
+	printf("\n");
+	for (int i = 0; i < 10; i++)
+		printf("%d %d\n", i, *(int *)nth(vl, i));
+	printf("\n");
+	for (int i = 5000; i < 5010; i++)
+		printf("%d %d\n", i, *(int *)nth(vl, i));
+	printf("\n");
+	for (int i = 9990; i < 10000; i++)
+		printf("%d %d\n", i, *(int *)nth(vl, i));
+	printf("\n");
 	/* add after end (which is 10000) */
-	/* i = 0; */
-	/* while (nth(kl, i)) { */
-	/*      free((int *)nth(kl, i)); */
-	/*      i += 1; */
-	/* } */
-	free_one(kl);
+	i = 0;
+	while (nth(vl, i)) {
+		free((int *)nth(vl, i));
+		i += 1;
+	}
+	free_one(vl);
 	//      mu_should(10000 == purge(kv));
 	free_one(kv);
 
@@ -421,27 +435,24 @@ MU_TEST(test_string_keys) {
 	mu_should(count(kv) == 6);
 
 	/* key and value lists */
-	/* one_block *kl = keys(kv); */
-	/* mu_should(kl); */
-	/* one_block *vl = values(kv); */
-	/* mu_should(vl); */
+	one_block *kl = keys(kv);
+	mu_should(kl);
+	one_block *vl = values(kv);
+	mu_should(vl);
 
 	/* check known key:vl pairs */
 	void *v = get(kv, "alpha");
 	mu_should(*(int *)v == 0);
 	v = get(kv, "charlie");
 	mu_should(*(int *)v == 17);
-
+	free_one(kl);
+	free_one(vl);
 	free_one(kv);
 }
 
 MU_TEST_SUITE(test_suite) {
 
 	MU_SUITE_CONFIGURE(test_setup, test_teardown);
-
-
-
-	//      return;
 
 	MU_RUN_TEST(test_load);
 	MU_RUN_TEST(test_create);
@@ -451,8 +462,6 @@ MU_TEST_SUITE(test_suite) {
 	MU_RUN_TEST(test_volume_ascending);
 	MU_RUN_TEST(test_volume_descending);
 	MU_RUN_TEST(test_volume_random);
-	/* MU_RUN_TEST(test_keys); */
-	/* MU_RUN_TEST(test_values); */
 }
 
 int
