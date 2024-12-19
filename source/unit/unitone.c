@@ -562,8 +562,9 @@ MU_TEST(test_deque) {
 }
 
 MU_TEST(test_keyval) {
-	one_block *ob = make_one(keyval);
-	mu_shouldnt(ob);
+	/* real tests are in unitkv */
+	one_block *ob = make_one_keyed(keyval, string, NULL);
+	mu_should(ob);
 	free_one(ob);
 }
 

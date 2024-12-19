@@ -95,31 +95,6 @@ target_compile_options(unitda PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:SHELL:${MY_REL_
 target_compile_options(unitda PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_OPTIONS}>")
 target_compile_options(unitda PUBLIC "$<$<CONFIG:RELEASE>:SHELL:${MY_RELEASE_OPTIONS}>")
 
-# add_executable(unitdl "${CMAKE_CURRENT_SOURCE_DIR}/unit/unitdl.c"
-#   "${CMAKE_CURRENT_SOURCE_DIR}/src/lib_txbrand.c"
-#   "${CMAKE_CURRENT_SOURCE_DIR}/src/lib_txballoc.c"
-#   "${CMAKE_CURRENT_SOURCE_DIR}/src/lib_txbmisc.c"
-#   "${CMAKE_CURRENT_SOURCE_DIR}/src/lib_txbstr.c"
-#   "${CMAKE_CURRENT_SOURCE_DIR}/src/txbone.c")
-# #  "${CMAKE_CURRENT_SOURCE_DIR}/src/lib_txbdl.c")
-# target_include_directories(unitdl PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/inc")
-# target_link_options(unitdl PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_LINK_OPTIONS}>")
-# target_compile_options(unitdl PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:SHELL:${MY_REL_DEB_OPTIONS}>")
-# target_compile_options(unitdl PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_OPTIONS}>")
-# target_compile_options(unitdl PUBLIC "$<$<CONFIG:RELEASE>:SHELL:${MY_RELEASE_OPTIONS}>")
-
-# add_executable(unitkl "${CMAKE_CURRENT_SOURCE_DIR}/unit/unitkl.c"
-#   "${CMAKE_CURRENT_SOURCE_DIR}/src/lib_txbrand.c"
-#   "${CMAKE_CURRENT_SOURCE_DIR}/src/lib_txballoc.c"
-#   "${CMAKE_CURRENT_SOURCE_DIR}/src/lib_txbstr.c"
-#   "${CMAKE_CURRENT_SOURCE_DIR}/src/txbone.c")
-# #  "${CMAKE_CURRENT_SOURCE_DIR}/src/lib_txbkl.c")
-# target_include_directories(unitkl PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/inc")
-# target_link_options(unitkl PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_LINK_OPTIONS}>")
-# target_compile_options(unitkl PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:SHELL:${MY_REL_DEB_OPTIONS}>")
-# target_compile_options(unitkl PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_OPTIONS}>")
-# target_compile_options(unitkl PUBLIC "$<$<CONFIG:RELEASE>:SHELL:${MY_RELEASE_OPTIONS}>")
-
 add_executable(unitkv "${CMAKE_CURRENT_SOURCE_DIR}/unit/unitkv.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/lib_txballoc.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/lib_txbmisc.c"
@@ -145,7 +120,6 @@ target_compile_options(unitll PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_OPTIONS
 target_compile_options(unitll PUBLIC "$<$<CONFIG:RELEASE>:SHELL:${MY_RELEASE_OPTIONS}>")
 
 add_executable(unitlog2 "${CMAKE_CURRENT_SOURCE_DIR}/unit/unitlog2.c"
-  "${CMAKE_CURRENT_SOURCE_DIR}/src/lib_txballoc.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/lib_txbrand.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/lib_txblog2.c")
 target_include_directories(unitlog2 PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/inc")
@@ -195,7 +169,6 @@ add_executable(unitpq "${CMAKE_CURRENT_SOURCE_DIR}/unit/unitpq.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/lib_txbmisc.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/lib_txbstr.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/txbone.c")
-#  "${CMAKE_CURRENT_SOURCE_DIR}/src/lib_txbpq.c")
 target_include_directories(unitpq PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/inc")
 target_link_options(unitpq PUBLIC "$<$<CONFIG:DEBUG>:SHELL:${MY_DEBUG_LINK_OPTIONS}>")
 target_compile_options(unitpq PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:SHELL:${MY_REL_DEB_OPTIONS}>")

@@ -6,7 +6,6 @@
 
 #include "minunit.h"
 
-#include "txballoc.h"
 #include "txbrand.h"
 
 #include "txblog2.h"
@@ -32,14 +31,14 @@ char **argv;
 static
 void
 test_setup(void) {
+	set_random_generator(RAND_DEFAULT);
 	seed_random_generator(6803);
-	tsinitialize(55000, txballoc_f_errors, stderr);
 }
 
 static
 void
 test_teardown(void) {
-	tsterminate();
+
 }
 
 /********************************************************************
