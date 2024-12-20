@@ -20,8 +20,8 @@
  * to copy, modify, publish, and distribute this file as you see fit.
  */
 
-#ifndef TALLOC_H
-#define TALLOC_H
+#ifndef TXBALLOC_H
+#define TXBALLOC_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -228,7 +228,7 @@ static pool library_pool;
  * maximum number of expected active (allocated but not yet freed)
  * entries.
  *
- * as memroy is plentiful these days, i recommend over allocation to
+ * as memory is plentiful these days, i recommend over allocation to
  * deal with creeping leaks.
  */
 

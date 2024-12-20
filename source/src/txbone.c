@@ -3029,8 +3029,8 @@ pre_order_keyed(one_block *ob, void *context, fn_traversal_cb fn) {
 		return -1;
 	}
 }
-int
 
+int
 post_order_keyed(one_block *ob, void *context, fn_traversal_cb fn) {
 	switch (ob->isa) {
 	case keyval:
