@@ -24,21 +24,19 @@
 #include "txballoc.h"
 #include "txbone.h"
 
-/* #define TXBTREE_INTERNAL_H */
-/* #include "txbtree.h" */
-
 /* a helpful macro for infrequently needed traces */
 // #define FPRINTF_INFO
-// todo --- is free double counting tree nodes?
 #ifndef FPRINTF_INFO
 #define FPRINTF_INFO if (false)
 #endif
 
-
 /**
  * this is a copy paste from my txblog2 header, which implements a
- * fast integer log base 2 function for 32 bit integers. it originally
- * comes from:
+ * fast integer log base 2 function for 32 bit integers. i changed the
+ * function name slightly and made it static so there won't be a
+ * problem if txblog2.h is included.
+ *
+ * this originally comes from:
  *
  * http://graphics.stanford.edu/~seander/bithacks.html#IntegerLogLookup
  *
@@ -80,8 +78,9 @@ log_table_256[256] = {
 	LT(7)
 };
 
+static
 uint32_t
-uint32_log2(uint32_t v) {
+u32_log2(uint32_t v) {
 	uint32_t r;
 	register uint32_t t, tt;
 	if ((tt = v >> 16))
@@ -818,7 +817,7 @@ bool
 btree_is_unbalanced(one_tree *self, one_node *n) {
 	int h = btree_height(self, n);
 	int s = btree_size(self, self->root);
-	return (h > ONE_REBALANCE_ALPHA * uint32_log2(s));
+	return (h > ONE_REBALANCE_ALPHA * u32_log2(s));
 }
 
 /*
