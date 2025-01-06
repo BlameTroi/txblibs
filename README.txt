@@ -492,7 +492,7 @@ the error message is gone.
 
 The build through CMake works fine with no errors. 
 
-But if I don't compile txbrand.h as an object dependency for the unit
+Yet if I don't compile txbrand.h as an object dependency for the unit
 test targets, arc4random_uniform() is not defined. Defining macro
 _DARWIN_C_SOURCE resolves that, but it should not be required.
 

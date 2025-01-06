@@ -429,7 +429,6 @@ MU_TEST(test_doubly_lasts) {
 	mu_should(equal_string(get_last(ob), "three"));
 	mu_should(is_empty(ob));
 
-
 	free_one(ob);
 }
 
