@@ -1,6 +1,6 @@
 /*
  * single file header generated via:
- * buildhdr --macro TXBWARN --intro LICENSE --pub ./inc/warn.h
+ * buildhdr --macro TXBABORT --intro LICENSE --pub ./inc/abort_if.h
  */
 /* *** begin intro ***
 This software is available under 2 licenses -- choose whichever you prefer.
@@ -43,18 +43,22 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
    *** end intro ***
  */
 
-#ifndef TXBWARN_SINGLE_HEADER
-#define TXBWARN_SINGLE_HEADER
+#ifndef TXBABORT_SINGLE_HEADER
+#define TXBABORT_SINGLE_HEADER
 /* *** begin pub *** */
-/* txbwarn.h -- Debugging helper macros -- Troy Brumley BlameTroi@gmail.com */
+/* txbabort.h -- `assert' replacement -- Troy Brumley BlameTroi@gmail.com */
 
 /*
- * Temporary drop in macros to help with debugging. Enable by defining
- * TXBWARN before including txbwarn.h, otherwise the macros are noops.
+ * Some conditions are both "should not occur" and "should not
+ * continue" errors. I prefer using assert to detect errors and end
+ * execution but it can be disabled via -D NDEBUG. That's a standard
+ * definition for release builds. While I don't expect any of these
+ * libraries to end up in released software I will follow the
+ * standard.
  *
- * I needed these while chasing a very obscure bug and figured I'd
- * keep them even though I don't think I'll use them often. Even if
- * the exact macro isn't needed, it's a reasonable starting template.
+ * I'm replaced my preferred 'assert(must be true condition &&
+ * "descriptive message")' with this 'abort_if' macro. This reversed
+ * many conditional checks throughout these libraries.
  *
  * Released to the public domain by Troy Brumley blametroi@gmail.com
  *
@@ -63,24 +67,22 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * to copy, modify, publish, and distribute this file as you see fit.
  */
 
-#ifdef TXBWARN
-#define WARN_NULL(n, f)\
-	if (!(n)) \
-		fprintf(stderr, "%s called with unexpected NULL\n", #f)
-#define WARN_NULL_TWO(n, o, f)\
-	if ((n) && (!o)) \
-		fprintf(stderr, "%s dropping a NULL on a pointer [%d]\n", #f)
-#else
-#define WARN_NULL(n, f)
-#define WARN_NULL_TWO(n, o, f)
-#endif
+#include <stdio.h>
 
-/* txbwarn.h ends here */
+#define abort_if(condition, message) \
+	do { \
+		if ((condition)) { \
+			fprintf(stderr, "abort: '%s' at %s:%d\n", message, __FILE__, __LINE__); \
+			abort(); \
+		} \
+	} while(0)
+
+/* txbabort.h ends here */
 /* *** end pub *** */
 
-#endif /* TXBWARN_SINGLE_HEADER */
+#endif /* TXBABORT_SINGLE_HEADER */
 
-#ifdef TXBWARN_IMPLEMENTATION
-#undef TXBWARN_IMPLEMENTATION
+#ifdef TXBABORT_IMPLEMENTATION
+#undef TXBABORT_IMPLEMENTATION
 
-#endif /* TXBWARN_IMPLEMENTATION */
+#endif /* TXBABORT_IMPLEMENTATION */

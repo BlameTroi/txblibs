@@ -1,4 +1,4 @@
-/* txbsb.h -- Simple String Builder -- Troy Brumley BlameTroi@gmail.com */
+/* txbsb.c -- Simple String Builder -- Troy Brumley BlameTroi@gmail.com */
 
 /*
  * a header only implementation of a very basic string builder.
@@ -19,7 +19,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
-#include "../inc/abort.h"
+#include "../inc/abort_if.h"
 #include "../inc/sb.h"
 
 /*
@@ -359,4 +359,4 @@ sb_puts(
 	sb->buf_used += additional;
 }
 
-/* txbsb.h ends here */
+/* txbsb.c ends here */

@@ -1,18 +1,63 @@
-/* txbpmute.h -- blametroi's permutation library */
+/*
+ * single file header generated via:
+ * buildhdr --macro TXBPMUTE --intro LICENSE --pub ./inc/pmute.h --priv ./src/pmute.c
+ */
+/* *** begin intro ***
+This software is available under 2 licenses -- choose whichever you prefer.
+------------------------------------------------------------------------------
+ALTERNATIVE A - MIT License
+Copyright (c) 2025 Troy Brumley
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
+so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+------------------------------------------------------------------------------
+ALTERNATIVE B - Public Domain (www.unlicense.org)
+This is free and unencumbered software released into the public domain.
+Anyone is free to copy, modify, publish, use, compile, sell, or distribute this
+software, either in source code form or as a compiled binary, for any purpose,
+commercial or non-commercial, and by any means.
+In jurisdictions that recognize copyright laws, the author or authors of this
+software dedicate any and all copyright interest in the software to the public
+domain. We make this dedication for the benefit of the public at large and to
+the detriment of our heirs and successors. We intend this dedication to be an
+overt act of relinquishment in perpetuity of all present and future rights to
+this software under copyright law.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+   *** end intro ***
+ */
+
+#ifndef TXBPMUTE_SINGLE_HEADER
+#define TXBPMUTE_SINGLE_HEADER
+/* *** begin pub *** */
+/* txbpmute.h -- A small permutation library -- Troy Brumley BlameTroi@gmail.com */
 
 /*
- * this is a header only implementation of a function to permute an
+ * This is a header only implementation of a function to permute an
  * array of integers.
  *
- * released to the public domain by Troy Brumley blametroi@gmail.com
+ * Released to the public domain by Troy Brumley blametroi@gmail.com
  *
- * this software is dual-licensed to the public domain and under the
+ * This software is dual-licensed to the public domain and under the
  * following license: you are granted a perpetual, irrevocable license
  * to copy, modify, publish, and distribute this file as you see fit.
  */
-
-#ifndef TXBPMUTE_H
-#define TXBPMUTE_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -54,10 +99,55 @@ permute_next(
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-#endif /* TXBPMUTE_H */
+
+/* txbpmute.h ends here */
+/* *** end pub *** */
+
+#endif /* TXBPMUTE_SINGLE_HEADER */
 
 #ifdef TXBPMUTE_IMPLEMENTATION
 #undef TXBPMUTE_IMPLEMENTATION
+/* *** begin priv *** */
+/* txbpmute.c -- A small permutation library -- Troy Brumley BlameTroi@gmail.com */
+
+/*
+ * This is a header only implementation of a function to permute an
+ * array of integers.
+ *
+ * Released to the public domain by Troy Brumley blametroi@gmail.com
+ *
+ * This software is dual-licensed to the public domain and under the
+ * following license: you are granted a perpetual, irrevocable license
+ * to copy, modify, publish, and distribute this file as you see fit.
+ */
+
+
+/*
+ * permute_next
+ *
+ *     in: length of array to permute
+ *
+ * in/out: array of ints to permute
+ *
+ * return the next possible permutation of the n unique integers in
+ * the array ints. to get all possible iterations, start with the
+ * elements of ints in ascending order. the array is updated on each
+ * call and the function returns 0 when no more permutations are
+ * possible.
+ *
+ * (the array has been reversed, and is now highest to lowest values.)
+ *
+ * sample code:
+ *
+ * int n = 5;
+ * int ints[n];
+ * for (int i = 0; i < n; i++)
+ *    ints[i] = i;
+ * print_current(n, ints);
+ * while (permute_next(n, ints))
+ *    print_current(&iter, n, ints);
+ *
+ */
 
 /*
  * permute the 'n' unique integers in 'ints' on successive calls until
@@ -153,5 +243,8 @@ permute_next(
 	/* no more permutations available */
 	return 0;
 }
+
+/* txbpmute.c ends here */
+/* *** end priv *** */
+
 #endif /* TXBPMUTE_IMPLEMENTATION */
-/* txbpmute.h ends here */

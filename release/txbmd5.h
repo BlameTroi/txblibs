@@ -1,26 +1,74 @@
-/* txbmd5.h -- blametroi's md5 hash library */
+/*
+ * single file header generated via:
+ * buildhdr --macro TXBMD5 --intro LICENSE --pub ./inc/md5.h --priv ./src/md5.c
+ */
+/* *** begin intro ***
+This software is available under 2 licenses -- choose whichever you prefer.
+------------------------------------------------------------------------------
+ALTERNATIVE A - MIT License
+Copyright (c) 2025 Troy Brumley
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
+so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+------------------------------------------------------------------------------
+ALTERNATIVE B - Public Domain (www.unlicense.org)
+This is free and unencumbered software released into the public domain.
+Anyone is free to copy, modify, publish, use, compile, sell, or distribute this
+software, either in source code form or as a compiled binary, for any purpose,
+commercial or non-commercial, and by any means.
+In jurisdictions that recognize copyright laws, the author or authors of this
+software dedicate any and all copyright interest in the software to the public
+domain. We make this dedication for the benefit of the public at large and to
+the detriment of our heirs and successors. We intend this dedication to be an
+overt act of relinquishment in perpetuity of all present and future rights to
+this software under copyright law.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+   *** end intro ***
+ */
+
+#ifndef TXBMD5_SINGLE_HEADER
+#define TXBMD5_SINGLE_HEADER
+/* *** begin pub *** */
+/* txbmd5.h -- Calculate an MD5 hash -- Troy Brumley BlameTroi@gmail.com */
 
 /*
- * a header only implementation of an md-5 hash.
+ * A header only implementation of an md-5 hash.
  *
- * the original code was by Bryce Wilson and he released it to the
- * public domain. i've massaged it to fit in my libraries, and as
- * with the rest of them, it's all public domain as far as i am
+ * The original code was by Bryce Wilson and he released it to the
+ * public domain. I've massaged it to fit in my libraries, and as
+ * with the rest of them, it's all public domain as far as I am
  * concerned.
  *
- * the externally visible functions and types are all prefixed by
- * upper cased 'MD5_'. internal functions and types are all in lower
+ * This is not considered secure. I wanted it for several Advent
+ * of Code problems.
+ *
+ * The externally visible functions and types are all prefixed by
+ * upper cased 'MD5_'. Internal functions and types are all in lower
  * case.
  *
- * released to the public domain by Troy Brumley blametroi@gmail.com
+ * Released to the public domain by Troy Brumley blametroi@gmail.com
  *
- * this software is dual-licensed to the public domain and under the
+ * This software is dual-licensed to the public domain and under the
  * following license: you are granted a perpetual, irrevocable license
  * to copy, modify, publish, and distribute this file as you see fit.
  */
-
-#ifndef TXBMD5_H
-#define TXBMD5_H
 
 #include <stdio.h>
 #include <stdint.h>
@@ -30,12 +78,11 @@ extern "C" {
 #endif /* __cplusplus */
 
 /*
- * these are the preferred functions for calculating and md5, hiding the
+ * These are the preferred functions for calculating an MD5 hash, hiding the
  * details behind functions to work over an arbitrary block of memory,
  * a string, or an opened and correctly positioned file stream.
  *
- * returns the hash to *result, which is expected to be large enough
- * to hold 16 bytes.
+ * Returns the hash to *result, which is expected to be at least 16 bytes.
  */
 
 void
@@ -58,7 +105,7 @@ MD5_file(
 );
 
 /*
- * these are the lower level api calls. initialize a context for a
+ * These are the lower level api calls. Initialize a context for a
  * hash calculation, update the hash on some input, finalize the
  * calculation, and retrieve the result from the digest.
  */
@@ -101,22 +148,36 @@ MD5_get_digest(
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-#endif /* TXBMD5_H */
+/* txbmd5.h ends here */
+/* *** end pub *** */
+
+#endif /* TXBMD5_SINGLE_HEADER */
 
 #ifdef TXBMD5_IMPLEMENTATION
 #undef TXBMD5_IMPLEMENTATION
+/* *** begin priv *** */
+/* txbmd5.c -- Calculate an MD5 hash -- Troy Brumley BlameTroi@gmail.com */
 
 /*
- * a header only implementation of an md-5 hash.
+ * A header only implementation of an md-5 hash.
  *
- * the original code was by Bryce Wilson and he released it to the
- * public domain. i've massaged it to fit in my libraries, and as
- * with the rest of them, it's all public domain as far as i am
+ * The original code was by Bryce Wilson and he released it to the
+ * public domain. I've massaged it to fit in my libraries, and as
+ * with the rest of them, it's all public domain as far as I am
  * concerned.
  *
- * the externally visible functions and types are all prefixed by
- * upper cased 'MD5_'. internal functions and types are all in lower
+ * This is not considered secure. I wanted it for several Advent
+ * of Code problems.
+ *
+ * The externally visible functions and types are all prefixed by
+ * upper cased 'MD5_'. Internal functions and types are all in lower
  * case.
+ *
+ * Released to the public domain by Troy Brumley blametroi@gmail.com
+ *
+ * This software is dual-licensed to the public domain and under the
+ * following license: you are granted a perpetual, irrevocable license
+ * to copy, modify, publish, and distribute this file as you see fit.
  */
 
 /*
@@ -131,10 +192,10 @@ MD5_get_digest(
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "txbabort.h"
+#include "txbabort_if.h"
 
 /*
- * transparent definition, it's opaque in md5.h.
+ * Transparent definition, it's opaque in txbmd5.h.
  */
 
 #define MD5_TAG "__MD5___"
@@ -155,7 +216,7 @@ struct md5_context {
 };
 
 /*
- * constants defined by the md5 algorithm
+ * Constants defined by the MD5 algorithm.
  */
 
 #define A 0x67452301
@@ -194,8 +255,8 @@ static uint32_t K[] = {
 };
 
 /*
- * padding used to make the size (in bits) of the input congruent to
- * 448 mod 512
+ * Padding used to make the size (in bits) of the input congruent to
+ * 448 mod 512.
  */
 
 static uint8_t PADDING[] = {
@@ -210,7 +271,7 @@ static uint8_t PADDING[] = {
 };
 
 /*
- * bit-manipulation functions defined by the md5 algorithm
+ * Bit-manipulation functions defined by the MD5 algorithm.
  */
 
 #define F(X, Y, Z) ((X & Y) | (~X & Z))
@@ -219,13 +280,10 @@ static uint8_t PADDING[] = {
 #define I(X, Y, Z) (Y ^ (X | ~Z))
 
 /*
- * rotates a 32-bit word left by n bits
+ * Rotate 32-bit word left by `n' bits
  */
 
 static uint32_t
-rotate_left(uint32_t, uint32_t);
-
-inline uint32_t
 rotate_left(
 	uint32_t x,
 	uint32_t n
@@ -234,7 +292,7 @@ rotate_left(
 }
 
 /*
- * step on 512 bits of input with the main md5 algorithm.
+ * Step on 512 bits of input with the main MD5 algorithm.
  */
 
 static void
@@ -285,7 +343,7 @@ md5_step(
 }
 
 /*
- * allocate and free, opaquely.
+ * Allocate and free, opaquely.
  */
 
 MD5_context *
@@ -308,7 +366,7 @@ MD5_release_context(
 }
 
 /*
- * (re)initialize a context
+ * (Re)Initialize a context
  */
 
 void
@@ -324,10 +382,10 @@ MD5_initialize(
 }
 
 /*
- * add some amount of input to the context
+ * dd some amount of input to the context
  *
- * if the input fills out a block of 512 bits, apply the algorithm
- * (md5_step) and save the result in the buffer. also updates the
+ * If the input fills out a block of 512 bits, apply the algorithm
+ * (md5_step) and save the result in the buffer. Also updates the
  * overall size.
  */
 
@@ -374,7 +432,7 @@ MD5_update(
 }
 
 /*
- * pad the current input to get to 448 bytes, append the size in bits
+ * Pad the current input to get to 448 bytes, append the size in bits
  * to the very end, and save the result of the final iteration into
  * digest.
  */
@@ -420,8 +478,9 @@ MD5_finalize(
 }
 
 /*
- * functions that run the algorithm on the provided input and put the
- * digest into result. result should be able to store 16 bytes.
+ * Functions that run the algorithm on the provided input and put the
+ * digest into result. The result should be able to store at least 16
+ * bytes.
  */
 
 void
@@ -472,7 +531,7 @@ MD5_file(
 }
 
 /*
- * provides access to the result of initialize/update.../finalize for
+ * Provide access to the result of initialize/update.../finalize for
  * someone not using the md5_file, md5_string, or md5_bytes functions.
  */
 
@@ -485,7 +544,7 @@ MD5_get_digest(
 	memcpy(result, ctx->digest, 16);
 }
 
-/* md5.c ends here */
+/* txbmd5.c ends here */
+/* *** end priv *** */
 
 #endif /* TXBMD5_IMPLEMENTATION */
-/* txbmd5.h ends here */

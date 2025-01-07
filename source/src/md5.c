@@ -1,4 +1,4 @@
-/* txbmd5.h -- Calculate an MD5 hash -- Troy Brumley BlameTroi@gmail.com */
+/* txbmd5.c -- Calculate an MD5 hash -- Troy Brumley BlameTroi@gmail.com */
 
 /*
  * A header only implementation of an md-5 hash.
@@ -34,7 +34,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../inc/abort.h"
+#include "../inc/abort_if.h"
 #include "../inc/md5.h"
 
 /*

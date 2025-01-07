@@ -1,4 +1,4 @@
-/* txbmisc.h -- Miscellaneous functions -- Troy Brumley BlameTroi@gmail.com */
+/* txbmisc.c -- Miscellaneous functions -- Troy Brumley BlameTroi@gmail.com */
 
 /*
  * This is a header only implementation of various bits of code that I
@@ -23,7 +23,6 @@
 
 #include "../inc/misc.h"
 
-
 /*
  * Various min/max functions. The typed functions are wrapped by
  * generic macros. The macros only type check the first argument to
@@ -31,7 +30,7 @@
  * to ensure that the arguments compatible.
  *
  * Use the macros `min' and `max' (defined in txbmisc.h) instead of
-   the following functions.
+ * the following functions.
  */
 
 int

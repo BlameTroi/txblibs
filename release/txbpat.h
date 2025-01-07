@@ -1,4 +1,52 @@
-/* txbpat.h -- blametroi's pattern matching library */
+/*
+ * single file header generated via:
+ * buildhdr --macro TXBPAT --intro LICENSE --pub ./inc/pat.h --priv ./src/pat.c
+ */
+/* *** begin intro ***
+This software is available under 2 licenses -- choose whichever you prefer.
+------------------------------------------------------------------------------
+ALTERNATIVE A - MIT License
+Copyright (c) 2025 Troy Brumley
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
+so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+------------------------------------------------------------------------------
+ALTERNATIVE B - Public Domain (www.unlicense.org)
+This is free and unencumbered software released into the public domain.
+Anyone is free to copy, modify, publish, use, compile, sell, or distribute this
+software, either in source code form or as a compiled binary, for any purpose,
+commercial or non-commercial, and by any means.
+In jurisdictions that recognize copyright laws, the author or authors of this
+software dedicate any and all copyright interest in the software to the public
+domain. We make this dedication for the benefit of the public at large and to
+the detriment of our heirs and successors. We intend this dedication to be an
+overt act of relinquishment in perpetuity of all present and future rights to
+this software under copyright law.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+   *** end intro ***
+ */
+
+#ifndef TXBPAT_SINGLE_HEADER
+#define TXBPAT_SINGLE_HEADER
+/* *** begin pub *** */
+/* txbpat.h -- Simple regexp like matching -- Troy Brumley BlameTroi@gmail.com */
 
 /*
  * this is a header only implementation of a subset of a regular
@@ -10,9 +58,6 @@
  * following license: you are granted a perpetual, irrevocable license
  * to copy, modify, publish, and distribute this file as you see fit.
  */
-
-#ifndef TXBPAT_H
-#define TXBPAT_H
 
 /*
  * these functions provide a limited implementation of regular
@@ -370,10 +415,133 @@ glob_match(
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-#endif /* TXBPAT_H */
+/* txbpat.h ends here */
+/* *** end pub *** */
+
+#endif /* TXBPAT_SINGLE_HEADER */
 
 #ifdef TXBPAT_IMPLEMENTATION
 #undef TXBPAT_IMPLEMENTATION
+/* *** begin priv *** */
+/* txbpat.c -- Simple regexp like matching -- Troy Brumley BlameTroi@gmail.com */
+
+/*
+ * this is a header only implementation of a subset of a regular
+ * expression parser and pattern matcher.
+ *
+ * released to the public domain by Troy Brumley blametroi@gmail.com
+ *
+ * this software is dual-licensed to the public domain and under the
+ * following license: you are granted a perpetual, irrevocable license
+ * to copy, modify, publish, and distribute this file as you see fit.
+ */
+
+/*
+ * these functions provide a limited implementation of regular
+ * expressions and file name globbing expressions.
+ *
+ * the initial shape of the implementation was inspired by Kernighan
+ * and Plaugher's chapter on _Text Patterns_ in _Software Tools in
+ * Pascal_, but the code is my own.
+ *
+ * diagnostics are limited and the code takes a "when in doubt, abort
+ * execution" approach to error handling. non fatal syntax errors in
+ * a pattern string might cause an infinite loop or invalid result,
+ * but should not access violate.
+ *
+ * the suppported pattern language is a subset of the common regular
+ * expression syntax:
+ *
+ * any character can be escaped via a backslash, removing its special
+ * meaning.
+ *
+ * token  meaning
+ *
+ * .      matches any single character except \n
+ * *      repeat the preceeding item zero or more times
+ * ?      repeat the preceeding item zero or one time
+ * +      repeat the preceeding item one or more times
+ * ^      start of line when in first position, otherwise the
+ *        literal character ^
+ * $      end of line when in last position, otherwise the
+ *        literal character $
+ * \      remove the special meaning from the following character
+ *        except as follows:
+ * \s     match a single whitespace character
+ * \S                    non whitespace character
+ * \w                    word character
+ * \W                    non word character
+ * \d                    digit character
+ * \D                    non digit character
+ * \n \t \f retain their common meanings
+ * [      start a class of characters, matches any one character
+ *        in the class
+ * [^     start a class of characters, matches any one character
+ *        _not_ in the class
+ * ]      end a class of characters
+ * -      when in a class of characters and not the first or last
+ *        character in the class, defines a range all the characters
+ *        between the preceeding and following characters in ascending
+ *        order
+ *
+ * the following are not yet implemented but must be escaped if they
+ * are meant as literals:
+ *
+ * (      group one or more expression items.
+ * )      end of a group
+ * |      or or choice, one or the other but not both.
+ * {      start a specific repeat quantifier, + is equivalent to {1,}
+ *        and ? is equivalent to {,1}. more explicitly:
+ *        {n} for exactly n times
+ *        {min,} at least min times
+ *        {,max} up to max times
+ *        {min,max}
+ * }      close the repeat quantifier.
+ *        not in the group
+ *
+ * any character or token not listed above is treated as a literal to
+ * be matched exactly.
+ */
+
+/*
+ * a match string expression is compiled into a pattern buffer. this
+ * buffer is a one dimensional array of unsigned integers. a pattern
+ * item occupies at least one slot of the array. the item code is
+ * symbolically identified in code by the macros PAT_???.
+ *
+ * the first item in the array is always PAT_BEG, and the last is
+ * always PAT_END. PAT_END is guaranteed to be followed by an
+ * unsigned integer zero.
+ *
+ * pattern items occupy a variable number of slots.
+ *
+ * many single character match string specifications take only
+ * one slot:
+ *
+ * ^ for start of line, $ for end of line, and . for any single
+ * character matches all take one slot.
+ *
+ * common character class matches for digits, letters, and whitespace
+ * all take one slot (\d, \w, \s) as do their negations.
+ *
+ * quantifiers (*, ?, +) all take only one slot.
+ *
+ * character classes or groups, where any one character can be matched
+ * or excluded from a list ([], [^]) occupy three slots plus one slot
+ * for each character in the group.
+ *
+ * runs of characters to match exactly also occupy three slots plus
+ * one slot for each character in the run.
+ *
+ * while literals are stored and processed as runs in the pattern
+ * buffer, a quantifier following a literal run actually only refers
+ * to the _last_ character of the run. [ab]cde* matches acd, bcd,
+ * bcdeeeee, and so on, not acdecde.
+ *
+ * as yet there is no match grouping so (abc)* does not mean zero or
+ * more repetitions of abc, and instead will match (abc, abc), abc))
+ * and so on.
+ */
 
 /*
  * a match string expression is compiled into a pattern buffer. the
@@ -419,9 +587,11 @@ glob_match(
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include "txbabort.h"
+
+#include "txbabort_if.h"
 #include "txbmisc.h"
 #include "txbstr.h"
+
 
 /*
  * these functions provide a limited implementation of regular
@@ -601,9 +771,9 @@ is_quantifier(
 	cpat p
 ) {
 	return p == PAT_REP0M ||   /* * */
-	p == PAT_REP1M ||   /* + */
-	p == PAT_REP01 ||   /* ? */
-	p == PAT_REP_COUNT; /* {,} */
+		p == PAT_REP1M ||   /* + */
+		p == PAT_REP01 ||   /* ? */
+		p == PAT_REP_COUNT; /* {,} */
 }
 
 /*
@@ -975,8 +1145,8 @@ add_pattern_item(
 		*from += 1;
 
 	} else if (item == PAT_WS || item == PAT_NOT_WS ||
-	item == PAT_DIG || item == PAT_NOT_DIG ||
-	item == PAT_WC || item == PAT_NOT_WC) {
+		item == PAT_DIG || item == PAT_NOT_DIG ||
+		item == PAT_WC || item == PAT_NOT_WC) {
 		*pos += 1;
 		*from += 2; /* \char */
 
@@ -2056,7 +2226,7 @@ glob_match(
 	return pm == 0;
 }
 
-/* pat.c ends here */
+/* txbpat.c ends here */
+/* *** end priv *** */
 
 #endif /* TXBPAT_IMPLEMENTATION */
-/* txbpat.h ends here */

@@ -1,4 +1,4 @@
-/* txbpmute.h -- A small permutation library -- Troy Brumley BlameTroi@gmail.com */
+/* txbpmute.c -- A small permutation library -- Troy Brumley BlameTroi@gmail.com */
 
 /*
  * This is a header only implementation of a function to permute an

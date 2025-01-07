@@ -1,4 +1,4 @@
-/* txbrs.h -- Simple Read Stream -- Troy Brumley BlameTroi@gmail.com */
+/* txbrs.c -- Simple Read Stream -- Troy Brumley BlameTroi@gmail.com */
 
 /*
  * a header only implementation of a string backed read stream.
@@ -16,7 +16,7 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 
-#include "../inc/abort.h"
+#include "../inc/abort_if.h"
 #include "../inc/rs.h"
 
 /*
@@ -454,4 +454,4 @@ rs_gets(
 	return buffer;
 }
 
-#/* txbrs.h ends here */
+/* txbrs.c ends here */

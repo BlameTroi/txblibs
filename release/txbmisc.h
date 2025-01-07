@@ -1,24 +1,69 @@
-/* txbmisc.h -- blametroi's common utility functions -- */
+/*
+ * single file header generated via:
+ * buildhdr --macro TXBMISC --intro LICENSE --pub ./inc/misc.h --priv ./src/misc.c
+ */
+/* *** begin intro ***
+This software is available under 2 licenses -- choose whichever you prefer.
+------------------------------------------------------------------------------
+ALTERNATIVE A - MIT License
+Copyright (c) 2025 Troy Brumley
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
+so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+------------------------------------------------------------------------------
+ALTERNATIVE B - Public Domain (www.unlicense.org)
+This is free and unencumbered software released into the public domain.
+Anyone is free to copy, modify, publish, use, compile, sell, or distribute this
+software, either in source code form or as a compiled binary, for any purpose,
+commercial or non-commercial, and by any means.
+In jurisdictions that recognize copyright laws, the author or authors of this
+software dedicate any and all copyright interest in the software to the public
+domain. We make this dedication for the benefit of the public at large and to
+the detriment of our heirs and successors. We intend this dedication to be an
+overt act of relinquishment in perpetuity of all present and future rights to
+this software under copyright law.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+   *** end intro ***
+ */
+
+#ifndef TXBMISC_SINGLE_HEADER
+#define TXBMISC_SINGLE_HEADER
+/* *** begin pub *** */
+/* txbmisc.h -- Miscellaneous functions -- Troy Brumley BlameTroi@gmail.com */
 
 /*
- * this is a header only implementation of various bits of code that i
- * keep repeating in my hobby programming that i want around without
- * the hassle of managing library dependencies. all functions are
- * small and i think pretty obvious.
+ * This is a header only implementation of various bits of code that I
+ * keep repeating in my hobby programming that I want around without
+ * the hassle of managing library dependencies. All functions are
+ * small and I think pretty obvious.
  *
- * some of the numeric functions use longs instead of ints to deal
- * with some of the large numbers seen in problems from advent of code
+ * Some of the numeric functions use longs instead of ints to deal
+ * with some of the large numbers seen in problems from Advent of Code
  * and other puzzle sites.
  *
- * released to the public domain by Troy Brumley blametroi@gmail.com
+ * Released to the public domain by Troy Brumley blametroi@gmail.com
  *
- * this software is dual-licensed to the public domain and under the
+ * This software is dual-licensed to the public domain and under the
  * following license: you are granted a perpetual, irrevocable license
  * to copy, modify, publish, and distribute this file as you see fit.
  */
-
-#ifndef TXBMISC_H
-#define TXBMISC_H
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -30,8 +75,8 @@ extern "C" {
 /*
  * factors_of
  *
- * returns an array of long integers big enought to at least hold the
- * factors of n and a trailing NULL. the caller is responsible for
+ * Returns an array of long integers big enought to at least hold the
+ * factors of 'n' and a trailing NULL. The caller is responsible for
  * freeing the array when it is no longer needed.
  *
  *     in: a long integer 'n'
@@ -40,15 +85,17 @@ extern "C" {
  */
 
 long *
-factors_of(long n);
+factors_of(
+	long n
+);
 
 /*
- * various min/max functions. the typed functions are wrapped by
- * generic macros. the macros only type check the first argument to
- * determine which function to call. it's the client's responsibility
+ * Various min/max functions. The typed functions are wrapped by
+ * generic macros. The macros only type check the first argument to
+ * determine which function to call. It's the client's responsibility
  * to ensure that the arguments compatible.
  *
- * use the macros min and max instead of the following functions.
+ * Use the macros `min' and `max' instead of the following functions.
  */
 
 int             i_max(int, int);
@@ -105,16 +152,16 @@ is_odd(
 /*
  * is_* various character predicates
  *
- * quick character classification from the point of view of this
- * us-ascii based programmer.
+ * Quick character classification from the point of view of this
+ * US-ASCII based programmer.
  *
  *     in: a char
  *
  * return: bool
  *
- * whether or not a hyphen is a word character (hypen, dash, em-dash)
+ * Whether or not a hyphen is a word character (hypen, dash, em-dash)
  * or a mathematical symbol and other such edge cases are not
- * accounted for here. these definitions work for 99% of the things i
+ * accounted for here. These definitions work for 99% of the things I
  * am likely to do.
  *
  * is_digit          0-9
@@ -170,7 +217,7 @@ is_uppercase(
 /*
  * one_bits_in
  *
- * brian kernighan's algorithm for counting set bits in a variable.
+ * Brian Kernighan's algorithm for counting set bits in a variable.
  *
  *     in: an unsigned long
  *
@@ -185,7 +232,7 @@ one_bits_in(
 /*
  * sum_one_to
  *
- * sum the integers 1 to n as gauss would.
+ * sum the integers 1 to n as Gauss would.
  *
  *     in: an int
  *
@@ -198,7 +245,7 @@ sum_one_to(
 );
 
 /*
- * some common comparator functions for things like qsort.
+ * Some common comparator functions for things like `qsort'.
  */
 
 int
@@ -216,14 +263,14 @@ fn_cmp_int_dsc(
 /*
  * hex_pack hex_unpack
  *
- * convert run of bytes to displayable hex digits (unpack hex) or a
+ * Convert run of bytes to displayable hex digits (unpack hex) or a
  * string of hex digits to bytes (pack hex).
  *
- * returns the address of the first byte of the output buffer so the
- * function can be used as an argument to printf. returns NULL if any
+ * Returns the address of the first byte of the output buffer so the
+ * function can be used as an argument to printf. Returns NULL if any
  * error in arguments is detected.
  *
- * the function arguments parallel each other.
+ * The function arguments parallel each other.
  *
  *     in: first byte of output buffer
  *
@@ -255,37 +302,46 @@ hex_unpack(
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-#endif /* TXBMISC_H */
+/* txbmisc.h ends here */
+/* *** end pub *** */
+
+#endif /* TXBMISC_SINGLE_HEADER */
 
 #ifdef TXBMISC_IMPLEMENTATION
 #undef TXBMISC_IMPLEMENTATION
+/* *** begin priv *** */
+/* txbmisc.c -- Miscellaneous functions -- Troy Brumley BlameTroi@gmail.com */
 
 /*
- * a header only implementation of various bits of code don't fit in
- * any of my other single c header file libraries.
+ * This is a header only implementation of various bits of code that I
+ * keep repeating in my hobby programming that I want around without
+ * the hassle of managing library dependencies. All functions are
+ * small and I think pretty obvious.
+ *
+ * Some of the numeric functions use longs instead of ints to deal
+ * with some of the large numbers seen in problems from Advent of Code
+ * and other puzzle sites.
+ *
+ * Released to the public domain by Troy Brumley blametroi@gmail.com
+ *
+ * This software is dual-licensed to the public domain and under the
+ * following license: you are granted a perpetual, irrevocable license
+ * to copy, modify, publish, and distribute this file as you see fit.
  */
 
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 
+
 /*
- * various min/max functions. the typed functions are wrapped by
- * generic macros. the macros only type check the first argument to
- * determine which function to call. it's the client's responsibility
+ * Various min/max functions. The typed functions are wrapped by
+ * generic macros. The macros only type check the first argument to
+ * determine which function to call. It's the client's responsibility
  * to ensure that the arguments compatible.
  *
- * as a general rule, i prefer to not use macros to express an
- * algorithm. macros are for plumbing.
- *
- * seeing as generic types are available in c18, and have been since
- * c11, there's one macro use case i can get behind: the lack of plain
- * min and max bugs me. so here i wrap them by various types.
- *
- * the macro only checks the type of the first argument to determine
- * which alternative to use. it's up to you to use compatible types.
- *
- * the actual #define is in the public declarations file, misc.h.
+ * Use the macros `min' and `max' (defined in txbmisc.h) instead of
+ * the following functions.
  */
 
 int
@@ -369,16 +425,16 @@ is_odd(long n) {
 /*
  * is_* various character predicates
  *
- * quick character classification from the point of view of this
- * us-ascii based programmer.
+ * Quick character classification from the point of view of this
+ * US-ASCII based programmer.
  *
  *     in: a char
  *
  * return: bool
  *
- * whether or not a hyphen is a word character (hypen, dash, em-dash)
+ * Whether or not a hyphen is a word character (hypen, dash, em-dash)
  * or a mathematical symbol and other such edge cases are not
- * accounted for here. these definitions work for 99% of the things i
+ * accounted for here. These definitions work for 99% of the things I
  * am likely to do.
  *
  * is_digit          0-9
@@ -400,7 +456,7 @@ bool
 is_word_char(char c) {
 	return (c >= 'a' && c <= 'z') ||
 		(c >= 'A' && c <= 'Z') ||
-	c == '_';
+		c == '_';
 }
 
 bool
@@ -416,10 +472,10 @@ is_uppercase(char c) {
 bool
 is_whitespace(char c) {
 	return c == ' ' ||
-	c == '\n' ||
-	c == '\f' ||
-	c == '\r' ||
-	c == '\t';
+		c == '\n' ||
+		c == '\f' ||
+		c == '\r' ||
+		c == '\t';
 }
 
 bool
@@ -430,27 +486,27 @@ is_control(char c) {
 bool
 is_punctuation(char c) {
 	return c == '.' ||
-	c == ',' ||
-	c == '?' ||
-	c == '!' ||
-	c == ';' ||
-	c == ':';
+		c == ',' ||
+		c == '?' ||
+		c == '!' ||
+		c == ';' ||
+		c == ':';
 }
 
 bool
 is_bracketing(char c) {
 	return c == '[' ||
-	c == '(' ||
-	c == '{' ||
-	c == '}' ||
-	c == ')' ||
-	c == ']';
+		c == '(' ||
+		c == '{' ||
+		c == '}' ||
+		c == ')' ||
+		c == ']';
 }
 
 /*
  * one_bits_in
  *
- * brian kernighan's algorithm for counting set bits in a variable.
+ * Brian Kernighan's algorithm for counting set bits in a variable.
  *
  *     in: an unsigned long
  *
@@ -470,7 +526,7 @@ one_bits_in(unsigned long n) {
 /*
  * sum_one_to
  *
- * sum the integers 1 to n as gauss would.
+ * sum the integers 1 to n as Gauss would.
  *
  *     in: an int
  *
@@ -483,7 +539,7 @@ sum_one_to(long n) {
 }
 
 /*
- * some common comparator functions for things like qsort.
+ * Some common comparator functions for things like `qsort'.
  */
 
 int
@@ -499,8 +555,8 @@ fn_cmp_int_dsc(const void *a, const void *b) {
 /*
  * factors_of
  *
- * returns an array of long integers big enought to at least hold the
- * factors of n and a trailing NULL. the caller is responsible for
+ * Returns an array of long integers big enought to at least hold the
+ * factors of 'n' and a trailing NULL. The caller is responsible for
  * freeing the array when it is no longer needed.
  *
  *     in: a long integer 'n'
@@ -553,14 +609,14 @@ factors_of(
 /*
  * hex_pack hex_unpack
  *
- * convert run of bytes to displayable hex digits (unpack hex) or a
+ * Convert run of bytes to displayable hex digits (unpack hex) or a
  * string of hex digits to bytes (pack hex).
  *
- * returns the address of the first byte of the output buffer so the
- * function can be used as an argument to printf. returns NULL if any
+ * Returns the address of the first byte of the output buffer so the
+ * function can be used as an argument to printf. Returns NULL if any
  * error in arguments is detected.
  *
- * the function arguments parallel each other.
+ * The function arguments parallel each other.
  *
  *     in: first byte of output buffer
  *
@@ -633,5 +689,8 @@ hex_unpack(
 	}
 	return chr;
 }
-#endif /* TXBMISC_IMPLEMENTATION */
+
 /* txbmisc.c ends here */
+/* *** end priv *** */
+
+#endif /* TXBMISC_IMPLEMENTATION */

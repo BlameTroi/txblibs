@@ -1,4 +1,52 @@
-/* txbrand.h -- random number suppport header library */
+/*
+ * single file header generated via:
+ * buildhdr --macro TXBRAND --intro LICENSE --pub ./inc/rand.h --priv ./src/rand.c
+ */
+/* *** begin intro ***
+This software is available under 2 licenses -- choose whichever you prefer.
+------------------------------------------------------------------------------
+ALTERNATIVE A - MIT License
+Copyright (c) 2025 Troy Brumley
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
+so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+------------------------------------------------------------------------------
+ALTERNATIVE B - Public Domain (www.unlicense.org)
+This is free and unencumbered software released into the public domain.
+Anyone is free to copy, modify, publish, use, compile, sell, or distribute this
+software, either in source code form or as a compiled binary, for any purpose,
+commercial or non-commercial, and by any means.
+In jurisdictions that recognize copyright laws, the author or authors of this
+software dedicate any and all copyright interest in the software to the public
+domain. We make this dedication for the benefit of the public at large and to
+the detriment of our heirs and successors. We intend this dedication to be an
+overt act of relinquishment in perpetuity of all present and future rights to
+this software under copyright law.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+   *** end intro ***
+ */
+
+#ifndef TXBRAND_SINGLE_HEADER
+#define TXBRAND_SINGLE_HEADER
+/* *** begin pub *** */
+/* txbrand.h -- Random number support -- Troy Brumley BlameTroi@gmail.com */
 
 /*
  * this is a header only implementation of non cryptographic quality
@@ -11,9 +59,6 @@
  * following license: you are granted a perpetual, irrevocable license
  * to copy, modify, publish, and distribute this file as you see fit.
  */
-
-#ifndef TXBRAND_H
-#define TXBRAND_H
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -128,10 +173,28 @@ random_character_from(
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-#endif /* TXBRAND_H */
+
+/* txbrand.h ends here */
+/* *** end pub *** */
+
+#endif /* TXBRAND_SINGLE_HEADER */
 
 #ifdef TXBRAND_IMPLEMENTATION
 #undef TXBRAND_IMPLEMENTATION
+/* *** begin priv *** */
+/* txbrand.c -- Random number support -- Troy Brumley BlameTroi@gmail.com */
+
+/*
+ * this is a header only implementation of non cryptographic quality
+ * random number support that i keep repeating in my hobby
+ * programming. all functions are small and i think pretty obvious.
+ *
+ * released to the public domain by Troy Brumley blametroi@gmail.com
+ *
+ * this software is dual-licensed to the public domain and under the
+ * following license: you are granted a perpetual, irrevocable license
+ * to copy, modify, publish, and distribute this file as you see fit.
+ */
 
 /*
  * frequently used random number related functions. these are not meant
@@ -143,6 +206,7 @@ random_character_from(
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
+
 
 /*
  * should the deterministic rand() or non-deterministic arc4random()
@@ -174,7 +238,6 @@ set_random_generator(
 	}
 }
 
-
 /*
  * reseed rand() using srand(). if rand is not being used this has
  * no effect.
@@ -190,7 +253,6 @@ seed_random_generator(
 	}
 	return false;
 }
-
 
 /*
  * generate a pseudo random integer between low and high inclusive.
@@ -215,7 +277,6 @@ random_between(
 	//      return rand() % (high + 1 - low) + low;
 	//#endif /* _DARWIN_C_SOURCE */
 }
-
 
 /*
  * random_dice
@@ -242,7 +303,6 @@ random_dice(
 	return res;
 }
 
-
 /*
  * shuffle an array of items using the fisher-yates algorithm. the
  * array is updated in place. by using an array of void pointers, any
@@ -268,7 +328,6 @@ shuffle(
 		i -= 1;
 	}
 }
-
 
 /*
  * the base character groupings.
@@ -330,7 +389,6 @@ random_special(void) {
 	return specials[random_between(0, NUM_SPECIALS-1)];
 }
 
-
 /*
  * random_character_from
  *
@@ -388,10 +446,7 @@ random_character_from(
 	return specials[rand-1];
 }
 
+/* txbrand.c ends here */
+/* *** end priv *** */
+
 #endif /* TXBRAND_IMPLEMENTATION */
-/* txbrand.h ends here */
-/* randext.c -- working on extensions to txbrand -- */
-
-
-
-/* randext.c ends here */

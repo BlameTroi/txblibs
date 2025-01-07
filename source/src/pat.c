@@ -163,7 +163,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "../inc/abort.h"
+#include "../inc/abort_if.h"
 #include "../inc/misc.h"
 #include "../inc/str.h"
 

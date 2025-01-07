@@ -1,37 +1,83 @@
-/* txbone.h -- one data structure library to rule them all */
+/*
+ * single file header generated via:
+ * buildhdr --macro TXBONE --intro LICENSE --pub ./inc/one.h --priv ./src/one.c
+ */
+/* *** begin intro ***
+This software is available under 2 licenses -- choose whichever you prefer.
+------------------------------------------------------------------------------
+ALTERNATIVE A - MIT License
+Copyright (c) 2025 Troy Brumley
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
+so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+------------------------------------------------------------------------------
+ALTERNATIVE B - Public Domain (www.unlicense.org)
+This is free and unencumbered software released into the public domain.
+Anyone is free to copy, modify, publish, use, compile, sell, or distribute this
+software, either in source code form or as a compiled binary, for any purpose,
+commercial or non-commercial, and by any means.
+In jurisdictions that recognize copyright laws, the author or authors of this
+software dedicate any and all copyright interest in the software to the public
+domain. We make this dedication for the benefit of the public at large and to
+the detriment of our heirs and successors. We intend this dedication to be an
+overt act of relinquishment in perpetuity of all present and future rights to
+this software under copyright law.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+   *** end intro ***
+ */
+
+#ifndef TXBONE_SINGLE_HEADER
+#define TXBONE_SINGLE_HEADER
+/* *** begin pub *** */
+/* txbone.h -- My grand unified ADTs -- Troy Brumley BlameTroi@gmail.com */
 
 /*
- * a header only implementation several data structures (linked lists,
- * queues, dynamic arrays, etc.) that i have written while working on
- * advent of code problems. this is a 'grand unified' library as i
+ * A header only implementation several data structures (linked lists,
+ * queues, dynamic arrays, etc.) that I have written while working on
+ * Advent of Code problems. This is a 'grand unified' library as I
  * rewrite several of the prior implementations for consistency and
- * some actual reuse. along the way i've added simplistic memory leak
+ * some actual reuse. Along the way I've added simplistic memory leak
  * tracking.
  *
- * this library has one external dependency, and that's my memory leak
- * tracker 'txballoc.h'. it is provided as a single header library
+ * This library has one external dependency, and that's my memory leak
+ * tracker `txballoc.h'. It is provided as a single header library
  * as well.
  *
- * there are better dst libraries out there, but anyone is welcome to
+ * There are better ADT libraries out there, but anyone is welcome to
  * use these if they wish.
  *
- * released to the public domain by Troy Brumley blametroi@gmail.com
+ * Released to the public domain by Troy Brumley blametroi@gmail.com
  *
- * this software is dual-licensed to the public domain and under the
+ * This software is dual-licensed to the public domain and under the
  * following license: you are granted a perpetual, irrevocable license
  * to copy, modify, publish, and distribute this file as you see fit.
  */
 
-#ifndef TXBONE_H
-#define TXBONE_H
+
+#include <stdbool.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-#include <stdbool.h>
-#include <stdint.h>
-
 /*
  * supported types so far are singly and doubly linked lists, queues,
  * deques, stacks, dynamic arrays, something i call an accumulator
@@ -67,7 +113,7 @@ extern "C" {
  * of course 'read' functions will return NULL if there is nothing to
  * return.
  */
-
+
 /*
  * configurable settings
  *
@@ -127,7 +173,7 @@ extern "C" {
 #ifndef ONE_REBALANCE_MINIMUM
 #define ONE_REBALANCE_MINIMUM 64
 #endif
-
+
 /*
  * the supported data structures. there is a table of tag strings in
  * the implementation side that must be kept in synch with these
@@ -151,7 +197,7 @@ typedef enum one_type one_type;
 
 #define ONE_TYPE_MAX unknowable
 #define ONE_TAG_LEN 24
-
+
 /*
  * core data structures/control blocks
  *
@@ -330,7 +376,7 @@ struct one_pqueue {
 	pq_item *first;
 	pq_item *last;
 };
-
+
 /*
  * rather than have separate high level control blocks, this union
  * approach allows for a cleaner interface and less redundancy.
@@ -360,7 +406,7 @@ struct one_block {
 	char tag[ONE_TAG_LEN];       /* eye catcher for those of us who remember core dumps */
 	one_details u;               /* what data structure sits under this instance? */
 };
-
+
 /*
  * create, destroy, and functions global to all data structures. all
  * entry points other than make_one(_keyed) and free_one tend to
@@ -459,7 +505,7 @@ one_block *
 clone(
 	one_block *ob
 );
-
+
 /*
  * these are possibly likely entry points for many of the data
  * structure. they are definitely the entry points for singly and
@@ -551,7 +597,7 @@ void *
 get_last(
 	one_block *ob
 );
-
+
 /*
  * a stack is implemented on a singly linked list, but use the
  * following entry points in addition to make_one, free_one, is_empty,
@@ -610,7 +656,7 @@ int
 depth(
 	one_block *ob
 );
-
+
 /*
  * a queue (fifo) is implemented on a doubly linked list, but use the
  * following entry points in addition to make_one, free_one, is_empty,
@@ -645,7 +691,7 @@ void *
 dequeue(
 	one_block *ob
 );
-
+
 /*
  * a deque (f/l-ifo)is built on a doubly linked list, but use the
  * following entry points in addition to make_one, free_one, is_empty,
@@ -709,7 +755,7 @@ void *
 peek_front(
 	one_block *ob
 );
-
+
 /*
  * accumulator lists are self expanding lists of uintptr_t sized
  * things. its api and intended use are as accumulators for
@@ -869,7 +915,7 @@ iterate(
 	one_block *ob,
 	int *idx
 );
-
+
 /*
  * dynamic arrays are self expanding arrays. in addition to make and
  * free, they support hbound via high_index, get, and put.
@@ -923,7 +969,7 @@ get_from(
 	one_block *ob,
 	int n
 );
-
+
 /*
  * a key:value store is one way of thinking of an associative array or
  * dictionary. this implementation is built on a scapegoat binary
@@ -1076,7 +1122,7 @@ one_block *
 values(
 	one_block *ob
 );
-
+
 /*
  * priority queue -- probably built on a double linked list with a key.
  *
@@ -1134,24 +1180,34 @@ peek_min(
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-#endif /* _TXBONE_H_ */
+/* txbone.h ends here */
+/* *** end pub *** */
+
+#endif /* TXBONE_SINGLE_HEADER */
 
 #ifdef TXBONE_IMPLEMENTATION
 #undef TXBONE_IMPLEMENTATION
+/* *** begin priv *** */
+/* txbone.c -- My grand unified ADTs -- Troy Brumley BlameTroi@gmail.com */
+
 /*
- * a header only implementation several data structures (linked lists,
- * queues, dynamic arrays, etc.) that i have written while working on
- * advent of code problems. this is a 'grand unified' library as i
+ * A header only implementation several data structures (linked lists,
+ * queues, dynamic arrays, etc.) that I have written while working on
+ * Advent of Code problems. This is a 'grand unified' library as I
  * rewrite several of the prior implementations for consistency and
- * some actual reuse. along the way i've added simplistic memory leak
+ * some actual reuse. Along the way I've added simplistic memory leak
  * tracking.
  *
- * there are better dst libraries out there, but anyone is welcome to
+ * This library has one external dependency, and that's my memory leak
+ * tracker `txballoc.h'. It is provided as a single header library
+ * as well.
+ *
+ * There are better ADT libraries out there, but anyone is welcome to
  * use these if they wish.
  *
- * released to the public domain by Troy Brumley blametroi@gmail.com
+ * Released to the public domain by Troy Brumley blametroi@gmail.com
  *
- * this software is dual-licensed to the public domain and under the
+ * This software is dual-licensed to the public domain and under the
  * following license: you are granted a perpetual, irrevocable license
  * to copy, modify, publish, and distribute this file as you see fit.
  */
@@ -1160,38 +1216,46 @@ peek_min(
 #include <string.h>
 
 #include "txballoc.h"
-#include "txbone.h"
 
 /* a helpful macro for infrequently needed traces */
 // #define FPRINTF_INFO
 #ifndef FPRINTF_INFO
 #define FPRINTF_INFO if (false)
 #endif
-
+
 /*
- * this is a copy paste from my txblog2 header, which implements a
- * fast integer log base 2 function for 32 bit integers. i changed the
+ * This is a copy paste from my txblog2 header, which implements a
+ * fast integer log base 2 function for 32 bit integers. I changed the
  * function name slightly and made it static so there won't be a
- * problem if txblog2.h is included.
+ * problem if '`txblog2.h' is included.
  *
- * this originally comes from:
+ * Implementation notes:
+ *
+ * See the following url for the original and so much more:
  *
  * http://graphics.stanford.edu/~seander/bithacks.html#IntegerLogLookup
  *
- * but i've tweaked some naming and formatting. i don't claim the
- * algorithm, just this particular implementation, which as always
- * i have --
- *
- * released to the public domain by Troy Brumley blametroi@gmail.com
- *
- * this software is dual-licensed to the public domain and under the
- * following license: you are granted a perpetual, irrevocable license
- * to copy, modify, publish, and distribute this file as you see fit.
- *
- * implementation notes:
- *
- * i had to make a few changes, after which i felt free to do some
+ * I had to make three changes, after which I felt free to do some
  * reformatting of the original code to match my sense of esthetics.
+ *
+ * 1) For an unknown (to me) reason, having the `#define' followed by
+ *    immediately by log table gets either an error complaining about
+ *    the `include' of `stdint', or one about an empty translation
+ *    unit on the type specifier for `log_table_256'. "ISO C requires
+ *    that a translation unit have at least one declaration" but there
+ *    is a declaration.
+ *
+ *    While in WTF mode I put an `#include' between the `#define'
+ *    and the table. Hey presto! the error goes away.
+ *
+ *    I expect this is some problem with my configuration of `clangd'
+ *    because a straight compile is clean.
+ *
+ * 2) In order to avoid the "include not directly used" pedantic
+ *    warning, I changed `unsigned int' to `uint32_t' and `char' to
+ *    `uint8_t'.
+ *
+ * 3) The original was in open code format, not a function.
  */
 
 #define LT(n) n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n
@@ -1227,24 +1291,24 @@ u32_log2(uint32_t v) {
 		r = (t = v >> 8) ? 8 + log_table_256[t] : log_table_256[v];
 	return r;
 }
-
+
 /*
- * supported types so far are singly and doubly linked lists, queues,
+ * Supported types so far are singly and doubly linked lists, queues,
  * deques, stacks, dynamic arrays, key:value stores (on binary search
- * trees), and priority queues. as need arises, hashes, dictionaries,
- * bags, and sets could be added, but i think the key:value store will
+ * trees), and priority queues. If need arises, hashes, dictionaries,
+ * bags, and sets could be added, but I think the key:value store will
  * fill most of those needs.
  *
- * all types store client data as pointer sized items, either `void *`
- * or uintptr_t. management of client payloads are the responsibility
+ * All types store client data as pointer sized items, either `void *`
+ * or uintptr_t. Management of client payloads are the responsibility
  * of the client.
  *
- * errors return invalid values (negatives or NULLs, see each
+ * Errors return invalid values (negatives or NULLs, see each
  * function) and can print a diagnostic message on stderr.
  */
 
 /*
- * keep these in synch with the one_type enum in the client
+ * Keep these in synch with the one_type enum in the client
  * header.
  */
 
@@ -1263,11 +1327,11 @@ one_tags[] = {
 	"unknowable",         /* -- end of list -- */
 	NULL
 };
-
+
 /*
- * difficult to avoid forward references
+ * Difficult to avoid forward references
  *
- * these should be all of the internal functions and they are
+ * These should be all of the internal functions and they are
  * meant to be static.
  */
 
@@ -1278,7 +1342,7 @@ btree_node_free(one_tree *, one_node *);
 static
 int
 btree_node_children_free(one_tree *, one_node *);
-
+
 /*
  * a singly linked list (singly) behaves as one would expect, and
  * the parameters of it functions should all be obvious. this
@@ -1415,7 +1479,7 @@ singly_purge(one_singly *self) {
 	}
 	return count;
 }
-
+
 /*
  * a doubly linked list (doubly) is the typical doubly linked list.
  * the comments for the singly linked list implementations apply.
@@ -1545,7 +1609,7 @@ doubly_purge(one_doubly *self) {
 	}
 	return count;
 }
-
+
 /*
  * the accumulator list (alist) is a cross between a java array list and a
  * lisp or sml list. while it has some similarities to the dynamic array
@@ -1785,7 +1849,7 @@ alist_setnth(one_block *xs, int n, uintptr_t atom) {
 		xs->u.acc.list[n] = atom;
 	return xs;
 }
-
+
 /*
  * key comparison
  */
@@ -1837,7 +1901,7 @@ keycmp(one_tree *self, void *left, void *right) {
 	else if (cmp > 0) return GREATER;
 	else return EQUAL;
 }
-
+
 /*
  * free memory for the tree and its Nodes. returns the now invalid
  * pointer to the old tree.
@@ -1968,7 +2032,7 @@ bool
 btree_is_scapegoat(one_tree *self, one_node *n) {
 	return n && (3*btree_size(self, n) > 2*btree_size(self, n->parent));
 }
-
+
 /*
  * tree traversal.
  *
@@ -2033,7 +2097,7 @@ int
 post_order_traversal(one_tree *self, void *context, fn_traversal_cb fn) {
 	return btree_post_order_traversal_r(self, self->root, context, fn);
 }
-
+
 /*
  * keys and values are packed into nodes, and the tree is composed of
  * nodes.
@@ -2097,7 +2161,7 @@ btree_node_children_free(one_tree *self, one_node *n) {
 	}
 	return freed + 1;
 }
-
+
 
 /*
  * recursively snip off all the branches of a (sub)tree for the
@@ -2392,7 +2456,7 @@ btree_should_full_rebalance(one_tree *self) {
 
 	return false;
 }
-
+
 /*
  * keys and values are passed as if they are pointers, but they do not
  * have to be.
@@ -2586,7 +2650,7 @@ btree_exists(one_tree *self, void *key) {
 	if (!n || n->deleted) return NULL;
 	return n;
 }
-
+
 /*
  * the priority queue (pqueue) is a non-uniquely keyed doubly
  * linked list. many of the functions look redundant with their
@@ -2638,7 +2702,7 @@ pq_purge(
 	}
 	return i;
 }
-
+
 /*
  * the unified or generic api.
  *
@@ -2673,7 +2737,7 @@ pq_purge(
  * dispose of the alist control block in flight. there the whole
  * `one_block` is passed.
  */
-
+
 /*
  * structure creation, duplication, and deletion
  */
@@ -2928,7 +2992,7 @@ free_one(one_block *ob) {
 	fprintf(stderr, "\nERROR txbone-free_one: called with NULL one block\n");
 	return NULL;
 }
-
+
 /*
  * singly and doubly linked list functions
  */
@@ -3097,7 +3161,7 @@ get_last(one_block *ob) {
 		return NULL;
 	}
 }
-
+
 /*
  * functions common to all (most) structures, for information
  * about the structure or its state.
@@ -3178,7 +3242,7 @@ is_empty(one_block *ob) {
 		return false;
 	}
 }
-
+
 /*
  * a stack is implemented on a singly linked list, but use the
  * following entry points in addition to make_one, free_one, is_empty,
@@ -3281,7 +3345,7 @@ peek(one_block *ob) {
 		return NULL;
 	}
 }
-
+
 /*
  * a queue (fifo) is implemented on a doubly linked list, but use the
  * following entry points in addition to make_one, free_one, is_empty,
@@ -3336,7 +3400,7 @@ dequeue(one_block *ob) {
 		return NULL;
 	}
 }
-
+
 /*
  * a deque (f/l-ifo)is built on a doubly linked list, but use the
  * following entry points in addition to make_one, free_one, empty,
@@ -3487,7 +3551,7 @@ peek_back(one_block *ob) {
 		return NULL;
 	}
 }
-
+
 /*
  * dynamic arrays are self expanding arrays. in addition to make and
  * free, they support hbound via high_index, get_from, and put_at.
@@ -3577,7 +3641,7 @@ get_from(one_block *self, int n) {
 	}
 	return (self->u.dyn.array)[n];
 }
-
+
 /*
  * accumulator list functions. the alist has a subset of array list
  * and lisp/sml list semantics. it is meant to ease accumulating
@@ -3713,7 +3777,7 @@ nth(one_block *ob, int n) {
 	}
 	return alist_nth(ob, n);
 }
-
+
 /*
  * priority queue functions
  *
@@ -3871,7 +3935,7 @@ long
 min_priority(one_block *ob) {
 	return ob->u.pqu.first ? ob->u.pqu.first->priority : 0;
 }
-
+
 /*
  * key:value store
  */
@@ -3967,7 +4031,7 @@ exists(one_block *ob, void *key) {
 		return false;
 	}
 }
-
+
 /*
  * functions that collect keys, values, or those that can iterate over the
  * items in a structure.
@@ -4102,5 +4166,7 @@ post_order_keyed(one_block *ob, void *context, fn_traversal_cb fn) {
 	}
 }
 
+/* txbone.c ends here */
+/* *** end priv *** */
+
 #endif /* TXBONE_IMPLEMENTATION */
-/* txbone.h ends here */
