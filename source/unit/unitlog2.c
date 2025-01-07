@@ -6,9 +6,9 @@
 
 #include "minunit.h"
 
-#include "txbrand.h"
+#include "../inc/rand.h"
 
-#include "txblog2.h"
+#include "../inc/log2.h"
 
 /********************************************************************
  * utility code and common data

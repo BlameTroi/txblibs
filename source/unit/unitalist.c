@@ -6,10 +6,10 @@
 
 #include "minunit.h"
 
-#include "txballoc.h"
-#include "txbmisc.h"
-#include "txbrand.h"
-#include "txbone.h"
+#include "../inc/alloc.h"
+#include "../inc/misc.h"
+#include "../inc/rand.h"
+#include "../inc/one.h"
 
 /*
  * main() drops these here for anyone who wants them, keeping the code

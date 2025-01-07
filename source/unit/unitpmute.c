@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "minunit.h"
-#include "txbpmute.h"
+#include "../inc/pmute.h"
 
 /*
  * minunit setup and teardown.

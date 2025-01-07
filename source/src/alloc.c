@@ -1,185 +1,92 @@
-/* txballoc.h -- memory allocation tracker */
+/* txballoc.c -- Memory allocation tracker -- Troy Brumley BlameTroi@gmail.com */
 
 /*
- * this is a header only implementation of a memory allocation tracker
- * for use in my library code. i have hopes to add pooling and limited
- * garbage collection in the future.
+ * This is a header only implementation of a memory allocation tracker
+ * for use in my library code. While I would like to add real pooling
+ * and garbage collection in the future, I doubt I'll get to it.
  *
- * i had some leaky code and this was written to find it. the approach
- * is to replace the standard library calls malloc, calloc, and free
- * with wrapper macros that call hooks with some additional
- * information for tracking.
+ * I had some leaky code and this was written to find it. The approach
+ * is to replace the standard library calls `malloc', `calloc', and
+ * `e' with wrapper macros that call hooks that include tracking.
  *
- * this is opt-in tracking. eventually all of my library code will use
+ * This is opt-in tracking. Eventually all of my library code will use
  * this but it won't interfere with non-library code.
  *
- * released to the public domain by Troy Brumley blametroi@gmail.com
+ * Released to the public domain by Troy Brumley blametroi@gmail.com
  *
- * this software is dual-licensed to the public domain and under the
+ * This software is dual-licensed to the public domain and under the
  * following license: you are granted a perpetual, irrevocable license
  * to copy, modify, publish, and distribute this file as you see fit.
  */
 
-#ifndef TXBALLOC_H
-#define TXBALLOC_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
-
-#define TXBALLOC_USER        true
-#define TXBALLOC_LIBRARY     false
-
-#define txballoc_f_allocs    (1 << 0)
-#define txballoc_f_frees     (1 << 1)
-#define txballoc_f_dup_frees (1 << 2)
-#define txballoc_f_leaks     (1 << 3)
-#define txballoc_f_silent    (0)
-#define txballoc_f_trace     (txballoc_f_allocs + txballoc_f_frees)
-#define txballoc_f_errors    (txballoc_f_dup_frees + txballoc_f_leaks)
-#define txballoc_f_full      (txballoc_f_trace + txballoc_f_errors)
-
-void
-txballoc_initialize(
-	size_t pool,    /* max number of active allocates to track */
-	uint16_t flags, /* configuration */
-	bool user_or_libs,
-	FILE *f         /* file stream to log on */
-);
-
-void *
-txballoc_malloc(        /* *** do not call directly, use tmalloc *** */
-	size_t n,       /* as in malloc # bytes */
-	bool user_or_libs,
-	char *f,        /* __FILE__ */
-	int l           /* __LINE__ */
-);
-
-void *
-txballoc_calloc(        /* *** do not call directly, use tcalloc *** */
-	int c,          /* as in calloc, # cells */
-	size_t n,       /* as in calloc, # bytes */
-	bool user_or_libs,
-	char *f,        /* __FILE__ */
-	int l           /* __LINE__ */
-);
-
-void
-txballoc_free(          /* *** do not call directly, use tfree *** */
-	void *p,        /* as in free, @ block */
-	bool user_or_libs,
-	char *f,        /* __FILE__ */
-	int l           /* __LINE__ */
-);
-
-void
-txballoc_terminate(
-	bool user_or_libs
-);
-
-#define tinitialize(n, r, f) \
-	txballoc_initialize((n), (r), TXBALLOC_USER, (f))
-
-#define tterminate() \
-	txballoc_terminate(TXBALLOC_USER)
-
-#define tmalloc(n) \
-	txballoc_malloc((n), TXBALLOC_USER, __FILE__, __LINE__)
-
-#define tcalloc(c, n) \
-	txballoc_calloc((c), (n), TXBALLOC_USER, __FILE__, __LINE__)
-
-#define tfree(p) \
-	txballoc_free((p), TXBALLOC_USER, __FILE__, __LINE__)
-
-#define tsinitialize(n, r, f) \
-	txballoc_initialize((n), (r), TXBALLOC_LIBRARY, (f))
-
-#define tsterminate() \
-	txballoc_terminate(TXBALLOC_LIBRARY)
-
-#define tsmalloc(n) \
-	txballoc_malloc((n), TXBALLOC_LIBRARY, __FILE__, __LINE__)
-
-#define tscalloc(c, n) \
-	txballoc_calloc((c), (n), TXBALLOC_LIBRARY, __FILE__, __LINE__)
-
-#define tsfree(p) \
-	txballoc_free((p), TXBALLOC_LIBRARY, __FILE__, __LINE__)
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-#endif /* TXBALLOC_H */
-
-#ifdef TXBALLOC_IMPLEMENTATION
-#undef TXBALLOC_IMPLEMENTATION
-
-/*
- * this is a header only implementation of a memory allocation tracker
- * for use in my library code. i have hopes to add pooling and limited
- * garbage collection in the future.
- *
- * i had some leaky code and this was written to find it. the approach
- * is to replace the standard library calls malloc, calloc, and free
- * with wrapper macros that call hooks with some additional
- * information for tracking.
- *
- * this is opt-in tracking. eventually all of my library code will use
- * this but it won't interfere with non-library code.
- *
- * released to the public domain by Troy Brumley blametroi@gmail.com
- *
- * this software is dual-licensed to the public domain and under the
- * following license: you are granted a perpetual, irrevocable license
- * to copy, modify, publish, and distribute this file as you see fit.
- */
-
-#include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <txballoc.h>
+
+#include "../inc/alloc.h"
 
 /*
- * to use this trace, you first call txballoc_initialize with the
+ * This allocation tracer uses wrapper macros to add instrumentation
+ * (currently only location and size) to selected allocations. There
+ * are two sets of wrappers, one for client code (prefix `t') and one
+ * for my library code (prefix `ts').
+ *
+ * My library code uses the `ts' macros for memory managed by the
+ * library. Memory returned for the user to manage is allocated using
+ * the standard system calls.
+ *
+ * To use this trace, you first call `t(s)initialize' with the
  * maximum number of concurrent allocations (allocated but not yet
  * freed) to track, logging options, and a file stream handle for the
- * log.
+ * log. There is support for tracing my library code and client code.
  *
- * then replace the malloc/calloc:free pairs you want to trace with
- * the macros tmalloc, tcalloc, and tfree. the arguments are unchanged
- * but the tracing hooks are invoked with the __FILE__ and __LINE__ of
- * the replaced calls.
+ * Then replace the `malloc/calloc':`free' pairs you want to trace
+ * with the macros `t(s)malloc', `t(s)calloc', and `t(s)free'. The
+ * arguments are unchanged but the tracing hooks are invoked with the
+ * __FILE__ and __LINE__ of the replaced calls.
  *
- * finally, call txballoc_terminate to report on any leaked
- * allocations along with some other information.
+ * Finally, call `t(s)terminate' to report on any leaked allocations
+ * along with some other information.
  *
- * only one instance of the trace may be active at a time. if you
- * attempt two txballoc_initization calls without an intervening
- * txballoc_termination call, the program will terminate via an
- * assert.
+ * Only one instance of each "space" allocator may be active at a
+ * time. If you attempt two `t(s)initization' calls without an
+ * intervening `t(c)termination' call, the program will terminate via
+ * an `abort'.
  *
- * allocations are logged when made and removed when freed. the
+ * Allocations are logged when made and removed when freed. The
  * address of the allocation is carried and is used as a key when
  * removing entries from the trace.
  *
- * entries are laid down sequentially with no attempt at ordering. an
- * allocation is logged in the first empty slot found. freeing clears
+ * Entries are laid down sequentially with no attempt at ordering. An
+ * allocation is logged in the first empty slot found. Freeing clears
  * a slot, so there are likely to be holes in the trace table.
  *
- * there is a maximum number of active entries (set when initialized)
- * and execution terminates via an assert if the table fills.
+ * There is a maximum number of active entries (set when initialized)
+ * and execution terminates via an `abort' if the table fills.
  *
- * only c/malloc and free calls that have been replaced by tcalloc,
- * tmalloc, and tfree are tracked. if the trace is not active, the
- * request is just passed directly to the run time library.
+ * Only `c/malloc' and 'free' calls that have been replaced by
+ * `t(s)calloc', `t(s)malloc', and `t(s)free' are tracked. If the
+ * trace is not active (not started with t(s)initialize), the request
+ * is passed directly to the run time library.
+ */
+
+/*
+ * Use the wrapper macros for library managed memory:
+ *
+ * t(s)initialize(n, r, f) -- track up to 'n' concurrent allocations
+ *                            with 'r' as option bits (see below)
+ *                            and write any log/trace to stream 'f'
+ * t(s)terminate           -- terminate tracking, report as in 'r'
+ * t(s)malloc(n)           -- allocate 'n' bytes
+ * t(s)calloc(c, n)        -- allocate and zero contiguous memory
+ *                            to hold 'c' blocks each of 'n' bytes
+ * t(s)free(p)             -- free the allocated memory at 'p'
+ *
+ * The reporting option bits will report allocations (malloc, calloc),
+ * frees, freeing an already freed block (does not abort the run),
+ * and any leaks detected.
  */
 
 typedef struct trace trace;
@@ -223,15 +130,14 @@ static pool library_pool;
  *
  * return: nothing
  *
- * entries are assigned on c/malloc and released on free, so the
+ * Entries are assigned on c/malloc and released on free, so the
  * capacity of the trace needs to be large enough to handle the
  * maximum number of expected active (allocated but not yet freed)
  * entries.
  *
- * as memory is plentiful these days, i recommend over allocation to
+ * As memory is plentiful these days, I recommend over allocation to
  * deal with creeping leaks.
  */
-
 
 void
 txballoc_initialize(
@@ -241,13 +147,13 @@ txballoc_initialize(
 	FILE *f
 ) {
 	pool *pool = user_or_libs ? &user_pool : &library_pool;
-	assert(!pool->active);
+	if (pool->active) abort();
 	pool->active = true;
 
 	pool->odometer = 0;
 	pool->capacity = n;
 	pool->table = calloc(pool->capacity, sizeof(trace));
-	assert(pool->table);
+	if (!pool->table) abort();
 	pool->high = 0;
 	pool->flags = request;
 	pool->report = f == NULL ? stderr : f;
@@ -268,10 +174,10 @@ txballoc_initialize(
  *
  * return: address of allocated storage
  *
- * if tracing is not active, pass the request straight through to
+ * If tracing is not active, pass the request straight through to
  * calloc.
  *
- * if tracing is active, multiply number of cells * cell length and
+ * If tracing is active, multiply number of cells * cell length and
  * call txballoc_malloc, clearing the memory before returning it to
  * the client.
  */
@@ -291,8 +197,8 @@ txballoc_calloc(
 }
 
 /*
- * find the basename of a file path. this should work on either
- * macos/linux or windows.
+ * Find the basename of a file path. This should work on either
+ * MacOS/Linux or Windows.
  */
 
 static
@@ -319,12 +225,12 @@ file_basename(
  *
  * return: address of allocated storage
  *
- * if tracing is not active, return the result of the intended malloc.
+ * If tracing is not active, return the result of the intended malloc.
  *
- * if tracing is active, find a free entry in the trace table, fill it
+ * If tracing is active, find a free entry in the trace table, fill it
  * in, and then malloc the requested memory.
  *
- * if the trace table is full, fail via an assert.
+ * If the trace table is full, fail via an `abort'.
  */
 
 void *
@@ -340,7 +246,7 @@ txballoc_malloc(
 	pool->odometer += 1;
 
 	if (pool->high >= pool->capacity)
-		assert(false); /* TODO: grow table or not? */
+		abort(); /* TODO: grow table or not? */
 
 	/* find free trace table entry */
 	int i;
@@ -349,7 +255,7 @@ txballoc_malloc(
 			break;
 
 	/* no free entry found, abort */
-	assert(i < pool->capacity);
+	if (i >= pool->capacity) abort();
 
 	/* track high water mark */
 	if (i > pool->high)
@@ -390,14 +296,16 @@ txballoc_malloc(
  *
  * return: nothing
  *
- * if tracing is not active, just free and return.
+ * If tracing is not active, just free and return.
  *
- * if tracing is active, find the entry in the trace table for this
+ * If tracing is active, find the entry in the trace table for this
  * allocation, clear it out, and then free the memory block.
  *
- * if the trace table somehow underflows (an impossibility) or the
+ * If the trace table somehow underflows (an impossibility) or the
  * requested allocation does not exist in the trace table, report it
- * and return. we could abort here but i decided not to.
+ * and return.
+ *
+ * I decided not to abort on underflow.
  */
 
 void
@@ -455,11 +363,11 @@ txballoc_free(
  *
  * return: nothing
  *
- * if tracing is not active we fail via an assert.
+ * If tracing is not active we fail via an `abort'.
  *
- * the report is self explanatory.
+ * The report is self explanatory.
  *
- * after the report completes, counters are cleared and the trace
+ * After the report completes, counters are cleared and the trace
  * table storage is released.
  */
 
@@ -468,7 +376,7 @@ txballoc_terminate(
 	bool user_or_libs
 ) {
 	pool *pool = user_or_libs ? &user_pool : &library_pool;
-	assert(pool->active);
+	if (!pool->active) abort();
 	pool->active = false;
 	if (pool->flags & txballoc_f_full) {
 		fprintf(pool->report, "\n***txballoc termination memory leak report***\n");
@@ -495,5 +403,4 @@ txballoc_terminate(
 	pool->flags = 0;
 }
 
-#endif /* TXBALLOC_IMPLEMENTATION */
-/* txballoc.h ends here */
+/* txballoc.c ends here */

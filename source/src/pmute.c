@@ -1,22 +1,17 @@
-/* txbpmute.h -- blametroi's permutation library */
+/* txbpmute.h -- A small permutation library -- Troy Brumley BlameTroi@gmail.com */
 
 /*
- * this is a header only implementation of a function to permute an
+ * This is a header only implementation of a function to permute an
  * array of integers.
  *
- * released to the public domain by Troy Brumley blametroi@gmail.com
+ * Released to the public domain by Troy Brumley blametroi@gmail.com
  *
- * this software is dual-licensed to the public domain and under the
+ * This software is dual-licensed to the public domain and under the
  * following license: you are granted a perpetual, irrevocable license
  * to copy, modify, publish, and distribute this file as you see fit.
  */
 
-#ifndef TXBPMUTE_H
-#define TXBPMUTE_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+#include "../inc/pmute.h"
 
 /*
  * permute_next
@@ -44,20 +39,6 @@ extern "C" {
  *    print_current(&iter, n, ints);
  *
  */
-
-int
-permute_next(
-	int n,        /* number of integers in the array *ints */
-	int *ints     /* n unique integers */
-);
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-#endif /* TXBPMUTE_H */
-
-#ifdef TXBPMUTE_IMPLEMENTATION
-#undef TXBPMUTE_IMPLEMENTATION
 
 /*
  * permute the 'n' unique integers in 'ints' on successive calls until
@@ -153,5 +134,5 @@ permute_next(
 	/* no more permutations available */
 	return 0;
 }
-#endif /* TXBPMUTE_IMPLEMENTATION */
-/* txbpmute.h ends here */
+
+/* txbpmute.c ends here */

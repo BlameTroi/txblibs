@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "minunit.h"
-#include "txbmisc.h"
+#include "../inc/misc.h"
 
 /*
  * minunit setup and teardown.

@@ -7,11 +7,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include "minunit.h"
-#include "txbmisc.h"
-//#include "txbdl.h"
-#include "txbstr.h"
-#include "txbrand.h"
-#include "txbone.h"
+#include "../inc/misc.h"
+//#include "../inc/dl.h"
+#include "../inc/str.h"
+#include "../inc/rand.h"
+#include "../inc/one.h"
 /*
  * minunit setup and teardown.
  */

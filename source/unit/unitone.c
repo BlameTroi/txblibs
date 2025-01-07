@@ -4,9 +4,9 @@
 
 #include <string.h>
 #include "minunit.h"
-#include "txballoc.h"
-#include "txbstr.h"
-#include "txbone.h"
+#include "../inc/alloc.h"
+#include "../inc/str.h"
+#include "../inc/one.h"
 
 /*
  * minunit setup and teardown.

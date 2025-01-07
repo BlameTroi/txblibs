@@ -5,8 +5,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "minunit.h"
-#include "txbone.h"
-#include "txbrand.h"
+#include "../inc/one.h"
+#include "../inc/rand.h"
 
 /*
  * minunit setup and teardown.

@@ -6,9 +6,9 @@
 #include <stdlib.h>
 #include <time.h>
 #include "minunit.h"
-#include "txballoc.h"
-#include "txbrand.h"
-#include "txbone.h"
+#include "../inc/alloc.h"
+#include "../inc/rand.h"
+#include "../inc/one.h"
 
 
 /*

@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "minunit.h"
-#include "txbone.h"
+#include "../inc/one.h"
 
 /*
  * minunit setup and teardown.

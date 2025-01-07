@@ -1,4 +1,4 @@
-/* txbrand.h -- random number suppport header library */
+/* txbrand.c -- Random number support -- Troy Brumley BlameTroi@gmail.com */
 
 /*
  * this is a header only implementation of non cryptographic quality
@@ -12,127 +12,6 @@
  * to copy, modify, publish, and distribute this file as you see fit.
  */
 
-#ifndef TXBRAND_H
-#define TXBRAND_H
-
-#include <stdbool.h>
-#include <stdint.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-/*
- * set which random generator to use. repeatable uses rand() and can
- * be seeded with the seed value to srand(). non-repeatable uses
- * arc4random() and siblings.
- *
- * arc4random() is only available with _DARWIN_C_SOURCE defined.
- */
-
-#define RAND_DEFAULT 0
-#define RAND_RANDOM 1
-
-bool
-set_random_generator(
-	int which
-);
-
-bool
-seed_random_generator(
-	uint32_t seed
-);
-
-/*
- * return a probably non-cyptography safe pseudo random unsigned
- * integer in an inclusive range.
- */
-
-uint32_t
-random_between(
-	uint32_t,
-	uint32_t
-);
-
-/*
- * random some number of some sided dice (eg, 3d6).
- */
-
-int
-random_dice(
-	int num,
-	int sides
-);
-
-/*
- * shuffle an array of n items using the fisher-yates algorithm.
- */
-
-void
-shuffle(
-	void **cards,
-	int n
-);
-
-/*
- * random_lower/upper/digit/special
- *
- * return a randomly selected character from the requested set
- * following us ascii conventions.
- */
-
-char
-random_lower(
-	void
-);
-
-char
-random_upper(
-	void
-);
-
-char
-random_digit(
-	void
-);
-
-char
-random_special(
-	void
-);
-
-/*
- * bit flags controlling which character sets to retrieve a random
- * character from.
- *
- * the distribution of characters is even throughout, which does
- * not mimic the distribution in real text samples.
- */
-
-#define RAND_CHAR_LOWER (1 << 0)
-#define RAND_CHAR_UPPER (1 << 1)
-#define RAND_CHAR_DIGIT (1 << 2)
-#define RAND_CHAR_SPECIAL (1 << 3)
-#define RAND_CHAR_ALL (RAND_CHAR_LOWER | RAND_CHAR_UPPER | RAND_CHAR_DIGIT | RAND_CHAR_SPECIAL)
-/*
- * return one random character one or more of the standard character
- * sets of lower case letters, upper case letters, decimal digits, and
- * special characters.
- */
-
-char
-random_character_from(
-	int pool
-);
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-#endif /* TXBRAND_H */
-
-#ifdef TXBRAND_IMPLEMENTATION
-#undef TXBRAND_IMPLEMENTATION
-
 /*
  * frequently used random number related functions. these are not meant
  * to be cryptographically secure. use of the old style deterministic
@@ -143,6 +22,8 @@ random_character_from(
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
+
+#include "../inc/rand.h"
 
 /*
  * should the deterministic rand() or non-deterministic arc4random()
@@ -174,7 +55,6 @@ set_random_generator(
 	}
 }
 
-
 /*
  * reseed rand() using srand(). if rand is not being used this has
  * no effect.
@@ -190,7 +70,6 @@ seed_random_generator(
 	}
 	return false;
 }
-
 
 /*
  * generate a pseudo random integer between low and high inclusive.
@@ -215,7 +94,6 @@ random_between(
 	//      return rand() % (high + 1 - low) + low;
 	//#endif /* _DARWIN_C_SOURCE */
 }
-
 
 /*
  * random_dice
@@ -242,7 +120,6 @@ random_dice(
 	return res;
 }
 
-
 /*
  * shuffle an array of items using the fisher-yates algorithm. the
  * array is updated in place. by using an array of void pointers, any
@@ -268,7 +145,6 @@ shuffle(
 		i -= 1;
 	}
 }
-
 
 /*
  * the base character groupings.
@@ -330,7 +206,6 @@ random_special(void) {
 	return specials[random_between(0, NUM_SPECIALS-1)];
 }
 
-
 /*
  * random_character_from
  *
@@ -388,10 +263,4 @@ random_character_from(
 	return specials[rand-1];
 }
 
-#endif /* TXBRAND_IMPLEMENTATION */
-/* txbrand.h ends here */
-/* randext.c -- working on extensions to txbrand -- */
-
-
-
-/* randext.c ends here */
+/* txbrand.c ends here */

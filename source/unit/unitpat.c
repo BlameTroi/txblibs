@@ -7,9 +7,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include "minunit.h"
-#include "txbstr.h"
-#include "txbmisc.h"
-#include "txbpat.h"
+#include "../inc/str.h"
+#include "../inc/misc.h"
+#include "../inc/pat.h"
 
 /*
  * test setup and teardown.

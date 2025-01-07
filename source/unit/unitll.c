@@ -5,8 +5,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "minunit.h"
-#include "txbstr.h"
-#include "txbone.h"
+#include "../inc/str.h"
+#include "../inc/one.h"
 
 /*
  * minunit setup and teardown.

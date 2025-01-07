@@ -1,16 +1,16 @@
-/* txbwarn.h -- debugging assist macros */
+/* txbwarn.h -- Debugging helper macros -- Troy Brumley BlameTroi@gmail.com */
 
 /*
- * temporary drop in macros to help with debugging. enable by defining
+ * Temporary drop in macros to help with debugging. Enable by defining
  * TXBWARN before including txbwarn.h, otherwise the macros are noops.
  *
- * i needed these while chasing a very obscure bug and figured i'd
- * keep them even though i don't think i'll use them often. even if
+ * I needed these while chasing a very obscure bug and figured I'd
+ * keep them even though I don't think I'll use them often. Even if
  * the exact macro isn't needed, it's a reasonable starting template.
  *
- * released to the public domain by Troy Brumley blametroi@gmail.com
+ * Released to the public domain by Troy Brumley blametroi@gmail.com
  *
- * this software is dual-licensed to the public domain and under the
+ * This software is dual-licensed to the public domain and under the
  * following license: you are granted a perpetual, irrevocable license
  * to copy, modify, publish, and distribute this file as you see fit.
  */

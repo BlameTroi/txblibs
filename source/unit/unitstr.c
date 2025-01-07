@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "minunit.h"
-#include "txbstr.h"
+#include "../inc/str.h"
 
 /*
  * minunit setup and teardown of listd infratstructure.

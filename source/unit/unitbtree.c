@@ -9,9 +9,9 @@
 #include "minunit.h"
 
 /* other library functions */
-#include "txballoc.h"
-#include "txbrand.h"
-#include "txbone.h"
+#include "../inc/alloc.h"
+#include "../inc/rand.h"
+#include "../inc/one.h"
 
 /* these are not exposed in txbone.h */
 

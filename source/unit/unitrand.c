@@ -3,8 +3,8 @@
 /* released to the public domain, troy brumley, may 2024 */
 
 #include "minunit.h"
-#include "txbrand.h"
-#include "txbmisc.h"
+#include "../inc/rand.h"
+#include "../inc/misc.h"
 #include <stdio.h>
 #include <stdint.h>
 

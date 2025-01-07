@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include "minunit.h"
-#include "txbmd5.h"
+#include "../inc/md5.h"
 
 /*
  * minunit setup and teardown.

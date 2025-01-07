@@ -5,11 +5,11 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include "minunit.h"
-#include "txbmisc.h"
-#include "txbrand.h"
-#include "txbstr.h"
-#include "txballoc.h"
-#include "txbone.h"
+#include "../inc/misc.h"
+#include "../inc/rand.h"
+#include "../inc/str.h"
+#include "../inc/alloc.h"
+#include "../inc/one.h"
 
 /*
  * minunit setup and teardown of listd infratstructure.
